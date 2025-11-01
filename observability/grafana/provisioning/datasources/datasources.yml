@@ -1,0 +1,29 @@
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:6210
+    isDefault: true
+
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:6208
+
+  - name: Tempo
+    type: tempo
+    access: proxy
+    url: http://tempo:6209
+    jsonData:
+      tracesToLogs:
+        datasourceUid: loki
+        tags: ['container', 'compose_service']
+        mappedTags:
+          - key: trace_id
+            value: trace_id
+      tracesToMetrics:
+        datasourceUid: prometheus
+      serviceMap:
+        datasourceUid: prometheus

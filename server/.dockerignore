@@ -1,0 +1,17 @@
+node_modules
+dist
+coverage
+.cache
+npm-debug.log
+yarn-error.log
+.DS_Store
+.tmp
+prisma/migrations
+
+# Git artifacts
+.git
+.gitignore
+
+# Local env files
+.env
+.env.*

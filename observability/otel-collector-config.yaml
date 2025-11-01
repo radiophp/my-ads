@@ -1,0 +1,30 @@
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:${OTEL_COLLECTOR_HTTP_PORT}
+      grpc:
+        endpoint: 0.0.0.0:${OTEL_COLLECTOR_GRPC_PORT}
+
+processors:
+  batch:
+    timeout: 5s
+    send_batch_size: 512
+
+exporters:
+  otlp/tempo:
+    endpoint: tempo:${TEMPO_GRPC_PORT}
+    tls:
+      insecure: true
+  logging:
+    loglevel: error
+
+service:
+  telemetry:
+    logs:
+      level: error
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp/tempo, logging]

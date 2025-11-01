@@ -1,0 +1,224 @@
+import { plainToInstance, Transform } from 'class-transformer';
+import {
+  IsBoolean,
+  IsEnum,
+  IsIn,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsPositive,
+  IsString,
+  Max,
+  Min,
+  validateSync,
+} from 'class-validator';
+
+enum NodeEnvironment {
+  DEVELOPMENT = 'development',
+  TEST = 'test',
+  PRODUCTION = 'production',
+}
+
+const POSTGRES_SCHEME_REGEX = /^postgres(?:ql)?:\/\//i;
+
+export class EnvironmentVariables {
+  @IsEnum(NodeEnvironment)
+  NODE_ENV: NodeEnvironment = NodeEnvironment.DEVELOPMENT;
+
+  @IsString()
+  @IsNotEmpty()
+  APP_HOST: string = '0.0.0.0';
+
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  @Min(1)
+  @Max(65535)
+  APP_PORT: number = 6200;
+
+  @IsString()
+  @IsNotEmpty()
+  APP_GLOBAL_PREFIX: string = 'api';
+
+  @IsString()
+  @IsNotEmpty()
+  @Transform(({ value }) => String(value))
+  DATABASE_URL!: string;
+
+  @IsOptional()
+  @IsString()
+  DATABASE_DIRECT_URL?: string;
+
+  @IsOptional()
+  @IsString()
+  SHADOW_DATABASE_URL?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  REDIS_HOST: string = 'redis';
+
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  @Min(1)
+  @Max(65535)
+  REDIS_PORT: number = 6202;
+
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  @Min(0)
+  REDIS_DB: number = 0;
+
+  @IsOptional()
+  @IsString()
+  REDIS_USERNAME?: string;
+
+  @IsOptional()
+  @IsString()
+  REDIS_PASSWORD?: string;
+
+  @Transform(({ value }) => (typeof value === 'string' ? value === 'true' : Boolean(value)))
+  @IsBoolean()
+  REDIS_TLS: boolean = false;
+
+  @IsOptional()
+  @IsString()
+  REDIS_KEY_PREFIX?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  JWT_ACCESS_TOKEN_SECRET!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  JWT_REFRESH_TOKEN_SECRET!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  JWT_ACCESS_TOKEN_TTL: string = '900s';
+
+  @IsString()
+  @IsNotEmpty()
+  JWT_REFRESH_TOKEN_TTL: string = '7d';
+
+  @IsOptional()
+  @IsString()
+  CORS_ORIGIN?: string;
+
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  @IsPositive()
+  RATE_LIMIT_TTL: number = 60;
+
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  @IsPositive()
+  RATE_LIMIT_MAX: number = 100;
+
+  @IsString()
+  @IsNotEmpty()
+  RABBITMQ_HOST: string = 'rabbitmq';
+
+  @IsString()
+  @IsNotEmpty()
+  RABBITMQ_URL: string = 'amqp://rabbitmq:6213';
+  @IsString()
+  @IsNotEmpty()
+  RABBITMQ_QUEUE_PREFIX: string = 'my-ads';
+
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  @IsPositive()
+  RABBITMQ_PREFETCH: number = 10;
+
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  @IsPositive()
+  RABBITMQ_HEARTBEAT: number = 60;
+
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  @IsPositive()
+  RABBITMQ_RECONNECT_SECONDS: number = 5;
+
+  @IsString()
+  @IsNotEmpty()
+  MINIO_ENDPOINT: string = 'minio';
+
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  @Min(1)
+  @Max(65535)
+  MINIO_PORT: number = 6204;
+
+  @Transform(({ value }) => (typeof value === 'string' ? value === 'true' : Boolean(value)))
+  @IsBoolean()
+  MINIO_USE_SSL: boolean = false;
+
+  @IsString()
+  @IsNotEmpty()
+  MINIO_ACCESS_KEY: string = 'minioadmin';
+
+  @IsString()
+  @IsNotEmpty()
+  MINIO_SECRET_KEY: string = 'minioadmin';
+
+  @IsString()
+  @IsNotEmpty()
+  MINIO_BUCKET: string = 'upload';
+
+  @IsOptional()
+  @IsString()
+  MINIO_REGION?: string;
+
+  @Transform(({ value }) => (typeof value === 'string' ? value === 'true' : Boolean(value)))
+  @IsBoolean()
+  OTEL_ENABLED: boolean = false;
+
+  @IsString()
+  @IsNotEmpty()
+  OTEL_SERVICE_NAME: string = 'my-ads-api';
+
+  @IsOptional()
+  @IsString()
+  OTEL_EXPORTER_OTLP_ENDPOINT?: string;
+
+  @IsOptional()
+  @IsString()
+  OTEL_EXPORTER_OTLP_HEADERS?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['none', 'error', 'warn', 'info', 'debug', 'verbose', 'all'])
+  OTEL_LOG_LEVEL?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @IsIn(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
+  LOG_LEVEL: string = 'info';
+
+  @Transform(({ value }) => (typeof value === 'string' ? value === 'true' : Boolean(value)))
+  @IsBoolean()
+  LOG_PRETTY: boolean = false;
+}
+
+export const validateEnvironment = (config: Record<string, unknown>): EnvironmentVariables => {
+  const validatedConfig = plainToInstance(EnvironmentVariables, config, {
+    enableImplicitConversion: true,
+  });
+
+  if (!POSTGRES_SCHEME_REGEX.test(validatedConfig.DATABASE_URL)) {
+    throw new Error('Environment validation failed:\nDATABASE_URL must be a PostgreSQL connection string');
+  }
+
+  const errors = validateSync(validatedConfig, {
+    skipMissingProperties: false,
+  });
+
+  if (errors.length > 0) {
+    const messages = errors
+      .flatMap((error) => Object.values(error.constraints ?? {}))
+      .join('\n');
+    throw new Error(`Environment validation failed:\n${messages}`);
+  }
+
+  return validatedConfig;
+};

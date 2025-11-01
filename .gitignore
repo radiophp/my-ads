@@ -1,0 +1,10 @@
+.env
+.env.local
+.env.development
+.env.production
+.idea/
+node_modules/
+server/node_modules/
+server/dist/
+npm-debug.log
+yarn-error.log

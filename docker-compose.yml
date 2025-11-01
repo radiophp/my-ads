@@ -1,0 +1,264 @@
+x-common-extra-hosts: &default-extra-hosts
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    profiles:
+      - minimal
+      - full
+    environment:
+      POSTGRES_DB: my_ads
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PGPORT: ${POSTGRES_PORT:-6201}
+    ports:
+      - '${POSTGRES_PORT:-6201}:${POSTGRES_PORT:-6201}'
+    command: ["postgres", "-c", "port=${POSTGRES_PORT:-6201}"]
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    <<: *default-extra-hosts
+    networks:
+      app_net:
+        ipv4_address: 172.30.0.2
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    profiles:
+      - minimal
+      - full
+    ports:
+      - '${REDIS_PORT:-6202}:${REDIS_PORT:-6202}'
+    command:
+      ["redis-server", "--port", "${REDIS_PORT:-6202}"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "-h", "127.0.0.1", "-p", "${REDIS_PORT:-6202}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    <<: *default-extra-hosts
+    networks:
+      app_net:
+        ipv4_address: 172.30.0.3
+
+  minio:
+    image: minio/minio:RELEASE.2025-02-28T09-55-16Z
+    restart: unless-stopped
+    profiles:
+      - minimal
+      - full
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-miniouser}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-miniopassword}
+    ports:
+      - '${MINIO_PORT:-6204}:${MINIO_PORT:-6204}'
+      - '${MINIO_CONSOLE_PORT:-6205}:${MINIO_CONSOLE_PORT:-6205}'
+    command:
+      [
+        "server",
+        "/data",
+        "--address",
+        ":${MINIO_PORT:-6204}",
+        "--console-address",
+        ":${MINIO_CONSOLE_PORT:-6205}"
+      ]
+    volumes:
+      - minio_data:/data
+    <<: *default-extra-hosts
+    networks:
+      app_net:
+        ipv4_address: 172.30.0.4
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    restart: unless-stopped
+    profiles:
+      - minimal
+      - full
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    ports:
+      - '${RABBITMQ_PORT:-6213}:${RABBITMQ_PORT:-6213}'
+      - '${RABBITMQ_MANAGEMENT_PORT:-6214}:${RABBITMQ_MANAGEMENT_PORT:-6214}'
+    volumes:
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - rabbitmq_data:/var/lib/rabbitmq
+    <<: *default-extra-hosts
+    networks:
+      app_net:
+        ipv4_address: 172.30.0.5
+
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    env_file:
+      - ./.env
+    depends_on:
+      - postgres
+      - redis
+      - minio
+      - rabbitmq
+      - otel-collector
+    ports:
+      - '${APP_PORT:-6200}:${APP_PORT:-6200}'
+    command: ["npm", "run", "start:prod"]
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    <<: *default-extra-hosts
+    networks:
+      app_net:
+        ipv4_address: 172.30.0.6
+    profiles:
+      - full
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.99.0
+    restart: unless-stopped
+    command: ["--config=/etc/otel-collector.yaml"]
+    volumes:
+      - ./observability/otel-collector-config.yaml:/etc/otel-collector.yaml:ro
+    ports:
+      - '${OTEL_COLLECTOR_GRPC_PORT:-6206}:${OTEL_COLLECTOR_GRPC_PORT:-6206}'
+      - '${OTEL_COLLECTOR_HTTP_PORT:-6207}:${OTEL_COLLECTOR_HTTP_PORT:-6207}'
+    environment:
+      OTEL_COLLECTOR_GRPC_PORT: ${OTEL_COLLECTOR_GRPC_PORT:-6206}
+      OTEL_COLLECTOR_HTTP_PORT: ${OTEL_COLLECTOR_HTTP_PORT:-6207}
+      TEMPO_GRPC_PORT: ${TEMPO_GRPC_PORT:-6212}
+    profiles:
+      - observability
+      - full
+    <<: *default-extra-hosts
+    networks:
+      app_net:
+        ipv4_address: 172.30.0.7
+
+  loki:
+    image: grafana/loki:2.9.3
+    restart: unless-stopped
+    command: ["-config.file=/etc/loki/local-config.yaml"]
+    volumes:
+      - ./observability/loki-config.yaml:/etc/loki/local-config.yaml:ro
+      - loki_data:/var/loki
+    ports:
+      - '${LOKI_PORT:-6208}:${LOKI_PORT:-6208}'
+    environment:
+      LOKI_PORT: ${LOKI_PORT:-6208}
+    profiles:
+      - observability
+      - full
+    <<: *default-extra-hosts
+    networks:
+      app_net:
+        ipv4_address: 172.30.0.8
+
+  promtail:
+    image: grafana/promtail:2.9.3
+    restart: unless-stopped
+    command: ["--config.file=/etc/promtail/config.yaml"]
+    volumes:
+      - ./observability/promtail-config.yaml:/etc/promtail/config.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - promtail_positions:/var/lib/promtail
+    depends_on:
+      - loki
+    profiles:
+      - observability
+      - full
+    <<: *default-extra-hosts
+    networks:
+      app_net:
+        ipv4_address: 172.30.0.9
+
+  tempo:
+    image: grafana/tempo:2.4.1
+    restart: unless-stopped
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./observability/tempo.yaml:/etc/tempo.yaml:ro
+      - tempo_data:/var/tempo
+    ports:
+      - '${TEMPO_PORT:-6209}:${TEMPO_PORT:-6209}'
+    expose:
+      - '${TEMPO_GRPC_PORT:-6212}'
+    environment:
+      TEMPO_PORT: ${TEMPO_PORT:-6209}
+      TEMPO_GRPC_PORT: ${TEMPO_GRPC_PORT:-6212}
+    profiles:
+      - observability
+      - full
+    <<: *default-extra-hosts
+    networks:
+      app_net:
+        ipv4_address: 172.30.0.10
+
+  prometheus:
+    image: prom/prometheus:v2.49.1
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.listen-address=:${PROMETHEUS_PORT:-6210}'
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - '${PROMETHEUS_PORT:-6210}:${PROMETHEUS_PORT:-6210}'
+    environment:
+      PROMETHEUS_PORT: ${PROMETHEUS_PORT:-6210}
+    profiles:
+      - observability
+      - full
+    <<: *default-extra-hosts
+    networks:
+      app_net:
+        ipv4_address: 172.30.0.11
+
+  grafana:
+    image: grafana/grafana:10.4.1
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_FEATURE_TOGGLES_ENABLE: traceqlEditor
+      GF_SERVER_HTTP_PORT: ${GRAFANA_PORT:-6211}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./observability/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+    depends_on:
+      - loki
+      - prometheus
+      - tempo
+    ports:
+      - '${GRAFANA_PORT:-6211}:${GRAFANA_PORT:-6211}'
+    profiles:
+      - observability
+      - full
+    <<: *default-extra-hosts
+    networks:
+      app_net:
+        ipv4_address: 172.30.0.12
+
+volumes:
+  postgres_data:
+  minio_data:
+  loki_data:
+  tempo_data:
+  prometheus_data:
+  grafana_data:
+  promtail_positions:
+  rabbitmq_data:
+
+networks:
+  app_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24

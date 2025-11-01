@@ -1,0 +1,32 @@
+search_enabled: true
+server:
+  http_listen_port: ${TEMPO_PORT}
+  grpc_listen_port: ${TEMPO_GRPC_PORT}
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        http:
+        grpc:
+
+ingester:
+  trace_idle_period: 10s
+  max_block_bytes: 1000000
+  max_block_duration: 5m
+
+compactor:
+  compaction:
+    block_retention: 24h
+
+storage:
+  trace:
+    backend: local
+    block:
+      bloom_filter_false_positive: 0.05
+      index_downsample_bytes: 10000
+      encoding: zstd
+    wal:
+      path: /var/tempo/wal
+    local:
+      path: /var/tempo/blocks

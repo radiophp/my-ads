@@ -24,6 +24,7 @@ export class SanitizePipe implements PipeTransform {
   private sanitizeValue(value: unknown): unknown {
     if (typeof value === 'string') {
       return value
+        .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
         .replace(/<\/?script[^>]*>/gi, '')
         .replace(/javascript:/gi, '')
         .trim();

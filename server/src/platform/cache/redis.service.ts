@@ -109,6 +109,10 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     return this.client.del(this.applyPrefix(key));
   }
 
+  async pTTL(key: string): Promise<number> {
+    return this.client.pTTL(this.applyPrefix(key));
+  }
+
   async createScopedClient(scope: string): Promise<RedisClient> {
     const scopedClient: ScopedClient = { client: createRedisClient(this.options), scope };
     this.registerEventLogging(scopedClient.client, scope);
@@ -206,7 +210,13 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     }
 
     const message = error.message ?? '';
-    const connectionErrors = ['ECONNREFUSED', 'ETIMEDOUT', 'ENOTFOUND', 'EHOSTUNREACH', 'Connection is closed'];
+    const connectionErrors = [
+      'ECONNREFUSED',
+      'ETIMEDOUT',
+      'ENOTFOUND',
+      'EHOSTUNREACH',
+      'Connection is closed',
+    ];
     const matchesKnownError = connectionErrors.some((token) => message.includes(token));
 
     if (!matchesKnownError) {
@@ -297,7 +307,10 @@ class IORedisClient implements RedisClient {
     return this.client.pttl(key);
   }
 
-  scan(cursor: number, options: ScanCommandOptions = {}): Promise<{ cursor: number; keys: string[] }> {
+  scan(
+    cursor: number,
+    options: ScanCommandOptions = {},
+  ): Promise<{ cursor: number; keys: string[] }> {
     const args: Array<string | number> = [];
 
     if (options.MATCH) {
@@ -334,7 +347,7 @@ class IORedisClient implements RedisClient {
   }
 
   publish(channel: string, message: string): Promise<number> {
-    return this.client.publish(channel, message) as Promise<number>;
+    return this.client.publish(channel, message);
   }
 
   subscribe(channel: string): Promise<number> {

@@ -1,5 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { QueueService } from '../queue.service';
+import { registerConsumerWithRetry } from '../utils/register-consumer-with-retry.util';
 
 export type NotificationJob = {
   userId: string;
@@ -7,13 +8,23 @@ export type NotificationJob = {
 };
 
 @Injectable()
-export class NotificationProcessor {
+export class NotificationProcessor implements OnModuleInit {
   private readonly logger = new Logger(NotificationProcessor.name);
 
-  constructor(private readonly queueService: QueueService) {
-    void this.queueService.registerConsumer<NotificationJob>(
+  constructor(private readonly queueService: QueueService) {}
+
+  async onModuleInit(): Promise<void> {
+    const { maxAttempts, baseDelayMs } = this.queueService.getConsumerRetryOptions();
+    await registerConsumerWithRetry<NotificationJob>(
+      this.queueService,
       'notification',
       async (payload) => this.handle(payload),
+      {
+        logger: this.logger,
+        label: 'Notification',
+        maxAttempts,
+        baseDelayMs,
+      },
     );
   }
 

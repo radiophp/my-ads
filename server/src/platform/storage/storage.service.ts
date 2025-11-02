@@ -93,7 +93,9 @@ export class StorageService implements OnModuleInit {
       Body: options.body,
       ContentType: options.contentType,
       Metadata: options.metadata,
-      ...(typeof options.contentLength === 'number' ? { ContentLength: options.contentLength } : {}),
+      ...(typeof options.contentLength === 'number'
+        ? { ContentLength: options.contentLength }
+        : {}),
     });
 
     const response: PutObjectCommandOutput = await this.s3Client.send(command);
@@ -112,6 +114,9 @@ export class StorageService implements OnModuleInit {
     await this.s3Client.send(command);
   }
 
+  async healthCheck(): Promise<void> {
+    await this.s3Client.send(new HeadBucketCommand({ Bucket: this.bucket }));
+  }
   async getObject(key: string): Promise<GetObjectCommandOutput> {
     const command = new GetObjectCommand({ Bucket: this.bucket, Key: key });
     return this.s3Client.send(command);
@@ -129,13 +134,23 @@ export class StorageService implements OnModuleInit {
       return Body;
     }
 
-    if (typeof (Body as { transformToWebStream?: () => ReadableStream })?.transformToWebStream === 'function') {
-      const webStream = (Body as { transformToWebStream: () => ReadableStream }).transformToWebStream();
+    if (
+      typeof (Body as { transformToWebStream?: () => ReadableStream })?.transformToWebStream ===
+      'function'
+    ) {
+      const webStream = (
+        Body as { transformToWebStream: () => ReadableStream }
+      ).transformToWebStream();
       return Readable.fromWeb(webStream);
     }
 
-    if (typeof (Body as { transformToByteArray?: () => Promise<Uint8Array> })?.transformToByteArray === 'function') {
-      const buffer = await (Body as { transformToByteArray: () => Promise<Uint8Array> }).transformToByteArray();
+    if (
+      typeof (Body as { transformToByteArray?: () => Promise<Uint8Array> })
+        ?.transformToByteArray === 'function'
+    ) {
+      const buffer = await (
+        Body as { transformToByteArray: () => Promise<Uint8Array> }
+      ).transformToByteArray();
       return Readable.from(buffer);
     }
 

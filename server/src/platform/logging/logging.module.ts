@@ -4,7 +4,15 @@ import { LoggerModule } from 'nestjs-pino';
 import { context, trace } from '@opentelemetry/api';
 import type { ObservabilityConfig } from '@app/platform/config/observability.config';
 
-const LOG_LEVELS: ReadonlyArray<string> = ['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'];
+const LOG_LEVELS: ReadonlyArray<string> = [
+  'fatal',
+  'error',
+  'warn',
+  'info',
+  'debug',
+  'trace',
+  'silent',
+];
 
 @Module({
   imports: [

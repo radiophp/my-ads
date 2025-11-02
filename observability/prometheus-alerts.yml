@@ -1,0 +1,11 @@
+groups:
+  - name: health-alerts
+    rules:
+      - alert: DependencyDown
+        expr: health_dependency_status == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Dependency {{ $labels.component }} is down"
+          description: "The {{ $labels.component }} dependency has been failing health checks for over a minute."

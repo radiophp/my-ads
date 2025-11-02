@@ -1,9 +1,4 @@
-import {
-  CallHandler,
-  ExecutionContext,
-  Injectable,
-  NestInterceptor,
-} from '@nestjs/common';
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { FastifyReply } from 'fastify';
 import { Observable, tap } from 'rxjs';
 import { MetricsService } from '../metrics.service';
@@ -18,7 +13,9 @@ export class HttpMetricsInterceptor implements NestInterceptor {
     return next.handle().pipe(
       tap(() => {
         const reply = context.switchToHttp().getResponse<FastifyReply>();
-        const request = context.switchToHttp().getRequest<Request & { method: string; url: string }>();
+        const request = context
+          .switchToHttp()
+          .getRequest<Request & { method: string; url: string }>();
         const durationInSeconds = Number(process.hrtime.bigint() - start) / 1_000_000_000;
         const path = request?.url?.split('?')[0] ?? 'unknown';
         const method = request?.method ?? 'UNKNOWN';

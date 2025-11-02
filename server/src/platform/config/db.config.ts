@@ -13,8 +13,7 @@ export default registerAs<DatabaseConfig>('database', () => {
 
   return {
     url:
-      env['DATABASE_URL'] ??
-      'postgresql://postgres:postgres@localhost:6201/my_ads?schema=public',
+      env['DATABASE_URL'] ?? 'postgresql://postgres:postgres@localhost:6201/my_ads?schema=public',
     ...(directUrl ? { directUrl } : {}),
     ...(shadowUrl ? { shadowDatabaseUrl: shadowUrl } : {}),
   } satisfies DatabaseConfig;

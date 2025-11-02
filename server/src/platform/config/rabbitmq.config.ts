@@ -6,6 +6,9 @@ export type RabbitMQConfig = {
   prefetch: number;
   heartbeat: number;
   reconnect: number;
+  maxConsumerRetries: number;
+  consumerRetryDelayMs: number;
+  deadLetterQueueSuffix: string;
 };
 
 const toNumber = (value: string | undefined, fallback: number): number => {
@@ -25,5 +28,8 @@ export default registerAs<RabbitMQConfig>('rabbitmq', () => {
     prefetch: toNumber(env['RABBITMQ_PREFETCH'], 10),
     heartbeat: toNumber(env['RABBITMQ_HEARTBEAT'], 60),
     reconnect: toNumber(env['RABBITMQ_RECONNECT_SECONDS'], 5),
+    maxConsumerRetries: toNumber(env['RABBITMQ_MAX_CONSUMER_RETRIES'], 5),
+    consumerRetryDelayMs: toNumber(env['RABBITMQ_CONSUMER_RETRY_DELAY_MS'], 500),
+    deadLetterQueueSuffix: env['RABBITMQ_DLQ_SUFFIX'] ?? 'dead',
   } satisfies RabbitMQConfig;
 });

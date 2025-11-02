@@ -3,6 +3,7 @@
 A modern NestJS (Fastify) backend ready for production workloads. It ships with PostgreSQL via Prisma, Redis-backed caching, BullMQ queues, Prometheus metrics, JWT authentication with role-based access, WebSocket support, and a Docker-first delivery model.
 
 ## Features
+
 - **NestJS + Fastify** with global validation, sanitisation, security hardening, and Prometheus metrics interceptor.
 - **Prisma ORM** targeting PostgreSQL with ready-to-run schema and migration tooling.
 - **Redis integration** (Redis Stack) for caching, rate limiting, job queues, and WebSocket clustering.
@@ -18,6 +19,7 @@ A modern NestJS (Fastify) backend ready for production workloads. It ships with 
 ## Getting Started
 
 ### 1. Environment configuration
+
 Copy the sample environment file located in the repository root and adjust values for your setup:
 
 ```bash
@@ -31,6 +33,7 @@ The defaults are geared towards Docker Compose (PostgreSQL + Redis service names
 
 ```bash
 npm install
+npm run prepare # sets up Husky git hooks
 npm run prisma:generate
 ```
 
@@ -59,6 +62,7 @@ docker-compose up --build
 Run the command from the repository root; it mounts `./server` into the container for hot-reloading (`npm run start:dev`).
 
 Default port bindings:
+
 - API → `6200`
 - PostgreSQL → `6201`
 - Redis Stack → `6202`
@@ -72,6 +76,7 @@ npm run test:e2e  # Fastify e2e tests (stubbed Prisma/Redis)
 ```
 
 ## Useful Scripts
+
 - `npm run prisma:generate` – generate Prisma Client.
 - `npm run prisma:migrate` – run interactive migrations.
 - `npm run prisma:studio` – launch Prisma Studio UI.
@@ -108,18 +113,23 @@ npm run test:e2e  # Fastify e2e tests (stubbed Prisma/Redis)
 ```
 
 ## Prometheus Metrics
+
 Hit `GET /metrics` for a Prometheus-compatible exposition format. The default setup includes:
+
 - `http_server_request_duration_seconds` histogram with method/path/status labels.
 - `users_created_total` counter incremented whenever a new user is registered.
 
 ## Queues & WebSockets
+
 - `EmailProcessor` and `NotificationProcessor` demonstrate BullMQ queues with retry/backoff policies.
 - The Socket.IO gateway lives on `/ws` and publishes Redis-backed events, making it safe for multi-instance deployments.
 
 ## Roadmap
+
 - GraphQL module scaffolding when required.
 - Additional queue processors (emails, push notifications).
 - Production-grade observability (structured logging, tracing).
 
 ## License
+
 MIT

@@ -7,41 +7,12 @@ import { HttpInstrumentation } from '@opentelemetry/instrumentation-http';
 import { FastifyInstrumentation } from '@opentelemetry/instrumentation-fastify';
 import { RedisInstrumentation } from '@opentelemetry/instrumentation-redis';
 import { PrismaInstrumentation } from '@prisma/instrumentation';
+import {
+  resolveObservabilityConfig,
+  type ObservabilityConfig,
+} from '@app/platform/config/observability.config';
 
-type OtelLogLevel = 'none' | 'error' | 'warn' | 'info' | 'debug' | 'verbose' | 'all';
-
-const parseBoolean = (value: string | undefined, fallback: boolean): boolean => {
-  if (typeof value === 'undefined') {
-    return fallback;
-  }
-
-  return value.toLowerCase() === 'true';
-};
-
-const parseHeaders = (headers: string | undefined): Record<string, string> => {
-  if (!headers) {
-    return {};
-  }
-
-  return headers
-    .split(',')
-    .map((chunk) => chunk.trim())
-    .filter((chunk) => chunk.length > 0)
-    .reduce<Record<string, string>>((acc, pair) => {
-      const [key, ...rest] = pair.split('=');
-      if (!key || rest.length === 0) {
-        return acc;
-      }
-
-      const value = rest.join('=').trim();
-      if (value.length === 0) {
-        return acc;
-      }
-
-      acc[key.trim()] = value;
-      return acc;
-    }, {});
-};
+type OtelLogLevel = ObservabilityConfig['otel']['logLevel'];
 
 const mapDiagLogLevel = (value: OtelLogLevel | undefined): DiagLogLevel => {
   switch (value) {
@@ -68,22 +39,23 @@ let initialized = false;
 
 const createSdk = (): NodeSDK => {
   const env = process.env ?? {};
-  const enabled = parseBoolean(env['OTEL_ENABLED'], false);
-  if (!enabled) {
+  const config = resolveObservabilityConfig(env);
+  const otel = config.otel;
+
+  if (!otel.enabled) {
     throw new Error('OTEL_DISABLED');
   }
 
-  const serviceName = env['OTEL_SERVICE_NAME'] ?? 'my-ads-api';
-  const endpoint = env['OTEL_EXPORTER_OTLP_ENDPOINT'];
-  const headers = parseHeaders(env['OTEL_EXPORTER_OTLP_HEADERS']);
-  const logLevel = mapDiagLogLevel((env['OTEL_LOG_LEVEL'] as OtelLogLevel | undefined) ?? 'error');
+  const logLevel = mapDiagLogLevel(otel.logLevel);
 
   diag.setLogger(new DiagConsoleLogger(), logLevel);
 
-  const traceExporter = endpoint ? new OTLPTraceExporter({ url: endpoint, headers }) : new OTLPTraceExporter();
+  const traceExporter = otel.endpoint
+    ? new OTLPTraceExporter({ url: otel.endpoint, headers: otel.headers })
+    : new OTLPTraceExporter();
 
   const resource = resourceFromAttributes({
-    [SemanticResourceAttributes.SERVICE_NAME]: serviceName,
+    [SemanticResourceAttributes.SERVICE_NAME]: otel.serviceName,
     [SemanticResourceAttributes.SERVICE_VERSION]: env['npm_package_version'] ?? '0.0.0',
     [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: env['NODE_ENV'] ?? 'development',
   });

@@ -1,17 +1,26 @@
 import { Test } from '@nestjs/testing';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
-import * as request from 'supertest';
+import type { FastifyInstance } from 'fastify';
 import { AppModule } from '@app/app.module';
 import { PrismaService } from '@app/platform/database/prisma.service';
 import { RedisService, type RedisClient } from '@app/platform/cache/redis.service';
 import { StorageService, type StoredObjectMetadata } from '@app/platform/storage/storage.service';
+import { QueueService } from '@app/platform/queue/queue.service';
+import { MetricsService } from '@app/platform/metrics/metrics.service';
+import healthConfig from '@app/platform/config/health.config';
 
 type InMemoryEntry = {
   value: string;
   expiresAt?: number;
 };
 
-class InMemoryRedisClient implements Pick<RedisClient, 'get' | 'mGet' | 'set' | 'pSetEx' | 'del' | 'multi' | 'pTTL' | 'scan' | 'quit' | 'ping'> {
+class InMemoryRedisClient
+  implements
+    Pick<
+      RedisClient,
+      'get' | 'mGet' | 'set' | 'pSetEx' | 'del' | 'multi' | 'pTTL' | 'scan' | 'quit' | 'ping'
+    >
+{
   constructor(private readonly store: Map<string, InMemoryEntry>) {}
 
   private isExpired(key: string): boolean {
@@ -102,9 +111,12 @@ class InMemoryRedisClient implements Pick<RedisClient, 'get' | 'mGet' | 'set' | 
     return Math.max(entry.expiresAt - Date.now(), 0);
   }
 
-  async scan(cursor: number, options: { MATCH: string; COUNT: number }): Promise<{ cursor: string; keys: string[] }> {
+  async scan(
+    cursor: number,
+    options: { MATCH: string; COUNT: number },
+  ): Promise<{ cursor: number; keys: string[] }> {
     if (cursor !== 0) {
-      return { cursor: '0', keys: [] };
+      return { cursor: 0, keys: [] };
     }
 
     const prefix = options.MATCH.endsWith('*') ? options.MATCH.slice(0, -1) : options.MATCH;
@@ -113,11 +125,11 @@ class InMemoryRedisClient implements Pick<RedisClient, 'get' | 'mGet' | 'set' | 
       return prefix === '*' || key.startsWith(prefix);
     });
 
-    return { cursor: '0', keys };
+    return { cursor: 0, keys };
   }
 
-  async quit(): Promise<void> {
-    return;
+  async quit(): Promise<'OK'> {
+    return 'OK';
   }
 
   async ping(): Promise<string> {
@@ -143,12 +155,23 @@ class InMemoryRedisService {
     return 1;
   }
 
+  async pTTL(key: string): Promise<number> {
+    const entry = this.store.get(key);
+    if (!entry) {
+      return -2;
+    }
+    if (typeof entry.expiresAt !== 'number') {
+      return -1;
+    }
+    return Math.max(entry.expiresAt - Date.now(), 0);
+  }
+
   async ping(): Promise<string> {
     return 'PONG';
   }
 
   async createScopedClient(): Promise<RedisClient> {
-    return new InMemoryRedisClient(this.store) as RedisClient;
+    return new InMemoryRedisClient(this.store) as unknown as RedisClient;
   }
 
   async quit(): Promise<void> {
@@ -157,6 +180,7 @@ class InMemoryRedisService {
 }
 
 const prismaServiceMock = {
+  $queryRaw: jest.fn().mockResolvedValue([{ '?column?': 1 }]),
   user: {
     create: jest.fn(),
     findUnique: jest.fn(),
@@ -165,7 +189,9 @@ const prismaServiceMock = {
   },
 };
 
-class StorageServiceMock implements Pick<StorageService, 'uploadObject' | 'getPublicUrl'> {
+class StorageServiceMock
+  implements Pick<StorageService, 'uploadObject' | 'getPublicUrl' | 'healthCheck'>
+{
   async uploadObject(): Promise<StoredObjectMetadata> {
     return {
       bucket: 'upload',
@@ -177,10 +203,58 @@ class StorageServiceMock implements Pick<StorageService, 'uploadObject' | 'getPu
   getPublicUrl(key: string): string {
     return `http://localhost:6204/upload/${encodeURIComponent(key)}`;
   }
+
+  async healthCheck(): Promise<void> {
+    return;
+  }
+}
+
+class QueueServiceMock
+  implements
+    Pick<
+      QueueService,
+      'publish' | 'registerConsumer' | 'close' | 'healthCheck' | 'getConsumerRetryOptions'
+    >
+{
+  shouldFailHealthCheck = false;
+
+  async publish(): Promise<void> {
+    return;
+  }
+
+  async registerConsumer(): Promise<void> {
+    return;
+  }
+
+  async close(): Promise<void> {
+    return;
+  }
+
+  async healthCheck(): Promise<void> {
+    if (this.shouldFailHealthCheck) {
+      throw new Error('simulated failure');
+    }
+    return;
+  }
+
+  getConsumerRetryOptions(): { maxAttempts: number; baseDelayMs: number } {
+    return { maxAttempts: 3, baseDelayMs: 100 };
+  }
+}
+
+class MetricsServiceMock
+  implements Pick<MetricsService, 'recordHealthCheck' | 'observeHttp' | 'incrementUsersCreated'>
+{
+  recordHealthCheck = jest.fn();
+  observeHttp(): void {}
+  incrementUsersCreated(): void {}
 }
 
 describe('App E2E', () => {
   let app: NestFastifyApplication;
+  let fastify: FastifyInstance;
+  const queueServiceMock = new QueueServiceMock();
+  const metricsServiceMock = new MetricsServiceMock();
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -192,21 +266,83 @@ describe('App E2E', () => {
       .useValue(new InMemoryRedisService())
       .overrideProvider(StorageService)
       .useValue(new StorageServiceMock())
+      .overrideProvider(QueueService)
+      .useValue(queueServiceMock)
+      .overrideProvider(MetricsService)
+      .useValue(metricsServiceMock)
+      .overrideProvider(healthConfig.KEY)
+      .useValue({ retryAttempts: 1, baseDelayMs: 10, failureCacheMs: 50 })
       .compile();
 
     app = moduleRef.createNestApplication<NestFastifyApplication>(new FastifyAdapter());
     await app.init();
-    await app.getHttpAdapter().getInstance().ready();
+    fastify = app.getHttpAdapter().getInstance();
+    await fastify.ready();
   });
 
   afterAll(async () => {
     await app.close();
   });
 
-  it('/public/health (GET)', async () => {
-    const response = await request(app.getHttpServer()).get('/public/health');
+  afterEach(() => {
+    queueServiceMock.shouldFailHealthCheck = false;
+    metricsServiceMock.recordHealthCheck.mockClear();
+  });
 
-    expect(response.status).toBe(200);
-    expect(response.body.status).toBe('ok');
+  it('/public/health (GET)', async () => {
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/public/health',
+    });
+
+    expect(response.statusCode).toBe(200);
+    const body = response.json() as {
+      status: string;
+      dependencies: Record<string, { status: string }>;
+      failedComponents: string[];
+    };
+    expect(body.status).toBe('ok');
+    expect(body.dependencies).toBeDefined();
+    expect(body.dependencies['redis']?.status).toBe('up');
+    expect(body.dependencies['database']?.status).toBe('up');
+    expect(body.failedComponents).toEqual([]);
+  });
+
+  it('/favicon.ico (GET)', async () => {
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/favicon.ico',
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.headers['content-type']).toContain('image/x-icon');
+    expect(response.payload.length).toBeGreaterThan(0);
+  });
+
+  it('records metrics when dependency fails', async () => {
+    queueServiceMock.shouldFailHealthCheck = true;
+    metricsServiceMock.recordHealthCheck.mockClear();
+
+    const response = await fastify.inject({
+      method: 'GET',
+      url: '/public/health',
+    });
+
+    expect(response.statusCode).toBe(200);
+    const body = response.json() as {
+      status: string;
+      dependencies: Record<string, { status: string }>;
+      failedComponents: string[];
+    };
+    expect(body.status).toBe('degraded');
+    expect(body.dependencies['rabbitmq']?.status).toBe('down');
+    expect(metricsServiceMock.recordHealthCheck).toHaveBeenCalledWith(
+      'rabbitmq',
+      'down',
+      expect.any(Number),
+    );
+    expect(body.failedComponents).toContain('rabbitmq');
+
+    queueServiceMock.shouldFailHealthCheck = false;
   });
 });

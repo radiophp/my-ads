@@ -14,7 +14,7 @@ export type ObservabilityConfig = {
   };
 };
 
-const parseBoolean = (value: string | undefined, fallback: boolean): boolean => {
+export const parseBoolean = (value: string | undefined, fallback: boolean): boolean => {
   if (typeof value === 'undefined') {
     return fallback;
   }
@@ -22,7 +22,7 @@ const parseBoolean = (value: string | undefined, fallback: boolean): boolean => 
   return value.toLowerCase() === 'true';
 };
 
-const parseHeaders = (headers: string | undefined): Record<string, string> => {
+export const parseHeaders = (headers: string | undefined): Record<string, string> => {
   if (!headers) {
     return {};
   }
@@ -47,8 +47,9 @@ const parseHeaders = (headers: string | undefined): Record<string, string> => {
     }, {});
 };
 
-export default registerAs<ObservabilityConfig>('observability', () => {
-  const env = process.env;
+export const resolveObservabilityConfig = (
+  env: NodeJS.ProcessEnv = process.env,
+): ObservabilityConfig => {
   const nodeEnv = env['NODE_ENV'] ?? 'development';
   const prettyDefault = nodeEnv !== 'production';
 
@@ -65,4 +66,6 @@ export default registerAs<ObservabilityConfig>('observability', () => {
       logLevel: (env['OTEL_LOG_LEVEL'] as ObservabilityConfig['otel']['logLevel']) ?? 'error',
     },
   } satisfies ObservabilityConfig;
-});
+};
+
+export default registerAs<ObservabilityConfig>('observability', () => resolveObservabilityConfig());

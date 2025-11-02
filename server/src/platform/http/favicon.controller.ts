@@ -33,7 +33,7 @@ export class FaviconController {
     }
 
     res
-      .header('Content-Type', 'image/png')
+      .header('Content-Type', 'image/x-icon')
       .header('Cache-Control', CACHE_CONTROL_HEADER)
       .send(favicon);
   }

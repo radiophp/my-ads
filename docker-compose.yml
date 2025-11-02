@@ -208,6 +208,7 @@ services:
       - '--web.listen-address=:${PROMETHEUS_PORT:-6210}'
     volumes:
       - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./observability/prometheus-alerts.yml:/etc/prometheus/alerts/health-alerts.yml:ro
       - prometheus_data:/prometheus
     ports:
       - '${PROMETHEUS_PORT:-6210}:${PROMETHEUS_PORT:-6210}'
@@ -229,9 +230,11 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: admin
       GF_FEATURE_TOGGLES_ENABLE: traceqlEditor
       GF_SERVER_HTTP_PORT: ${GRAFANA_PORT:-6211}
+      GF_PATHS_PROVISIONING: /etc/grafana/provisioning
     volumes:
       - grafana_data:/var/lib/grafana
       - ./observability/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./observability/grafana/provisioning/dashboards:/var/lib/grafana/dashboards
     depends_on:
       - loki
       - prometheus

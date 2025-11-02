@@ -1,0 +1,111 @@
+{
+  "id": null,
+  "uid": "service-health",
+  "title": "Service Health Overview",
+  "tags": ["health", "my-ads"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "panels": [
+    {
+      "type": "state-timeline",
+      "title": "Dependency Status",
+      "id": 1,
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "health_dependency_status{component=~\"$component\"}",
+          "legendFormat": "{{component}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-GrYlRd"
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": {
+                  "color": "#2ecc71",
+                  "index": 0,
+                  "text": "Up"
+                },
+                "0": {
+                  "color": "#e74c3c",
+                  "index": 1,
+                  "text": "Down"
+                }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "#e74c3c", "value": 0 },
+              { "color": "#2ecc71", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showValue": "auto"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Health Probe Latency",
+      "id": 2,
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(health_dependency_latency_seconds_sum{component=~\"$component\"}[$__rate_interval]) / rate(health_dependency_latency_seconds_count{component=~\"$component\"}[$__rate_interval])",
+          "legendFormat": "{{component}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": { "mode": "palette-classic" }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      }
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "component",
+        "label": "Component",
+        "type": "query",
+        "datasource": "Prometheus",
+        "definition": "label_values(health_dependency_status, component)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "sort": 1
+      }
+    ]
+  }
+}

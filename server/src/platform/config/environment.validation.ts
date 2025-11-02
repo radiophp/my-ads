@@ -143,6 +143,20 @@ export class EnvironmentVariables {
   @IsPositive()
   RABBITMQ_RECONNECT_SECONDS: number = 5;
 
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  @IsPositive()
+  RABBITMQ_MAX_CONSUMER_RETRIES: number = 5;
+
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  @IsPositive()
+  RABBITMQ_CONSUMER_RETRY_DELAY_MS: number = 500;
+
+  @IsString()
+  @IsNotEmpty()
+  RABBITMQ_DLQ_SUFFIX: string = 'dead';
+
   @IsString()
   @IsNotEmpty()
   MINIO_ENDPOINT: string = 'minio';
@@ -202,6 +216,21 @@ export class EnvironmentVariables {
   @Transform(({ value }) => (typeof value === 'string' ? value === 'true' : Boolean(value)))
   @IsBoolean()
   LOG_PRETTY: boolean = false;
+
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  @IsPositive()
+  HEALTH_RETRY_ATTEMPTS: number = 3;
+
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  @IsPositive()
+  HEALTH_RETRY_BASE_DELAY_MS: number = 150;
+
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  @IsPositive()
+  HEALTH_FAILURE_CACHE_MS: number = 5000;
 }
 
 export const validateEnvironment = (config: Record<string, unknown>): EnvironmentVariables => {
@@ -210,7 +239,9 @@ export const validateEnvironment = (config: Record<string, unknown>): Environmen
   });
 
   if (!POSTGRES_SCHEME_REGEX.test(validatedConfig.DATABASE_URL)) {
-    throw new Error('Environment validation failed:\nDATABASE_URL must be a PostgreSQL connection string');
+    throw new Error(
+      'Environment validation failed:\nDATABASE_URL must be a PostgreSQL connection string',
+    );
   }
 
   const errors = validateSync(validatedConfig, {
@@ -218,9 +249,7 @@ export const validateEnvironment = (config: Record<string, unknown>): Environmen
   });
 
   if (errors.length > 0) {
-    const messages = errors
-      .flatMap((error) => Object.values(error.constraints ?? {}))
-      .join('\n');
+    const messages = errors.flatMap((error) => Object.values(error.constraints ?? {})).join('\n');
     throw new Error(`Environment validation failed:\n${messages}`);
   }
 

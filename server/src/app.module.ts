@@ -26,6 +26,7 @@ import { StorageModule } from './platform/storage/storage.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
 import { LoggingModule } from './platform/logging/logging.module';
 import { HttpModule } from './platform/http/http.module';
+import healthConfig from './platform/config/health.config';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { HttpModule } from './platform/http/http.module';
         minioConfig,
         observabilityConfig,
         loggerConfig,
+        healthConfig,
       ],
     }),
     LoggingModule,

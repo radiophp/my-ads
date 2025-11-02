@@ -12,7 +12,10 @@ import { KeyvAdapter, type CacheManagerStore } from 'cache-manager';
 class RedisCacheStore implements CacheManagerStore {
   readonly name = 'redis';
 
-  constructor(private readonly redis: RedisClient, private readonly keyPrefix?: string) {}
+  constructor(
+    private readonly redis: RedisClient,
+    private readonly keyPrefix?: string,
+  ) {}
 
   private buildKey(key: string): string {
     return this.keyPrefix ? `${this.keyPrefix}${key}` : key;

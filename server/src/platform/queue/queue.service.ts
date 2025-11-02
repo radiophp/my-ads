@@ -20,6 +20,10 @@ export class QueueService {
   private readonly assertedQueues = new Set<string>();
   private readonly connection: AmqpConnectionManager;
   private readonly channel: ChannelWrapper;
+  private readonly maxConsumerRetries: number;
+  private readonly consumerRetryBaseDelayMs: number;
+  private readonly deadLetterQueueSuffix: string;
+  private readonly retryHeaderKey = 'x-retry-count';
 
   constructor(private readonly configService: ConfigService) {
     const config = this.configService.get<RabbitMQConfig>('rabbitmq', { infer: true });
@@ -28,6 +32,9 @@ export class QueueService {
     }
 
     this.queuePrefix = config.queuePrefix;
+    this.maxConsumerRetries = config.maxConsumerRetries;
+    this.consumerRetryBaseDelayMs = config.consumerRetryDelayMs;
+    this.deadLetterQueueSuffix = config.deadLetterQueueSuffix;
 
     const connectionOptions: AmqpConnectionManagerOptions = {
       heartbeatIntervalInSeconds: config.heartbeat,
@@ -37,7 +44,7 @@ export class QueueService {
     this.connection = connect([config.url], connectionOptions);
     this.connection.on('connect', () => this.logger.log('Connected to RabbitMQ'));
     this.connection.on('disconnect', (error) => {
-      const reason = error?.err ? (error.err as Error).message : 'unknown reason';
+      const reason = error?.err ? error.err.message : 'unknown reason';
       this.logger.error(`Disconnected from RabbitMQ: ${reason}`);
     });
 
@@ -46,6 +53,13 @@ export class QueueService {
         await channel.prefetch(config.prefetch);
       },
     });
+  }
+
+  getConsumerRetryOptions(): { maxAttempts: number; baseDelayMs: number } {
+    return {
+      maxAttempts: this.maxConsumerRetries,
+      baseDelayMs: this.consumerRetryBaseDelayMs,
+    };
   }
 
   private buildQueueName(name: QueueName): string {
@@ -105,12 +119,20 @@ export class QueueService {
             channel.ack(message);
           } catch (error) {
             this.logger.error(`Failed to process message from ${queueName}`, error as Error);
-            channel.nack(message, false, false);
+            await this.handleProcessingFailure(channel, queueName, message);
           }
         },
         { noAck: false },
       );
     });
+  }
+
+  async healthCheck(): Promise<void> {
+    if (!this.connection.isConnected()) {
+      throw new Error('RabbitMQ connection is not established.');
+    }
+
+    await this.channel.waitForConnect();
   }
 
   async close(): Promise<void> {
@@ -124,6 +146,104 @@ export class QueueService {
       await this.connection.close();
     } catch (error) {
       this.logger.warn('Error closing RabbitMQ connection', error as Error);
+    }
+  }
+
+  private async handleProcessingFailure(
+    channel: ConfirmChannel,
+    queueName: string,
+    message: ConsumeMessage,
+  ): Promise<void> {
+    const currentAttempts = this.extractAttemptCount(message);
+    const nextAttempt = currentAttempts + 1;
+
+    if (nextAttempt > this.maxConsumerRetries) {
+      await this.moveToDeadLetter(channel, queueName, message, currentAttempts);
+      return;
+    }
+
+    const headers = {
+      ...(message.properties.headers ?? {}),
+      [this.retryHeaderKey]: nextAttempt,
+    };
+
+    try {
+      const options: AmqpChannelOptions.Publish = {
+        ...(message.properties as AmqpChannelOptions.Publish),
+        headers,
+        persistent: true,
+        contentType: message.properties.contentType ?? 'application/json',
+      };
+
+      const requeued = channel.sendToQueue(queueName, message.content, options);
+      if (!requeued) {
+        this.logger.warn(
+          `Requeue buffer for ${queueName} is full; message retained in memory until broker drains.`,
+        );
+      }
+
+      channel.ack(message);
+      this.logger.warn(
+        `Requeued message from ${queueName}; attempt ${nextAttempt}/${this.maxConsumerRetries}.`,
+      );
+    } catch (publishError) {
+      this.logger.error(
+        `Failed to requeue message for ${queueName}; message will be nacked.`,
+        publishError as Error,
+      );
+      channel.nack(message, false, false);
+    }
+  }
+
+  private extractAttemptCount(message: ConsumeMessage): number {
+    const headerValue = message.properties.headers?.[this.retryHeaderKey];
+    const parsed =
+      typeof headerValue === 'number'
+        ? headerValue
+        : typeof headerValue === 'string'
+          ? Number(headerValue)
+          : 0;
+
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+  }
+
+  private async moveToDeadLetter(
+    channel: ConfirmChannel,
+    queueName: string,
+    message: ConsumeMessage,
+    attempts: number,
+  ): Promise<void> {
+    const deadLetterQueue = `${queueName}.${this.deadLetterQueueSuffix}`;
+
+    try {
+      await channel.assertQueue(deadLetterQueue, { durable: true });
+      const deadLetterHeaders = {
+        ...(message.properties.headers ?? {}),
+        [this.retryHeaderKey]: attempts,
+        'x-original-queue': queueName,
+      };
+      const published = channel.sendToQueue(deadLetterQueue, message.content, {
+        ...(message.properties as AmqpChannelOptions.Publish),
+        headers: deadLetterHeaders,
+        persistent: true,
+      });
+
+      if (!published) {
+        this.logger.error(`Dead-letter queue ${deadLetterQueue} is full; message will be nacked.`);
+        channel.nack(message, false, false);
+        return;
+      }
+
+      channel.ack(message);
+      this.logger.error(
+        `Moved message from ${queueName} to ${deadLetterQueue} after ${attempts} attempts.`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to publish to dead-letter queue ${deadLetterQueue}; message will be nacked.`,
+        error as Error,
+      );
+      channel.nack(message, false, false);
     }
   }
 }

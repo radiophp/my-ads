@@ -68,7 +68,9 @@ function detectContainer(): boolean {
 
   try {
     const cgroup = readFileSync('/proc/self/cgroup', 'utf8');
-    return cgroup.includes('docker') || cgroup.includes('containerd') || cgroup.includes('kubepods');
+    return (
+      cgroup.includes('docker') || cgroup.includes('containerd') || cgroup.includes('kubepods')
+    );
   } catch {
     return false;
   }

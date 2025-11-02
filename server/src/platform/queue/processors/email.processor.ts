@@ -1,6 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { QueueService } from '../queue.service';
 import type { JsonValue } from '@app/common/types/json.type';
+import { registerConsumerWithRetry } from '../utils/register-consumer-with-retry.util';
 
 export type EmailJob = {
   to: string;
@@ -9,11 +10,24 @@ export type EmailJob = {
 };
 
 @Injectable()
-export class EmailProcessor {
+export class EmailProcessor implements OnModuleInit {
   private readonly logger = new Logger(EmailProcessor.name);
 
-  constructor(private readonly queueService: QueueService) {
-    void this.queueService.registerConsumer<EmailJob>('email', async (payload) => this.handle(payload));
+  constructor(private readonly queueService: QueueService) {}
+
+  async onModuleInit(): Promise<void> {
+    const { maxAttempts, baseDelayMs } = this.queueService.getConsumerRetryOptions();
+    await registerConsumerWithRetry<EmailJob>(
+      this.queueService,
+      'email',
+      async (payload) => this.handle(payload),
+      {
+        logger: this.logger,
+        label: 'Email',
+        maxAttempts,
+        baseDelayMs,
+      },
+    );
   }
 
   async enqueue(job: EmailJob): Promise<void> {

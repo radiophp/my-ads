@@ -5,7 +5,10 @@ import { AuthService } from '../auth.service';
 
 @Injectable()
 export class RefreshJwtGuard extends AuthGuard('jwt-refresh') {
-  constructor(private readonly authService: AuthService, private readonly reflector: Reflector) {
+  constructor(
+    private readonly authService: AuthService,
+    private readonly reflector: Reflector,
+  ) {
     super();
   }
 
@@ -15,7 +18,9 @@ export class RefreshJwtGuard extends AuthGuard('jwt-refresh') {
       return false;
     }
 
-    const request = context.switchToHttp().getRequest<{ user?: { sub: string }; body?: { refreshToken?: string } }>();
+    const request = context
+      .switchToHttp()
+      .getRequest<{ user?: { sub: string }; body?: { refreshToken?: string } }>();
     const refreshToken = request.body?.refreshToken;
     if (!refreshToken || !request.user?.sub) {
       throw new UnauthorizedException('Refresh token is missing.');

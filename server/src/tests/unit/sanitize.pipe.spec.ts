@@ -3,7 +3,9 @@ import { SanitizePipe } from '@app/common/pipes/sanitize.pipe';
 describe('SanitizePipe', () => {
   it('should strip script tags from strings', () => {
     const pipe = new SanitizePipe();
-    const result = pipe.transform({ field: '<script>alert(1)</script>hello' }, { type: 'body' } as any);
+    const result = pipe.transform({ field: '<script>alert(1)</script>hello' }, {
+      type: 'body',
+    } as any) as { field: string };
 
     expect(result.field).toBe('hello');
   });
@@ -16,7 +18,9 @@ describe('SanitizePipe', () => {
       },
     };
 
-    const result = pipe.transform(payload, { type: 'body' } as any);
+    const result = pipe.transform(payload, { type: 'body' } as any) as {
+      level1: { level2: string };
+    };
 
     expect(result.level1.level2.includes('javascript')).toBe(false);
   });

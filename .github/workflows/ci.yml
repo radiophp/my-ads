@@ -7,8 +7,34 @@ on:
     branches: [ main ]
 
 jobs:
-  lint-test-build:
+  lint:
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install dependencies
+        working-directory: server
+        run: npm install
+
+      - name: Run lint
+        working-directory: server
+        run: ESLINT_USE_FLAT_CONFIG=false npm run lint
+
+      - name: Type check
+        working-directory: server
+        run: npm run typecheck
+
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
     services:
       postgres:
         image: postgres:16-alpine
@@ -49,14 +75,6 @@ jobs:
         working-directory: server
         run: npm install
 
-      - name: Run lint
-        working-directory: server
-        run: ESLINT_USE_FLAT_CONFIG=false npm run lint
-
-      - name: Type check
-        working-directory: server
-        run: npm run typecheck
-
       - name: Generate Prisma Client
         working-directory: server
         run: npm run prisma:generate
@@ -72,6 +90,24 @@ jobs:
       - name: Run e2e tests
         working-directory: server
         run: npm run test:e2e
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install dependencies
+        working-directory: server
+        run: npm install
 
       - name: Build
         working-directory: server

@@ -25,6 +25,7 @@ import { RateLimitModule } from './common/guards/rate-limit/rate-limit.module';
 import { StorageModule } from './platform/storage/storage.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
 import { LoggingModule } from './platform/logging/logging.module';
+import { HttpModule } from './platform/http/http.module';
 
 @Module({
   imports: [
@@ -66,6 +67,7 @@ import { LoggingModule } from './platform/logging/logging.module';
     WebsocketModule,
     StorageModule,
     UploadsModule,
+    HttpModule,
   ],
 })
 export class AppModule {}

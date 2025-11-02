@@ -11,8 +11,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       throw new Error('Database configuration is missing.');
     }
 
-    console.info('[PrismaService] Using database URL:', databaseConfig.url);
-
     super({
       datasources: {
         db: {

@@ -13,10 +13,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Use Node.js 18
+      - name: Use Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22
           cache: 'npm'
           cache-dependency-path: server/package-lock.json
 
@@ -55,6 +55,7 @@ jobs:
 
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:6201/my_ads?schema=public
+      DATABASE_DIRECT_URL: postgresql://postgres:postgres@localhost:6201/my_ads?schema=public
       REDIS_HOST: localhost
       REDIS_PORT: 6202
       JWT_ACCESS_TOKEN_SECRET: github-access-secret
@@ -64,10 +65,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Use Node.js 18
+      - name: Use Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22
           cache: 'npm'
           cache-dependency-path: server/package-lock.json
 
@@ -98,10 +99,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Use Node.js 18
+      - name: Use Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22
           cache: 'npm'
           cache-dependency-path: server/package-lock.json
 

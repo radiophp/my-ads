@@ -101,7 +101,7 @@ Services exposed:
 
 | Service | Port | Notes |
 | --- | --- | --- |
-| API (NestJS) | 6200 | hot-reloads via `npm run start:dev` inside the container |
+| API (NestJS) | 6200 | hot-reloads via `npm run start:dev` inside the container; Swagger UI at `/docs` |
 | PostgreSQL | 6201 | default credentials `postgres/postgres` |
 | Redis Stack | 6202 | TLS disabled by default; Insight UI on 6203 |
 | RabbitMQ | 6213 | connection URL `amqp://rabbitmq:6213` |
@@ -216,8 +216,9 @@ Environment variables not listed above are either optional feature toggles or in
 
 - **Health:** `GET /public/health` (no prefix) — returns status + dependency map.
 - **Info:** `GET /public/info` — exposes project name/version (uses `npm_package_version`).
+- **Swagger UI:** `GET /docs` — interactive OpenAPI docs (JWT secured endpoints require a bearer token via “Authorize”). Raw spec available at `/docs-json`.
 - **Authentication:** `POST /api/auth/login`, `/api/auth/register` (JWT response).
-- **Swagger/OpenAPI:** Not yet included; add `@nestjs/swagger` if documentation is required.
+- **Swagger/OpenAPI:** Auto-generated with `@nestjs/swagger`; browse at `/docs` (JSON at `/docs-json`).
 - **WebSockets:** Socket.IO server accessible on the same port (`/socket.io`, adapter uses Redis).
 
 ---

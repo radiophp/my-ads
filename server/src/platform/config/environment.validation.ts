@@ -56,6 +56,10 @@ export class EnvironmentVariables {
   @IsNotEmpty()
   REDIS_HOST: string = 'redis';
 
+  @IsOptional()
+  @IsString()
+  REDIS_HOST_FALLBACK?: string;
+
   @Transform(({ value }) => Number(value))
   @IsInt()
   @Min(1)

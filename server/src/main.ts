@@ -88,7 +88,14 @@ async function bootstrap(): Promise<void> {
   const port = configService.get<number>('app.port', 6200);
   const host = configService.get<string>('app.host', '0.0.0.0');
 
-  await app.listen({ port, host });
+  console.log('[Bootstrap] Listening on', { host, port });
+  try {
+    await app.listen({ port, host });
+    console.log('[Bootstrap] Listen resolved');
+  } catch (error) {
+    console.error('[Bootstrap] Listen failed', error);
+    throw error;
+  }
   logger.log(`🚀 Application is running on: http://${host}:${port}/${globalPrefix}`);
 }
 

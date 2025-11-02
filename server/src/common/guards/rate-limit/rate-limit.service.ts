@@ -4,6 +4,15 @@ import { RedisService } from '@app/platform/cache/redis.service';
 import { RateLimitOptions } from '../../decorators/rate-limit.decorator';
 import type { SecurityConfig } from '@app/platform/config/security.config';
 
+const RATE_LIMIT_LUA_SCRIPT = `
+  local current = redis.call("INCR", KEYS[1])
+  if current == 1 then
+    redis.call("PEXPIRE", KEYS[1], ARGV[1])
+  end
+  local ttl = redis.call("PTTL", KEYS[1])
+  return { current, ttl }
+`;
+
 @Injectable()
 export class RateLimitService {
   private readonly logger = new Logger(RateLimitService.name);
@@ -26,12 +35,26 @@ export class RateLimitService {
 
     const redisKey = `rate-limit:${key}`;
 
-    const usage = await this.redisService.incr(redisKey);
-    if (usage === 1) {
-      await this.redisService.expire(redisKey, ttlSeconds);
+    let usage: number;
+    let ttlMs: number;
+
+    if (typeof this.redisService.eval === 'function') {
+      const ttlMsTarget = ttlSeconds * 1000;
+      const [usageRaw, ttlRaw] = await this.redisService.eval<[number, number]>(
+        RATE_LIMIT_LUA_SCRIPT,
+        [redisKey],
+        [ttlMsTarget],
+      );
+      usage = Number(usageRaw);
+      ttlMs = Number(ttlRaw);
+    } else {
+      usage = await this.redisService.incr(redisKey);
+      if (usage === 1) {
+        await this.redisService.expire(redisKey, ttlSeconds);
+      }
+      ttlMs = await this.redisService.pTTL(redisKey);
     }
 
-    const ttlMs = await this.redisService.pTTL(redisKey);
     let remainingTtlSeconds: number;
 
     if (ttlMs > 0) {

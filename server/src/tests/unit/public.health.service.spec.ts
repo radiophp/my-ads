@@ -82,7 +82,10 @@ describe('PublicHealthService', () => {
 
     expect(queue.healthCheck).not.toHaveBeenCalled();
     expect(report.rabbitmq.status).toBe('down');
-    expect(metrics.recordHealthCheck).toHaveBeenCalledWith('rabbitmq', 'down', expect.any(Number));
+    const rabbitmqCalls = metrics.recordHealthCheck.mock.calls.filter(
+      ([component]) => component === 'rabbitmq',
+    );
+    expect(rabbitmqCalls).toHaveLength(0);
   });
 
   it('retries after cache window expires', async () => {

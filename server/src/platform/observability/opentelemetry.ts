@@ -60,7 +60,9 @@ const createSdk = (): NodeSDK => {
     [SemanticResourceAttributes.DEPLOYMENT_ENVIRONMENT]: env['NODE_ENV'] ?? 'development',
   });
 
-  const ignoredPaths = ['/metrics', '/health', '/favicon.ico'];
+  const prefix = (env['APP_GLOBAL_PREFIX'] ?? 'api').toString().replace(/^\/+|\/+$/g, '');
+  const prefixedHealthPath = prefix.length > 0 ? `/${prefix}/public/health` : '/public/health';
+  const ignoredPaths = ['/metrics', '/public/health', prefixedHealthPath, '/favicon.ico'];
 
   return new NodeSDK({
     traceExporter,

@@ -68,11 +68,6 @@ export class PublicHealthService {
     const cached = this.failureCache.get(component);
     if (cached && cached.expiresAt > Date.now()) {
       this.logger.debug(`Returning cached failure for ${component}`);
-      this.metricsService.recordHealthCheck(
-        component,
-        cached.status.status,
-        cached.status.latencyMs,
-      );
       return { ...cached.status };
     }
 

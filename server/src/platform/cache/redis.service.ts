@@ -30,6 +30,7 @@ export interface RedisClient {
   pSetEx(key: string, ttlMs: number, value: string): Promise<'OK'>;
   pTTL(key: string): Promise<number>;
   scan(cursor: number, options?: ScanCommandOptions): Promise<{ cursor: number; keys: string[] }>;
+  eval<T = unknown>(script: string, keys: string[], args: Array<string | number>): Promise<T>;
   multi(): RedisMulti;
   publish(channel: string, message: string): Promise<number>;
   subscribe(channel: string): Promise<number>;
@@ -111,6 +112,15 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
   async pTTL(key: string): Promise<number> {
     return this.client.pTTL(this.applyPrefix(key));
+  }
+
+  async eval<T = unknown>(
+    script: string,
+    keys: string[],
+    args: Array<string | number> = [],
+  ): Promise<T> {
+    const prefixedKeys = keys.map((key) => this.applyPrefix(key));
+    return this.client.eval<T>(script, prefixedKeys, args);
   }
 
   async createScopedClient(scope: string): Promise<RedisClient> {
@@ -305,6 +315,15 @@ class IORedisClient implements RedisClient {
 
   pTTL(key: string): Promise<number> {
     return this.client.pttl(key);
+  }
+
+  eval<T = unknown>(script: string, keys: string[], args: Array<string | number>): Promise<T> {
+    return this.client.eval(
+      script,
+      keys.length,
+      ...keys,
+      ...args.map((value) => value.toString()),
+    ) as Promise<T>;
   }
 
   scan(

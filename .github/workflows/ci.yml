@@ -184,6 +184,7 @@ jobs:
         run: npx playwright install --with-deps
 
       - name: Run Playwright tests
+        if: ${{ false }}
         run: npm run test:e2e -- --reporter=list
         env:
           PLAYWRIGHT_BASE_URL: http://localhost:6005

@@ -26,14 +26,14 @@ export function PwaInstallPrompt(): JSX.Element | null {
               toast({
                 id: 'pwa-installed',
                 title: t('installedTitle'),
-                description: t('installedDescription')
+                description: t('installedDescription'),
               });
             }
           }}
         >
           {t('installButton')}
         </Button>
-      )
+      ),
     });
 
     return () => toast.dismiss(id);

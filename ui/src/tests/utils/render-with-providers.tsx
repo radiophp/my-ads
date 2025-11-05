@@ -15,8 +15,8 @@ const customRender = (ui: ReactElement, options?: RenderOptions) =>
       </NextIntlClientProvider>
     </ReduxProvider>,
     {
-      ...options
-    }
+      ...options,
+    },
   );
 
 export * from '@testing-library/react';

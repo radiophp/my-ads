@@ -13,16 +13,16 @@ const preview: Preview = {
     controls: {
       matchers: {
         color: /(background|color)$/i,
-        date: /Date$/
-      }
+        date: /Date$/,
+      },
     },
     backgrounds: {
       default: 'slate',
       values: [
         { name: 'slate', value: '#0f172a' },
-        { name: 'light', value: '#f8fafc' }
-      ]
-    }
+        { name: 'light', value: '#f8fafc' },
+      ],
+    },
   },
   decorators: [
     (Story) => (
@@ -34,8 +34,8 @@ const preview: Preview = {
           </div>
         </ThemeProvider>
       </ReduxProvider>
-    )
-  ]
+    ),
+  ],
 };
 
 export default preview;

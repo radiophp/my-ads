@@ -7,7 +7,7 @@ export { defaultLocale, localePrefix, locales } from './config';
 export const { Link, redirect, usePathname, useRouter } = createNavigation({
   locales,
   defaultLocale,
-  localePrefix
+  localePrefix,
 });
 
 export type Locale = (typeof locales)[number];

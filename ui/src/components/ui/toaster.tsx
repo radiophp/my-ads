@@ -2,7 +2,15 @@
 
 import type { JSX } from 'react';
 
-import { Toast, ToastAction, ToastCloseButton, ToastDescription, ToastProvider, ToastTitle, ToastViewport } from './toast';
+import {
+  Toast,
+  ToastAction,
+  ToastCloseButton,
+  ToastDescription,
+  ToastProvider,
+  ToastTitle,
+  ToastViewport,
+} from './toast';
 import { useToast } from './use-toast';
 
 export function Toaster(): JSX.Element {
@@ -16,7 +24,11 @@ export function Toaster(): JSX.Element {
             {title ? <ToastTitle>{title}</ToastTitle> : null}
             {description ? <ToastDescription>{description}</ToastDescription> : null}
           </div>
-          {action ? <ToastAction altText="Action" asChild>{action}</ToastAction> : null}
+          {action ? (
+            <ToastAction altText="Action" asChild>
+              {action}
+            </ToastAction>
+          ) : null}
           <ToastCloseButton />
         </Toast>
       ))}

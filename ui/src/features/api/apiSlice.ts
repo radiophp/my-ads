@@ -9,15 +9,15 @@ export const apiSlice = createApi({
     prepareHeaders: (headers) => {
       headers.set('Content-Type', 'application/json');
       return headers;
-    }
+    },
   }),
   tagTypes: ['Health', 'User'],
   endpoints: (builder) => ({
     getHealth: builder.query<{ status: string }, void>({
       query: () => '/health',
-      providesTags: ['Health']
-    })
-  })
+      providesTags: ['Health'],
+    }),
+  }),
 });
 
 export const { useGetHealthQuery } = apiSlice;

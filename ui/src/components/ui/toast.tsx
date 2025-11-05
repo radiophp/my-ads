@@ -13,8 +13,8 @@ const ToastViewport = React.forwardRef<
   <ToastPrimitives.Viewport
     ref={ref}
     className={cn(
-      'fixed top-6 right-6 z-[100] flex max-h-screen w-full max-w-sm flex-col gap-2 p-4',
-      className
+      'fixed right-6 top-6 z-[100] flex max-h-screen w-full max-w-sm flex-col gap-2 p-4',
+      className,
     )}
     {...props}
   />
@@ -27,13 +27,13 @@ const toastVariants = cva(
     variants: {
       variant: {
         default: 'bg-background text-foreground',
-        destructive: 'border-destructive/50 bg-destructive text-destructive-foreground'
-      }
+        destructive: 'border-destructive/50 bg-destructive text-destructive-foreground',
+      },
     },
     defaultVariants: {
-      variant: 'default'
-    }
-  }
+      variant: 'default',
+    },
+  },
 );
 
 const Toast = React.forwardRef<
@@ -62,7 +62,11 @@ const ToastDescription = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Description>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Description>
 >(({ className, ...props }, ref) => (
-  <ToastPrimitives.Description ref={ref} className={cn('text-sm text-muted-foreground', className)} {...props} />
+  <ToastPrimitives.Description
+    ref={ref}
+    className={cn('text-sm text-muted-foreground', className)}
+    {...props}
+  />
 ));
 ToastDescription.displayName = ToastPrimitives.Description.displayName;
 
@@ -72,11 +76,14 @@ const ToastCloseButton = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <ToastPrimitives.Close
     ref={ref}
-    className={cn('absolute right-3 top-3 rounded-md p-1 text-muted-foreground transition hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2', className)}
+    className={cn(
+      'absolute right-3 top-3 rounded-md p-1 text-muted-foreground transition hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+      className,
+    )}
     toast-close=""
     {...props}
   >
-    <X className="h-4 w-4" />
+    <X className="size-4" />
   </ToastPrimitives.Close>
 ));
 ToastCloseButton.displayName = ToastPrimitives.Close.displayName;
@@ -89,5 +96,5 @@ export {
   ToastDescription,
   ToastAction,
   ToastClose,
-  ToastCloseButton
+  ToastCloseButton,
 };

@@ -5,7 +5,7 @@ export type CounterState = {
 };
 
 const initialState: CounterState = {
-  value: 0
+  value: 0,
 };
 
 const counterSlice = createSlice({
@@ -18,8 +18,8 @@ const counterSlice = createSlice({
     decrement: (state) => {
       state.value -= 1;
     },
-    reset: () => initialState
-  }
+    reset: () => initialState,
+  },
 });
 
 export const { increment, decrement, reset } = counterSlice.actions;

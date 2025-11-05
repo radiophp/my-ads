@@ -11,7 +11,7 @@ const envFiles = [
   '../.env.development.local',
   '../.env.production',
   '../.env.production.local',
-  '../.env.test'
+  '../.env.test',
 ];
 envFiles.forEach((file) => {
   loadEnv({ path: resolve(process.cwd(), file), override: true });
@@ -38,8 +38,8 @@ const withPWA = withPWAInit({
   disable: process.env.NODE_ENV === 'development',
   sw: 'service-worker.js',
   fallbacks: {
-    document: '/offline'
-  }
+    document: '/offline',
+  },
 } as any);
 
 const i18nRequestRelativePath = './src/i18n/request.ts';
@@ -47,7 +47,7 @@ const i18nRequestRelativePath = './src/i18n/request.ts';
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production'
+    removeConsole: process.env.NODE_ENV === 'production',
   },
   webpack(config) {
     config.resolve ??= {};
@@ -58,14 +58,14 @@ const nextConfig: NextConfig = {
   },
   turbopack: {
     resolveAlias: {
-      'next-intl/config': i18nRequestRelativePath
-    }
-  }
+      'next-intl/config': i18nRequestRelativePath,
+    },
+  },
 };
 
 nextConfig.experimental ??= {};
 nextConfig.experimental.serverActions = {
-  bodySizeLimit: '2mb'
+  bodySizeLimit: '2mb',
 };
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
@@ -83,6 +83,7 @@ if (experimentalConfig?.turbo) {
 configWithPlugins.turbopack ??= {};
 const turbopackConfig = configWithPlugins.turbopack as Record<string, unknown>;
 turbopackConfig.resolveAlias ??= {};
-(turbopackConfig.resolveAlias as Record<string, string>)['next-intl/config'] = i18nRequestRelativePath;
+(turbopackConfig.resolveAlias as Record<string, string>)['next-intl/config'] =
+  i18nRequestRelativePath;
 
 export default configWithPlugins;

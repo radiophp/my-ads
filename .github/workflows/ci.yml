@@ -26,13 +26,31 @@ jobs:
         working-directory: server
         run: ESLINT_USE_FLAT_CONFIG=false npm run lint
 
+  server-typecheck:
+    runs-on: ubuntu-latest
+    needs: server-lint
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install dependencies
+        working-directory: server
+        run: npm install
+
       - name: Type check
         working-directory: server
         run: npm run typecheck
 
   server-test:
     runs-on: ubuntu-latest
-    needs: server-lint
+    needs: server-typecheck
     services:
       postgres:
         image: postgres:16-alpine

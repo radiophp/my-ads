@@ -10,17 +10,17 @@ export default defineConfig({
   use: {
     baseURL,
     headless: true,
-    trace: 'retain-on-failure'
+    trace: 'retain-on-failure',
   },
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] }
+      use: { ...devices['Desktop Chrome'] },
     },
     {
       name: 'firefox',
-      use: { ...devices['Desktop Firefox'] }
-    }
+      use: { ...devices['Desktop Firefox'] },
+    },
   ],
   webServer: {
     command: 'npm run dev',
@@ -29,7 +29,7 @@ export default defineConfig({
     env: {
       NODE_ENV: 'test',
       NEXT_TELEMETRY_DISABLED: '1',
-      NEXT_UI_PORT: String(uiPort)
-    }
-  }
+      NEXT_UI_PORT: String(uiPort),
+    },
+  },
 });

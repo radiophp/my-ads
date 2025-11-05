@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/', labelKey: 'header.nav.dashboard' },
-  { href: '/guides', labelKey: 'header.nav.guides' }
+  { href: '/guides', labelKey: 'header.nav.guides' },
 ] as const;
 
 export function SiteHeader(): JSX.Element {
@@ -32,7 +32,7 @@ export function SiteHeader(): JSX.Element {
                 href={item.href}
                 className={cn(
                   'rounded-md px-3 py-2 transition-colors hover:bg-secondary/60 hover:text-secondary-foreground',
-                  pathname === item.href && 'bg-secondary/70 text-secondary-foreground'
+                  pathname === item.href && 'bg-secondary/70 text-secondary-foreground',
                 )}
               >
                 {t(item.labelKey)}

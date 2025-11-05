@@ -1,4 +1,4 @@
 export const inter = {
   variable: '',
-  className: 'font-sans'
+  className: 'font-sans',
 };

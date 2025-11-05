@@ -8,7 +8,15 @@ import { useForm } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/use-toast';
 import { onboardingFormSchema, type OnboardingFormValues } from '@/lib/validators';
@@ -23,8 +31,8 @@ export function OnboardingForm(): JSX.Element {
       name: '',
       email: '',
       company: '',
-      terms: true
-    }
+      terms: true,
+    },
   });
 
   const handleSubmit = form.handleSubmit(async (values) => {
@@ -33,14 +41,18 @@ export function OnboardingForm(): JSX.Element {
       title: t('toast.title'),
       description: t('toast.description', {
         name: values.name,
-        company: values.company || t('companyFallback')
-      })
+        company: values.company || t('companyFallback'),
+      }),
     });
     form.reset({ ...values });
   });
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
       <Form {...form}>
         <form onSubmit={handleSubmit} className="space-y-6">
           <FormField
@@ -91,7 +103,7 @@ export function OnboardingForm(): JSX.Element {
                 <input
                   id="terms"
                   type="checkbox"
-                  className="h-4 w-4 rounded border border-input accent-primary"
+                  className="size-4 rounded border border-input accent-primary"
                   checked={field.value}
                   onChange={(event) => field.onChange(event.target.checked)}
                   onBlur={field.onBlur}

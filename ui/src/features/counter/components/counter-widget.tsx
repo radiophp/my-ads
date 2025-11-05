@@ -24,7 +24,11 @@ export function CounterWidget(): JSX.Element {
           {value}
         </span>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => dispatch(decrement())} aria-label={t('buttons.decrement')}>
+          <Button
+            variant="outline"
+            onClick={() => dispatch(decrement())}
+            aria-label={t('buttons.decrement')}
+          >
             -1
           </Button>
           <Button onClick={() => dispatch(increment())} aria-label={t('buttons.increment')}>

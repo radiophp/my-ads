@@ -89,6 +89,15 @@ npm run typecheck              # TS compiler in no-emit mode
 npm run lint                   # ESLint (set ESLINT_USE_FLAT_CONFIG=false)
 ```
 
+### Authentication Flow
+
+Phone-based OTP replaces the traditional email/password flow:
+
+- `POST /auth/request-otp` &mdash; submit a phone number to trigger an OTP delivery. New phone numbers are persisted automatically.
+- `POST /auth/verify-otp` &mdash; submit the phone number and the received code to obtain access/refresh tokens (during development, the code `1234` always succeeds).
+
+OTP defaults are controlled via `OTP_TTL_SECONDS`, `OTP_DIGITS`, and the optional `OTP_SENDER_BASE_URL`/`OTP_SENDER_API_KEY` environment variables. When no gateway URL is configured, OTPs are logged to the server console for local development.
+
 ### 6. Docker Compose Stack
 
 From the repository root:
@@ -123,6 +132,52 @@ Ensure the same environment variables are available in production.
 
 ---
 
+## Frontend (Next.js UI)
+
+The customer-facing UI lives in `ui/` and is built with **Next.js 16**, **React 19**, and `next-intl` for localisation.
+
+### Prerequisites
+
+- Node.js **22.x** (matches the CI environment)
+- npm **10.x**
+- Playwright system dependencies (only required for e2e tests)
+
+### 1. Install & Dev Server
+
+```bash
+cd ui
+npm install            # install dependencies
+npm run dev            # start Next.js on http://localhost:6005
+```
+
+The helper script `scripts/run-next.mjs` standardises the dev port (`NEXT_UI_PORT=6005`) and disables Turbopack for now. Environment variables are loaded from the repository root so the UI can share `.env` files with the backend.
+
+### 2. Linting & Typechecking
+
+```bash
+npm run lint           # ESLint (internally sets ESLINT_USE_FLAT_CONFIG=false)
+npm run typecheck      # TypeScript --noEmit
+```
+
+Tailwind class ordering rules are enabled; ESLint may rewrite class strings during `--fix`.
+
+### 3. Tests
+
+```bash
+npm run test -- --run  # Vitest (uses --passWithNoTests so empty suites are allowed)
+npm run test:e2e       # Playwright end-to-end suite
+```
+
+Vitest currently runs without spec files; once tests are added they will execute automatically in CI. Playwright requires browsers to be installed locally via `npx playwright install --with-deps`.
+
+### 4. Build
+
+```bash
+npm run build          # Produces the production .next/ artefacts
+```
+
+---
+
 ## Prometheus, Observability & Metrics
 
 - `GET /metrics` exposes Prometheus-compatible metrics (HTTP latency histogram, health gauges, queue counters, etc.).
@@ -130,6 +185,23 @@ Ensure the same environment variables are available in production.
 - `GET /public/health` returns structured JSON including `status`, `failedComponents`, and per-dependency details with retry/backoff caching.
 - OpenTelemetry can push traces to an OTLP endpoint when enabled via `OTEL_ENABLED=true`.
 - Logging is handled by Pino; pretty-printing is controlled with `LOG_PRETTY`.
+
+---
+
+## Continuous Integration
+
+GitHub Actions (`.github/workflows/ci.yml`) run on every push and pull request. The pipeline currently spans eight jobs:
+
+1. **server-lint** — installs dependencies in `server/` and runs ESLint.
+2. **server-typecheck** — reruns dependency install and executes `npm run typecheck`.
+3. **server-test** — boots PostgreSQL + Redis services, generates Prisma client, runs unit tests (`npm test -- --runInBand`) and e2e tests (`npm run test:e2e`).
+4. **server-build** — ensures the backend compiles (`npm run build`).
+5. **ui-lint** — installs UI dependencies and runs ESLint with Tailwind rules.
+6. **ui-typecheck** — executes `npm run typecheck` in `ui/`.
+7. **ui-test** — runs Vitest (`--passWithNoTests`) and installs Playwright browsers; the Playwright execution step is currently disabled with `if: ${{ false }}` while the suite is stabilised.
+8. **ui-build** — performs `npm run build` to validate the Next.js production bundle.
+
+All jobs run on Node.js 22 to mirror local prerequisites. The UI tests are tolerant of empty suites, so adding Vitest specs will not require pipeline changes. Re-enable Playwright by removing the conditional guard once the e2e suite is ready.
 
 ---
 
@@ -207,6 +279,10 @@ All configuration is validated at startup (`platform/config/environment.validati
 | `HEALTH_RETRY_ATTEMPTS` | `3` | Number of retries per dependency health probe. |
 | `HEALTH_RETRY_BASE_DELAY_MS` | `150` | Base delay (ms) for exponential backoff between retries. |
 | `HEALTH_FAILURE_CACHE_MS` | `5000` | How long to cache failed dependency results to reduce pressure. |
+| `OTP_TTL_SECONDS` | `300` | OTP validity duration in seconds. |
+| `OTP_DIGITS` | `6` | Number of digits generated for OTP codes. |
+| `OTP_SENDER_BASE_URL` | — | Optional HTTP endpoint invoked to deliver OTP codes. |
+| `OTP_SENDER_API_KEY` | — | Optional bearer token used when calling the OTP provider. |
 
 Environment variables not listed above are either optional feature toggles or inherit defaults inside module configuration files.
 

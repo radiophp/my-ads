@@ -16,11 +16,26 @@ enum Role {
 
 model User {
   id                  String   @id @default(uuid())
-  email               String   @unique
-  password            String
+  phone               String   @unique
+  email               String?  @unique
+  firstName           String?
+  lastName            String?
+  cityId              Int?
+  city                City?    @relation(fields: [cityId], references: [id], onUpdate: Cascade, onDelete: SetNull)
+  profileImageUrl     String?
   role                Role     @default(USER)
   isActive            Boolean  @default(true)
   hashedRefreshToken  String?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
+
+  @@index([cityId])
+}
+
+model City {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  users     User[]
 }

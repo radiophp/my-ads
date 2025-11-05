@@ -10,8 +10,15 @@ export class UserPanelController {
   @Get('dashboard')
   async getDashboard(@Req() request: { user?: { sub: string } }) {
     const user = await this.usersService.findById(request.user?.sub ?? '');
+    const displayName =
+      [user?.firstName, user?.lastName]
+        .filter((value): value is string => Boolean(value && value.trim().length > 0))
+        .join(' ')
+        .trim() ||
+      user?.phone ||
+      'user';
     return {
-      message: `Welcome back, ${user?.email ?? 'user'}!`,
+      message: `Welcome back, ${displayName}!`,
       user,
     };
   }

@@ -1,20 +1,24 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { User } from '@prisma/client';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
+import { Prisma } from '@prisma/client';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { UsersService } from '@app/modules/users/users.service';
 import { comparePassword, hashPassword } from '@app/common/utils/password.util';
 import { Role } from '@app/common/decorators/roles.decorator';
 import type { JwtConfig } from '@app/platform/config/jwt.config';
+import { OtpService } from '@app/platform/otp/otp.service';
+import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { CurrentUserDto } from './dto/current-user.dto';
+import { UpdateCurrentUserDto } from './dto/update-current-user.dto';
 
 export type JwtPayload = {
   sub: string;
-  email: string;
+  phone: string;
   role: Role;
 };
+
+type UserWithCity = Prisma.UserGetPayload<{ include: { city: true } }>;
 
 @Injectable()
 export class AuthService {
@@ -22,33 +26,35 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly otpService: OtpService,
   ) {}
 
-  async register(dto: RegisterDto): Promise<AuthResponseDto> {
-    const existingUser = await this.usersService.findByEmail(dto.email);
-    if (existingUser) {
-      throw new BadRequestException('Email is already registered.');
+  async requestOtp(phone: string): Promise<void> {
+    const user = await this.usersService.findOrCreateByPhone(phone);
+
+    if (!user.isActive) {
+      throw new UnauthorizedException('User account is disabled.');
     }
 
-    const hashedPassword = await hashPassword(dto.password);
-    const user = await this.usersService.createUser({
-      email: dto.email,
-      password: hashedPassword,
-      role: dto.role ?? Role.USER,
-    });
-
-    return this.buildAuthResponse(user);
+    try {
+      await this.otpService.sendCode(phone);
+    } catch {
+      throw new InternalServerErrorException('Failed to send verification code.');
+    }
   }
 
-  async login(dto: LoginDto): Promise<AuthResponseDto> {
-    const user = await this.usersService.findByEmail(dto.email);
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials.');
+  async verifyOtp(dto: VerifyOtpDto): Promise<AuthResponseDto> {
+    const isValid = await this.otpService.verifyCode(dto.phone, dto.code);
+    if (!isValid) {
+      throw new UnauthorizedException('Invalid verification code.');
     }
 
-    const isValid = await comparePassword(dto.password, user.password);
-    if (!isValid) {
-      throw new UnauthorizedException('Invalid credentials.');
+    const user =
+      (await this.usersService.findByPhone(dto.phone)) ??
+      (await this.usersService.createUser({ phone: dto.phone }));
+
+    if (!user.isActive) {
+      throw new UnauthorizedException('User account is disabled.');
     }
 
     return this.buildAuthResponse(user);
@@ -60,13 +66,17 @@ export class AuthService {
       throw new UnauthorizedException('User not found.');
     }
 
+    if (!user.isActive) {
+      throw new UnauthorizedException('User account is disabled.');
+    }
+
     return this.buildAuthResponse(user);
   }
 
-  private async buildAuthResponse(user: User): Promise<AuthResponseDto> {
+  private async buildAuthResponse(user: UserWithCity): Promise<AuthResponseDto> {
     const payload: JwtPayload = {
       sub: user.id,
-      email: user.email,
+      phone: user.phone,
       role: user.role as Role,
     };
 
@@ -91,19 +101,51 @@ export class AuthService {
       refreshToken,
       user: {
         id: user.id,
+        phone: user.phone,
         email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        cityId: user.cityId,
+        city: user.city?.name ?? null,
+        profileImageUrl: user.profileImageUrl,
         role: user.role as Role,
         isActive: user.isActive,
       },
-    };
+    } as AuthResponseDto;
   }
 
   async validateRefreshToken(userId: string, token: string): Promise<boolean> {
     const user = await this.usersService.findById(userId);
-    if (!user || !user.hashedRefreshToken) {
+    if (!user || !user.hashedRefreshToken || !user.isActive) {
       return false;
     }
 
     return comparePassword(token, user.hashedRefreshToken);
+  }
+
+  async getCurrentUser(userId: string): Promise<CurrentUserDto> {
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found.');
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      cityId: user.cityId,
+      city: user.city?.name ?? null,
+      profileImageUrl: user.profileImageUrl,
+      role: user.role,
+      isActive: user.isActive,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    } satisfies CurrentUserDto;
+  }
+
+  async updateCurrentUser(userId: string, dto: UpdateCurrentUserDto): Promise<CurrentUserDto> {
+    const user = await this.usersService.updateProfile(userId, dto);
+    return this.getCurrentUser(user.id);
   }
 }

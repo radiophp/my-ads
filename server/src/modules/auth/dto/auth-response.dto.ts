@@ -1,12 +1,13 @@
-import { Role } from '@app/common/decorators/roles.decorator';
+import { ApiProperty } from '@nestjs/swagger';
+import { AuthenticatedUserDto } from './auth-user.dto';
 
 export class AuthResponseDto {
+  @ApiProperty({ description: 'JWT access token' })
   accessToken!: string;
+
+  @ApiProperty({ description: 'JWT refresh token' })
   refreshToken!: string;
-  user!: {
-    id: string;
-    email: string;
-    role: Role;
-    isActive: boolean;
-  };
+
+  @ApiProperty({ type: AuthenticatedUserDto })
+  user!: AuthenticatedUserDto;
 }

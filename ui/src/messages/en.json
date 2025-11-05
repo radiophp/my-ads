@@ -18,6 +18,10 @@
     },
     "themeToggle": "Toggle theme"
   },
+  "landing": {
+    "title": "Welcome to My Ads",
+    "subtitle": "Build and manage your classifieds experience with a modern, localized interface."
+  },
   "home": {
     "badge": "Production ready",
     "heroTitle": "Ship your frontend faster with a batteries-included Next.js stack.",

@@ -7,12 +7,11 @@ import { AuthController } from './auth.controller';
 import { UsersModule } from '@app/modules/users/users.module';
 import { JwtAccessStrategy } from './strategies/jwt-access.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
-import { LocalStrategy } from './strategies/local.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RefreshJwtGuard } from './guards/refresh-jwt.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { RateLimitModule } from '@app/common/guards/rate-limit/rate-limit.module';
-import { LocalAuthGuard } from './guards/local-auth.guard';
+import { OtpModule } from '@app/platform/otp/otp.module';
 import type { JwtConfig } from '@app/platform/config/jwt.config';
 
 @Module({
@@ -21,6 +20,7 @@ import type { JwtConfig } from '@app/platform/config/jwt.config';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     UsersModule,
     RateLimitModule,
+    OtpModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {
@@ -43,12 +43,10 @@ import type { JwtConfig } from '@app/platform/config/jwt.config';
     AuthService,
     JwtAccessStrategy,
     JwtRefreshStrategy,
-    LocalStrategy,
     JwtAuthGuard,
     RefreshJwtGuard,
     RolesGuard,
-    LocalAuthGuard,
   ],
-  exports: [AuthService, JwtAuthGuard, RefreshJwtGuard, RolesGuard, LocalAuthGuard],
+  exports: [AuthService, JwtAuthGuard, RefreshJwtGuard, RolesGuard],
 })
 export class AuthModule {}

@@ -1,9 +1,10 @@
 import { unstable_setRequestLocale } from 'next-intl/server';
 
-import { HomeLanding } from '@/components/home/home-landing';
+import { HomeView } from '@/components/home/home-view';
 import { defaultLocale } from '@/i18n/config';
 
-export default function IndexPage() {
+export default function TestPage() {
   unstable_setRequestLocale(defaultLocale);
-  return <HomeLanding />;
+  return <HomeView />;
 }
+

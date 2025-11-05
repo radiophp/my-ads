@@ -231,6 +231,25 @@ export class EnvironmentVariables {
   @IsInt()
   @IsPositive()
   HEALTH_FAILURE_CACHE_MS: number = 5000;
+
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  @IsPositive()
+  OTP_TTL_SECONDS: number = 300;
+
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  @Min(4)
+  @Max(10)
+  OTP_DIGITS: number = 6;
+
+  @IsOptional()
+  @IsString()
+  OTP_SENDER_BASE_URL?: string;
+
+  @IsOptional()
+  @IsString()
+  OTP_SENDER_API_KEY?: string;
 }
 
 export const validateEnvironment = (config: Record<string, unknown>): EnvironmentVariables => {

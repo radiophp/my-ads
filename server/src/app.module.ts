@@ -10,6 +10,7 @@ import minioConfig from './platform/config/minio.config';
 import observabilityConfig from './platform/config/observability.config';
 import loggerConfig from './platform/config/logger.config';
 import { validateEnvironment } from './platform/config/environment.validation';
+import otpConfig from './platform/config/otp.config';
 import { PrismaModule } from './platform/database/prisma.module';
 import { RedisModule } from './platform/cache/redis.module';
 import { CacheModule } from './platform/cache/cache.module';
@@ -27,6 +28,7 @@ import { UploadsModule } from './modules/uploads/uploads.module';
 import { LoggingModule } from './platform/logging/logging.module';
 import { HttpModule } from './platform/http/http.module';
 import healthConfig from './platform/config/health.config';
+import { CitiesModule } from './modules/cities/cities.module';
 
 @Module({
   imports: [
@@ -52,6 +54,7 @@ import healthConfig from './platform/config/health.config';
         observabilityConfig,
         loggerConfig,
         healthConfig,
+        otpConfig,
       ],
     }),
     LoggingModule,
@@ -62,6 +65,7 @@ import healthConfig from './platform/config/health.config';
     RateLimitModule,
     QueueModule,
     UsersModule,
+    CitiesModule,
     AuthModule,
     PublicModule,
     UserPanelModule,

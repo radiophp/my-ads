@@ -1,0 +1,103 @@
+{
+  "meta": {
+    "title": "Pro UI Base",
+    "description": "Production-ready Next.js 15 starter for the My Ads platform.",
+    "canonical": "https://example.com"
+  },
+  "header": {
+    "brand": "Pro UI Base",
+    "nav": {
+      "dashboard": "Dashboard",
+      "guides": "Guides"
+    },
+    "docs": "Docs",
+    "languageLabel": "Language",
+    "language": {
+      "en": "English",
+      "fa": "فارسی"
+    },
+    "themeToggle": "Toggle theme"
+  },
+  "home": {
+    "badge": "Production ready",
+    "heroTitle": "Ship your frontend faster with a batteries-included Next.js stack.",
+    "heroDescription": "This template pairs Redux Toolkit, RTK Query, Tailwind, and shadcn/ui with testing and PWA tooling pre-configured. Hook it up to the My Ads backend and focus on your features, not wiring.",
+    "ctaDocs": "Explore docs",
+    "ctaQuickStart": "Quick start",
+    "quickStart": {
+      "commandsIntro": "Run the following commands to get your environment ready:",
+      "envHint": "Update <file>.env.local</file> with <variable>NEXT_PUBLIC_API_BASE_URL</variable> to point at the backend gateway."
+    },
+    "copyTokens": "Copy tokens",
+    "tokensToast": {
+      "title": "Design tokens copied",
+      "description": "Use Tailwind classes from tailwind.config.ts to stay on-brand."
+    },
+    "apiHealth": {
+      "title": "API health",
+      "hint": "Powered by RTK Query. Update <code>src/features/api/apiSlice.ts</code> to map backend endpoints.",
+      "status": {
+        "healthy": "Healthy",
+        "unavailable": "Unavailable",
+        "checking": "Checking…",
+        "unknown": "Unknown"
+      }
+    }
+  },
+  "onboarding": {
+    "fields": {
+      "name": {
+        "label": "Full name",
+        "placeholder": "Alex Johnson",
+        "min": "Name must be at least 2 characters",
+        "required": "Name is required"
+      },
+      "email": {
+        "label": "Work email",
+        "placeholder": "alex@company.com",
+        "invalid": "Provide a valid email address",
+        "required": "Email is required"
+      },
+      "company": {
+        "label": "Company (optional)",
+        "placeholder": "My Ads",
+        "description": "Used to personalize notification templates."
+      },
+      "terms": {
+        "label": "I agree to receive onboarding resources.",
+        "required": "Please accept the terms to continue"
+      }
+    },
+    "button": "Save profile",
+    "toast": {
+      "title": "Profile submitted",
+      "description": "Thanks {name}, we will sync data from {company}."
+    },
+    "companyFallback": "your team"
+  },
+  "counter": {
+    "title": "Redux Toolkit Counter",
+    "description": "State managed via RTK slices & RTK Query middleware.",
+    "buttons": {
+      "decrement": "Decrease",
+      "increment": "Increase",
+      "reset": "Reset"
+    }
+  },
+  "pwa": {
+    "installTitle": "Install Pro UI Base",
+    "installDescription": "Get offline access and an app-like experience.",
+    "installButton": "Install",
+    "installedTitle": "Success",
+    "installedDescription": "The app is installing on your device."
+  },
+  "offline": {
+    "title": "You are offline",
+    "description": "No worries—continue exploring cached content or reconnect to refresh the latest data."
+  },
+  "footer": {
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "copyright": "© {year} Pro UI Base"
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "meta": {
+    "title": "پرو UI بیس",
+    "description": "استارتر آماده‌ی تولید Next.js 15 برای پلتفرم My Ads.",
+    "canonical": "https://example.com/fa"
+  },
+  "header": {
+    "brand": "پرو UI بیس",
+    "nav": {
+      "dashboard": "داشبورد",
+      "guides": "راهنماها"
+    },
+    "docs": "مستندات",
+    "languageLabel": "زبان",
+    "language": {
+      "en": "انگلیسی",
+      "fa": "فارسی"
+    },
+    "themeToggle": "تغییر پوسته"
+  },
+  "home": {
+    "badge": "آماده‌ی تولید",
+    "heroTitle": "با یک استک کامل Next.js سریع‌تر فرانت‌اند خود را منتشر کنید.",
+    "heroDescription": "این تمپلیت، Redux Toolkit، RTK Query، Tailwind و shadcn/ui را همراه با تست و PWA از پیش پیکربندی کرده است. آن را به بک‌اند My Ads متصل کنید و روی امکانات تمرکز کنید، نه سیم‌کشی.",
+    "ctaDocs": "مطالعه مستندات",
+    "ctaQuickStart": "شروع سریع",
+    "quickStart": {
+      "commandsIntro": "دستورات زیر محیط توسعه را آماده می‌کند:",
+      "envHint": "فایل <file>.env.local</file> را با مقدار <variable>NEXT_PUBLIC_API_BASE_URL</variable> برای اتصال به درگاه بک‌اند به‌روزرسانی کنید."
+    },
+    "copyTokens": "کپی توکن‌ها",
+    "tokensToast": {
+      "title": "توکن‌های طراحی کپی شد",
+      "description": "برای حفظ هویت برند از کلاس‌های Tailwind در tailwind.config.ts استفاده کنید."
+    },
+    "apiHealth": {
+      "title": "وضعیت API",
+      "hint": "با RTK Query پشتیبانی می‌شود. فایل <code>src/features/api/apiSlice.ts</code> را برای نگاشت اندپوینت‌ها به‌روزرسانی کنید.",
+      "status": {
+        "healthy": "سالم",
+        "unavailable": "در دسترس نیست",
+        "checking": "در حال بررسی…",
+        "unknown": "نامشخص"
+      }
+    }
+  },
+  "onboarding": {
+    "fields": {
+      "name": {
+        "label": "نام و نام خانوادگی",
+        "placeholder": "علی احمدی",
+        "min": "نام باید حداقل ۲ کاراکتر باشد",
+        "required": "نام الزامی است"
+      },
+      "email": {
+        "label": "ایمیل سازمانی",
+        "placeholder": "ali@company.com",
+        "invalid": "یک ایمیل معتبر وارد کنید",
+        "required": "ایمیل الزامی است"
+      },
+      "company": {
+        "label": "سازمان (اختیاری)",
+        "placeholder": "My Ads",
+        "description": "برای شخصی‌سازی قالب‌های اعلان استفاده می‌شود."
+      },
+      "terms": {
+        "label": "دریافت منابع آنبوردینگ را می‌پذیرم.",
+        "required": "لطفاً برای ادامه، شرایط را بپذیرید"
+      }
+    },
+    "button": "ذخیره پروفایل",
+    "toast": {
+      "title": "پروفایل ارسال شد",
+      "description": "ممنون {name}، داده‌های {company} را همگام می‌کنیم."
+    },
+    "companyFallback": "تیمتان"
+  },
+  "counter": {
+    "title": "شمارنده Redux Toolkit",
+    "description": "وضعیت با اسلایس‌های RTK و میان‌افزار RTK Query مدیریت می‌شود.",
+    "buttons": {
+      "decrement": "کاهش",
+      "increment": "افزایش",
+      "reset": "بازنشانی"
+    }
+  },
+  "pwa": {
+    "installTitle": "نصب پرو UI بیس",
+    "installDescription": "دسترسی آفلاین و تجربه‌ای شبیه اپلیکیشن دریافت کنید.",
+    "installButton": "نصب",
+    "installedTitle": "موفقیت‌آمیز",
+    "installedDescription": "اپلیکیشن روی دستگاه شما در حال نصب است."
+  },
+  "offline": {
+    "title": "آفلاین هستید",
+    "description": "نگران نباشید؛ از محتوای کش‌شده استفاده کنید یا پس از اتصال مجدد صفحه را تازه‌سازی کنید."
+  },
+  "footer": {
+    "privacy": "حریم خصوصی",
+    "terms": "شرایط استفاده",
+    "copyright": "© {year} پرو UI بیس"
+  }
+}

@@ -1,0 +1,6 @@
+#!/bin/sh
+
+ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT_DIR" || exit 1
+
+npm exec commitlint --edit "$1"

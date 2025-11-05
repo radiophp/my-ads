@@ -110,8 +110,54 @@ jobs:
         working-directory: server
         run: npm run build
 
-  ui-build:
+  ui-lint:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: ui/package-lock.json
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run lint
+        run: npm run lint -- --dir .
+
+  ui-typecheck:
+    runs-on: ubuntu-latest
+    needs: ui-lint
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: ui/package-lock.json
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Type check
+        run: npm run typecheck
+
+  ui-test:
+    runs-on: ubuntu-latest
+    needs: ui-typecheck
     env:
       NEXT_UI_PORT: 6005
     defaults:
@@ -131,17 +177,37 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run lint
-        run: npm run lint
-
       - name: Run unit tests
         run: npm test -- --run
 
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
       - name: Run Playwright tests
-        run: npx playwright install --with-deps && npm run test:e2e -- --reporter=list
+        run: npm run test:e2e -- --reporter=list
         env:
           PLAYWRIGHT_BASE_URL: http://localhost:6005
           NEXT_UI_PORT: 6005
+
+  ui-build:
+    runs-on: ubuntu-latest
+    needs: ui-test
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: ui/package-lock.json
+
+      - name: Install dependencies
+        run: npm install
 
       - name: Build project
         run: npm run build

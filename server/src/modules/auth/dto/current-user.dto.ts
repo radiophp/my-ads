@@ -4,6 +4,9 @@ export class CurrentUserDto {
   @ApiProperty({ format: 'uuid' })
   id!: string;
 
+  @ApiProperty({ example: '+12345678900' })
+  phone!: string;
+
   @ApiProperty({ example: 'user@example.com', nullable: true })
   email!: string | null;
 
@@ -12,6 +15,12 @@ export class CurrentUserDto {
 
   @ApiProperty({ example: 'Johnson', nullable: true })
   lastName!: string | null;
+
+  @ApiProperty({ example: 1, nullable: true })
+  provinceId!: number | null;
+
+  @ApiProperty({ example: 'Tehran Province', nullable: true })
+  province!: string | null;
 
   @ApiProperty({ example: 1, nullable: true })
   cityId!: number | null;

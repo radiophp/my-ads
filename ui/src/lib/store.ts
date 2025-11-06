@@ -3,9 +3,11 @@ import { setupListeners } from '@reduxjs/toolkit/query';
 
 import { apiSlice } from '@/features/api/apiSlice';
 import counterReducer from '@/features/counter/counterSlice';
+import authReducer from '@/features/auth/authSlice';
 
 export const store = configureStore({
   reducer: {
+    auth: authReducer,
     counter: counterReducer,
     [apiSlice.reducerPath]: apiSlice.reducer,
   },

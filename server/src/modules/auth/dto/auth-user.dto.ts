@@ -17,6 +17,12 @@ export class AuthenticatedUserDto {
   lastName!: string | null;
 
   @ApiProperty({ example: 1, nullable: true, required: false })
+  provinceId!: number | null;
+
+  @ApiProperty({ example: 'Tehran Province', nullable: true, required: false })
+  province!: string | null;
+
+  @ApiProperty({ example: 1, nullable: true, required: false })
   cityId!: number | null;
 
   @ApiProperty({ example: 'Tehran', nullable: true, required: false })

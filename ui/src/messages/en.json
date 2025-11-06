@@ -8,6 +8,7 @@
     "brand": "Pro UI Base",
     "nav": {
       "dashboard": "Dashboard",
+      "admin": "Admin",
       "guides": "Guides"
     },
     "docs": "Docs",
@@ -16,11 +17,115 @@
       "en": "English",
       "fa": "فارسی"
     },
-    "themeToggle": "Toggle theme"
+    "themeToggle": "Toggle theme",
+    "logout": "Log out",
+    "loggingOut": "Logging out…",
+    "menu": {
+      "profile": "Profile"
+    }
   },
   "landing": {
     "title": "Welcome to My Ads",
-    "subtitle": "Build and manage your classifieds experience with a modern, localized interface."
+    "subtitle": "Build and manage your classifieds experience with a modern, localized interface.",
+    "badge": "Secure OTP login",
+    "bullets": {
+      "otp": "Authenticate with phone-based one-time passwords.",
+      "dashboard": "Access your personal dashboard instantly after signing in.",
+      "localization": "Enjoy a localized experience in every supported language."
+    },
+    "login": {
+      "title": "Sign in with your phone",
+      "description": "Enter your phone number to receive a one-time login code.",
+      "phoneLabel": "Phone number",
+      "phonePlaceholder": "+12345678900",
+      "requestCode": "Send code",
+      "requesting": "Sending…",
+      "codeInfo": "We sent a code to {phone}.",
+      "codeDescription": "Enter the 4-digit code sent to {phone}.",
+      "codeLabel": "Verification code",
+      "codePlaceholder": "1234",
+      "verifyCode": "Verify & continue",
+      "verifying": "Verifying…",
+      "resend": "Resend code",
+      "changePhone": "Change phone number",
+      "requestToast": "Verification code sent",
+      "successToast": "Welcome back!",
+      "alreadySignedIn": "You are already signed in",
+      "signedInDescription": "Head to your dashboard to manage your ads and profile.",
+      "dashboardCta": "Go to dashboard",
+      "errors": {
+        "invalidPhone": "Enter a valid phone number.",
+        "invalidCode": "Enter the 4-digit code.",
+        "requestFailed": "We couldn’t send the code. Try again in a moment.",
+        "verifyFailed": "The code is invalid or expired. Try again."
+      }
+    }
+  },
+  "profile": {
+    "title": "Personal information",
+    "description": "Update your contact details and location.",
+    "image": {
+      "title": "Profile picture",
+      "cta": "Drag & drop an image, or click to browse.",
+      "helper": "PNG, JPG, or WEBP up to 5MB.",
+      "select": "Select image",
+      "uploading": "Uploading…",
+      "remove": "Remove current photo",
+      "success": "Profile image updated",
+      "successDescription": "Your profile picture was uploaded successfully.",
+      "error": "Upload failed",
+      "errorDescription": "Unable to upload the selected image. Please try again.",
+      "unsupported": "Unsupported file",
+      "unsupportedDescription": "Please select an image file.",
+      "modalTitle": "Adjust your profile photo",
+      "modalDescription": "Crop the image to fit a square frame.",
+      "confirm": "Use photo",
+      "cancel": "Cancel",
+      "zoomLabel": "Zoom"
+    },
+    "fields": {
+      "firstName": {
+        "label": "First name",
+        "placeholder": "Alex"
+      },
+      "lastName": {
+        "label": "Last name",
+        "placeholder": "Johnson"
+      },
+      "email": {
+        "label": "Email",
+        "placeholder": "user@example.com"
+      },
+      "phone": {
+        "label": "Phone number"
+      },
+      "province": {
+        "label": "Province",
+        "placeholder": "Select a province"
+      },
+      "city": {
+        "label": "City",
+        "placeholder": "Select a city"
+      }
+    },
+    "validation": {
+      "firstNameMax": "First name is too long",
+      "lastNameMax": "Last name is too long",
+      "emailMax": "Email is too long",
+      "emailInvalid": "Enter a valid email address",
+      "provinceRequired": "Select a province before choosing a city.",
+      "imageUrlInvalid": "Provide a valid URL including the protocol (https://)"
+    },
+    "actions": {
+      "save": "Save changes",
+      "saving": "Saving…"
+    },
+    "toast": {
+      "successTitle": "Profile updated",
+      "successDescription": "Your profile information has been saved.",
+      "errorTitle": "Update failed",
+      "errorDescription": "We couldn't save your profile. Please try again."
+    }
   },
   "home": {
     "badge": "Production ready",
@@ -47,6 +152,98 @@
         "unknown": "Unknown"
       }
     }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Your personalized workspace will land here soon."
+  },
+  "admin": {
+    "packages": {
+      "form": {
+        "title": "Create a subscription package",
+        "description": "Define duration, pricing, and allowances for your users.",
+        "fields": {
+          "title": "Package title",
+          "description": "Description",
+          "durationDays": "Duration (days)",
+          "freeDays": "Bonus days",
+      "includedUsers": "Included users",
+      "actualPrice": "List price",
+      "discountedPrice": "Discounted price"
+    },
+    "createSubmit": "Save package",
+    "updateSubmit": "Update package",
+    "cancel": "Cancel",
+    "imageUpload": {
+      "title": "Package image",
+      "helper": "Upload an optional illustration or keep it empty.",
+      "cta": "Drag & drop an image, or click to browse.",
+      "select": "Select image",
+      "uploading": "Uploading…",
+      "remove": "Remove image",
+      "error": "Image upload failed"
+    }
+  },
+      "table": {
+        "title": "Existing packages",
+        "description": "Manage the packages available for account upgrades.",
+      "columns": {
+        "package": "Package",
+        "duration": "Duration",
+        "users": "Users",
+        "pricing": "Pricing",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "add": "Add package",
+      "loading": "Loading packages…",
+      "empty": "No packages defined yet. Create the first package above.",
+        "actions": {
+          "edit": "Edit",
+          "activate": "Activate",
+          "deactivate": "Deactivate"
+        },
+        "durationValue": "{days, plural, one {# day} other {# days}}",
+        "freeDaysValue": "+{days, plural, one {# bonus day} other {# bonus days}}",
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "toast": {
+        "createdTitle": "Package created",
+        "createdDescription": "The package is now available to users.",
+        "updatedTitle": "Package updated",
+        "updatedDescription": "Your changes were saved successfully.",
+        "errorTitle": "Something went wrong",
+        "errorDescription": "We couldn't complete that action. Try again."
+      },
+      "edit": {
+        "title": "Edit subscription package"
+      },
+    "validation": {
+      "titleRequired": "Enter a title for the package.",
+      "titleMax": "Title is too long.",
+      "descriptionMax": "Description is too long.",
+      "imageUrl": "Enter a valid image URL (including https://).",
+      "durationInteger": "Duration must be a whole number.",
+      "durationMin": "Provide at least 1 day.",
+      "freeDaysInteger": "Bonus days must be a whole number.",
+      "freeDaysMin": "Bonus days cannot be negative.",
+      "includedUsersInteger": "Included users must be a whole number.",
+      "includedUsersMin": "Include at least 1 user.",
+      "actualPriceMin": "List price cannot be negative.",
+      "discountedPriceMin": "Discounted price cannot be negative.",
+      "discountedPriceLteActual": "Discounted price cannot be higher than the list price."
+    },
+    "editor": {
+      "createTitle": "Create a subscription package",
+      "createDescription": "Define the benefits, duration, and pricing for this offer.",
+      "updateTitle": "Edit subscription package",
+      "updateDescription": "Adjust the package settings and pricing.",
+      "backToList": "Back to packages",
+      "loading": "Loading package…",
+      "reset": "Reset form"
+    }
+  }
   },
   "onboarding": {
     "fields": {

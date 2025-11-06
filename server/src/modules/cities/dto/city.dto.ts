@@ -6,4 +6,10 @@ export class CityDto {
 
   @ApiProperty({ example: 'Tehran' })
   name!: string;
+
+  @ApiProperty({ example: 5 })
+  provinceId!: number;
+
+  @ApiProperty({ example: 'Tehran Province' })
+  province!: string;
 }

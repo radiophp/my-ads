@@ -5,9 +5,11 @@ import { PrismaService } from '@app/platform/database/prisma.service';
 export class CitiesService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  findAll() {
+  findAll(provinceId?: number) {
     return this.prismaService.city.findMany({
+      where: provinceId ? { provinceId } : undefined,
       orderBy: { name: 'asc' },
+      include: { province: true },
     });
   }
 }

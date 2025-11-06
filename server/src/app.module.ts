@@ -29,6 +29,8 @@ import { LoggingModule } from './platform/logging/logging.module';
 import { HttpModule } from './platform/http/http.module';
 import healthConfig from './platform/config/health.config';
 import { CitiesModule } from './modules/cities/cities.module';
+import { ProvincesModule } from './modules/provinces/provinces.module';
+import { PackagesModule } from './modules/packages/packages.module';
 
 @Module({
   imports: [
@@ -67,6 +69,7 @@ import { CitiesModule } from './modules/cities/cities.module';
     UsersModule,
     CitiesModule,
     AuthModule,
+    ProvincesModule,
     PublicModule,
     UserPanelModule,
     AdminPanelModule,
@@ -74,6 +77,7 @@ import { CitiesModule } from './modules/cities/cities.module';
     StorageModule,
     UploadsModule,
     HttpModule,
+    PackagesModule,
   ],
 })
 export class AppModule {}

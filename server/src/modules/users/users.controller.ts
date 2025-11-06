@@ -18,17 +18,25 @@ export class UsersController {
   }
 
   private formatUser(
-    user: Prisma.UserGetPayload<{ include: { city: true } }> | null,
+    user: Prisma.UserGetPayload<{ include: { city: { include: { province: true } } } }> | null,
   ): Record<string, unknown> | null {
     if (!user) {
       return null;
     }
 
-    const { hashedRefreshToken: _hashedRefreshToken, city, ...rest } = user;
+    const {
+      hashedRefreshToken: _hashedRefreshToken,
+      city,
+      ...rest
+    } = user as Prisma.UserGetPayload<{
+      include: { city: { include: { province: true } } };
+    }>;
     return {
       ...rest,
       cityId: user.cityId,
       city: city?.name ?? null,
+      provinceId: city?.provinceId ?? null,
+      province: city?.province?.name ?? null,
     };
   }
 }

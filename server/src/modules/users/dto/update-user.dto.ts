@@ -25,6 +25,18 @@ export class UpdateUserDto {
   })
   @IsInt()
   @Min(1)
+  provinceId?: number | null;
+
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === undefined || value === null || value === '') {
+      return value === '' ? null : value;
+    }
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? value : parsed;
+  })
+  @IsInt()
+  @Min(1)
   cityId?: number | null;
 
   @IsOptional()

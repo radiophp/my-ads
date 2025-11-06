@@ -31,6 +31,23 @@ export class UpdateCurrentUserDto {
   @ApiPropertyOptional({
     example: 1,
     nullable: true,
+    description: 'Identifier of the selected province',
+  })
+  provinceId?: number | null;
+
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (value === undefined || value === null || value === '') {
+      return value === '' ? null : value;
+    }
+    const parsed = Number(value);
+    return Number.isNaN(parsed) ? value : parsed;
+  })
+  @IsInt()
+  @Min(1)
+  @ApiPropertyOptional({
+    example: 1,
+    nullable: true,
     description: 'Identifier of the selected city',
   })
   cityId?: number | null;

@@ -33,9 +33,39 @@ model User {
 }
 
 model City {
+  id         Int       @id @default(autoincrement())
+  name       String
+  provinceId Int
+  province   Province  @relation(fields: [provinceId], references: [id], onUpdate: Cascade, onDelete: Restrict)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  users      User[]
+
+  @@index([provinceId])
+  @@unique([name, provinceId])
+}
+
+model Province {
   id        Int      @id @default(autoincrement())
   name      String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  users     User[]
+  cities    City[]
+}
+
+model SubscriptionPackage {
+  id               String   @id @default(uuid())
+  title            String
+  description      String?
+  imageUrl         String?
+  durationDays     Int
+  freeDays         Int      @default(0)
+  includedUsers    Int      @default(1)
+  actualPrice      Decimal  @db.Decimal(12, 2)
+  discountedPrice  Decimal  @db.Decimal(12, 2)
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([isActive])
 }

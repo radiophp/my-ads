@@ -158,12 +158,18 @@ export class StorageService implements OnModuleInit {
   }
 
   getPublicUrl(key: string): string {
-    const protocol = this.config.useSSL ? 'https' : 'http';
+    const endpoint = this.config.publicEndpoint ?? this.config.endpoint;
+    const useSSL = this.config.publicUseSSL ?? this.config.useSSL;
+    const port = this.config.publicPort ?? this.config.port;
+    const protocol = useSSL ? 'https' : 'http';
     const encodedKey = key
       .split('/')
       .map((segment) => encodeURIComponent(segment))
       .join('/');
 
-    return `${protocol}://${this.config.endpoint}:${this.config.port}/${this.bucket}/${encodedKey}`;
+    const defaultPort = useSSL ? 443 : 80;
+    const portSegment = port === defaultPort || typeof port === 'undefined' ? '' : `:${port}`;
+
+    return `${protocol}://${endpoint}${portSegment}/${this.bucket}/${encodedKey}`;
   }
 }

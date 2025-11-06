@@ -8,6 +8,9 @@ export type MinioConfig = {
   secretKey: string;
   bucket: string;
   region?: string;
+  publicEndpoint?: string;
+  publicPort?: number;
+  publicUseSSL?: boolean;
 };
 
 const parseBoolean = (value: string | undefined, fallback: boolean): boolean => {
@@ -24,6 +27,10 @@ export default registerAs<MinioConfig>('minio', () => {
   const portSource = env['MINIO_PORT'] ?? '6204';
 
   const host = env['MINIO_ENDPOINT'] ?? 'minio';
+  const publicHost = env['MINIO_PUBLIC_ENDPOINT'];
+  const publicUseSSL = parseBoolean(env['MINIO_PUBLIC_USE_SSL'], useSSL);
+  const publicPortSource = env['MINIO_PUBLIC_PORT'];
+
   return {
     endpoint: host,
     port: Number(portSource),
@@ -32,5 +39,8 @@ export default registerAs<MinioConfig>('minio', () => {
     secretKey: env['MINIO_SECRET_KEY'] ?? 'minioadmin',
     bucket: env['MINIO_BUCKET'] ?? 'upload',
     region: env['MINIO_REGION'],
+    publicEndpoint: publicHost,
+    publicPort: publicHost ? (publicPortSource ? Number(publicPortSource) : undefined) : undefined,
+    publicUseSSL: publicHost ? publicUseSSL : undefined,
   } satisfies MinioConfig;
 });

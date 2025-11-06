@@ -18,7 +18,9 @@ export type JwtPayload = {
   role: Role;
 };
 
-type UserWithCity = Prisma.UserGetPayload<{ include: { city: true } }>;
+type UserWithRelations = Prisma.UserGetPayload<{
+  include: { city: { include: { province: true } } };
+}>;
 
 @Injectable()
 export class AuthService {
@@ -73,7 +75,7 @@ export class AuthService {
     return this.buildAuthResponse(user);
   }
 
-  private async buildAuthResponse(user: UserWithCity): Promise<AuthResponseDto> {
+  private async buildAuthResponse(user: UserWithRelations): Promise<AuthResponseDto> {
     const payload: JwtPayload = {
       sub: user.id,
       phone: user.phone,
@@ -105,6 +107,8 @@ export class AuthService {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
+        provinceId: user.city?.provinceId ?? null,
+        province: user.city?.province?.name ?? null,
         cityId: user.cityId,
         city: user.city?.name ?? null,
         profileImageUrl: user.profileImageUrl,
@@ -131,9 +135,12 @@ export class AuthService {
 
     return {
       id: user.id,
+      phone: user.phone,
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
+      provinceId: user.city?.provinceId ?? null,
+      province: user.city?.province?.name ?? null,
       cityId: user.cityId,
       city: user.city?.name ?? null,
       profileImageUrl: user.profileImageUrl,

@@ -1,5 +1,18 @@
 #!/usr/bin/env node
 import { spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { config as loadEnv } from 'dotenv';
+
+const rootDir = resolve(process.cwd(), '..');
+const envFiles = ['.env'];
+
+for (const file of envFiles) {
+  const fullPath = resolve(rootDir, file);
+  if (existsSync(fullPath)) {
+    loadEnv({ path: fullPath, override: file !== '.env' });
+  }
+}
 
 const [mode = 'dev', ...rest] = process.argv.slice(2);
 

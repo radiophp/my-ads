@@ -4,15 +4,17 @@ import type { NextConfig } from 'next';
 import withPWAInit from '@ducanh2912/next-pwa';
 import createNextIntlPlugin from 'next-intl/plugin';
 
-const envFiles = [
-  '../.env',
-  '../.env.local',
-  '../.env.development',
-  '../.env.development.local',
-  '../.env.production',
-  '../.env.production.local',
-  '../.env.test',
-];
+const nodeEnv = process.env.NODE_ENV ?? 'development';
+
+const baseEnvFiles = ['../.env', '../.env.local'];
+const envByMode: Record<string, string[]> = {
+  development: ['../.env.development', '../.env.development.local'],
+  production: ['../.env.production', '../.env.production.local'],
+  test: ['../.env.test'],
+};
+
+const envFiles = [...baseEnvFiles, ...(envByMode[nodeEnv] ?? [])];
+
 envFiles.forEach((file) => {
   loadEnv({ path: resolve(process.cwd(), file), override: true });
 });
@@ -24,11 +26,20 @@ if (!process.env.PORT) {
 if (!process.env.NEXT_UI_PORT) {
   process.env.NEXT_UI_PORT = defaultPort;
 }
+const defaultAppUrl =
+  process.env.NODE_ENV === 'production'
+    ? 'https://mahan.toncloud.observer'
+    : `http://localhost:${defaultPort}`;
+const defaultApiBaseUrl =
+  process.env.NODE_ENV === 'production'
+    ? 'https://mahan.toncloud.observer/backend'
+    : 'http://localhost:6200/api';
+
 if (!process.env.NEXT_PUBLIC_APP_URL) {
-  process.env.NEXT_PUBLIC_APP_URL = `http://localhost:${defaultPort}`;
+  process.env.NEXT_PUBLIC_APP_URL = defaultAppUrl;
 }
 if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
-  process.env.NEXT_PUBLIC_API_BASE_URL = 'http://localhost:6200/api';
+  process.env.NEXT_PUBLIC_API_BASE_URL = defaultApiBaseUrl;
 }
 
 const withPWA = withPWAInit({
@@ -49,6 +60,15 @@ const nextConfig: NextConfig = {
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'mahan-storage.toncloud.observer',
+        pathname: '/upload/**',
+      },
+    ],
+  },
   webpack(config) {
     config.resolve ??= {};
     config.resolve.alias ??= {};
@@ -63,11 +83,6 @@ const nextConfig: NextConfig = {
   },
 };
 
-nextConfig.experimental ??= {};
-nextConfig.experimental.serverActions = {
-  bodySizeLimit: '2mb',
-};
-
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
 const configWithPlugins = withNextIntl(withPWA(nextConfig)) as NextConfig & {
@@ -78,6 +93,19 @@ const configWithPlugins = withNextIntl(withPWA(nextConfig)) as NextConfig & {
 const experimentalConfig = configWithPlugins.experimental as Record<string, unknown> | undefined;
 if (experimentalConfig?.turbo) {
   delete experimentalConfig.turbo;
+}
+
+if (configWithPlugins.experimental) {
+  (configWithPlugins.experimental as Record<string, unknown>).serverActions ??= {
+    bodySizeLimit: '2mb',
+  };
+  const experimental = configWithPlugins.experimental as Record<string, unknown>;
+  const allowedOrigins = experimental.allowedDevOrigins as string[] | undefined;
+  if (!allowedOrigins) {
+    experimental.allowedDevOrigins = ['https://mahan.toncloud.observer'];
+  } else if (!allowedOrigins.includes('https://mahan.toncloud.observer')) {
+    experimental.allowedDevOrigins = [...allowedOrigins, 'https://mahan.toncloud.observer'];
+  }
 }
 
 configWithPlugins.turbopack ??= {};

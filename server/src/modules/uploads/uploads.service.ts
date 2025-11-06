@@ -8,18 +8,28 @@ export type UploadResult = StoredObjectMetadata & {
   contentType?: string;
 };
 
+export type UploadScope = 'profile' | 'temp' | 'public';
+
 @Injectable()
 export class UploadsService {
   constructor(private readonly storageService: StorageService) {}
 
-  async uploadMultipartFile(file: MultipartFile, ownerId?: string): Promise<UploadResult> {
+  async uploadMultipartFile(
+    file: MultipartFile,
+    ownerId?: string,
+    scope: UploadScope = 'profile',
+  ): Promise<UploadResult> {
     if (file.file.truncated) {
       throw new PayloadTooLargeException('Uploaded file exceeds the configured size limit.');
     }
 
     const sanitizedOwnerId = ownerId ? this.sanitizePathSegment(ownerId) : undefined;
     const extension = this.extractExtension(file.filename);
-    const key = this.buildObjectKey(sanitizedOwnerId, extension);
+    const key = this.buildObjectKey({
+      ownerId: sanitizedOwnerId,
+      extension,
+      scope,
+    });
 
     const metadata: Record<string, string> = {};
     if (sanitizedOwnerId) {
@@ -29,10 +39,12 @@ export class UploadsService {
       metadata['original-name'] = this.truncateMetadataValue(file.filename);
     }
 
+    const buffer = await file.toBuffer();
     const upload = await this.storageService.uploadObject({
       key,
-      body: file.file,
+      body: buffer,
       contentType: file.mimetype,
+      contentLength: buffer.length,
       metadata: Object.keys(metadata).length > 0 ? metadata : undefined,
     });
 
@@ -41,6 +53,22 @@ export class UploadsService {
       originalName: file.filename ?? undefined,
       contentType: file.mimetype ?? undefined,
     } satisfies UploadResult;
+  }
+
+  async deleteTemporaryUpload(key: string, ownerId?: string): Promise<void> {
+    if (!ownerId) {
+      throw new BadRequestException('Authenticated user information is required for cleanup.');
+    }
+
+    const sanitizedOwnerId = this.sanitizePathSegment(ownerId);
+    const sanitizedKey = this.sanitizeObjectKey(key);
+    const expectedPrefix = `users/${sanitizedOwnerId}/temp/`;
+
+    if (!sanitizedKey.startsWith(expectedPrefix)) {
+      throw new BadRequestException('The provided key does not belong to the authenticated user.');
+    }
+
+    await this.storageService.deleteObject(sanitizedKey);
   }
 
   private sanitizePathSegment(input: string): string {
@@ -68,16 +96,42 @@ export class UploadsService {
     return sanitized.length > 0 ? sanitized : undefined;
   }
 
-  private buildObjectKey(ownerId: string | undefined, extension: string | undefined): string {
-    const ownerSegment = ownerId ? `users/${ownerId}` : 'public';
+  private buildObjectKey(options: {
+    ownerId?: string;
+    extension?: string;
+    scope: UploadScope;
+  }): string {
+    const { ownerId, extension, scope } = options;
     const uniqueName = randomUUID();
     const suffix = extension ? `.${extension}` : '';
 
-    return `${ownerSegment}/${uniqueName}${suffix}`;
+    switch (scope) {
+      case 'temp':
+        if (ownerId) {
+          return `users/${ownerId}/temp/${uniqueName}${suffix}`;
+        }
+        return `temp/public/${uniqueName}${suffix}`;
+      case 'public':
+        return `public/${uniqueName}${suffix}`;
+      case 'profile':
+      default:
+        if (ownerId) {
+          return `users/${ownerId}/${uniqueName}${suffix}`;
+        }
+        return `public/${uniqueName}${suffix}`;
+    }
   }
 
   private truncateMetadataValue(value: string): string {
     const maxLength = 255;
     return value.length > maxLength ? value.slice(0, maxLength) : value;
+  }
+
+  private sanitizeObjectKey(key: string): string {
+    if (!key || key.includes('..') || key.startsWith('/') || key.startsWith('\\')) {
+      throw new BadRequestException('Provided storage key is invalid.');
+    }
+
+    return key;
   }
 }

@@ -10,6 +10,7 @@ type CreateUserInput = {
   firstName?: string | null;
   lastName?: string | null;
   cityId?: number | null;
+  provinceId?: number | null;
   profileImageUrl?: string | null;
   role?: Role;
   isActive?: boolean;
@@ -20,6 +21,7 @@ type UpdateUserInput = {
   firstName?: string | null;
   lastName?: string | null;
   cityId?: number | null;
+  provinceId?: number | null;
   profileImageUrl?: string | null;
   isActive?: boolean;
   role?: Role;
@@ -30,10 +32,13 @@ type UpdateProfileInput = {
   firstName?: string | null;
   lastName?: string | null;
   cityId?: number | null;
+  provinceId?: number | null;
   profileImageUrl?: string | null;
 };
 
-type UserWithCity = Prisma.UserGetPayload<{ include: { city: true } }>;
+type UserWithRelations = Prisma.UserGetPayload<{
+  include: { city: { include: { province: true } } };
+}>;
 
 @Injectable()
 export class UsersService {
@@ -42,9 +47,9 @@ export class UsersService {
     private readonly metricsService: MetricsService,
   ) {}
 
-  async createUser(input: CreateUserInput): Promise<UserWithCity> {
-    if (input.cityId !== undefined && input.cityId !== null) {
-      await this.ensureCityExists(input.cityId);
+  async createUser(input: CreateUserInput): Promise<UserWithRelations> {
+    if (input.cityId !== undefined || input.provinceId !== undefined) {
+      await this.validateLocation(input.cityId, input.provinceId);
     }
 
     const user = await this.prismaService.user.create({
@@ -58,21 +63,21 @@ export class UsersService {
         role: input.role ?? Role.USER,
         isActive: input.isActive ?? true,
       },
-      include: { city: true },
+      include: { city: { include: { province: true } } },
     });
 
     this.metricsService.incrementUsersCreated();
     return user;
   }
 
-  findByPhone(phone: string): Promise<UserWithCity | null> {
+  findByPhone(phone: string): Promise<UserWithRelations | null> {
     return this.prismaService.user.findUnique({
       where: { phone },
-      include: { city: true },
+      include: { city: { include: { province: true } } },
     });
   }
 
-  async findOrCreateByPhone(phone: string): Promise<UserWithCity> {
+  async findOrCreateByPhone(phone: string): Promise<UserWithRelations> {
     const existing = await this.findByPhone(phone);
     if (existing) {
       return existing;
@@ -91,10 +96,10 @@ export class UsersService {
     }
   }
 
-  findById(id: string): Promise<UserWithCity | null> {
+  findById(id: string): Promise<UserWithRelations | null> {
     return this.prismaService.user.findUnique({
       where: { id },
-      include: { city: true },
+      include: { city: { include: { province: true } } },
     });
   }
 
@@ -105,45 +110,80 @@ export class UsersService {
     });
   }
 
-  async listUsers(): Promise<UserWithCity[]> {
+  async listUsers(): Promise<UserWithRelations[]> {
     return this.prismaService.user.findMany({
       orderBy: { createdAt: 'desc' },
-      include: { city: true },
+      include: { city: { include: { province: true } } },
     });
   }
 
-  async updateUser(id: string, data: UpdateUserInput): Promise<UserWithCity> {
-    if (data.cityId !== undefined && data.cityId !== null) {
-      await this.ensureCityExists(data.cityId);
-    }
+  async updateUser(id: string, data: UpdateUserInput): Promise<UserWithRelations> {
+    await this.validateLocation(data.cityId, data.provinceId);
 
     const sanitizedData = this.sanitizeUpdateInput(data);
+    const { provinceId: _provinceId, ...updateData } = sanitizedData as Prisma.UserUpdateInput & {
+      provinceId?: number | null;
+    };
 
     return this.prismaService.user.update({
       where: { id },
-      data: sanitizedData,
-      include: { city: true },
+      data: updateData,
+      include: { city: { include: { province: true } } },
     });
   }
 
-  async updateProfile(userId: string, data: UpdateProfileInput): Promise<UserWithCity> {
-    if (data.cityId !== undefined && data.cityId !== null) {
-      await this.ensureCityExists(data.cityId);
-    }
+  async updateProfile(userId: string, data: UpdateProfileInput): Promise<UserWithRelations> {
+    await this.validateLocation(data.cityId, data.provinceId);
 
     const sanitizedData = this.sanitizeUpdateInput(data);
+    const { provinceId: _provinceId, ...updateData } = sanitizedData as Prisma.UserUpdateInput & {
+      provinceId?: number | null;
+    };
 
     return this.prismaService.user.update({
       where: { id: userId },
-      data: sanitizedData,
-      include: { city: true },
+      data: updateData,
+      include: { city: { include: { province: true } } },
     });
   }
 
-  private async ensureCityExists(cityId: number): Promise<void> {
-    const city = await this.prismaService.city.findUnique({ where: { id: cityId } });
+  private async validateLocation(
+    cityId: number | null | undefined,
+    provinceId: number | null | undefined,
+  ): Promise<void> {
+    if (cityId === undefined && provinceId === undefined) {
+      return;
+    }
+
+    if (cityId === undefined && provinceId !== undefined) {
+      throw new BadRequestException('City is required when updating province.');
+    }
+
+    if (cityId !== undefined && cityId !== null) {
+      if (provinceId === undefined || provinceId === null) {
+        throw new BadRequestException('Province is required when updating city.');
+      }
+      await this.ensureCityBelongsToProvince(cityId, provinceId);
+      return;
+    }
+
+    if (cityId === null && provinceId) {
+      throw new BadRequestException('Province should be omitted when city is null.');
+    }
+  }
+
+  private async ensureCityBelongsToProvince(cityId: number, provinceId: number): Promise<void> {
+    const city = await this.prismaService.city.findUnique({
+      where: { id: cityId },
+      include: { province: true },
+    });
+
     if (!city) {
       throw new BadRequestException('Selected city does not exist.');
+    }
+
+    if (city.provinceId !== provinceId) {
+      throw new BadRequestException('Selected city does not belong to the provided province.');
     }
   }
 

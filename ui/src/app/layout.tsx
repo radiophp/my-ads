@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { NextIntlClientProvider } from 'next-intl';
-import { getLocale, getMessages } from 'next-intl/server';
+import { getLocale, getMessages, unstable_setRequestLocale } from 'next-intl/server';
 
 import { inter } from '@/app/fonts';
 import { Providers } from '@/app/providers';
@@ -10,6 +10,7 @@ import './globals.css';
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const locale = await getLocale();
+  unstable_setRequestLocale(locale);
   const messages = await getMessages();
   const dir = locale === 'fa' ? 'rtl' : 'ltr';
 

@@ -1,7 +1,5 @@
 'use client';
 
-import type { JSX } from 'react';
-
 import {
   Toast,
   ToastAction,
@@ -13,7 +11,7 @@ import {
 } from './toast';
 import { useToast } from './use-toast';
 
-export function Toaster(): JSX.Element {
+export function Toaster() {
   const { toasts } = useToast();
 
   return (

@@ -1,9 +1,7 @@
 'use client';
-
-import type { JSX } from 'react';
 import { useTranslations } from 'next-intl';
 
-export function DashboardPlaceholder(): JSX.Element {
+export function DashboardPlaceholder() {
   const t = useTranslations('dashboard');
 
   return (

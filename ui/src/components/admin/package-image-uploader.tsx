@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState, type JSX } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { CloudUpload, Loader2, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -31,7 +31,7 @@ export function PackageImageUploader({
   onChange,
   disabled = false,
   texts,
-}: PackageImageUploaderProps): JSX.Element {
+}: PackageImageUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadPublicImage, { isLoading }] = useUploadPublicImageMutation();

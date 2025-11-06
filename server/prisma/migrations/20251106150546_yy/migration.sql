@@ -1,0 +1,2 @@
+-- Originally generated to drop timestamp defaults. Left intentionally empty
+-- now that defaults are managed in later migrations.

@@ -1,7 +1,5 @@
 'use client';
 
-import type { JSX } from 'react';
-
 import { AdminGuard } from '@/components/auth/admin-guard';
 import { AdminPackageEditor } from '@/components/admin/admin-package-editor';
 
@@ -13,7 +11,7 @@ type AdminPackageEditorClientProps = {
 export function AdminPackageEditorClient({
   mode,
   packageId,
-}: AdminPackageEditorClientProps): JSX.Element {
+}: AdminPackageEditorClientProps) {
   return (
     <AdminGuard>
       <AdminPackageEditor mode={mode} packageId={packageId} />

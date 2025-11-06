@@ -1,6 +1,4 @@
 'use client';
-
-import type { JSX } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { PhoneOtpLoginForm } from '@/components/auth/phone-otp-login-form';
@@ -9,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Link } from '@/i18n/routing';
 import { cn } from '@/lib/utils';
 
-export function HomeLanding(): JSX.Element {
+export function HomeLanding() {
   const t = useTranslations('landing');
   const auth = useAppSelector((state) => state.auth);
   const isAuthenticated = Boolean(auth.accessToken);

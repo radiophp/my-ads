@@ -33,24 +33,60 @@ model User {
 }
 
 model City {
-  id         Int       @id @default(autoincrement())
+  id         Int       @id
+  slug       String    @unique
   name       String
   provinceId Int
   province   Province  @relation(fields: [provinceId], references: [id], onUpdate: Cascade, onDelete: Restrict)
   createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  updatedAt  DateTime  @default(now()) @updatedAt
   users      User[]
+  districts  District[]
 
   @@index([provinceId])
   @@unique([name, provinceId])
 }
 
 model Province {
-  id        Int      @id @default(autoincrement())
+  id        Int      @id
+  slug      String   @unique
   name      String   @unique
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now()) @updatedAt
   cities    City[]
+}
+
+model District {
+  id        Int      @id
+  slug      String
+  name      String
+  cityId    Int
+  city      City     @relation(fields: [cityId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([cityId, slug])
+  @@unique([cityId, name])
+  @@index([slug])
+}
+
+model DivarCategory {
+  id          String          @id @default(uuid())
+  slug        String          @unique
+  name        String
+  displayPath String
+  path        String          @unique
+  parentId    String?
+  parent      DivarCategory?  @relation("DivarCategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  children    DivarCategory[] @relation("DivarCategoryHierarchy")
+  depth       Int
+  position    Int
+  isActive    Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @default(now()) @updatedAt
+
+  @@index([parentId])
+  @@index([isActive])
 }
 
 model SubscriptionPackage {

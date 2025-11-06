@@ -1,7 +1,7 @@
 import { unstable_setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 
-import { AdminPackagesClient } from '@/components/admin/admin-packages-client';
+import { AdminDashboard } from '@/components/admin/admin-dashboard';
 import { defaultLocale, locales } from '@/i18n/config';
 import type { Locale } from '@/types/locale';
 
@@ -22,5 +22,5 @@ export default async function LocaleAdminPage({
 
   unstable_setRequestLocale(locale as Locale);
 
-  return <AdminPackagesClient />;
+  return <AdminDashboard />;
 }

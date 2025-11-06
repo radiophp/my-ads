@@ -20,6 +20,7 @@
     "prisma:generate": "dotenv -e ../.env -- prisma generate",
     "prisma:migrate": "dotenv -e ../.env -- prisma migrate dev",
     "prisma:studio": "dotenv -e ../.env -- prisma studio",
+    "sync:divar-categories": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/sync-divar-categories.ts",
     "prepare": "husky install",
     "lint-staged": "lint-staged"
   },

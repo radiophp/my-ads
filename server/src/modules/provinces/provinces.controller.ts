@@ -18,6 +18,7 @@ export class ProvincesController {
     return provinces.map((province) => ({
       id: province.id,
       name: province.name,
+      slug: province.slug,
     }));
   }
 }

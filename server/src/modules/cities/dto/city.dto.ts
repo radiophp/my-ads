@@ -12,4 +12,10 @@ export class CityDto {
 
   @ApiProperty({ example: 'Tehran Province' })
   province!: string;
+
+  @ApiProperty({ example: 'tehran' })
+  slug!: string;
+
+  @ApiProperty({ example: 'tehran-province' })
+  provinceSlug!: string;
 }

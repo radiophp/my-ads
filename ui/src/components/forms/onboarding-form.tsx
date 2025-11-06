@@ -3,7 +3,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
 import { useMemo } from 'react';
-import type { JSX } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
 
@@ -21,7 +20,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/use-toast';
 import { onboardingFormSchema, type OnboardingFormValues } from '@/lib/validators';
 
-export function OnboardingForm(): JSX.Element {
+export function OnboardingForm() {
   const t = useTranslations('onboarding');
   const schema = useMemo(() => onboardingFormSchema(t), [t]);
 

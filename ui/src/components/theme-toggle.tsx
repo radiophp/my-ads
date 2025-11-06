@@ -2,7 +2,6 @@
 
 import { Moon, Sun } from 'lucide-react';
 import * as React from 'react';
-import type { JSX } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
@@ -31,7 +30,7 @@ function applyTheme(theme: Theme) {
   root.classList.toggle('dark', theme === 'dark');
 }
 
-export function ThemeToggle(): JSX.Element {
+export function ThemeToggle() {
   const [theme, setTheme] = React.useState<Theme>('light');
   const [mounted, setMounted] = React.useState(false);
   const [userOverride, setUserOverride] = React.useState(false);

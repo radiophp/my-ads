@@ -1,9 +1,9 @@
 import { unstable_setRequestLocale } from 'next-intl/server';
 
-import { AdminPackagesClient } from '@/components/admin/admin-packages-client';
+import { AdminDashboard } from '@/components/admin/admin-dashboard';
 import { defaultLocale } from '@/i18n/config';
 
-export default function AdminPage(): JSX.Element {
+export default function AdminPage() {
   unstable_setRequestLocale(defaultLocale);
-  return <AdminPackagesClient />;
+  return <AdminDashboard />;
 }

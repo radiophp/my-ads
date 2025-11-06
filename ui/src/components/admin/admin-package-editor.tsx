@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, type JSX } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { Loader2, Save, ArrowLeft } from 'lucide-react';
@@ -35,7 +35,7 @@ type AdminPackageEditorProps = {
   packageId?: string;
 };
 
-export function AdminPackageEditor({ mode, packageId }: AdminPackageEditorProps): JSX.Element {
+export function AdminPackageEditor({ mode, packageId }: AdminPackageEditorProps) {
   const t = useTranslations('admin.packages');
   const editorT = useTranslations('admin.packages.editor');
   const router = useRouter();
@@ -148,7 +148,7 @@ export function AdminPackageEditor({ mode, packageId }: AdminPackageEditorProps)
           description: t('toast.createdDescription'),
         });
       }
-      router.push('/admin');
+      router.push('/admin/packages');
     } catch (error) {
       console.error('Failed to submit subscription package', error);
       toast({
@@ -163,7 +163,7 @@ export function AdminPackageEditor({ mode, packageId }: AdminPackageEditorProps)
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8">
       <div className="flex items-center gap-2">
         <Button variant="ghost" asChild>
-          <Link href="/admin">
+          <Link href="/admin/packages">
             <ArrowLeft className="mr-2 size-4" aria-hidden />
             {editorT('backToList')}
           </Link>

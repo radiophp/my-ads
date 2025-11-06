@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState, type JSX } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Loader2, PencilLine, Plus, UserRound } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import {
   useGetPackagesQuery,
@@ -32,7 +33,7 @@ const formatPrice = (value: string, locale: string): string => {
   }).format(numeric);
 };
 
-export function AdminPackagesManager(): JSX.Element {
+export function AdminPackagesManager() {
   const t = useTranslations('admin.packages');
   const locale = useLocale();
   const { toast } = useToast();
@@ -45,6 +46,19 @@ export function AdminPackagesManager(): JSX.Element {
   const [updatePackage] = useUpdatePackageMutation();
 
   const [togglingId, setTogglingId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const filteredPackages = useMemo(() => {
+    if (!normalizedSearch) {
+      return packages;
+    }
+    return packages.filter((pkg) => {
+      const haystack = `${pkg.title} ${pkg.description ?? ''}`.toLowerCase();
+      return haystack.includes(normalizedSearch);
+    });
+  }, [packages, normalizedSearch]);
+  const hasSearch = normalizedSearch.length > 0;
 
   const handleToggleStatus = useCallback(
     async (pkg: SubscriptionPackage) => {
@@ -75,17 +89,28 @@ export function AdminPackagesManager(): JSX.Element {
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8">
       <Card className="border-border/70">
-        <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
+        <CardHeader className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1">
             <CardTitle>{t('table.title')}</CardTitle>
             <CardDescription>{t('table.description')}</CardDescription>
           </div>
-          <Button asChild>
-            <Link href="/admin/packages/new">
-              <Plus className="mr-2 size-4" aria-hidden />
-              {t('table.add')}
-            </Link>
-          </Button>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <label className="flex flex-col gap-1 text-sm text-muted-foreground sm:max-w-xs">
+              <span className="font-medium text-foreground">{t('table.searchLabel')}</span>
+              <Input
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder={t('table.searchPlaceholder')}
+                autoComplete="off"
+              />
+            </label>
+            <Button asChild>
+              <Link href="/admin/packages/new">
+                <Plus className="mr-2 size-4" aria-hidden />
+                {t('table.add')}
+              </Link>
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="overflow-x-auto">
           <table className="min-w-full border-collapse text-sm">
@@ -121,14 +146,14 @@ export function AdminPackagesManager(): JSX.Element {
                     </div>
                   </td>
                 </tr>
-              ) : packages.length === 0 ? (
+              ) : filteredPackages.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-10 text-center text-muted-foreground">
-                    {t('table.empty')}
+                    {hasSearch ? t('table.searchEmpty') : t('table.empty')}
                   </td>
                 </tr>
               ) : (
-                packages.map((pkg) => (
+                filteredPackages.map((pkg) => (
                   <tr key={pkg.id} className="border-b border-border/60 last:border-b-0">
                     <td className="py-3 pr-4">
                       <div className="flex items-start gap-3">
@@ -222,6 +247,6 @@ export function AdminPackagesManager(): JSX.Element {
   );
 }
 
-function UserIconPlaceholder(): JSX.Element {
+function UserIconPlaceholder() {
   return <UserRound className="size-6 text-muted-foreground" aria-hidden />;
 }

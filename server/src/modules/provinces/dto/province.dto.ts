@@ -6,4 +6,7 @@ export class ProvinceDto {
 
   @ApiProperty({ example: 'Tehran Province' })
   name!: string;
+
+  @ApiProperty({ example: 'tehran-province' })
+  slug!: string;
 }

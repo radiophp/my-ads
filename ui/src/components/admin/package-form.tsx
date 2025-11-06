@@ -1,6 +1,6 @@
 'use client';
 
-import type { JSX, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import type { UseFormReturn } from 'react-hook-form';
 import { Loader2 } from 'lucide-react';
 
@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import type { PackageFormValues } from '@/components/admin/admin-packages-manager';
+import type { PackageFormValues } from '@/components/admin/package-form-defs';
 
 export type PackageFormTexts = {
   title: string;
@@ -45,7 +45,7 @@ export function PackageForm({
   isSubmitting,
   submitIcon,
   secondaryAction,
-}: PackageFormProps): JSX.Element {
+}: PackageFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">

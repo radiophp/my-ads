@@ -1,11 +1,9 @@
 'use client';
-
-import type { JSX } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { LocaleSwitcher } from '@/components/layout/locale-switcher';
 
-export function Footer(): JSX.Element {
+export function Footer() {
   const t = useTranslations('footer');
   const year = new Date().getFullYear();
 

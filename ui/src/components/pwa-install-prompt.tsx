@@ -1,14 +1,13 @@
 'use client';
 
 import { useEffect } from 'react';
-import type { JSX } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import { usePwaPrompt } from '@/hooks/usePwaPrompt';
 
-export function PwaInstallPrompt(): JSX.Element | null {
+export function PwaInstallPrompt() {
   const { isInstallable, promptInstall } = usePwaPrompt();
   const t = useTranslations('pwa');
 

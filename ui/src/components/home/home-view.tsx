@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import type { JSX } from 'react';
 
 import { OnboardingForm } from '@/components/forms/onboarding-form';
 import { Button } from '@/components/ui/button';
@@ -21,7 +20,7 @@ import { Link } from '@/i18n/routing';
 import { CounterWidget } from '@/features/counter/components/counter-widget';
 import { useGetHealthQuery } from '@/features/api/apiSlice';
 
-export function HomeView(): JSX.Element {
+export function HomeView() {
   const { data, isFetching, isError } = useGetHealthQuery();
   const [dialogOpen, setDialogOpen] = useState(false);
   const t = useTranslations('home');

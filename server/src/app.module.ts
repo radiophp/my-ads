@@ -31,6 +31,8 @@ import healthConfig from './platform/config/health.config';
 import { CitiesModule } from './modules/cities/cities.module';
 import { ProvincesModule } from './modules/provinces/provinces.module';
 import { PackagesModule } from './modules/packages/packages.module';
+import { DivarCategoriesModule } from './modules/divar-categories/divar-categories.module';
+import { DistrictsModule } from './modules/districts/districts.module';
 
 @Module({
   imports: [
@@ -70,6 +72,7 @@ import { PackagesModule } from './modules/packages/packages.module';
     CitiesModule,
     AuthModule,
     ProvincesModule,
+    DistrictsModule,
     PublicModule,
     UserPanelModule,
     AdminPanelModule,
@@ -78,6 +81,7 @@ import { PackagesModule } from './modules/packages/packages.module';
     UploadsModule,
     HttpModule,
     PackagesModule,
+    DivarCategoriesModule,
   ],
 })
 export class AppModule {}

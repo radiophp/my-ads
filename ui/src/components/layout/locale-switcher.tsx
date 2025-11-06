@@ -1,12 +1,11 @@
 'use client';
 
 import * as React from 'react';
-import type { JSX } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 
 import { locales, Locale, usePathname, useRouter } from '@/i18n/routing';
 
-export function LocaleSwitcher(): JSX.Element {
+export function LocaleSwitcher() {
   const t = useTranslations('header');
   const currentLocale = useLocale() as Locale;
   const router = useRouter();

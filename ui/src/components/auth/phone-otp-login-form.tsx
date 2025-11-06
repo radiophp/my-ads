@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState, type JSX } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 
@@ -31,7 +31,7 @@ const sanitizePhone = (input: string) =>
 
 const sanitizeCode = (input: string) => input.replace(/\D/g, '').slice(0, 6);
 
-export function PhoneOtpLoginForm(): JSX.Element {
+export function PhoneOtpLoginForm() {
   const t = useTranslations('landing.login');
   const router = useRouter();
   const dispatch = useAppDispatch();

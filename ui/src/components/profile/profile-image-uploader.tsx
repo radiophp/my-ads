@@ -6,7 +6,6 @@ import {
   useMemo,
   useRef,
   useState,
-  type JSX,
 } from 'react';
 import { CloudUpload, Loader2, Trash2 } from 'lucide-react';
 
@@ -126,7 +125,7 @@ export function ProfileImageUploader({
   onChange,
   disabled = false,
   texts,
-}: ProfileImageUploaderProps): JSX.Element {
+}: ProfileImageUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const cropContainerRef = useRef<HTMLDivElement>(null);
   const dragStateRef = useRef<{

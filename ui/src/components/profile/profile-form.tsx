@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState, type JSX } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -84,7 +84,7 @@ const profileSchemaFactory = (t: (path: string) => string) =>
 
 type ProfileFormValues = z.infer<ReturnType<typeof profileSchemaFactory>>;
 
-export function ProfileForm(): JSX.Element {
+export function ProfileForm() {
   const t = useTranslations('profile');
   const schema = useMemo(() => profileSchemaFactory(t), [t]);
   const imageTexts = useMemo(

@@ -158,6 +158,124 @@
     "subtitle": "Your personalized workspace will land here soon."
   },
   "admin": {
+    "dashboard": {
+      "title": "Administration",
+      "description": "Choose a management area to maintain catalog data and platform content.",
+      "cards": {
+        "cta": "Manage",
+        "packages": {
+          "title": "Subscription packages",
+          "description": "Create and update the subscription offers available to users."
+        },
+        "provinces": {
+          "title": "Provinces",
+          "description": "Review province records and verify their slugs."
+        },
+        "cities": {
+          "title": "Cities",
+          "description": "Browse cities and confirm their province assignments."
+        },
+        "districts": {
+          "title": "Districts",
+          "description": "Inspect neighborhoods grouped under each city."
+        },
+        "divarCategories": {
+          "title": "Divar categories",
+          "description": "Review the hierarchical taxonomy fetched from Divar."
+        }
+      }
+    },
+    "locations": {
+      "provinces": {
+        "title": "Province directory",
+        "description": "Reference the list of provinces synchronized from Divar.",
+        "loading": "Loading provinces…",
+        "empty": "No provinces are available.",
+        "search": {
+          "label": "Search",
+          "placeholder": "Search provinces…",
+          "empty": "No provinces match your search."
+        },
+        "columns": {
+          "id": "ID",
+          "name": "Name",
+          "slug": "Slug"
+        }
+      },
+      "cities": {
+        "title": "Cities catalog",
+        "description": "Filter cities by province and verify their generated slugs.",
+        "loading": "Loading cities…",
+        "empty": "No cities match the selected filters.",
+        "search": {
+          "label": "Search",
+          "placeholder": "Search cities…",
+          "empty": "No cities match your search."
+        },
+        "columns": {
+          "id": "ID",
+          "name": "Name",
+          "slug": "Slug",
+          "province": "Province"
+        },
+        "filters": {
+          "province": "Province",
+          "all": "All provinces"
+        }
+      },
+      "districts": {
+        "title": "District overview",
+        "description": "Select a city to explore its neighborhoods and URL slugs.",
+        "loading": "Loading districts…",
+        "loadingCities": "Loading cities…",
+        "empty": "No districts found for the selected city.",
+        "search": {
+          "label": "Search",
+          "placeholder": "Search districts…",
+          "empty": "No districts match your search."
+        },
+        "selectCityPlaceholder": "Select a city to display its districts.",
+        "columns": {
+          "id": "ID",
+          "name": "Name",
+          "slug": "Slug",
+          "city": "City",
+          "province": "Province"
+        },
+        "filters": {
+          "province": "Province",
+          "city": "City",
+          "allProvinces": "All provinces",
+          "selectCity": "Select a city"
+        }
+      }
+    },
+    "divarCategories": {
+      "title": "Divar taxonomy",
+      "description": "Browse categories synchronized from Divar and inspect their parent/child structure.",
+      "search": {
+        "label": "Search",
+        "placeholder": "Search categories…",
+        "empty": "No categories match your search."
+      },
+      "stats": "Showing {active} active out of {total} categories.",
+      "loading": "Loading categories…",
+      "empty": "No categories were found. Run the sync script to import them.",
+      "noParent": "Root",
+      "columns": {
+        "name": "Category",
+        "slug": "Slug",
+        "parent": "Parent",
+        "path": "Path",
+        "depth": "Depth",
+        "children": "Children",
+        "status": "Status"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      }
+    },
     "packages": {
       "form": {
         "title": "Create a subscription package",
@@ -167,37 +285,40 @@
           "description": "Description",
           "durationDays": "Duration (days)",
           "freeDays": "Bonus days",
-      "includedUsers": "Included users",
-      "actualPrice": "List price",
-      "discountedPrice": "Discounted price"
-    },
-    "createSubmit": "Save package",
-    "updateSubmit": "Update package",
-    "cancel": "Cancel",
-    "imageUpload": {
-      "title": "Package image",
-      "helper": "Upload an optional illustration or keep it empty.",
-      "cta": "Drag & drop an image, or click to browse.",
-      "select": "Select image",
-      "uploading": "Uploading…",
-      "remove": "Remove image",
-      "error": "Image upload failed"
-    }
-  },
+          "includedUsers": "Included users",
+          "actualPrice": "List price",
+          "discountedPrice": "Discounted price"
+        },
+        "createSubmit": "Save package",
+        "updateSubmit": "Update package",
+        "cancel": "Cancel",
+        "imageUpload": {
+          "title": "Package image",
+          "helper": "Upload an optional illustration or keep it empty.",
+          "cta": "Drag & drop an image, or click to browse.",
+          "select": "Select image",
+          "uploading": "Uploading…",
+          "remove": "Remove image",
+          "error": "Image upload failed"
+        }
+      },
       "table": {
         "title": "Existing packages",
         "description": "Manage the packages available for account upgrades.",
-      "columns": {
-        "package": "Package",
-        "duration": "Duration",
-        "users": "Users",
-        "pricing": "Pricing",
-        "status": "Status",
-        "actions": "Actions"
-      },
-      "add": "Add package",
-      "loading": "Loading packages…",
-      "empty": "No packages defined yet. Create the first package above.",
+        "searchLabel": "Search",
+        "searchPlaceholder": "Search packages…",
+        "searchEmpty": "No packages match your search.",
+        "columns": {
+          "package": "Package",
+          "duration": "Duration",
+          "users": "Users",
+          "pricing": "Pricing",
+          "status": "Status",
+          "actions": "Actions"
+        },
+        "add": "Add package",
+        "loading": "Loading packages…",
+        "empty": "No packages defined yet. Create the first package above.",
         "actions": {
           "edit": "Edit",
           "activate": "Activate",
@@ -219,31 +340,31 @@
       "edit": {
         "title": "Edit subscription package"
       },
-    "validation": {
-      "titleRequired": "Enter a title for the package.",
-      "titleMax": "Title is too long.",
-      "descriptionMax": "Description is too long.",
-      "imageUrl": "Enter a valid image URL (including https://).",
-      "durationInteger": "Duration must be a whole number.",
-      "durationMin": "Provide at least 1 day.",
-      "freeDaysInteger": "Bonus days must be a whole number.",
-      "freeDaysMin": "Bonus days cannot be negative.",
-      "includedUsersInteger": "Included users must be a whole number.",
-      "includedUsersMin": "Include at least 1 user.",
-      "actualPriceMin": "List price cannot be negative.",
-      "discountedPriceMin": "Discounted price cannot be negative.",
-      "discountedPriceLteActual": "Discounted price cannot be higher than the list price."
-    },
-    "editor": {
-      "createTitle": "Create a subscription package",
-      "createDescription": "Define the benefits, duration, and pricing for this offer.",
-      "updateTitle": "Edit subscription package",
-      "updateDescription": "Adjust the package settings and pricing.",
-      "backToList": "Back to packages",
-      "loading": "Loading package…",
-      "reset": "Reset form"
+      "validation": {
+        "titleRequired": "Enter a title for the package.",
+        "titleMax": "Title is too long.",
+        "descriptionMax": "Description is too long.",
+        "imageUrl": "Enter a valid image URL (including https://).",
+        "durationInteger": "Duration must be a whole number.",
+        "durationMin": "Provide at least 1 day.",
+        "freeDaysInteger": "Bonus days must be a whole number.",
+        "freeDaysMin": "Bonus days cannot be negative.",
+        "includedUsersInteger": "Included users must be a whole number.",
+        "includedUsersMin": "Include at least 1 user.",
+        "actualPriceMin": "List price cannot be negative.",
+        "discountedPriceMin": "Discounted price cannot be negative.",
+        "discountedPriceLteActual": "Discounted price cannot be higher than the list price."
+      },
+      "editor": {
+        "createTitle": "Create a subscription package",
+        "createDescription": "Define the benefits, duration, and pricing for this offer.",
+        "updateTitle": "Edit subscription package",
+        "updateDescription": "Adjust the package settings and pricing.",
+        "backToList": "Back to packages",
+        "loading": "Loading package…",
+        "reset": "Reset form"
+      }
     }
-  }
   },
   "onboarding": {
     "fields": {

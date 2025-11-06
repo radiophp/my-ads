@@ -1,4 +1,3 @@
-import type { JSX } from 'react';
 import { unstable_setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 
@@ -14,7 +13,7 @@ export default async function LocaleProfilePage({
   params,
 }: {
   params: Promise<{ locale: string }>;
-}): Promise<JSX.Element> {
+}) {
   const { locale } = await params;
 
   if (!locales.includes(locale as Locale)) {

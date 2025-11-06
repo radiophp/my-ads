@@ -1,6 +1,4 @@
 'use client';
-
-import type { JSX } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
@@ -11,7 +9,7 @@ import { useLogoutMutation } from '@/features/api/apiSlice';
 import { clearAuth } from '@/features/auth/authSlice';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 
-export function SiteHeader(): JSX.Element {
+export function SiteHeader() {
   const t = useTranslations();
   const router = useRouter();
   const dispatch = useAppDispatch();

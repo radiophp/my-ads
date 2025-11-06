@@ -22,6 +22,8 @@ export class CitiesController {
       name: city.name,
       provinceId: city.provinceId,
       province: city.province.name,
+      slug: city.slug,
+      provinceSlug: city.province.slug,
     }));
   }
 }

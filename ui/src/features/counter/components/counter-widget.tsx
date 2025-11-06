@@ -1,6 +1,4 @@
 'use client';
-
-import type { JSX } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
@@ -8,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import { decrement, increment, reset } from '../counterSlice';
 
-export function CounterWidget(): JSX.Element {
+export function CounterWidget() {
   const value = useAppSelector((state) => state.counter.value);
   const dispatch = useAppDispatch();
   const t = useTranslations('counter');

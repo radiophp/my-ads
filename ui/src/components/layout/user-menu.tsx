@@ -1,7 +1,7 @@
 /* eslint-disable tailwindcss/classnames-order */
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState, type JSX } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { LogOut, UserRound } from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -25,7 +25,7 @@ export function UserMenu({
   logoutLabel,
   profileLabel,
   profileHref,
-}: UserMenuProps): JSX.Element {
+}: UserMenuProps) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);

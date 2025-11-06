@@ -1,15 +1,15 @@
 'use client';
 
-import { useEffect, type PropsWithChildren, type JSX } from 'react';
+import { useEffect, type PropsWithChildren, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { useAppSelector } from '@/lib/hooks';
 
 type AuthGuardProps = PropsWithChildren<{
-  fallback?: JSX.Element | null;
+  fallback?: ReactNode;
 }>;
 
-export function AuthGuard({ children, fallback = null }: AuthGuardProps): JSX.Element | null {
+export function AuthGuard({ children, fallback = null }: AuthGuardProps) {
   const auth = useAppSelector((state) => state.auth);
   const router = useRouter();
   const isAuthenticated = Boolean(auth.accessToken);

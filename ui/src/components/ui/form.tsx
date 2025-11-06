@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import type { JSX } from 'react';
 import { Slot } from '@radix-ui/react-slot';
 import {
   Controller,
@@ -22,7 +21,7 @@ type FormProps<TFieldValues extends FieldValues = FieldValues, TContext = unknow
 function Form<TFieldValues extends FieldValues, TContext>({
   children,
   ...form
-}: FormProps<TFieldValues, TContext>): JSX.Element {
+}: FormProps<TFieldValues, TContext>) {
   return <FormProvider {...form}>{children}</FormProvider>;
 }
 

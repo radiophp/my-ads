@@ -1,12 +1,13 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 import type { AuthResponse, CurrentUser, SuccessResponse } from '@/types/auth';
-import type { City, Province } from '@/types/location';
+import type { City, District, Province } from '@/types/location';
 import type {
   CreatePackagePayload,
   SubscriptionPackage,
   UpdatePackagePayload,
 } from '@/types/packages';
+import type { DivarCategory } from '@/types/divar-category';
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:6200/api';
 
@@ -36,7 +37,7 @@ export const apiSlice = createApi({
     },
     credentials: 'include',
   }),
-  tagTypes: ['Health', 'User', 'Locations', 'Packages'],
+  tagTypes: ['Health', 'User', 'Locations', 'Packages', 'DivarCategories'],
   endpoints: (builder) => ({
     getHealth: builder.query<{ status: string }, void>({
       query: () => '/health',
@@ -84,6 +85,10 @@ export const apiSlice = createApi({
     getCities: builder.query<City[], number | void>({
       query: (provinceId) =>
         provinceId ? `/cities?provinceId=${provinceId}` : '/cities',
+      providesTags: ['Locations'],
+    }),
+    getDistricts: builder.query<District[], number | void>({
+      query: (cityId) => (cityId ? `/districts?cityId=${cityId}` : '/districts'),
       providesTags: ['Locations'],
     }),
     uploadProfileImage: builder.mutation<UploadResponse, FormData>({
@@ -160,6 +165,19 @@ export const apiSlice = createApi({
         body: formData,
       }),
     }),
+    getDivarCategories: builder.query<DivarCategory[], void>({
+      query: () => '/admin/divar-categories',
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map((category) => ({
+                type: 'DivarCategories' as const,
+                id: category.id,
+              })),
+              { type: 'DivarCategories' as const, id: 'LIST' },
+            ]
+          : [{ type: 'DivarCategories' as const, id: 'LIST' }],
+    }),
   }),
 });
 
@@ -172,6 +190,7 @@ export const {
   useUpdateCurrentUserMutation,
   useGetProvincesQuery,
   useGetCitiesQuery,
+  useGetDistrictsQuery,
   useUploadProfileImageMutation,
   useUploadTempProfileImageMutation,
   useDeleteTempProfileImageMutation,
@@ -181,6 +200,7 @@ export const {
   useUpdatePackageMutation,
   useDeletePackageMutation,
   useUploadPublicImageMutation,
+  useGetDivarCategoriesQuery,
 } = apiSlice;
 
 type UpdateCurrentUserPayload = Partial<{

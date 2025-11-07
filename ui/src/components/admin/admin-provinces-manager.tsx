@@ -12,11 +12,17 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { useGetProvincesQuery } from '@/features/api/apiSlice';
+import {
+  useGetProvincesQuery,
+  useUpdateProvinceAllowPostingMutation,
+} from '@/features/api/apiSlice';
+import { Button } from '@/components/ui/button';
 
 export function AdminProvincesManager() {
   const t = useTranslations('admin.locations.provinces');
   const { data: provinces = [], isLoading, isFetching } = useGetProvincesQuery();
+  const [updateProvinceAllowPosting] = useUpdateProvinceAllowPostingMutation();
+  const [updatingId, setUpdatingId] = useState<number | null>(null);
 
   const [searchTerm, setSearchTerm] = useState('');
   const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -64,12 +70,15 @@ export function AdminProvincesManager() {
                 <th className="py-3 pr-4 font-medium text-muted-foreground">
                   {t('columns.slug')}
                 </th>
+                <th className="py-3 pr-4 font-medium text-muted-foreground">
+                  {t('columns.allowPosting')}
+                </th>
               </tr>
             </thead>
             <tbody>
               {isBusy ? (
                 <tr>
-                  <td colSpan={3} className="py-10 text-center text-muted-foreground">
+                  <td colSpan={4} className="py-10 text-center text-muted-foreground">
                     <div className="flex items-center justify-center gap-2">
                       <Loader2 className="size-4 animate-spin" aria-hidden />
                       <span>{t('loading')}</span>
@@ -78,7 +87,7 @@ export function AdminProvincesManager() {
                 </tr>
               ) : filteredProvinces.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="py-10 text-center text-muted-foreground">
+                  <td colSpan={4} className="py-10 text-center text-muted-foreground">
                     {hasSearch ? t('search.empty') : t('empty')}
                   </td>
                 </tr>
@@ -89,6 +98,33 @@ export function AdminProvincesManager() {
                     <td className="py-3 pr-4 font-medium text-foreground">{province.name}</td>
                     <td className="py-3 pr-4 text-xs text-muted-foreground sm:text-sm">
                       {province.slug}
+                    </td>
+                    <td className="py-3 pr-4 text-right">
+                      <Button
+                        type="button"
+                        variant={province.allowPosting ? 'default' : 'outline'}
+                        size="sm"
+                        disabled={updatingId === province.id}
+                        onClick={async () => {
+                          try {
+                            setUpdatingId(province.id);
+                            await updateProvinceAllowPosting({
+                              id: province.id,
+                              allowPosting: !province.allowPosting,
+                            }).unwrap();
+                          } finally {
+                            setUpdatingId(null);
+                          }
+                        }}
+                      >
+                        {updatingId === province.id ? (
+                          <Loader2 className="size-3 animate-spin" aria-hidden />
+                        ) : province.allowPosting ? (
+                          t('allowPosting.enabled')
+                        ) : (
+                          t('allowPosting.disabled')
+                        )}
+                      </Button>
                     </td>
                   </tr>
                 ))

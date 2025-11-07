@@ -33,27 +33,29 @@ model User {
 }
 
 model City {
-  id         Int        @id
-  slug       String     @unique
-  name       String
-  provinceId Int
-  province   Province   @relation(fields: [provinceId], references: [id], onUpdate: Cascade, onDelete: Restrict)
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @default(now()) @updatedAt
-  users      User[]
-  districts  District[]
+  id           Int        @id
+  slug         String     @unique
+  name         String
+  provinceId   Int
+  province     Province   @relation(fields: [provinceId], references: [id], onUpdate: Cascade, onDelete: Restrict)
+  allowPosting Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @default(now()) @updatedAt
+  users        User[]
+  districts    District[]
 
   @@unique([name, provinceId])
   @@index([provinceId])
 }
 
 model Province {
-  id        Int      @id
-  slug      String   @unique
-  name      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
-  cities    City[]
+  id           Int      @id
+  slug         String   @unique
+  name         String   @unique
+  allowPosting Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
+  cities       City[]
 }
 
 model District {

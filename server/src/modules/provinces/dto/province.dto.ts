@@ -9,4 +9,7 @@ export class ProvinceDto {
 
   @ApiProperty({ example: 'tehran-province' })
   slug!: string;
+
+  @ApiProperty({ example: false })
+  allowPosting!: boolean;
 }

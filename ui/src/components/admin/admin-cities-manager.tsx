@@ -12,7 +12,12 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { useGetCitiesQuery, useGetProvincesQuery } from '@/features/api/apiSlice';
+import {
+  useGetCitiesQuery,
+  useGetProvincesQuery,
+  useUpdateCityAllowPostingMutation,
+} from '@/features/api/apiSlice';
+import { Button } from '@/components/ui/button';
 
 export function AdminCitiesManager() {
   const t = useTranslations('admin.locations.cities');
@@ -26,6 +31,8 @@ export function AdminCitiesManager() {
     isLoading,
     isFetching,
   } = useGetCitiesQuery(selectedProvinceId === 'all' ? undefined : selectedProvinceId);
+  const [updateCityAllowPosting] = useUpdateCityAllowPostingMutation();
+  const [updatingId, setUpdatingId] = useState<number | null>(null);
 
   const normalizedSearch = searchTerm.trim().toLowerCase();
   const filteredCities = useMemo(() => {
@@ -100,12 +107,15 @@ export function AdminCitiesManager() {
                 <th className="py-3 pr-4 font-medium text-muted-foreground">
                   {t('columns.province')}
                 </th>
+                <th className="py-3 pr-4 font-medium text-muted-foreground">
+                  {t('columns.allowPosting')}
+                </th>
               </tr>
             </thead>
             <tbody>
               {isBusy ? (
                 <tr>
-                  <td colSpan={4} className="py-10 text-center text-muted-foreground">
+                  <td colSpan={5} className="py-10 text-center text-muted-foreground">
                     <div className="flex items-center justify-center gap-2">
                       <Loader2 className="size-4 animate-spin" aria-hidden />
                       <span>{t('loading')}</span>
@@ -114,7 +124,7 @@ export function AdminCitiesManager() {
                 </tr>
               ) : filteredCities.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="py-10 text-center text-muted-foreground">
+                  <td colSpan={5} className="py-10 text-center text-muted-foreground">
                     {hasSearch ? t('search.empty') : t('empty')}
                   </td>
                 </tr>
@@ -128,6 +138,33 @@ export function AdminCitiesManager() {
                     </td>
                     <td className="py-3 pr-4 text-muted-foreground">
                       {provinceLookup.get(city.provinceId)}
+                    </td>
+                    <td className="py-3 pr-4 text-right">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={city.allowPosting ? 'default' : 'outline'}
+                        disabled={updatingId === city.id}
+                        onClick={async () => {
+                          try {
+                            setUpdatingId(city.id);
+                            await updateCityAllowPosting({
+                              id: city.id,
+                              allowPosting: !city.allowPosting,
+                            }).unwrap();
+                          } finally {
+                            setUpdatingId(null);
+                          }
+                        }}
+                      >
+                        {updatingId === city.id ? (
+                          <Loader2 className="size-3 animate-spin" aria-hidden />
+                        ) : city.allowPosting ? (
+                          t('allowPosting.enabled')
+                        ) : (
+                          t('allowPosting.disabled')
+                        )}
+                      </Button>
                     </td>
                   </tr>
                 ))

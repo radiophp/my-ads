@@ -256,7 +256,12 @@
         "columns": {
           "id": "ID",
           "name": "Name",
-          "slug": "Slug"
+          "slug": "Slug",
+          "allowPosting": "Allow posting"
+        },
+        "allowPosting": {
+          "enabled": "Allowed",
+          "disabled": "Blocked"
         }
       },
       "cities": {
@@ -269,17 +274,22 @@
           "placeholder": "Search cities…",
           "empty": "No cities match your search."
         },
-        "columns": {
-          "id": "ID",
-          "name": "Name",
-          "slug": "Slug",
-          "province": "Province"
-        },
-        "filters": {
-          "province": "Province",
-          "all": "All provinces"
-        }
+      "columns": {
+        "id": "ID",
+        "name": "Name",
+        "slug": "Slug",
+        "province": "Province",
+        "allowPosting": "Allow posting"
       },
+      "filters": {
+        "province": "Province",
+        "all": "All provinces"
+      },
+      "allowPosting": {
+        "enabled": "Allowed",
+        "disabled": "Blocked"
+      }
+    },
       "districts": {
         "title": "District overview",
         "description": "Select a city to explore its neighborhoods and URL slugs.",

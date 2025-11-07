@@ -5,7 +5,7 @@ import { JwtAuthGuard } from '@app/modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '@app/modules/auth/guards/roles.guard';
 import { Roles, Role } from '@app/common/decorators/roles.decorator';
 import { DivarCategoryDto } from './dto/divar-category.dto';
-import { UpdateAllowPostingDto } from './dto/update-allow-posting.dto';
+import { UpdateAllowPostingDto } from '@app/common/dto/update-allow-posting.dto';
 
 @Controller('admin/divar-categories')
 @ApiTags('divar-categories')

@@ -12,4 +12,12 @@ export class CitiesService {
       include: { province: true },
     });
   }
+
+  updateAllowPosting(id: number, allowPosting: boolean) {
+    return this.prismaService.city.update({
+      where: { id },
+      data: { allowPosting },
+      include: { province: true },
+    });
+  }
 }

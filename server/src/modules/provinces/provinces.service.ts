@@ -10,4 +10,20 @@ export class ProvincesService {
       orderBy: { name: 'asc' },
     });
   }
+
+  async updateAllowPosting(id: number, allowPosting: boolean) {
+    return this.prismaService.$transaction(async (tx) => {
+      const province = await tx.province.update({
+        where: { id },
+        data: { allowPosting },
+      });
+
+      await tx.city.updateMany({
+        where: { provinceId: id },
+        data: { allowPosting },
+      });
+
+      return province;
+    });
+  }
 }

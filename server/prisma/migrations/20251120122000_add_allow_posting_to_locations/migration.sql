@@ -1,0 +1,2 @@
+ALTER TABLE "Province" ADD COLUMN "allowPosting" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "City" ADD COLUMN "allowPosting" BOOLEAN NOT NULL DEFAULT false;

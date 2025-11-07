@@ -2,6 +2,7 @@ export type Province = {
   id: number;
   name: string;
   slug: string;
+  allowPosting: boolean;
 };
 
 export type City = {
@@ -11,6 +12,7 @@ export type City = {
   provinceId: number;
   province: string;
   provinceSlug: string;
+  allowPosting: boolean;
 };
 
 export type District = {

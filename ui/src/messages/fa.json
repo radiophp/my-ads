@@ -253,12 +253,17 @@
           "placeholder": "جستجوی استان…",
           "empty": "استانی مطابق جستجو پیدا نشد."
         },
-        "columns": {
-          "id": "شناسه",
-          "name": "نام",
-          "slug": "اسلاگ"
-        }
+      "columns": {
+        "id": "شناسه",
+        "name": "نام",
+        "slug": "اسلاگ",
+        "allowPosting": "امکان درج آگهی"
       },
+      "allowPosting": {
+        "enabled": "فعال",
+        "disabled": "غیرفعال"
+      }
+    },
       "cities": {
         "title": "فهرست شهرها",
         "description": "با فیلتر استان، شهرها و اسلاگ‌ آن‌ها را بررسی کنید.",
@@ -269,17 +274,22 @@
           "placeholder": "جستجوی شهر…",
           "empty": "شهری مطابق جستجو پیدا نشد."
         },
-        "columns": {
-          "id": "شناسه",
-          "name": "نام",
-          "slug": "اسلاگ",
-          "province": "استان"
-        },
-        "filters": {
-          "province": "استان",
-          "all": "همه استان‌ها"
-        }
+      "columns": {
+        "id": "شناسه",
+        "name": "نام",
+        "slug": "اسلاگ",
+        "province": "استان",
+        "allowPosting": "امکان درج آگهی"
       },
+      "filters": {
+        "province": "استان",
+        "all": "همه استان‌ها"
+      },
+      "allowPosting": {
+        "enabled": "فعال",
+        "disabled": "غیرفعال"
+      }
+    },
       "districts": {
         "title": "فهرست محله‌ها",
         "description": "یک شهر را انتخاب کنید تا محله‌ها و اسلاگ‌ آن‌ها نمایش داده شود.",

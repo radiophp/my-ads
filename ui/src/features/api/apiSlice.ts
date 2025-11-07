@@ -100,6 +100,24 @@ export const apiSlice = createApi({
       query: (cityId) => (cityId ? `/districts?cityId=${cityId}` : '/districts'),
       providesTags: ['Locations'],
     }),
+    updateProvinceAllowPosting: builder.mutation<Province, { id: number; allowPosting: boolean }>(
+      {
+        query: ({ id, allowPosting }) => ({
+          url: `/provinces/${id}/allow-posting`,
+          method: 'PATCH',
+          body: { allowPosting },
+        }),
+        invalidatesTags: ['Locations'],
+      },
+    ),
+    updateCityAllowPosting: builder.mutation<City, { id: number; allowPosting: boolean }>({
+      query: ({ id, allowPosting }) => ({
+        url: `/cities/${id}/allow-posting`,
+        method: 'PATCH',
+        body: { allowPosting },
+      }),
+      invalidatesTags: ['Locations'],
+    }),
     uploadProfileImage: builder.mutation<UploadResponse, FormData>({
       query: (formData) => ({
         url: '/uploads',
@@ -229,6 +247,8 @@ export const {
   useGetProvincesQuery,
   useGetCitiesQuery,
   useGetDistrictsQuery,
+  useUpdateProvinceAllowPostingMutation,
+  useUpdateCityAllowPostingMutation,
   useUploadProfileImageMutation,
   useUploadTempProfileImageMutation,
   useDeleteTempProfileImageMutation,

@@ -211,11 +211,25 @@ export class DivarCategoriesService {
   }
 
   async updateAllowPosting(id: string, allowPosting: boolean): Promise<DivarCategoryDto> {
-    const category = await this.prisma.divarCategory.update({
-      where: { id },
-      data: { allowPosting },
-      include: this.includeForCategory(),
+    const category = await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.divarCategory.update({
+        where: { id },
+        data: { allowPosting },
+        include: this.includeForCategory(),
+      });
+
+      await tx.divarCategory.updateMany({
+        where: {
+          path: {
+            startsWith: `${updated.path}/`,
+          },
+        },
+        data: { allowPosting },
+      });
+
+      return updated;
     });
+
     return this.toDto(category);
   }
 

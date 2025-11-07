@@ -18,4 +18,7 @@ export class CityDto {
 
   @ApiProperty({ example: 'tehran-province' })
   provinceSlug!: string;
+
+  @ApiProperty({ example: false })
+  allowPosting!: boolean;
 }

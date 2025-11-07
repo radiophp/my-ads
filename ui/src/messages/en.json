@@ -207,7 +207,39 @@
         "divarCategories": {
           "title": "Divar categories",
           "description": "Review the hierarchical taxonomy fetched from Divar."
+        },
+        "divarFilters": {
+          "title": "Divar filters",
+          "description": "Inspect stored filter payloads per Divar category."
         }
+      }
+    },
+    "divarFilters": {
+      "title": "Divar category filters",
+      "description": "Reference the categories that already have synchronized filter payloads.",
+      "loading": "Loading filter records…",
+      "empty": "No filters are available yet.",
+      "search": {
+        "label": "Search",
+        "placeholder": "Search by slug or name…",
+        "empty": "Nothing matches your search."
+      },
+      "columns": {
+        "category": "Category",
+        "slug": "Slug",
+        "displayPath": "Display path",
+        "updatedAt": "Last synced",
+        "actions": "Actions"
+      },
+      "actions": {
+        "viewPayload": "View JSON"
+      },
+      "payload": {
+        "title": "Filter payload",
+        "description": "Latest configuration for {name}.",
+        "displayPath": "Display path",
+        "loading": "Loading payload…",
+        "empty": "No payload available."
       }
     },
     "locations": {
@@ -294,11 +326,16 @@
         "path": "Path",
         "depth": "Depth",
         "children": "Children",
-        "status": "Status"
+        "status": "Status",
+        "allowPosting": "Allow posting"
       },
       "status": {
         "active": "Active",
         "inactive": "Inactive"
+      },
+      "allowPosting": {
+        "enabled": "Allowed",
+        "disabled": "Blocked"
       }
     },
     "packages": {

@@ -3,9 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  directUrl = env("DATABASE_DIRECT_URL")
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  directUrl         = env("DATABASE_DIRECT_URL")
   shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
@@ -15,36 +15,36 @@ enum Role {
 }
 
 model User {
-  id                  String   @id @default(uuid())
-  phone               String   @unique
-  email               String?  @unique
-  firstName           String?
-  lastName            String?
-  cityId              Int?
-  city                City?    @relation(fields: [cityId], references: [id], onUpdate: Cascade, onDelete: SetNull)
-  profileImageUrl     String?
-  role                Role     @default(USER)
-  isActive            Boolean  @default(true)
-  hashedRefreshToken  String?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  id                 String   @id @default(uuid())
+  phone              String   @unique
+  email              String?  @unique
+  firstName          String?
+  lastName           String?
+  cityId             Int?
+  city               City?    @relation(fields: [cityId], references: [id], onUpdate: Cascade, onDelete: SetNull)
+  profileImageUrl    String?
+  role               Role     @default(USER)
+  isActive           Boolean  @default(true)
+  hashedRefreshToken String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 
   @@index([cityId])
 }
 
 model City {
-  id         Int       @id
-  slug       String    @unique
+  id         Int        @id
+  slug       String     @unique
   name       String
   provinceId Int
-  province   Province  @relation(fields: [provinceId], references: [id], onUpdate: Cascade, onDelete: Restrict)
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @default(now()) @updatedAt
+  province   Province   @relation(fields: [provinceId], references: [id], onUpdate: Cascade, onDelete: Restrict)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @default(now()) @updatedAt
   users      User[]
   districts  District[]
 
-  @@index([provinceId])
   @@unique([name, provinceId])
+  @@index([provinceId])
 }
 
 model Province {
@@ -71,20 +71,21 @@ model District {
 }
 
 model DivarCategory {
-  id          String          @id @default(uuid())
-  slug        String          @unique
-  name        String
-  displayPath String
-  path        String          @unique
-  parentId    String?
-  parent      DivarCategory?  @relation("DivarCategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  children    DivarCategory[] @relation("DivarCategoryHierarchy")
-  depth       Int
-  position    Int
-  isActive    Boolean         @default(true)
-  filters     DivarCategoryFilter?
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @default(now()) @updatedAt
+  id           String               @id @default(uuid())
+  slug         String               @unique
+  name         String
+  displayPath  String
+  path         String               @unique
+  parentId     String?
+  parent       DivarCategory?       @relation("DivarCategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  children     DivarCategory[]      @relation("DivarCategoryHierarchy")
+  depth        Int
+  position     Int
+  isActive     Boolean              @default(true)
+  allowPosting Boolean              @default(false)
+  filters      DivarCategoryFilter?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @default(now()) @updatedAt
 
   @@index([parentId])
   @@index([isActive])
@@ -100,18 +101,18 @@ model DivarCategoryFilter {
 }
 
 model SubscriptionPackage {
-  id               String   @id @default(uuid())
-  title            String
-  description      String?
-  imageUrl         String?
-  durationDays     Int
-  freeDays         Int      @default(0)
-  includedUsers    Int      @default(1)
-  actualPrice      Decimal  @db.Decimal(12, 2)
-  discountedPrice  Decimal  @db.Decimal(12, 2)
-  isActive         Boolean  @default(true)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id              String   @id @default(uuid())
+  title           String
+  description     String?
+  imageUrl        String?
+  durationDays    Int
+  freeDays        Int      @default(0)
+  includedUsers   Int      @default(1)
+  actualPrice     Decimal  @db.Decimal(12, 2)
+  discountedPrice Decimal  @db.Decimal(12, 2)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@index([isActive])
 }

@@ -12,8 +12,12 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { useGetDivarCategoriesQuery } from '@/features/api/apiSlice';
+import {
+  useGetDivarCategoriesQuery,
+  useUpdateDivarCategoryAllowPostingMutation,
+} from '@/features/api/apiSlice';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 export function AdminDivarCategoriesManager() {
   const t = useTranslations('admin.divarCategories');
@@ -22,6 +26,8 @@ export function AdminDivarCategoriesManager() {
     isLoading,
     isFetching,
   } = useGetDivarCategoriesQuery();
+  const [updateAllowPosting] = useUpdateDivarCategoryAllowPostingMutation();
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState('');
   const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -90,12 +96,15 @@ export function AdminDivarCategoriesManager() {
                 <th className="py-3 font-medium text-muted-foreground">
                   {t('columns.status')}
                 </th>
+                <th className="py-3 font-medium text-muted-foreground">
+                  {t('columns.allowPosting')}
+                </th>
               </tr>
             </thead>
             <tbody>
               {isBusy ? (
                 <tr>
-                  <td colSpan={7} className="py-10 text-center text-muted-foreground">
+                  <td colSpan={8} className="py-10 text-center text-muted-foreground">
                     <div className="flex items-center justify-center gap-2">
                       <Loader2 className="size-4 animate-spin" aria-hidden />
                       <span>{t('loading')}</span>
@@ -104,7 +113,7 @@ export function AdminDivarCategoriesManager() {
                 </tr>
               ) : filteredCategories.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-10 text-center text-muted-foreground">
+                  <td colSpan={8} className="py-10 text-center text-muted-foreground">
                     {hasSearch ? t('search.empty') : t('empty')}
                   </td>
                 </tr>
@@ -148,6 +157,33 @@ export function AdminDivarCategoriesManager() {
                       >
                         {category.isActive ? t('status.active') : t('status.inactive')}
                       </span>
+                    </td>
+                    <td className="py-3">
+                      <Button
+                        type="button"
+                        variant={category.allowPosting ? 'default' : 'outline'}
+                        size="sm"
+                        disabled={updatingId === category.id}
+                        onClick={async () => {
+                          try {
+                            setUpdatingId(category.id);
+                            await updateAllowPosting({
+                              id: category.id,
+                              allowPosting: !category.allowPosting,
+                            }).unwrap();
+                          } finally {
+                            setUpdatingId(null);
+                          }
+                        }}
+                      >
+                        {updatingId === category.id ? (
+                          <Loader2 className="size-3 animate-spin" aria-hidden />
+                        ) : category.allowPosting ? (
+                          t('allowPosting.enabled')
+                        ) : (
+                          t('allowPosting.disabled')
+                        )}
+                      </Button>
                     </td>
                   </tr>
                 ))

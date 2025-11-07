@@ -13,4 +13,16 @@ CREATE TABLE "DivarCategoryFilter" (
 CREATE UNIQUE INDEX "DivarCategoryFilter_categoryId_key" ON "DivarCategoryFilter"("categoryId");
 
 -- AddForeignKey
-ALTER TABLE "DivarCategoryFilter" ADD CONSTRAINT "DivarCategoryFilter_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "DivarCategory"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.tables
+    WHERE table_schema = current_schema()
+      AND table_name = 'DivarCategory'
+  ) THEN
+    ALTER TABLE "DivarCategoryFilter"
+    ADD CONSTRAINT "DivarCategoryFilter_categoryId_fkey"
+    FOREIGN KEY ("categoryId") REFERENCES "DivarCategory"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+END $$;

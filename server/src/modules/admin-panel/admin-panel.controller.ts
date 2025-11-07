@@ -3,12 +3,17 @@ import { JwtAuthGuard } from '@app/modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '@app/modules/auth/guards/roles.guard';
 import { Roles, Role } from '@app/common/decorators/roles.decorator';
 import { UsersService } from '@app/modules/users/users.service';
+import { AdminPanelService } from './admin-panel.service';
+import type { AdminEntityCounts } from './admin-panel.service';
 
 @Controller('admin-panel')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.ADMIN)
 export class AdminPanelController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly adminPanelService: AdminPanelService,
+  ) {}
 
   @Get('overview')
   async getOverview() {
@@ -18,5 +23,10 @@ export class AdminPanelController {
       activeUsers: users.filter((user) => user.isActive).length,
       users,
     };
+  }
+
+  @Get('stats')
+  async getStats(): Promise<AdminEntityCounts> {
+    return this.adminPanelService.getEntityCounts();
   }
 }

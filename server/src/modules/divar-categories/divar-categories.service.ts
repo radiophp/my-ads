@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@app/platform/database/prisma.service';
 import type { DivarCategoryDto } from './dto/divar-category.dto';
+import type { Prisma } from '@prisma/client';
 
 type DivarCategoryPayload = {
   display: string;
@@ -202,22 +203,43 @@ export class DivarCategoriesService {
 
   async listCategories(): Promise<DivarCategoryDto[]> {
     const categories = await this.prisma.divarCategory.findMany({
-      orderBy: [{ depth: 'asc' }, { position: 'asc' }, { name: 'asc' }],
-      include: {
-        parent: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-          },
-        },
-        _count: {
-          select: { children: true },
-        },
-      },
+      orderBy: [{ displayPath: 'asc' }],
+      include: this.includeForCategory(),
     });
 
-    return categories.map((category) => ({
+    return categories.map((category) => this.toDto(category));
+  }
+
+  async updateAllowPosting(id: string, allowPosting: boolean): Promise<DivarCategoryDto> {
+    const category = await this.prisma.divarCategory.update({
+      where: { id },
+      data: { allowPosting },
+      include: this.includeForCategory(),
+    });
+    return this.toDto(category);
+  }
+
+  private includeForCategory() {
+    return {
+      parent: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+        },
+      },
+      _count: {
+        select: { children: true },
+      },
+    };
+  }
+
+  private toDto(
+    category: Prisma.DivarCategoryGetPayload<{
+      include: ReturnType<DivarCategoriesService['includeForCategory']>;
+    }>,
+  ): DivarCategoryDto {
+    return {
       id: category.id,
       slug: category.slug,
       name: category.name,
@@ -230,8 +252,9 @@ export class DivarCategoriesService {
       position: category.position,
       childrenCount: category._count.children,
       isActive: category.isActive,
+      allowPosting: category.allowPosting,
       createdAt: category.createdAt,
       updatedAt: category.updatedAt,
-    }));
+    };
   }
 }

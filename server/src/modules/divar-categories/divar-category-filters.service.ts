@@ -2,6 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import { PrismaService } from '@app/platform/database/prisma.service';
 import { DivarCategoryFilterDto } from './dto/divar-category-filter.dto';
+import { DivarCategoryFilterSummaryDto } from './dto/divar-category-filter-summary.dto';
 
 type DivarCategoryFiltersSyncFailure = {
   slug: string;
@@ -110,6 +111,30 @@ export class DivarCategoryFiltersService {
       payload: record.payload,
       updatedAt: record.updatedAt,
     };
+  }
+
+  async listFilterSummaries(): Promise<DivarCategoryFilterSummaryDto[]> {
+    const records = await this.prisma.divarCategoryFilter.findMany({
+      include: {
+        category: {
+          select: {
+            id: true,
+            slug: true,
+            name: true,
+            displayPath: true,
+          },
+        },
+      },
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    return records.map((record) => ({
+      categoryId: record.category.id,
+      categorySlug: record.category.slug,
+      categoryName: record.category.name,
+      displayPath: record.category.displayPath,
+      updatedAt: record.updatedAt,
+    }));
   }
 
   private async fetchFiltersPayload(slug: string, cityId: string): Promise<Prisma.InputJsonValue> {

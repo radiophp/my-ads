@@ -7,7 +7,8 @@ import type {
   SubscriptionPackage,
   UpdatePackagePayload,
 } from '@/types/packages';
-import type { DivarCategory } from '@/types/divar-category';
+import type { DivarCategory, DivarCategoryFilterDetail, DivarCategoryFilterSummary } from '@/types/divar-category';
+import type { AdminDashboardStats } from '@/types/admin';
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:6200/api';
 
@@ -37,7 +38,15 @@ export const apiSlice = createApi({
     },
     credentials: 'include',
   }),
-  tagTypes: ['Health', 'User', 'Locations', 'Packages', 'DivarCategories'],
+  tagTypes: [
+    'Health',
+    'User',
+    'Locations',
+    'Packages',
+    'DivarCategories',
+    'AdminStats',
+    'DivarCategoryFilters',
+  ],
   endpoints: (builder) => ({
     getHealth: builder.query<{ status: string }, void>({
       query: () => '/health',
@@ -178,6 +187,35 @@ export const apiSlice = createApi({
             ]
           : [{ type: 'DivarCategories' as const, id: 'LIST' }],
     }),
+    updateDivarCategoryAllowPosting: builder.mutation<
+      DivarCategory,
+      { id: string; allowPosting: boolean }
+    >({
+      query: ({ id, allowPosting }) => ({
+        url: `/admin/divar-categories/${id}/allow-posting`,
+        method: 'PATCH',
+        body: { allowPosting },
+      }),
+      invalidatesTags: (result, error, arg) => [
+        { type: 'DivarCategories', id: arg.id },
+        { type: 'DivarCategories', id: 'LIST' },
+      ],
+    }),
+    getAdminDashboardStats: builder.query<AdminDashboardStats, void>({
+      query: () => '/admin-panel/stats',
+      providesTags: ['AdminStats'],
+    }),
+    getDivarCategoryFilters: builder.query<DivarCategoryFilterSummary[], void>({
+      query: () => '/admin/divar-category-filters',
+      providesTags: ['DivarCategoryFilters'],
+    }),
+    getDivarCategoryFilter: builder.query<DivarCategoryFilterDetail, string>({
+      query: (slug) => `/admin/divar-category-filters/${slug}`,
+      providesTags: (result, error, slug) => [
+        { type: 'DivarCategoryFilters', id: slug },
+        'DivarCategoryFilters',
+      ],
+    }),
   }),
 });
 
@@ -201,6 +239,10 @@ export const {
   useDeletePackageMutation,
   useUploadPublicImageMutation,
   useGetDivarCategoriesQuery,
+  useUpdateDivarCategoryAllowPostingMutation,
+  useGetDivarCategoryFiltersQuery,
+  useGetDivarCategoryFilterQuery,
+  useGetAdminDashboardStatsQuery,
 } = apiSlice;
 
 type UpdateCurrentUserPayload = Partial<{

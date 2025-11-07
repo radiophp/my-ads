@@ -37,6 +37,9 @@ export class DivarCategoryDto {
   @ApiProperty()
   isActive!: boolean;
 
+  @ApiProperty({ description: 'Whether posting ads is allowed for this category' })
+  allowPosting!: boolean;
+
   @ApiProperty()
   createdAt!: Date;
 

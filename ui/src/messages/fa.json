@@ -207,7 +207,39 @@
         "divarCategories": {
           "title": "دسته‌بندی‌های دیوار",
           "description": "ساختار سلسله‌مراتبی دسته‌بندی‌های همگام‌سازی‌شده از دیوار را مرور کنید."
+        },
+        "divarFilters": {
+          "title": "فیلترهای دیوار",
+          "description": "پیکربندی فیلتر هر دسته‌بندی همگام‌سازی‌شده را بررسی کنید."
         }
+      }
+    },
+    "divarFilters": {
+      "title": "فیلترهای دسته‌بندی دیوار",
+      "description": "لیست دسته‌هایی که فیلتر آن‌ها ذخیره شده است.",
+      "loading": "در حال بارگذاری فیلترها…",
+      "empty": "هنوز فیلتری ثبت نشده است.",
+      "search": {
+        "label": "جستجو",
+        "placeholder": "جستجو بر اساس عنوان یا اسلاگ…",
+        "empty": "موردی مطابق جستجو یافت نشد."
+      },
+      "columns": {
+        "category": "دسته‌بندی",
+        "slug": "اسلاگ",
+        "displayPath": "مسیر نمایشی",
+        "updatedAt": "آخرین همگام‌سازی",
+        "actions": "اقدامات"
+      },
+      "actions": {
+        "viewPayload": "نمایش JSON"
+      },
+      "payload": {
+        "title": "جزئیات فیلتر",
+        "description": "آخرین پیکربندی برای {name}.",
+        "displayPath": "مسیر نمایشی",
+        "loading": "در حال بارگذاری…",
+        "empty": "داده‌ای برای نمایش وجود ندارد."
       }
     },
     "locations": {
@@ -294,11 +326,16 @@
         "path": "مسیر",
         "depth": "عمق",
         "children": "زیرمجموعه",
-        "status": "وضعیت"
+        "status": "وضعیت",
+        "allowPosting": "امکان درج آگهی"
       },
       "status": {
         "active": "فعال",
         "inactive": "غیرفعال"
+      },
+      "allowPosting": {
+        "enabled": "فعال",
+        "disabled": "غیرفعال"
       }
     },
     "packages": {

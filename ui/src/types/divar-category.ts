@@ -11,6 +11,24 @@ export type DivarCategory = {
   position: number;
   childrenCount: number;
   isActive: boolean;
+  allowPosting: boolean;
   createdAt: string;
+  updatedAt: string;
+};
+
+export type DivarCategoryFilterSummary = {
+  categoryId: string;
+  categorySlug: string;
+  categoryName: string;
+  displayPath: string;
+  updatedAt: string;
+};
+
+export type DivarCategoryFilterDetail = {
+  categoryId: string;
+  categorySlug: string;
+  categoryName: string;
+  displayPath: string;
+  payload: unknown;
   updatedAt: string;
 };

@@ -1,0 +1,1032 @@
+{
+  "page": {
+    "widget_list": [
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "status",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "new",
+              "title": "نو",
+              "search_keywords": "نو"
+            },
+            {
+              "key": "like-new",
+              "title": "در حد نو",
+              "search_keywords": "در حد نو"
+            },
+            {
+              "key": "used",
+              "title": "کارکرده",
+              "search_keywords": "کارکرده"
+            },
+            {
+              "key": "repair-needed",
+              "title": "نیازمند تعمیر",
+              "search_keywords": "نیازمند تعمیر"
+            }
+          ],
+          "cache_key": "laptops:status",
+          "bottom_sheet_title": "انتخاب وضعیت کالا",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "وضعیت کالا",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_status"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "goods-business-type",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "personal",
+              "title": "شخصی",
+              "search_keywords": "شخصی"
+            },
+            {
+              "key": "marketplace",
+              "title": "فروشگاه",
+              "search_keywords": "فروشگاه"
+            }
+          ],
+          "cache_key": "laptops:goods-business-type",
+          "bottom_sheet_title": "انتخاب نوع آگهی\u200cدهنده",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "نوع آگهی\u200cدهنده",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_goods-business-type"
+      },
+      {
+        "widget_type": "TITLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.TitleRowData",
+          "text": "قیمت",
+          "text_color": "TEXT_PRIMARY",
+          "description": "(تومان)",
+          "description_color": "TEXT_SECONDARY",
+          "corresponding_input_widget_id": "filter_price"
+        }
+      },
+      {
+        "widget_type": "I_MANUAL_INPUT_NUMBER_RANGE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IManualInputNumberRangeRowData",
+          "has_divider": true,
+          "field": {
+            "key": "price",
+            "default": {},
+            "type": "number_range",
+            "validators": {
+              "minimum_validators": [
+                {
+                  "min": {
+                    "err": {
+                      "message": "مقدار واردشده نباید کمتر از ۰ تومان باشد."
+                    }
+                  }
+                },
+                {
+                  "max": {
+                    "err": {
+                      "message": "مقدار واردشده نباید بیشتر از ۱۰,۰۰۰,۰۰۰,۰۰۰,۰۰۰ تومان باشد."
+                    },
+                    "max": "10000000000000"
+                  }
+                }
+              ],
+              "maximum_validators": [
+                {
+                  "min": {
+                    "err": {
+                      "message": "مقدار واردشده نباید کمتر از ۰ تومان باشد."
+                    }
+                  }
+                },
+                {
+                  "max": {
+                    "err": {
+                      "message": "مقدار واردشده نباید بیشتر از ۱۰,۰۰۰,۰۰۰,۰۰۰,۰۰۰ تومان باشد."
+                    },
+                    "max": "10000000000000"
+                  }
+                }
+              ],
+              "number_range_validators": [
+                {
+                  "min_must_be_less_or_equal_max": {
+                    "err": {
+                      "message": "عدد انتخابی نباید کمتر از عدد شروع بازه باشد."
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "unit": "تومان",
+          "show_previous_suggestions": true,
+          "cache_key": "laptops:price",
+          "show_field_caption": true,
+          "minimum_dynamic_suggestion": "1660000",
+          "maximum_dynamic_suggestion": "316240000"
+        },
+        "action_log": {
+          "server_side_info": {
+            "info": {
+              "@type": "type.googleapis.com/action_log.PostListFilterWidgetInteractedInfo",
+              "filter_name": "price",
+              "source": "FILTERS_PAGE"
+            },
+            "item_type": {
+              "type": "POST_LIST_FILTER_WIDGET_INTERACTED"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_price"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "brand",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "Acer - ایسر",
+              "title": "Acer - ایسر",
+              "search_keywords": "Acer - ایسر"
+            },
+            {
+              "key": "Apple - اپل",
+              "title": "Apple - اپل",
+              "search_keywords": "Apple - اپل"
+            },
+            {
+              "key": "Asus - ایسوس",
+              "title": "Asus - ایسوس",
+              "search_keywords": "Asus - ایسوس"
+            },
+            {
+              "key": "Compaq - کامپک",
+              "title": "Compaq - کامپک",
+              "search_keywords": "Compaq - کامپک"
+            },
+            {
+              "key": "Dell - دل",
+              "title": "Dell - دل",
+              "search_keywords": "Dell - دل"
+            },
+            {
+              "key": "Fujitsu - فوجیتسو",
+              "title": "Fujitsu - فوجیتسو",
+              "search_keywords": "Fujitsu - فوجیتسو"
+            },
+            {
+              "key": "Gigabyte - گیگابایت",
+              "title": "Gigabyte - گیگابایت",
+              "search_keywords": "Gigabyte - گیگابایت"
+            },
+            {
+              "key": "HP - اچ\u200cپی",
+              "title": "HP - اچ\u200cپی",
+              "search_keywords": "HP - اچ\u200cپی"
+            },
+            {
+              "key": "Lenovo - لنوو",
+              "title": "Lenovo - لنوو",
+              "search_keywords": "Lenovo - لنوو"
+            },
+            {
+              "key": "MSI - ام\u200cاس\u200cآی",
+              "title": "MSI - ام\u200cاس\u200cآی",
+              "search_keywords": "MSI - ام\u200cاس\u200cآی"
+            },
+            {
+              "key": "Samsung - سامسونگ",
+              "title": "Samsung - سامسونگ",
+              "search_keywords": "Samsung - سامسونگ"
+            },
+            {
+              "key": "Sony - سونی",
+              "title": "Sony - سونی",
+              "search_keywords": "Sony - سونی"
+            },
+            {
+              "key": "Toshiba - توشیبا",
+              "title": "Toshiba - توشیبا",
+              "search_keywords": "Toshiba - توشیبا"
+            },
+            {
+              "key": "Suzuki - سوزوکی",
+              "title": "Suzuki - سوزوکی",
+              "search_keywords": "Suzuki - سوزوکی"
+            },
+            {
+              "key": "Razer - ریزر",
+              "title": "Razer - ریزر",
+              "search_keywords": "Razer - ریزر"
+            },
+            {
+              "key": "Alienware - ایلین\u200cویر",
+              "title": "Alienware - ایلین\u200cویر",
+              "search_keywords": "Alienware - ایلین\u200cویر"
+            },
+            {
+              "key": "Microsoft - مایکروسافت",
+              "title": "Microsoft - مایکروسافت",
+              "search_keywords": "Microsoft - مایکروسافت"
+            },
+            {
+              "key": "غیره",
+              "title": "غیره",
+              "search_keywords": "غیره"
+            }
+          ],
+          "cache_key": "laptops:brand",
+          "bottom_sheet_title": "انتخاب برند",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "برند",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_brand"
+      },
+      {
+        "widget_type": "I_LAZY_MULTI_SELECT_DISTRICT_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.ILazyMultiSelectHierarchyRowData",
+          "has_divider": true,
+          "field": {
+            "key": "districts",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "online_search": {
+            "min_query_length": 2,
+            "placeholder": "جستجو",
+            "delay_ms": 300,
+            "field_key": "districts",
+            "source": "filter"
+          },
+          "lazy_payload": {
+            "@type": "type.googleapis.com/post_list.LazyFilterPayload",
+            "filter_name": "districts",
+            "version": "52",
+            "place_ids": ["2"],
+            "category_slug": "laptops"
+          },
+          "show_previous_suggestions": true,
+          "cache_key": "districts",
+          "bottom_sheet_title": "انتخاب محله",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "محله",
+          "placeholder": "انتخاب"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_LAZY_MULTI_SELECT_DISTRICT"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_districts"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "processor",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "Core i3",
+              "title": "Core i3",
+              "search_keywords": "Core i3"
+            },
+            {
+              "key": "Core i5",
+              "title": "Core i5",
+              "search_keywords": "Core i5"
+            },
+            {
+              "key": "Core i7",
+              "title": "Core i7",
+              "search_keywords": "Core i7"
+            },
+            {
+              "key": "Core i9",
+              "title": "Core i9",
+              "search_keywords": "Core i9"
+            },
+            {
+              "key": "Core 2 Duo",
+              "title": "Core 2 Duo",
+              "search_keywords": "Core 2 Duo"
+            },
+            {
+              "key": "Pentium",
+              "title": "Pentium",
+              "search_keywords": "Pentium"
+            },
+            {
+              "key": "Celeron",
+              "title": "Celeron",
+              "search_keywords": "Celeron"
+            },
+            {
+              "key": "Atom",
+              "title": "Atom",
+              "search_keywords": "Atom"
+            },
+            {
+              "key": "Ryzen 3",
+              "title": "Ryzen 3",
+              "search_keywords": "Ryzen 3"
+            },
+            {
+              "key": "Ryzen 5",
+              "title": "Ryzen 5",
+              "search_keywords": "Ryzen 5"
+            },
+            {
+              "key": "Ryzen 7",
+              "title": "Ryzen 7",
+              "search_keywords": "Ryzen 7"
+            },
+            {
+              "key": "Apple M1",
+              "title": "Apple M1",
+              "search_keywords": "Apple M1"
+            },
+            {
+              "key": "غیره",
+              "title": "غیره",
+              "search_keywords": "غیره"
+            }
+          ],
+          "cache_key": "laptops:processor",
+          "bottom_sheet_title": "انتخاب نوع پردازنده",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "نوع پردازنده",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_processor"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "screen_size",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "کوچک\u200cتر از ۱۰ اینچ",
+              "title": "کوچک\u200cتر از ۱۰ اینچ",
+              "search_keywords": "کوچک\u200cتر از ۱۰ اینچ"
+            },
+            {
+              "key": "۱۱ اینچ تا ۱۳ اینچ",
+              "title": "۱۱ اینچ تا ۱۳ اینچ",
+              "search_keywords": "۱۱ اینچ تا ۱۳ اینچ"
+            },
+            {
+              "key": "۱۴ اینچ تا ۱۶ اینچ",
+              "title": "۱۴ اینچ تا ۱۶ اینچ",
+              "search_keywords": "۱۴ اینچ تا ۱۶ اینچ"
+            },
+            {
+              "key": "۱۷ اینچ و بزرگ\u200cتر",
+              "title": "۱۷ اینچ و بزرگ\u200cتر",
+              "search_keywords": "۱۷ اینچ و بزرگ\u200cتر"
+            }
+          ],
+          "cache_key": "laptops:screen_size",
+          "bottom_sheet_title": "انتخاب اندازهٔ صفحه",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "اندازهٔ صفحه",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_screen_size"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "internal_storage",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "۱۶ گیگابایت",
+              "title": "۱۶ گیگابایت",
+              "search_keywords": "۱۶ گیگابایت"
+            },
+            {
+              "key": "۳۲ گیگابایت",
+              "title": "۳۲ گیگابایت",
+              "search_keywords": "۳۲ گیگابایت"
+            },
+            {
+              "key": "۶۴ گیگابایت",
+              "title": "۶۴ گیگابایت",
+              "search_keywords": "۶۴ گیگابایت"
+            },
+            {
+              "key": "۱۲۰ گیگابایت",
+              "title": "۱۲۰ گیگابایت",
+              "search_keywords": "۱۲۰ گیگابایت"
+            },
+            {
+              "key": "۱۲۸ گیگابایت",
+              "title": "۱۲۸ گیگابایت",
+              "search_keywords": "۱۲۸ گیگابایت"
+            },
+            {
+              "key": "۱۶۰ گیگابایت",
+              "title": "۱۶۰ گیگابایت",
+              "search_keywords": "۱۶۰ گیگابایت"
+            },
+            {
+              "key": "۲۰۰ گیگابایت",
+              "title": "۲۰۰ گیگابایت",
+              "search_keywords": "۲۰۰ گیگابایت"
+            },
+            {
+              "key": "۲۵۰ گیگابایت",
+              "title": "۲۵۰ گیگابایت",
+              "search_keywords": "۲۵۰ گیگابایت"
+            },
+            {
+              "key": "۲۵۶ گیگابایت",
+              "title": "۲۵۶ گیگابایت",
+              "search_keywords": "۲۵۶ گیگابایت"
+            },
+            {
+              "key": "۳۲۰ گیگابایت",
+              "title": "۳۲۰ گیگابایت",
+              "search_keywords": "۳۲۰ گیگابایت"
+            },
+            {
+              "key": "۴۰۰ گیگابایت",
+              "title": "۴۰۰ گیگابایت",
+              "search_keywords": "۴۰۰ گیگابایت"
+            },
+            {
+              "key": "۴۸۰ گیگابایت",
+              "title": "۴۸۰ گیگابایت",
+              "search_keywords": "۴۸۰ گیگابایت"
+            },
+            {
+              "key": "۵۰۰ گیگابایت",
+              "title": "۵۰۰ گیگابایت",
+              "search_keywords": "۵۰۰ گیگابایت"
+            },
+            {
+              "key": "۵۱۲ گیگابایت",
+              "title": "۵۱۲ گیگابایت",
+              "search_keywords": "۵۱۲ گیگابایت"
+            },
+            {
+              "key": "۶۴۰ گیگابایت",
+              "title": "۶۴۰ گیگابایت",
+              "search_keywords": "۶۴۰ گیگابایت"
+            },
+            {
+              "key": "۷۵۰ گیگابایت",
+              "title": "۷۵۰ گیگابایت",
+              "search_keywords": "۷۵۰ گیگابایت"
+            },
+            {
+              "key": "۹۶۰ گیگابایت",
+              "title": "۹۶۰ گیگابایت",
+              "search_keywords": "۹۶۰ گیگابایت"
+            },
+            {
+              "key": "یک ترابایت",
+              "title": "یک ترابایت",
+              "search_keywords": "یک ترابایت"
+            },
+            {
+              "key": "یک و نیم ترابایت",
+              "title": "یک و نیم ترابایت",
+              "search_keywords": "یک و نیم ترابایت"
+            },
+            {
+              "key": "دو ترابایت",
+              "title": "دو ترابایت",
+              "search_keywords": "دو ترابایت"
+            },
+            {
+              "key": "غیره",
+              "title": "غیره",
+              "search_keywords": "غیره"
+            }
+          ],
+          "cache_key": "laptops:internal_storage",
+          "bottom_sheet_title": "انتخاب حافظهٔ داخلی",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "حافظهٔ داخلی",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_internal_storage"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "ram_memory",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "۱ گیگابایت",
+              "title": "۱ گیگابایت",
+              "search_keywords": "۱ گیگابایت"
+            },
+            {
+              "key": "۲ گیگابایت",
+              "title": "۲ گیگابایت",
+              "search_keywords": "۲ گیگابایت"
+            },
+            {
+              "key": "۳ گیگابایت",
+              "title": "۳ گیگابایت",
+              "search_keywords": "۳ گیگابایت"
+            },
+            {
+              "key": "۴ گیگابایت",
+              "title": "۴ گیگابایت",
+              "search_keywords": "۴ گیگابایت"
+            },
+            {
+              "key": "۶ گیگابایت",
+              "title": "۶ گیگابایت",
+              "search_keywords": "۶ گیگابایت"
+            },
+            {
+              "key": "۸ گیگابایت",
+              "title": "۸ گیگابایت",
+              "search_keywords": "۸ گیگابایت"
+            },
+            {
+              "key": "۱۰ گیگابایت",
+              "title": "۱۰ گیگابایت",
+              "search_keywords": "۱۰ گیگابایت"
+            },
+            {
+              "key": "۱۲ گیگابایت",
+              "title": "۱۲ گیگابایت",
+              "search_keywords": "۱۲ گیگابایت"
+            },
+            {
+              "key": "۱۶ گیگابایت",
+              "title": "۱۶ گیگابایت",
+              "search_keywords": "۱۶ گیگابایت"
+            },
+            {
+              "key": "۲۰ گیگابایت",
+              "title": "۲۰ گیگابایت",
+              "search_keywords": "۲۰ گیگابایت"
+            },
+            {
+              "key": "۲۴ گیگابایت",
+              "title": "۲۴ گیگابایت",
+              "search_keywords": "۲۴ گیگابایت"
+            },
+            {
+              "key": "۳۲ گیگابایت",
+              "title": "۳۲ گیگابایت",
+              "search_keywords": "۳۲ گیگابایت"
+            },
+            {
+              "key": "۶۴ گیگابایت",
+              "title": "۶۴ گیگابایت",
+              "search_keywords": "۶۴ گیگابایت"
+            },
+            {
+              "key": "غیره",
+              "title": "غیره",
+              "search_keywords": "غیره"
+            }
+          ],
+          "cache_key": "laptops:ram_memory",
+          "bottom_sheet_title": "انتخاب مقدار رم",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "مقدار رم",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_ram_memory"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "os",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "Windows 10",
+              "title": "Windows 10",
+              "search_keywords": "Windows 10"
+            },
+            {
+              "key": "Windows 8",
+              "title": "Windows 8",
+              "search_keywords": "Windows 8"
+            },
+            {
+              "key": "Windows 7",
+              "title": "Windows 7",
+              "search_keywords": "Windows 7"
+            },
+            {
+              "key": "Windows Vista",
+              "title": "Windows Vista",
+              "search_keywords": "Windows Vista"
+            },
+            {
+              "key": "Windows XP",
+              "title": "Windows XP",
+              "search_keywords": "Windows XP"
+            },
+            {
+              "key": "macOS",
+              "title": "macOS",
+              "search_keywords": "macOS"
+            },
+            {
+              "key": "Google Chrome",
+              "title": "Google Chrome",
+              "search_keywords": "Google Chrome"
+            },
+            {
+              "key": "Linux",
+              "title": "Linux",
+              "search_keywords": "Linux"
+            },
+            {
+              "key": "Ubuntu",
+              "title": "Ubuntu",
+              "search_keywords": "Ubuntu"
+            },
+            {
+              "key": "Dos",
+              "title": "Dos",
+              "search_keywords": "Dos"
+            },
+            {
+              "key": "بدون سیستم عامل",
+              "title": "بدون سیستم عامل",
+              "search_keywords": "بدون سیستم عامل"
+            },
+            {
+              "key": "سایر",
+              "title": "سایر",
+              "search_keywords": "سایر"
+            }
+          ],
+          "cache_key": "laptops:os",
+          "bottom_sheet_title": "انتخاب سیستم\u200cعامل",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "سیستم\u200cعامل",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_os"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "color",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "مشکی",
+              "title": "مشکی",
+              "search_keywords": "مشکی"
+            },
+            {
+              "key": "سفید",
+              "title": "سفید",
+              "search_keywords": "سفید"
+            },
+            {
+              "key": "خاکستری",
+              "title": "خاکستری",
+              "search_keywords": "خاکستری"
+            },
+            {
+              "key": "نقره\u200cای",
+              "title": "نقره\u200cای",
+              "search_keywords": "نقره\u200cای"
+            },
+            {
+              "key": "بژ",
+              "title": "بژ",
+              "search_keywords": "بژ"
+            },
+            {
+              "key": "سرمه\u200cای",
+              "title": "سرمه\u200cای",
+              "search_keywords": "سرمه\u200cای"
+            },
+            {
+              "key": "طلایی",
+              "title": "طلایی",
+              "search_keywords": "طلایی"
+            },
+            {
+              "key": "آبی",
+              "title": "آبی",
+              "search_keywords": "آبی"
+            },
+            {
+              "key": "صورتی",
+              "title": "صورتی",
+              "search_keywords": "صورتی"
+            },
+            {
+              "key": "قرمز",
+              "title": "قرمز",
+              "search_keywords": "قرمز"
+            },
+            {
+              "key": "سبز",
+              "title": "سبز",
+              "search_keywords": "سبز"
+            },
+            {
+              "key": "سایر",
+              "title": "سایر",
+              "search_keywords": "سایر"
+            }
+          ],
+          "cache_key": "laptops:color",
+          "bottom_sheet_title": "انتخاب رنگ",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "رنگ",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_color"
+      },
+      {
+        "widget_type": "I_TOGGLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IToggleRowData",
+          "title": "دارای صفحه\u200cنمایش لمسی",
+          "size": "SMALL",
+          "has_divider": true,
+          "field": {
+            "key": "has_touch_screen",
+            "validators": {},
+            "type": "boolean"
+          }
+        },
+        "uid": "filter_has_touch_screen"
+      },
+      {
+        "widget_type": "I_TOGGLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IToggleRowData",
+          "title": "دارای پورت HDMI",
+          "size": "SMALL",
+          "has_divider": true,
+          "field": {
+            "key": "hdmi_port",
+            "validators": {},
+            "type": "boolean"
+          }
+        },
+        "uid": "filter_hdmi_port"
+      },
+      {
+        "widget_type": "I_TOGGLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IToggleRowData",
+          "title": "عکس\u200cدار",
+          "size": "SMALL",
+          "has_divider": true,
+          "field": {
+            "key": "has-photo",
+            "validators": {},
+            "type": "boolean"
+          }
+        },
+        "uid": "filter_has-photo"
+      },
+      {
+        "widget_type": "I_SINGLE_SELECT_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.ISingleSelectRowData",
+          "has_divider": true,
+          "field": {
+            "key": "exchange",
+            "validators": {},
+            "type": "str"
+          },
+          "title": "نمایش معاوضه\u200cها",
+          "sheet_title": "نمایش معاوضه\u200cها",
+          "placeholder": "انتخاب",
+          "clearable": true,
+          "options": [
+            {
+              "value": "only-exchanges",
+              "display": "نمایش فقط معاوضه\u200cها"
+            },
+            {
+              "value": "exclude-exchanges",
+              "display": "حذف معاوضه\u200cها"
+            }
+          ],
+          "options_alignment": "CENTER",
+          "small": true
+        },
+        "uid": "filter_exchange"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "addon_service_tags",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "IDENTITY_VERIFIED",
+              "title": "با تأیید هویت",
+              "search_keywords": "با تأیید هویت"
+            },
+            {
+              "key": "SECURE_PAYMENT",
+              "title": "با پرداخت امن",
+              "search_keywords": "با پرداخت امن"
+            }
+          ],
+          "cache_key": "laptops:addon_service_tags",
+          "bottom_sheet_title": "انتخاب افزونه\u200cها",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "افزونه\u200cها",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_addon_service_tags"
+      }
+    ],
+    "title": "فیلترها",
+    "submit_title": "اعمال فیلترها"
+  },
+  "base_data": {
+    "form_data": {
+      "data": {
+        "category": {
+          "str": {
+            "value": "laptops"
+          }
+        }
+      }
+    }
+  }
+}

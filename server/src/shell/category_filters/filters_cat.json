@@ -1,0 +1,90 @@
+{
+  "page": {
+    "widget_list": [
+      {
+        "widget_type": "I_LAZY_MULTI_SELECT_DISTRICT_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.ILazyMultiSelectHierarchyRowData",
+          "has_divider": true,
+          "field": {
+            "key": "districts",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "online_search": {
+            "min_query_length": 2,
+            "placeholder": "جستجو",
+            "delay_ms": 300,
+            "field_key": "districts",
+            "source": "filter"
+          },
+          "lazy_payload": {
+            "@type": "type.googleapis.com/post_list.LazyFilterPayload",
+            "filter_name": "districts",
+            "version": "52",
+            "place_ids": ["2"],
+            "category_slug": "cat"
+          },
+          "show_previous_suggestions": true,
+          "cache_key": "districts",
+          "bottom_sheet_title": "انتخاب محله",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "محله",
+          "placeholder": "انتخاب"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_LAZY_MULTI_SELECT_DISTRICT"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_districts"
+      },
+      {
+        "widget_type": "I_TOGGLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IToggleRowData",
+          "title": "ویدیو\u200cدار",
+          "size": "SMALL",
+          "has_divider": true,
+          "field": {
+            "key": "has-video",
+            "validators": {},
+            "type": "boolean"
+          }
+        },
+        "uid": "filter_has-video"
+      },
+      {
+        "widget_type": "I_TOGGLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IToggleRowData",
+          "title": "عکس\u200cدار",
+          "size": "SMALL",
+          "has_divider": true,
+          "field": {
+            "key": "has-photo",
+            "validators": {},
+            "type": "boolean"
+          }
+        },
+        "uid": "filter_has-photo"
+      }
+    ],
+    "title": "فیلترها",
+    "submit_title": "اعمال فیلترها"
+  },
+  "base_data": {
+    "form_data": {
+      "data": {
+        "category": {
+          "str": {
+            "value": "cat"
+          }
+        }
+      }
+    }
+  }
+}

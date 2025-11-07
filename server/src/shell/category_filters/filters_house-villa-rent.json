@@ -1,0 +1,1045 @@
+{
+  "page": {
+    "widget_list": [
+      {
+        "widget_type": "I_LAZY_MULTI_SELECT_DISTRICT_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.ILazyMultiSelectHierarchyRowData",
+          "has_divider": true,
+          "field": {
+            "key": "districts",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "online_search": {
+            "min_query_length": 2,
+            "placeholder": "جستجو",
+            "delay_ms": 300,
+            "field_key": "districts",
+            "source": "filter"
+          },
+          "lazy_payload": {
+            "@type": "type.googleapis.com/post_list.LazyFilterPayload",
+            "filter_name": "districts",
+            "version": "52",
+            "place_ids": ["2"],
+            "category_slug": "house-villa-rent"
+          },
+          "show_previous_suggestions": true,
+          "cache_key": "districts",
+          "bottom_sheet_title": "انتخاب محله",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "محله",
+          "placeholder": "انتخاب"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_LAZY_MULTI_SELECT_DISTRICT"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_districts"
+      },
+      {
+        "widget_type": "TITLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.TitleRowData",
+          "text": "ودیعه",
+          "text_color": "TEXT_PRIMARY",
+          "description": "(تومان)",
+          "description_color": "TEXT_SECONDARY",
+          "corresponding_input_widget_id": "filter_credit"
+        }
+      },
+      {
+        "widget_type": "I_MANUAL_INPUT_NUMBER_RANGE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IManualInputNumberRangeRowData",
+          "has_divider": true,
+          "field": {
+            "key": "credit",
+            "default": {},
+            "type": "number_range",
+            "validators": {
+              "minimum_validators": [
+                {
+                  "min": {
+                    "err": {
+                      "message": "مقدار واردشده نباید کمتر از ۰ تومان باشد."
+                    }
+                  }
+                },
+                {
+                  "max": {
+                    "err": {
+                      "message": "مقدار واردشده نباید بیشتر از ۱۰,۰۰۰,۰۰۰,۰۰۰,۰۰۰ تومان باشد."
+                    },
+                    "max": "10000000000000"
+                  }
+                }
+              ],
+              "maximum_validators": [
+                {
+                  "min": {
+                    "err": {
+                      "message": "مقدار واردشده نباید کمتر از ۰ تومان باشد."
+                    }
+                  }
+                },
+                {
+                  "max": {
+                    "err": {
+                      "message": "مقدار واردشده نباید بیشتر از ۱۰,۰۰۰,۰۰۰,۰۰۰,۰۰۰ تومان باشد."
+                    },
+                    "max": "10000000000000"
+                  }
+                }
+              ],
+              "number_range_validators": [
+                {
+                  "min_must_be_less_or_equal_max": {
+                    "err": {
+                      "message": "عدد انتخابی نباید کمتر از عدد شروع بازه باشد."
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "unit": "تومان",
+          "show_previous_suggestions": true,
+          "cache_key": "house-villa-rent:credit",
+          "show_field_caption": true,
+          "minimum_dynamic_suggestion": "22800000",
+          "maximum_dynamic_suggestion": "16325199872"
+        },
+        "action_log": {
+          "server_side_info": {
+            "info": {
+              "@type": "type.googleapis.com/action_log.PostListFilterWidgetInteractedInfo",
+              "filter_name": "credit",
+              "source": "FILTERS_PAGE"
+            },
+            "item_type": {
+              "type": "POST_LIST_FILTER_WIDGET_INTERACTED"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_credit"
+      },
+      {
+        "widget_type": "TITLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.TitleRowData",
+          "text": "اجاره",
+          "text_color": "TEXT_PRIMARY",
+          "description": "(تومان)",
+          "description_color": "TEXT_SECONDARY",
+          "corresponding_input_widget_id": "filter_rent"
+        }
+      },
+      {
+        "widget_type": "I_MANUAL_INPUT_NUMBER_RANGE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IManualInputNumberRangeRowData",
+          "has_divider": true,
+          "field": {
+            "key": "rent",
+            "default": {},
+            "type": "number_range",
+            "validators": {
+              "minimum_validators": [
+                {
+                  "min": {
+                    "err": {
+                      "message": "مقدار واردشده نباید کمتر از ۰ تومان باشد."
+                    }
+                  }
+                },
+                {
+                  "max": {
+                    "err": {
+                      "message": "مقدار واردشده نباید بیشتر از ۱۰,۰۰۰,۰۰۰,۰۰۰,۰۰۰ تومان باشد."
+                    },
+                    "max": "10000000000000"
+                  }
+                }
+              ],
+              "maximum_validators": [
+                {
+                  "min": {
+                    "err": {
+                      "message": "مقدار واردشده نباید کمتر از ۰ تومان باشد."
+                    }
+                  }
+                },
+                {
+                  "max": {
+                    "err": {
+                      "message": "مقدار واردشده نباید بیشتر از ۱۰,۰۰۰,۰۰۰,۰۰۰,۰۰۰ تومان باشد."
+                    },
+                    "max": "10000000000000"
+                  }
+                }
+              ],
+              "number_range_validators": [
+                {
+                  "min_must_be_less_or_equal_max": {
+                    "err": {
+                      "message": "عدد انتخابی نباید کمتر از عدد شروع بازه باشد."
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "unit": "تومان",
+          "show_previous_suggestions": true,
+          "cache_key": "house-villa-rent:rent",
+          "show_field_caption": true,
+          "minimum_dynamic_suggestion": "100000",
+          "maximum_dynamic_suggestion": "354400000"
+        },
+        "action_log": {
+          "server_side_info": {
+            "info": {
+              "@type": "type.googleapis.com/action_log.PostListFilterWidgetInteractedInfo",
+              "filter_name": "rent",
+              "source": "FILTERS_PAGE"
+            },
+            "item_type": {
+              "type": "POST_LIST_FILTER_WIDGET_INTERACTED"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_rent"
+      },
+      {
+        "widget_type": "TITLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.TitleRowData",
+          "text": "متراژ",
+          "text_color": "TEXT_PRIMARY",
+          "description": "(متر)",
+          "description_color": "TEXT_SECONDARY",
+          "corresponding_input_widget_id": "filter_size"
+        }
+      },
+      {
+        "widget_type": "I_SELECTIVE_RANGE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.ISelectiveRangeRowData",
+          "has_divider": true,
+          "field": {
+            "key": "size",
+            "default": {},
+            "type": "number_range",
+            "validators": {
+              "minimum_validators": [
+                {
+                  "min": {
+                    "err": {
+                      "message": "مقدار واردشده نباید کمتر از ۰ متر باشد."
+                    }
+                  }
+                },
+                {
+                  "max": {
+                    "err": {
+                      "message": "مقدار واردشده نباید بیشتر از ۱,۰۰۰,۰۰۰ متر باشد."
+                    },
+                    "max": "1000000"
+                  }
+                }
+              ],
+              "maximum_validators": [
+                {
+                  "min": {
+                    "err": {
+                      "message": "مقدار واردشده نباید کمتر از ۰ متر باشد."
+                    }
+                  }
+                },
+                {
+                  "max": {
+                    "err": {
+                      "message": "مقدار واردشده نباید بیشتر از ۱,۰۰۰,۰۰۰ متر باشد."
+                    },
+                    "max": "1000000"
+                  }
+                }
+              ],
+              "number_range_validators": [
+                {
+                  "min_must_be_less_or_equal_max": {
+                    "err": {
+                      "message": "عدد انتخابی نباید کمتر از عدد شروع بازه باشد."
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "show_previous_suggestions": true,
+          "cache_key": "house-villa-rent:size",
+          "from_options": [
+            {
+              "value": "30",
+              "display": "۳۰ متر"
+            },
+            {
+              "value": "40",
+              "display": "۴۰ متر"
+            },
+            {
+              "value": "50",
+              "display": "۵۰ متر"
+            },
+            {
+              "value": "60",
+              "display": "۶۰ متر"
+            },
+            {
+              "value": "70",
+              "display": "۷۰ متر"
+            },
+            {
+              "value": "80",
+              "display": "۸۰ متر"
+            },
+            {
+              "value": "90",
+              "display": "۹۰ متر"
+            },
+            {
+              "value": "100",
+              "display": "۱۰۰ متر"
+            },
+            {
+              "value": "120",
+              "display": "۱۲۰ متر"
+            },
+            {
+              "value": "140",
+              "display": "۱۴۰ متر"
+            },
+            {
+              "value": "160",
+              "display": "۱۶۰ متر"
+            },
+            {
+              "value": "180",
+              "display": "۱۸۰ متر"
+            },
+            {
+              "value": "200",
+              "display": "۲۰۰ متر"
+            },
+            {
+              "value": "250",
+              "display": "۲۵۰ متر"
+            },
+            {
+              "value": "300",
+              "display": "۳۰۰ متر"
+            },
+            {
+              "value": "350",
+              "display": "۳۵۰ متر"
+            },
+            {
+              "value": "400",
+              "display": "۴۰۰ متر"
+            },
+            {
+              "value": "500",
+              "display": "۵۰۰ متر"
+            },
+            {
+              "value": "1000",
+              "display": "۱۰۰۰ متر"
+            },
+            {
+              "value": "2000",
+              "display": "۲۰۰۰ متر"
+            },
+            {
+              "value": "5000",
+              "display": "۵۰۰۰ متر"
+            }
+          ],
+          "to_options": [
+            {
+              "value": "30",
+              "display": "۳۰ متر"
+            },
+            {
+              "value": "40",
+              "display": "۴۰ متر"
+            },
+            {
+              "value": "50",
+              "display": "۵۰ متر"
+            },
+            {
+              "value": "60",
+              "display": "۶۰ متر"
+            },
+            {
+              "value": "70",
+              "display": "۷۰ متر"
+            },
+            {
+              "value": "80",
+              "display": "۸۰ متر"
+            },
+            {
+              "value": "90",
+              "display": "۹۰ متر"
+            },
+            {
+              "value": "100",
+              "display": "۱۰۰ متر"
+            },
+            {
+              "value": "120",
+              "display": "۱۲۰ متر"
+            },
+            {
+              "value": "140",
+              "display": "۱۴۰ متر"
+            },
+            {
+              "value": "160",
+              "display": "۱۶۰ متر"
+            },
+            {
+              "value": "180",
+              "display": "۱۸۰ متر"
+            },
+            {
+              "value": "200",
+              "display": "۲۰۰ متر"
+            },
+            {
+              "value": "250",
+              "display": "۲۵۰ متر"
+            },
+            {
+              "value": "300",
+              "display": "۳۰۰ متر"
+            },
+            {
+              "value": "350",
+              "display": "۳۵۰ متر"
+            },
+            {
+              "value": "400",
+              "display": "۴۰۰ متر"
+            },
+            {
+              "value": "500",
+              "display": "۵۰۰ متر"
+            },
+            {
+              "value": "1000",
+              "display": "۱۰۰۰ متر"
+            },
+            {
+              "value": "2000",
+              "display": "۲۰۰۰ متر"
+            },
+            {
+              "value": "5000",
+              "display": "۵۰۰۰ متر"
+            },
+            {
+              "value": "1000000",
+              "display": "بالای ۵۰۰۰ متر"
+            }
+          ],
+          "open_new_bottom_sheet": true,
+          "filter_options_by_from": true,
+          "manual_input_option": {
+            "display": "- وارد\u200cکردن مقدار دلخواه -",
+            "unit": "متر",
+            "show_field_caption": true
+          },
+          "from_bottom_sheet_title": "متراژ از",
+          "to_bottom_sheet_title": "متراژ تا"
+        },
+        "action_log": {
+          "server_side_info": {
+            "info": {
+              "@type": "type.googleapis.com/action_log.PostListFilterWidgetInteractedInfo",
+              "filter_name": "size",
+              "source": "FILTERS_PAGE"
+            },
+            "item_type": {
+              "type": "POST_LIST_FILTER_WIDGET_INTERACTED"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_size"
+      },
+      {
+        "widget_type": "TITLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.TitleRowData",
+          "text": "امکانات تصویری آگهی",
+          "text_color": "TEXT_PRIMARY"
+        }
+      },
+      {
+        "widget_type": "I_TOGGLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IToggleRowData",
+          "title": "ویدیو\u200cدار",
+          "size": "SMALL",
+          "has_divider": true,
+          "field": {
+            "key": "has-video",
+            "validators": {},
+            "type": "boolean"
+          }
+        },
+        "uid": "filter_has-video"
+      },
+      {
+        "widget_type": "I_TOGGLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IToggleRowData",
+          "title": "دارای عکس از ملک",
+          "size": "SMALL",
+          "has_divider": true,
+          "field": {
+            "key": "has-photo",
+            "validators": {},
+            "type": "boolean"
+          }
+        },
+        "uid": "filter_has-photo"
+      },
+      {
+        "widget_type": "TITLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.TitleRowData",
+          "text": "ویژگی\u200cها و امکانات",
+          "text_color": "TEXT_PRIMARY"
+        }
+      },
+      {
+        "widget_type": "I_TOGGLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IToggleRowData",
+          "title": "با پارکینگ",
+          "size": "SMALL",
+          "has_divider": true,
+          "field": {
+            "key": "parking",
+            "validators": {},
+            "type": "boolean"
+          }
+        },
+        "uid": "filter_parking"
+      },
+      {
+        "widget_type": "I_TOGGLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IToggleRowData",
+          "title": "با بالکن",
+          "size": "SMALL",
+          "has_divider": true,
+          "field": {
+            "key": "balcony",
+            "validators": {},
+            "type": "boolean"
+          }
+        },
+        "uid": "filter_balcony"
+      },
+      {
+        "widget_type": "I_TOGGLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IToggleRowData",
+          "title": "با انباری",
+          "size": "SMALL",
+          "has_divider": true,
+          "field": {
+            "key": "warehouse",
+            "validators": {},
+            "type": "boolean"
+          }
+        },
+        "uid": "filter_warehouse"
+      },
+      {
+        "widget_type": "I_TOGGLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IToggleRowData",
+          "title": "بازسازی شده",
+          "size": "SMALL",
+          "has_divider": true,
+          "field": {
+            "key": "rebuilt",
+            "validators": {},
+            "type": "boolean"
+          }
+        },
+        "uid": "filter_rebuilt"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "building_direction",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "east",
+              "title": "شرقی",
+              "search_keywords": "شرقی"
+            },
+            {
+              "key": "west",
+              "title": "غربی",
+              "search_keywords": "غربی"
+            },
+            {
+              "key": "north",
+              "title": "شمالی",
+              "search_keywords": "شمالی"
+            },
+            {
+              "key": "south",
+              "title": "جنوبی",
+              "search_keywords": "جنوبی"
+            }
+          ],
+          "cache_key": "house-villa-rent:building_direction",
+          "bottom_sheet_title": "انتخاب جهت ساختمان",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "جهت ساختمان",
+          "placeholder": "مثلا شمالی",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_building_direction"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "cooling_system",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "water_cooler",
+              "title": "کولر آبی",
+              "search_keywords": "کولر آبی"
+            },
+            {
+              "key": "air_conditioner",
+              "title": "کولر گازی",
+              "search_keywords": "کولر گازی"
+            },
+            {
+              "key": "duct_split",
+              "title": "داکت اسپلیت",
+              "search_keywords": "داکت اسپلیت"
+            },
+            {
+              "key": "split",
+              "title": "اسپلیت",
+              "search_keywords": "اسپلیت"
+            },
+            {
+              "key": "fan_coil",
+              "title": "فن کوئل",
+              "search_keywords": "فن کوئل"
+            }
+          ],
+          "cache_key": "house-villa-rent:cooling_system",
+          "bottom_sheet_title": "انتخاب سرمایش",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "سرمایش",
+          "placeholder": "مثلا داکت اسپلیت",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_cooling_system"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "heating_system",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "heater",
+              "title": "بخاری",
+              "search_keywords": "بخاری"
+            },
+            {
+              "key": "shoofaj",
+              "title": "شوفاژ",
+              "search_keywords": "شوفاژ"
+            },
+            {
+              "key": "fan_coil",
+              "title": "فن کوئل",
+              "search_keywords": "فن کوئل"
+            },
+            {
+              "key": "floor_heating",
+              "title": "از کف",
+              "search_keywords": "از کف"
+            },
+            {
+              "key": "duct_split",
+              "title": "داکت اسپلیت",
+              "search_keywords": "داکت اسپلیت"
+            },
+            {
+              "key": "split",
+              "title": "اسپلیت",
+              "search_keywords": "اسپلیت"
+            },
+            {
+              "key": "fireplace",
+              "title": "شومینه",
+              "search_keywords": "شومینه"
+            }
+          ],
+          "cache_key": "house-villa-rent:heating_system",
+          "bottom_sheet_title": "انتخاب گرمایش",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "گرمایش",
+          "placeholder": "مثلا شوفاژ",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_heating_system"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "floor_type",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "ceramic",
+              "title": "سرامیک",
+              "search_keywords": "سرامیک"
+            },
+            {
+              "key": "wood_parquet",
+              "title": "پارکت چوب",
+              "search_keywords": "پارکت چوب"
+            },
+            {
+              "key": "laminate_parquet",
+              "title": "پارکت لمینت",
+              "search_keywords": "پارکت لمینت"
+            },
+            {
+              "key": "stone",
+              "title": "سنگ",
+              "search_keywords": "سنگ"
+            },
+            {
+              "key": "floor_covering",
+              "title": "کف\u200cپوش PVC",
+              "search_keywords": "کف\u200cپوش PVC"
+            },
+            {
+              "key": "carpet",
+              "title": "موکت",
+              "search_keywords": "موکت"
+            },
+            {
+              "key": "mosaic",
+              "title": "موزائیک",
+              "search_keywords": "موزائیک"
+            }
+          ],
+          "cache_key": "house-villa-rent:floor_type",
+          "bottom_sheet_title": "انتخاب جنس کف",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "جنس کف",
+          "placeholder": "مثلا پارکت چوب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_floor_type"
+      },
+      {
+        "widget_type": "I_SINGLE_SELECT_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.ISingleSelectRowData",
+          "has_divider": true,
+          "field": {
+            "key": "toilet",
+            "validators": {},
+            "type": "str"
+          },
+          "title": "سرویس بهداشتی",
+          "sheet_title": "سرویس بهداشتی",
+          "placeholder": "انتخاب",
+          "clearable": true,
+          "options": [
+            {
+              "value": "squat",
+              "display": "ایرانی"
+            },
+            {
+              "value": "seat",
+              "display": "فرنگی"
+            },
+            {
+              "value": "squat_seat",
+              "display": "ایرانی و فرنگی"
+            }
+          ],
+          "options_alignment": "CENTER",
+          "small": true
+        },
+        "uid": "filter_toilet"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "warm_water_provider",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "water_heater",
+              "title": "آبگرم\u200cکن",
+              "search_keywords": "آبگرم\u200cکن"
+            },
+            {
+              "key": "powerhouse",
+              "title": "موتورخانه",
+              "search_keywords": "موتورخانه"
+            },
+            {
+              "key": "package",
+              "title": "پکیج",
+              "search_keywords": "پکیج"
+            }
+          ],
+          "cache_key": "house-villa-rent:warm_water_provider",
+          "bottom_sheet_title": "انتخاب تأمین\u200cکننده آب گرم",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "تأمین\u200cکننده آب گرم",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_warm_water_provider"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "business-type",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "real-estate-business",
+              "title": "مشاور املاک",
+              "search_keywords": "مشاور املاک"
+            },
+            {
+              "key": "personal",
+              "title": "شخصی",
+              "search_keywords": "شخصی"
+            }
+          ],
+          "cache_key": "house-villa-rent:business-type",
+          "bottom_sheet_title": "انتخاب آگهی\u200cدهنده",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "آگهی\u200cدهنده",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_business-type"
+      },
+      {
+        "widget_type": "I_SINGLE_SELECT_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.ISingleSelectRowData",
+          "has_divider": true,
+          "field": {
+            "key": "recent_ads",
+            "validators": {},
+            "type": "str"
+          },
+          "title": "زمان انتشار آگهی",
+          "sheet_title": "زمان انتشار آگهی",
+          "placeholder": "انتخاب",
+          "clearable": true,
+          "options": [
+            {
+              "value": "3h",
+              "display": "۳ ساعت پیش"
+            },
+            {
+              "value": "12h",
+              "display": "۱۲ ساعت پیش"
+            },
+            {
+              "value": "1d",
+              "display": "۱ روز پیش"
+            },
+            {
+              "value": "3d",
+              "display": "۳ روز پیش"
+            },
+            {
+              "value": "7d",
+              "display": "۷ روز پیش"
+            }
+          ],
+          "options_alignment": "CENTER",
+          "small": true
+        },
+        "uid": "filter_recent_ads"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "addon_service_tags",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "IDENTITY_VERIFIED",
+              "title": "با تأیید هویت",
+              "search_keywords": "با تأیید هویت"
+            },
+            {
+              "key": "POST_VERIFIED",
+              "title": "با تأیید اطلاعات",
+              "search_keywords": "با تأیید اطلاعات"
+            }
+          ],
+          "cache_key": "house-villa-rent:addon_service_tags",
+          "bottom_sheet_title": "انتخاب افزونه\u200cها",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "افزونه\u200cها",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_addon_service_tags"
+      }
+    ],
+    "title": "فیلترها",
+    "submit_title": "اعمال فیلترها"
+  },
+  "base_data": {
+    "form_data": {
+      "data": {
+        "category": {
+          "str": {
+            "value": "house-villa-rent"
+          }
+        }
+      }
+    }
+  }
+}

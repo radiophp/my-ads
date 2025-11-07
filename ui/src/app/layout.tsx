@@ -21,7 +21,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           <Providers>
             <div className="min-h-screen bg-background text-foreground">
               <SiteHeader />
-              <main className="mx-auto w-full max-w-5xl px-4 py-12">{children}</main>
+              <main className="w-full px-0 py-12">{children}</main>
               <Footer />
             </div>
           </Providers>

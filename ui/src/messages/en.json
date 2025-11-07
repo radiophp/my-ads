@@ -155,7 +155,32 @@
   },
   "dashboard": {
     "title": "Dashboard",
-    "subtitle": "Your personalized workspace will land here soon."
+    "subtitle": "Your personalized workspace will land here soon.",
+    "filters": {
+      "title": "Search filters",
+      "provinceLabel": "Province",
+      "provinceAll": "All provinces",
+      "provinceButtonSelect": "Select province",
+      "provinceModalTitle": "Select province",
+      "provinceModalDescription": "Pick one province or target the entire country.",
+      "provinceModalSelectAll": "All provinces",
+      "provinceModalEmpty": "No provinces are available.",
+      "provinceModalCancel": "Cancel",
+      "provinceModalConfirm": "Select",
+      "cityLabel": "Cities",
+      "cityAll": "All cities",
+      "cityButtonSelect": "Select city",
+      "cityButtonSelected": "{count} cities",
+      "cityHelper": "Open the selector to choose one or more cities.",
+      "cityDisabledHelper": "Select a province to enable city filtering.",
+      "cityModalTitle": "Select cities",
+      "cityModalDescription": "Choose the cities that should be included in search.",
+      "cityModalSelectAll": "Select all cities",
+      "cityModalEmpty": "No cities are available for the selected province yet.",
+      "cityModalCancel": "Cancel",
+      "cityModalConfirm": "Select",
+      "mobileBack": "Back"
+    }
   },
   "admin": {
     "dashboard": {

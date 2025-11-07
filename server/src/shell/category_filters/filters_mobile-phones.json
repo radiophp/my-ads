@@ -1,0 +1,768 @@
+{
+  "page": {
+    "widget_list": [
+      {
+        "widget_type": "I_LAZY_MULTI_SELECT_DISTRICT_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.ILazyMultiSelectHierarchyRowData",
+          "has_divider": true,
+          "field": {
+            "key": "districts",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "online_search": {
+            "min_query_length": 2,
+            "placeholder": "جستجو",
+            "delay_ms": 300,
+            "field_key": "districts",
+            "source": "filter"
+          },
+          "lazy_payload": {
+            "@type": "type.googleapis.com/post_list.LazyFilterPayload",
+            "filter_name": "districts",
+            "version": "52",
+            "place_ids": ["2"],
+            "category_slug": "mobile-phones"
+          },
+          "show_previous_suggestions": true,
+          "cache_key": "districts",
+          "bottom_sheet_title": "انتخاب محله",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "محله",
+          "placeholder": "انتخاب"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_LAZY_MULTI_SELECT_DISTRICT"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_districts"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "goods-business-type",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "personal",
+              "title": "شخصی",
+              "search_keywords": "شخصی"
+            },
+            {
+              "key": "marketplace",
+              "title": "فروشگاه",
+              "search_keywords": "فروشگاه"
+            }
+          ],
+          "cache_key": "mobile-phones:goods-business-type",
+          "bottom_sheet_title": "انتخاب نوع آگهی\u200cدهنده",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "نوع آگهی\u200cدهنده",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_goods-business-type"
+      },
+      {
+        "widget_type": "TITLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.TitleRowData",
+          "text": "قیمت",
+          "text_color": "TEXT_PRIMARY",
+          "description": "(تومان)",
+          "description_color": "TEXT_SECONDARY",
+          "corresponding_input_widget_id": "filter_price"
+        }
+      },
+      {
+        "widget_type": "I_MANUAL_INPUT_NUMBER_RANGE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IManualInputNumberRangeRowData",
+          "has_divider": true,
+          "field": {
+            "key": "price",
+            "default": {},
+            "type": "number_range",
+            "validators": {
+              "minimum_validators": [
+                {
+                  "min": {
+                    "err": {
+                      "message": "مقدار واردشده نباید کمتر از ۰ تومان باشد."
+                    }
+                  }
+                },
+                {
+                  "max": {
+                    "err": {
+                      "message": "مقدار واردشده نباید بیشتر از ۱۰,۰۰۰,۰۰۰,۰۰۰,۰۰۰ تومان باشد."
+                    },
+                    "max": "10000000000000"
+                  }
+                }
+              ],
+              "maximum_validators": [
+                {
+                  "min": {
+                    "err": {
+                      "message": "مقدار واردشده نباید کمتر از ۰ تومان باشد."
+                    }
+                  }
+                },
+                {
+                  "max": {
+                    "err": {
+                      "message": "مقدار واردشده نباید بیشتر از ۱۰,۰۰۰,۰۰۰,۰۰۰,۰۰۰ تومان باشد."
+                    },
+                    "max": "10000000000000"
+                  }
+                }
+              ],
+              "number_range_validators": [
+                {
+                  "min_must_be_less_or_equal_max": {
+                    "err": {
+                      "message": "عدد انتخابی نباید کمتر از عدد شروع بازه باشد."
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "unit": "تومان",
+          "show_previous_suggestions": true,
+          "cache_key": "mobile-phones:price",
+          "show_field_caption": true,
+          "minimum_dynamic_suggestion": "267162",
+          "maximum_dynamic_suggestion": "464779104"
+        },
+        "action_log": {
+          "server_side_info": {
+            "info": {
+              "@type": "type.googleapis.com/action_log.PostListFilterWidgetInteractedInfo",
+              "filter_name": "price",
+              "source": "FILTERS_PAGE"
+            },
+            "item_type": {
+              "type": "POST_LIST_FILTER_WIDGET_INTERACTED"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_price"
+      },
+      {
+        "widget_type": "I_LAZY_MULTI_SELECT_HIERARCHY_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.ILazyMultiSelectHierarchyRowData",
+          "has_divider": true,
+          "field": {
+            "key": "brand_model",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "online_search": {
+            "min_query_length": 2,
+            "placeholder": "جستجوی برند یا مدل موبایل...",
+            "delay_ms": 300,
+            "field_key": "brand_model",
+            "search_key": "mobile_brand_model",
+            "source": "filter"
+          },
+          "lazy_payload": {
+            "@type": "type.googleapis.com/post_list.LazyFilterPayload",
+            "filter_name": "brand_model",
+            "version": "690caf67",
+            "category_slug": "mobile-phones"
+          },
+          "show_previous_suggestions": true,
+          "cache_key": "mobile-phones:brand_model",
+          "bottom_sheet_title": "انتخاب برند و مدل",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "برند و مدل",
+          "placeholder": "انتخاب"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_LAZY_MULTI_SELECT_HIERARCHY"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_brand_model"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "status",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "new",
+              "title": "نو",
+              "search_keywords": "نو"
+            },
+            {
+              "key": "like-new",
+              "title": "در حد نو",
+              "search_keywords": "در حد نو"
+            },
+            {
+              "key": "used",
+              "title": "کارکرده",
+              "search_keywords": "کارکرده"
+            },
+            {
+              "key": "repair-needed",
+              "title": "نیازمند تعمیر",
+              "search_keywords": "نیازمند تعمیر"
+            }
+          ],
+          "cache_key": "mobile-phones:status",
+          "bottom_sheet_title": "انتخاب وضعیت کالا",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "وضعیت کالا",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_status"
+      },
+      {
+        "widget_type": "TITLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.TitleRowData",
+          "text": "مشخصات گوشی موبایل",
+          "text_color": "TEXT_PRIMARY"
+        }
+      },
+      {
+        "widget_type": "I_SINGLE_SELECT_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.ISingleSelectRowData",
+          "has_divider": true,
+          "field": {
+            "key": "originality",
+            "validators": {},
+            "type": "str"
+          },
+          "title": "اصالت برند",
+          "sheet_title": "اصالت برند",
+          "placeholder": "انتخاب",
+          "clearable": true,
+          "options": [
+            {
+              "value": "original",
+              "display": "اصل"
+            },
+            {
+              "value": "fake",
+              "display": "غیر اصل"
+            }
+          ],
+          "options_alignment": "CENTER",
+          "small": true
+        },
+        "uid": "filter_originality"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "sim_card_slot",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "1",
+              "title": "۱",
+              "search_keywords": "۱"
+            },
+            {
+              "key": "2",
+              "title": "۲",
+              "search_keywords": "۲"
+            },
+            {
+              "key": "+3",
+              "title": "۳ و بیشتر",
+              "search_keywords": "۳ و بیشتر"
+            }
+          ],
+          "cache_key": "mobile-phones:sim_card_slot",
+          "bottom_sheet_title": "انتخاب تعداد سیم\u200cکارت",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "تعداد سیم\u200cکارت",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_sim_card_slot"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "internal_storage",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "512MB",
+              "title": "۵۱۲ مگابایت",
+              "search_keywords": "۵۱۲ مگابایت"
+            },
+            {
+              "key": "1GB",
+              "title": "۱ گیگابایت",
+              "search_keywords": "۱ گیگابایت"
+            },
+            {
+              "key": "2GB",
+              "title": "۲ گیگابایت",
+              "search_keywords": "۲ گیگابایت"
+            },
+            {
+              "key": "3GB",
+              "title": "۳ گیگابایت",
+              "search_keywords": "۳ گیگابایت"
+            },
+            {
+              "key": "4GB",
+              "title": "۴ گیگابایت",
+              "search_keywords": "۴ گیگابایت"
+            },
+            {
+              "key": "8GB",
+              "title": "۸ گیگابایت",
+              "search_keywords": "۸ گیگابایت"
+            },
+            {
+              "key": "13GB",
+              "title": "۱۳ گیگابایت",
+              "search_keywords": "۱۳ گیگابایت"
+            },
+            {
+              "key": "16GB",
+              "title": "۱۶ گیگابایت",
+              "search_keywords": "۱۶ گیگابایت"
+            },
+            {
+              "key": "20GB",
+              "title": "۲۰ گیگابایت",
+              "search_keywords": "۲۰ گیگابایت"
+            },
+            {
+              "key": "32GB",
+              "title": "۳۲ گیگابایت",
+              "search_keywords": "۳۲ گیگابایت"
+            },
+            {
+              "key": "64GB",
+              "title": "۶۴ گیگابایت",
+              "search_keywords": "۶۴ گیگابایت"
+            },
+            {
+              "key": "128GB",
+              "title": "۱۲۸ گیگابایت",
+              "search_keywords": "۱۲۸ گیگابایت"
+            },
+            {
+              "key": "256GB",
+              "title": "۲۵۶ گیگابایت",
+              "search_keywords": "۲۵۶ گیگابایت"
+            },
+            {
+              "key": "512GB",
+              "title": "۵۱۲ گیگابایت",
+              "search_keywords": "۵۱۲ گیگابایت"
+            },
+            {
+              "key": "640GB",
+              "title": "۶۴۰ گیگابایت",
+              "search_keywords": "۶۴۰ گیگابایت"
+            },
+            {
+              "key": "1TB",
+              "title": "۱ ترابایت",
+              "search_keywords": "۱ ترابایت"
+            }
+          ],
+          "cache_key": "mobile-phones:internal_storage",
+          "bottom_sheet_title": "انتخاب حافظهٔ داخلی",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "حافظهٔ داخلی",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_internal_storage"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "ram_memory",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "512MB",
+              "title": "۵۱۲ مگابایت",
+              "search_keywords": "۵۱۲ مگابایت"
+            },
+            {
+              "key": "768MB",
+              "title": "۷۶۸ مگابایت",
+              "search_keywords": "۷۶۸ مگابایت"
+            },
+            {
+              "key": "1GB",
+              "title": "۱ گیگابایت",
+              "search_keywords": "۱ گیگابایت"
+            },
+            {
+              "key": "1.5GB",
+              "title": "۱.۵ گیگابایت",
+              "search_keywords": "۱.۵ گیگابایت"
+            },
+            {
+              "key": "2GB",
+              "title": "۲ گیگابایت",
+              "search_keywords": "۲ گیگابایت"
+            },
+            {
+              "key": "3GB",
+              "title": "۳ گیگابایت",
+              "search_keywords": "۳ گیگابایت"
+            },
+            {
+              "key": "4GB",
+              "title": "۴ گیگابایت",
+              "search_keywords": "۴ گیگابایت"
+            },
+            {
+              "key": "6GB",
+              "title": "۶ گیگابایت",
+              "search_keywords": "۶ گیگابایت"
+            },
+            {
+              "key": "8GB",
+              "title": "۸ گیگابایت",
+              "search_keywords": "۸ گیگابایت"
+            },
+            {
+              "key": "10GB",
+              "title": "۱۰ گیگابایت",
+              "search_keywords": "۱۰ گیگابایت"
+            },
+            {
+              "key": "12GB",
+              "title": "۱۲ گیگابایت",
+              "search_keywords": "۱۲ گیگابایت"
+            },
+            {
+              "key": "16GB",
+              "title": "۱۶ گیگابایت",
+              "search_keywords": "۱۶ گیگابایت"
+            },
+            {
+              "key": "18GB",
+              "title": "۱۸ گیگابایت",
+              "search_keywords": "۱۸ گیگابایت"
+            }
+          ],
+          "cache_key": "mobile-phones:ram_memory",
+          "bottom_sheet_title": "انتخاب مقدار رم",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "مقدار رم",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_ram_memory"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "base_color",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "black",
+              "title": "مشکی",
+              "search_keywords": "مشکی"
+            },
+            {
+              "key": "white",
+              "title": "سفید",
+              "search_keywords": "سفید"
+            },
+            {
+              "key": "green",
+              "title": "سبز",
+              "search_keywords": "سبز"
+            },
+            {
+              "key": "red",
+              "title": "قرمز",
+              "search_keywords": "قرمز"
+            },
+            {
+              "key": "pink",
+              "title": "صورتی",
+              "search_keywords": "صورتی"
+            },
+            {
+              "key": "gray",
+              "title": "خاکستری",
+              "search_keywords": "خاکستری"
+            },
+            {
+              "key": "gold",
+              "title": "طلایی",
+              "search_keywords": "طلایی"
+            },
+            {
+              "key": "blue",
+              "title": "آبی",
+              "search_keywords": "آبی"
+            },
+            {
+              "key": "yellow",
+              "title": "زرد",
+              "search_keywords": "زرد"
+            },
+            {
+              "key": "silver",
+              "title": "نقره\u200cای",
+              "search_keywords": "نقره\u200cای"
+            },
+            {
+              "key": "orange",
+              "title": "نارنجی",
+              "search_keywords": "نارنجی"
+            },
+            {
+              "key": "purple",
+              "title": "بنفش",
+              "search_keywords": "بنفش"
+            },
+            {
+              "key": "brown",
+              "title": "قهوه\u200cای",
+              "search_keywords": "قهوه\u200cای"
+            }
+          ],
+          "cache_key": "mobile-phones:base_color",
+          "bottom_sheet_title": "انتخاب رنگ",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "رنگ",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_base_color"
+      },
+      {
+        "widget_type": "TITLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.TitleRowData",
+          "text": "وضعیت آگهی",
+          "text_color": "TEXT_PRIMARY"
+        }
+      },
+      {
+        "widget_type": "I_TOGGLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IToggleRowData",
+          "title": "عکس\u200cدار",
+          "size": "SMALL",
+          "has_divider": true,
+          "field": {
+            "key": "has-photo",
+            "validators": {},
+            "type": "boolean"
+          }
+        },
+        "uid": "filter_has-photo"
+      },
+      {
+        "widget_type": "I_TOGGLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IToggleRowData",
+          "title": "با امکان خرید اقساطی",
+          "size": "SMALL",
+          "has_divider": true,
+          "field": {
+            "key": "has_installment_sale",
+            "validators": {},
+            "type": "boolean"
+          }
+        },
+        "uid": "filter_has_installment_sale"
+      },
+      {
+        "widget_type": "I_SINGLE_SELECT_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.ISingleSelectRowData",
+          "has_divider": true,
+          "field": {
+            "key": "exchange",
+            "validators": {},
+            "type": "str"
+          },
+          "title": "نمایش معاوضه\u200cها",
+          "sheet_title": "نمایش معاوضه\u200cها",
+          "placeholder": "انتخاب",
+          "clearable": true,
+          "options": [
+            {
+              "value": "only-exchanges",
+              "display": "نمایش فقط معاوضه\u200cها"
+            },
+            {
+              "value": "exclude-exchanges",
+              "display": "حذف معاوضه\u200cها"
+            }
+          ],
+          "options_alignment": "CENTER",
+          "small": true
+        },
+        "uid": "filter_exchange"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "addon_service_tags",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "IDENTITY_VERIFIED",
+              "title": "با تأیید هویت",
+              "search_keywords": "با تأیید هویت"
+            },
+            {
+              "key": "SECURE_PAYMENT",
+              "title": "با پرداخت امن",
+              "search_keywords": "با پرداخت امن"
+            }
+          ],
+          "cache_key": "mobile-phones:addon_service_tags",
+          "bottom_sheet_title": "انتخاب افزونه\u200cها",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "افزونه\u200cها",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_addon_service_tags"
+      }
+    ],
+    "title": "فیلترها",
+    "submit_title": "اعمال فیلترها"
+  },
+  "base_data": {
+    "form_data": {
+      "data": {
+        "category": {
+          "str": {
+            "value": "mobile-phones"
+          }
+        }
+      }
+    }
+  }
+}

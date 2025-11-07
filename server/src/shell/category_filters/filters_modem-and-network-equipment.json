@@ -1,0 +1,547 @@
+{
+  "page": {
+    "widget_list": [
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "status",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "new",
+              "title": "نو",
+              "search_keywords": "نو"
+            },
+            {
+              "key": "like-new",
+              "title": "در حد نو",
+              "search_keywords": "در حد نو"
+            },
+            {
+              "key": "used",
+              "title": "کارکرده",
+              "search_keywords": "کارکرده"
+            },
+            {
+              "key": "repair-needed",
+              "title": "نیازمند تعمیر",
+              "search_keywords": "نیازمند تعمیر"
+            }
+          ],
+          "cache_key": "modem-and-network-equipment:status",
+          "bottom_sheet_title": "انتخاب وضعیت کالا",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "وضعیت کالا",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_status"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "goods-business-type",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "personal",
+              "title": "شخصی",
+              "search_keywords": "شخصی"
+            },
+            {
+              "key": "marketplace",
+              "title": "فروشگاه",
+              "search_keywords": "فروشگاه"
+            }
+          ],
+          "cache_key": "modem-and-network-equipment:goods-business-type",
+          "bottom_sheet_title": "انتخاب نوع آگهی\u200cدهنده",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "نوع آگهی\u200cدهنده",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_goods-business-type"
+      },
+      {
+        "widget_type": "I_LAZY_MULTI_SELECT_DISTRICT_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.ILazyMultiSelectHierarchyRowData",
+          "has_divider": true,
+          "field": {
+            "key": "districts",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "online_search": {
+            "min_query_length": 2,
+            "placeholder": "جستجو",
+            "delay_ms": 300,
+            "field_key": "districts",
+            "source": "filter"
+          },
+          "lazy_payload": {
+            "@type": "type.googleapis.com/post_list.LazyFilterPayload",
+            "filter_name": "districts",
+            "version": "52",
+            "place_ids": ["2"],
+            "category_slug": "modem-and-network-equipment"
+          },
+          "show_previous_suggestions": true,
+          "cache_key": "districts",
+          "bottom_sheet_title": "انتخاب محله",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "محله",
+          "placeholder": "انتخاب"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_LAZY_MULTI_SELECT_DISTRICT"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_districts"
+      },
+      {
+        "widget_type": "I_SINGLE_SELECT_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.ISingleSelectRowData",
+          "has_divider": true,
+          "field": {
+            "key": "merchandise-type",
+            "validators": {},
+            "type": "str"
+          },
+          "title": "نوع کالا",
+          "sheet_title": "نوع کالا",
+          "placeholder": "انتخاب",
+          "clearable": true,
+          "options": [
+            {
+              "value": "modem-and-router",
+              "display": "مودم و روتر"
+            },
+            {
+              "value": "nic-card-and-connector",
+              "display": "کارت شبکه و اتصالات"
+            },
+            {
+              "value": "network-switch-and-hub",
+              "display": "سوئیچ و هاب"
+            },
+            {
+              "value": "ups",
+              "display": "باتری پشتیبان(UPS)"
+            },
+            {
+              "value": "security-equipment",
+              "display": "تجهیزات امنیتی"
+            },
+            {
+              "value": "others",
+              "display": "سایر"
+            }
+          ],
+          "options_alignment": "CENTER",
+          "small": true
+        },
+        "uid": "filter_merchandise-type"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "brand",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "tplink",
+              "title": "تی پی لینک - Tp-link",
+              "search_keywords": "تی پی لینک - Tp-link"
+            },
+            {
+              "key": "dlink",
+              "title": "دی لینک - D-link",
+              "search_keywords": "دی لینک - D-link"
+            },
+            {
+              "key": "irancell",
+              "title": "ایرانسل - Irancell",
+              "search_keywords": "ایرانسل - Irancell"
+            },
+            {
+              "key": "hamrahe-aval",
+              "title": "همراه اول - Hamrahe aval",
+              "search_keywords": "همراه اول - Hamrahe aval"
+            },
+            {
+              "key": "netis",
+              "title": "نتیس - Netis",
+              "search_keywords": "نتیس - Netis"
+            },
+            {
+              "key": "naztech",
+              "title": "نزتک - Naztech",
+              "search_keywords": "نزتک - Naztech"
+            },
+            {
+              "key": "buffalo",
+              "title": "بوفالو - Buffalo",
+              "search_keywords": "بوفالو - Buffalo"
+            },
+            {
+              "key": "softbank",
+              "title": "سافت بانک - Softbank",
+              "search_keywords": "سافت بانک - Softbank"
+            },
+            {
+              "key": "mikrotik",
+              "title": "میکروتیک - Mikrotik",
+              "search_keywords": "میکروتیک - Mikrotik"
+            },
+            {
+              "key": "utel",
+              "title": "یوتل - Utel",
+              "search_keywords": "یوتل - Utel"
+            },
+            {
+              "key": "huawei",
+              "title": "هواوی - Huawei",
+              "search_keywords": "هواوی - Huawei"
+            },
+            {
+              "key": "others",
+              "title": "سایر",
+              "search_keywords": "سایر"
+            }
+          ],
+          "cache_key": "modem-and-network-equipment:brand",
+          "bottom_sheet_title": "انتخاب سازنده",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "سازنده",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_brand"
+      },
+      {
+        "widget_type": "I_SINGLE_SELECT_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.ISingleSelectRowData",
+          "has_divider": true,
+          "field": {
+            "key": "lan_ports_quantity",
+            "validators": {},
+            "type": "str"
+          },
+          "title": "تعداد پورت LAN",
+          "sheet_title": "تعداد پورت LAN",
+          "placeholder": "انتخاب",
+          "clearable": true,
+          "options": [
+            {
+              "value": "0-port",
+              "display": "بدون پورت"
+            },
+            {
+              "value": "1-port",
+              "display": "۱ پورت"
+            },
+            {
+              "value": "2-ports",
+              "display": "۲ پورت"
+            },
+            {
+              "value": "3-ports",
+              "display": "۳ پورت"
+            },
+            {
+              "value": "4-ports",
+              "display": "۴ پورت"
+            },
+            {
+              "value": "+4-ports",
+              "display": "بیشتر از ۴ پورت"
+            }
+          ],
+          "options_alignment": "CENTER",
+          "small": true
+        },
+        "uid": "filter_lan_ports_quantity"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "modem_router_type",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "adsl",
+              "title": "ADSL",
+              "search_keywords": "ADSL"
+            },
+            {
+              "key": "td-lte",
+              "title": "TD-LTE",
+              "search_keywords": "TD-LTE"
+            },
+            {
+              "key": "wireless-portable-modem",
+              "title": "مودم بی\u200cسیم قابل حمل",
+              "search_keywords": "مودم بی\u200cسیم قابل حمل"
+            }
+          ],
+          "cache_key": "modem-and-network-equipment:modem_router_type",
+          "bottom_sheet_title": "انتخاب نوع مودم یا روتر",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "نوع مودم یا روتر",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_modem_router_type"
+      },
+      {
+        "widget_type": "TITLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.TitleRowData",
+          "text": "قیمت",
+          "text_color": "TEXT_PRIMARY",
+          "description": "(تومان)",
+          "description_color": "TEXT_SECONDARY",
+          "corresponding_input_widget_id": "filter_price"
+        }
+      },
+      {
+        "widget_type": "I_MANUAL_INPUT_NUMBER_RANGE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IManualInputNumberRangeRowData",
+          "has_divider": true,
+          "field": {
+            "key": "price",
+            "default": {},
+            "type": "number_range",
+            "validators": {
+              "minimum_validators": [
+                {
+                  "min": {
+                    "err": {
+                      "message": "مقدار واردشده نباید کمتر از ۰ تومان باشد."
+                    }
+                  }
+                },
+                {
+                  "max": {
+                    "err": {
+                      "message": "مقدار واردشده نباید بیشتر از ۱۰,۰۰۰,۰۰۰,۰۰۰,۰۰۰ تومان باشد."
+                    },
+                    "max": "10000000000000"
+                  }
+                }
+              ],
+              "maximum_validators": [
+                {
+                  "min": {
+                    "err": {
+                      "message": "مقدار واردشده نباید کمتر از ۰ تومان باشد."
+                    }
+                  }
+                },
+                {
+                  "max": {
+                    "err": {
+                      "message": "مقدار واردشده نباید بیشتر از ۱۰,۰۰۰,۰۰۰,۰۰۰,۰۰۰ تومان باشد."
+                    },
+                    "max": "10000000000000"
+                  }
+                }
+              ],
+              "number_range_validators": [
+                {
+                  "min_must_be_less_or_equal_max": {
+                    "err": {
+                      "message": "عدد انتخابی نباید کمتر از عدد شروع بازه باشد."
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "unit": "تومان",
+          "show_previous_suggestions": true,
+          "cache_key": "modem-and-network-equipment:price",
+          "show_field_caption": true,
+          "minimum_dynamic_suggestion": "41880",
+          "maximum_dynamic_suggestion": "69020000"
+        },
+        "action_log": {
+          "server_side_info": {
+            "info": {
+              "@type": "type.googleapis.com/action_log.PostListFilterWidgetInteractedInfo",
+              "filter_name": "price",
+              "source": "FILTERS_PAGE"
+            },
+            "item_type": {
+              "type": "POST_LIST_FILTER_WIDGET_INTERACTED"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_price"
+      },
+      {
+        "widget_type": "I_TOGGLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IToggleRowData",
+          "title": "عکس\u200cدار",
+          "size": "SMALL",
+          "has_divider": true,
+          "field": {
+            "key": "has-photo",
+            "validators": {},
+            "type": "boolean"
+          }
+        },
+        "uid": "filter_has-photo"
+      },
+      {
+        "widget_type": "I_SINGLE_SELECT_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.ISingleSelectRowData",
+          "has_divider": true,
+          "field": {
+            "key": "exchange",
+            "validators": {},
+            "type": "str"
+          },
+          "title": "نمایش معاوضه\u200cها",
+          "sheet_title": "نمایش معاوضه\u200cها",
+          "placeholder": "انتخاب",
+          "clearable": true,
+          "options": [
+            {
+              "value": "only-exchanges",
+              "display": "نمایش فقط معاوضه\u200cها"
+            },
+            {
+              "value": "exclude-exchanges",
+              "display": "حذف معاوضه\u200cها"
+            }
+          ],
+          "options_alignment": "CENTER",
+          "small": true
+        },
+        "uid": "filter_exchange"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "addon_service_tags",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "IDENTITY_VERIFIED",
+              "title": "با تأیید هویت",
+              "search_keywords": "با تأیید هویت"
+            },
+            {
+              "key": "SECURE_PAYMENT",
+              "title": "با پرداخت امن",
+              "search_keywords": "با پرداخت امن"
+            }
+          ],
+          "cache_key": "modem-and-network-equipment:addon_service_tags",
+          "bottom_sheet_title": "انتخاب افزونه\u200cها",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "افزونه\u200cها",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_addon_service_tags"
+      }
+    ],
+    "title": "فیلترها",
+    "submit_title": "اعمال فیلترها"
+  },
+  "base_data": {
+    "form_data": {
+      "data": {
+        "category": {
+          "str": {
+            "value": "modem-and-network-equipment"
+          }
+        }
+      }
+    }
+  }
+}

@@ -8,3 +8,4 @@ server/node_modules/
 server/dist/
 npm-debug.log
 yarn-error.log
+server/src/shell/list_json/

@@ -1,0 +1,558 @@
+{
+  "page": {
+    "widget_list": [
+      {
+        "widget_type": "I_LAZY_MULTI_SELECT_DISTRICT_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.ILazyMultiSelectHierarchyRowData",
+          "has_divider": true,
+          "field": {
+            "key": "districts",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "online_search": {
+            "min_query_length": 2,
+            "placeholder": "جستجو",
+            "delay_ms": 300,
+            "field_key": "districts",
+            "source": "filter"
+          },
+          "lazy_payload": {
+            "@type": "type.googleapis.com/post_list.LazyFilterPayload",
+            "filter_name": "districts",
+            "version": "52",
+            "place_ids": ["2"],
+            "category_slug": "accounting-finance-legal"
+          },
+          "show_previous_suggestions": true,
+          "cache_key": "districts",
+          "bottom_sheet_title": "انتخاب محله",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "محله",
+          "placeholder": "انتخاب"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_LAZY_MULTI_SELECT_DISTRICT"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_districts"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "job_type",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "full_time",
+              "title": "تمام وقت",
+              "search_keywords": "تمام وقت"
+            },
+            {
+              "key": "part_time",
+              "title": "پاره وقت",
+              "search_keywords": "پاره وقت"
+            },
+            {
+              "key": "contract",
+              "title": "پیمان\u200cکاری/پروژه\u200cای",
+              "search_keywords": "پیمان\u200cکاری/پروژه\u200cای"
+            },
+            {
+              "key": "internship",
+              "title": "کارآموزی",
+              "search_keywords": "کارآموزی"
+            },
+            {
+              "key": "other",
+              "title": "سایر",
+              "search_keywords": "سایر"
+            }
+          ],
+          "cache_key": "accounting-finance-legal:job_type",
+          "bottom_sheet_title": "انتخاب نوع همکاری",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "نوع همکاری",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_job_type"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "payment_method",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "monthly",
+              "title": "ماهانه",
+              "search_keywords": "ماهانه"
+            },
+            {
+              "key": "daily",
+              "title": "روزانه",
+              "search_keywords": "روزانه"
+            },
+            {
+              "key": "hourly",
+              "title": "ساعتی",
+              "search_keywords": "ساعتی"
+            },
+            {
+              "key": "percentage_commission",
+              "title": "پورسانتی/درصدی",
+              "search_keywords": "پورسانتی/درصدی"
+            },
+            {
+              "key": "adaptive",
+              "title": "توافقی",
+              "search_keywords": "توافقی"
+            },
+            {
+              "key": "other",
+              "title": "سایر",
+              "search_keywords": "سایر"
+            }
+          ],
+          "cache_key": "accounting-finance-legal:payment_method",
+          "bottom_sheet_title": "انتخاب شیوهٔ پرداخت",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "شیوهٔ پرداخت",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_payment_method"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "job_role",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "accounting_finance_legal_investor_wanted",
+              "title": "جذب سرمایه گذار",
+              "search_keywords": "جذب سرمایه گذار"
+            },
+            {
+              "key": "accounting_finance_legal_accountant",
+              "title": "حسابدار",
+              "search_keywords": "حسابدار"
+            },
+            {
+              "key": "accounting_finance_legal_financial_expert",
+              "title": "کارشناس امور مالی",
+              "search_keywords": "کارشناس امور مالی"
+            },
+            {
+              "key": "accounting_finance_legal_receptionist",
+              "title": "منشی",
+              "search_keywords": "منشی"
+            },
+            {
+              "key": "accounting_finance_legal_other",
+              "title": "سایر",
+              "search_keywords": "سایر"
+            }
+          ],
+          "cache_key": "accounting-finance-legal:job_role",
+          "bottom_sheet_title": "انتخاب عنوان شغلی",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "عنوان شغلی",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_job_role"
+      },
+      {
+        "widget_type": "I_TOGGLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IToggleRowData",
+          "title": "با بیمه",
+          "size": "SMALL",
+          "has_divider": true,
+          "field": {
+            "key": "health_insurance",
+            "validators": {},
+            "type": "boolean"
+          }
+        },
+        "uid": "filter_health_insurance"
+      },
+      {
+        "widget_type": "I_TOGGLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IToggleRowData",
+          "title": "با امکان دورکاری",
+          "size": "SMALL",
+          "has_divider": true,
+          "field": {
+            "key": "remote",
+            "validators": {},
+            "type": "boolean"
+          }
+        },
+        "uid": "filter_remote"
+      },
+      {
+        "widget_type": "TITLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.TitleRowData",
+          "text": "سابقهٔ مورد نیاز",
+          "text_color": "TEXT_PRIMARY",
+          "description_color": "TEXT_SECONDARY",
+          "corresponding_input_widget_id": "filter_experience"
+        }
+      },
+      {
+        "widget_type": "I_SELECTIVE_RANGE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.ISelectiveRangeRowData",
+          "has_divider": true,
+          "field": {
+            "key": "experience",
+            "default": {},
+            "type": "number_range",
+            "validators": {
+              "minimum_validators": [
+                {
+                  "min": {
+                    "err": {
+                      "message": "مقدار واردشده نباید کمتر از -۲ باشد."
+                    },
+                    "min": "-2"
+                  }
+                },
+                {
+                  "max": {
+                    "err": {
+                      "message": "مقدار واردشده نباید بیشتر از ۱۰,۰۰۰ باشد."
+                    },
+                    "max": "10000"
+                  }
+                }
+              ],
+              "maximum_validators": [
+                {
+                  "min": {
+                    "err": {
+                      "message": "مقدار واردشده نباید کمتر از -۲ باشد."
+                    },
+                    "min": "-2"
+                  }
+                },
+                {
+                  "max": {
+                    "err": {
+                      "message": "مقدار واردشده نباید بیشتر از ۱۰,۰۰۰ باشد."
+                    },
+                    "max": "10000"
+                  }
+                }
+              ],
+              "number_range_validators": [
+                {
+                  "min_must_be_less_or_equal_max": {
+                    "err": {
+                      "message": "عدد انتخابی نباید کمتر از عدد شروع بازه باشد."
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "show_previous_suggestions": true,
+          "cache_key": "accounting-finance-legal:experience",
+          "from_options": [
+            {
+              "value": "-1",
+              "display": "کمتر از ۱ سال"
+            },
+            {
+              "value": "1",
+              "display": "۱ سال"
+            },
+            {
+              "value": "2",
+              "display": "۲ سال"
+            },
+            {
+              "value": "3",
+              "display": "۳ سال"
+            },
+            {
+              "value": "4",
+              "display": "۴ سال"
+            },
+            {
+              "value": "5",
+              "display": "۵ سال"
+            },
+            {
+              "value": "6",
+              "display": "۶ سال"
+            },
+            {
+              "value": "7",
+              "display": "۷ سال"
+            },
+            {
+              "value": "8",
+              "display": "۸ سال"
+            },
+            {
+              "value": "9",
+              "display": "۹ سال"
+            },
+            {
+              "value": "10",
+              "display": "۱۰ سال"
+            }
+          ],
+          "to_options": [
+            {
+              "value": "-1",
+              "display": "کمتر از ۱ سال"
+            },
+            {
+              "value": "1",
+              "display": "۱ سال"
+            },
+            {
+              "value": "2",
+              "display": "۲ سال"
+            },
+            {
+              "value": "3",
+              "display": "۳ سال"
+            },
+            {
+              "value": "4",
+              "display": "۴ سال"
+            },
+            {
+              "value": "5",
+              "display": "۵ سال"
+            },
+            {
+              "value": "6",
+              "display": "۶ سال"
+            },
+            {
+              "value": "7",
+              "display": "۷ سال"
+            },
+            {
+              "value": "8",
+              "display": "۸ سال"
+            },
+            {
+              "value": "9",
+              "display": "۹ سال"
+            },
+            {
+              "value": "10",
+              "display": "۱۰ سال"
+            },
+            {
+              "value": "11",
+              "display": "بالای ۱۰ سال"
+            }
+          ],
+          "open_new_bottom_sheet": true,
+          "filter_options_by_from": true,
+          "from_bottom_sheet_title": "سابقهٔ مورد نیاز از",
+          "to_bottom_sheet_title": "سابقهٔ مورد نیاز تا"
+        },
+        "action_log": {
+          "server_side_info": {
+            "info": {
+              "@type": "type.googleapis.com/action_log.PostListFilterWidgetInteractedInfo",
+              "filter_name": "experience",
+              "source": "FILTERS_PAGE"
+            },
+            "item_type": {
+              "type": "POST_LIST_FILTER_WIDGET_INTERACTED"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_experience"
+      },
+      {
+        "widget_type": "I_TOGGLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IToggleRowData",
+          "title": "بدون نیاز به سابقه",
+          "size": "SMALL",
+          "has_divider": true,
+          "field": {
+            "key": "no_experience_required",
+            "validators": {},
+            "type": "boolean"
+          }
+        },
+        "uid": "filter_no_experience_required"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "military_service_status",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "finish_or_exemption_required",
+              "title": "الزامی",
+              "search_keywords": "الزامی"
+            },
+            {
+              "key": "finish_not_required",
+              "title": "اختیاری",
+              "search_keywords": "اختیاری"
+            }
+          ],
+          "cache_key": "accounting-finance-legal:military_service_status",
+          "bottom_sheet_title": "انتخاب پایان خدمت/معافیت",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "پایان خدمت/معافیت",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_military_service_status"
+      },
+      {
+        "widget_type": "TITLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.TitleRowData",
+          "text": "وضعیت آگهی",
+          "text_color": "TEXT_PRIMARY"
+        }
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "addon_service_tags",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "IDENTITY_VERIFIED",
+              "title": "با تأیید هویت",
+              "search_keywords": "با تأیید هویت"
+            }
+          ],
+          "cache_key": "accounting-finance-legal:addon_service_tags",
+          "bottom_sheet_title": "انتخاب افزونه\u200cها",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "افزونه\u200cها",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_addon_service_tags"
+      },
+      {
+        "widget_type": "I_TOGGLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IToggleRowData",
+          "title": "عکس\u200cدار",
+          "size": "SMALL",
+          "has_divider": true,
+          "field": {
+            "key": "has-photo",
+            "validators": {},
+            "type": "boolean"
+          }
+        },
+        "uid": "filter_has-photo"
+      }
+    ],
+    "title": "فیلترها",
+    "submit_title": "اعمال فیلترها"
+  },
+  "base_data": {
+    "form_data": {
+      "data": {
+        "category": {
+          "str": {
+            "value": "accounting-finance-legal"
+          }
+        }
+      }
+    }
+  }
+}

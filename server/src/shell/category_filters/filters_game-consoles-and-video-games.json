@@ -1,0 +1,589 @@
+{
+  "page": {
+    "widget_list": [
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "status",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "new",
+              "title": "نو",
+              "search_keywords": "نو"
+            },
+            {
+              "key": "like-new",
+              "title": "در حد نو",
+              "search_keywords": "در حد نو"
+            },
+            {
+              "key": "used",
+              "title": "کارکرده",
+              "search_keywords": "کارکرده"
+            },
+            {
+              "key": "repair-needed",
+              "title": "نیازمند تعمیر",
+              "search_keywords": "نیازمند تعمیر"
+            }
+          ],
+          "cache_key": "game-consoles-and-video-games:status",
+          "bottom_sheet_title": "انتخاب وضعیت کالا",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "وضعیت کالا",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_status"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "goods-business-type",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "personal",
+              "title": "شخصی",
+              "search_keywords": "شخصی"
+            },
+            {
+              "key": "marketplace",
+              "title": "فروشگاه",
+              "search_keywords": "فروشگاه"
+            }
+          ],
+          "cache_key": "game-consoles-and-video-games:goods-business-type",
+          "bottom_sheet_title": "انتخاب نوع آگهی\u200cدهنده",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "نوع آگهی\u200cدهنده",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_goods-business-type"
+      },
+      {
+        "widget_type": "TITLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.TitleRowData",
+          "text": "قیمت",
+          "text_color": "TEXT_PRIMARY",
+          "description": "(تومان)",
+          "description_color": "TEXT_SECONDARY",
+          "corresponding_input_widget_id": "filter_price"
+        }
+      },
+      {
+        "widget_type": "I_MANUAL_INPUT_NUMBER_RANGE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IManualInputNumberRangeRowData",
+          "has_divider": true,
+          "field": {
+            "key": "price",
+            "default": {},
+            "type": "number_range",
+            "validators": {
+              "minimum_validators": [
+                {
+                  "min": {
+                    "err": {
+                      "message": "مقدار واردشده نباید کمتر از ۰ تومان باشد."
+                    }
+                  }
+                },
+                {
+                  "max": {
+                    "err": {
+                      "message": "مقدار واردشده نباید بیشتر از ۱۰,۰۰۰,۰۰۰,۰۰۰,۰۰۰ تومان باشد."
+                    },
+                    "max": "10000000000000"
+                  }
+                }
+              ],
+              "maximum_validators": [
+                {
+                  "min": {
+                    "err": {
+                      "message": "مقدار واردشده نباید کمتر از ۰ تومان باشد."
+                    }
+                  }
+                },
+                {
+                  "max": {
+                    "err": {
+                      "message": "مقدار واردشده نباید بیشتر از ۱۰,۰۰۰,۰۰۰,۰۰۰,۰۰۰ تومان باشد."
+                    },
+                    "max": "10000000000000"
+                  }
+                }
+              ],
+              "number_range_validators": [
+                {
+                  "min_must_be_less_or_equal_max": {
+                    "err": {
+                      "message": "عدد انتخابی نباید کمتر از عدد شروع بازه باشد."
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "unit": "تومان",
+          "show_previous_suggestions": true,
+          "cache_key": "game-consoles-and-video-games:price",
+          "show_field_caption": true,
+          "minimum_dynamic_suggestion": "59382",
+          "maximum_dynamic_suggestion": "311295136"
+        },
+        "action_log": {
+          "server_side_info": {
+            "info": {
+              "@type": "type.googleapis.com/action_log.PostListFilterWidgetInteractedInfo",
+              "filter_name": "price",
+              "source": "FILTERS_PAGE"
+            },
+            "item_type": {
+              "type": "POST_LIST_FILTER_WIDGET_INTERACTED"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_price"
+      },
+      {
+        "widget_type": "I_SINGLE_SELECT_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.ISingleSelectRowData",
+          "has_divider": true,
+          "field": {
+            "key": "merchandise-type",
+            "validators": {},
+            "type": "str"
+          },
+          "title": "نوع کالا",
+          "sheet_title": "نوع کالا",
+          "placeholder": "انتخاب",
+          "clearable": true,
+          "options": [
+            {
+              "value": "console",
+              "display": "کنسول"
+            },
+            {
+              "value": "gaming-controller",
+              "display": "دستهٔ بازی"
+            },
+            {
+              "value": "gaming-accessories",
+              "display": "تجهیزات بازی"
+            },
+            {
+              "value": "account",
+              "display": "اکانت"
+            },
+            {
+              "value": "game",
+              "display": "بازی"
+            }
+          ],
+          "options_alignment": "CENTER",
+          "small": true
+        },
+        "uid": "filter_merchandise-type"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "accessory_type",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "cover-and-shield",
+              "title": "کاور، قاب و محافظ",
+              "search_keywords": "کاور، قاب و محافظ"
+            },
+            {
+              "key": "vr-glasses",
+              "title": "عینک واقعیت مجازی",
+              "search_keywords": "عینک واقعیت مجازی"
+            },
+            {
+              "key": "steering-wheel",
+              "title": "فرمان بازی",
+              "search_keywords": "فرمان بازی"
+            },
+            {
+              "key": "others",
+              "title": "سایر",
+              "search_keywords": "سایر"
+            }
+          ],
+          "cache_key": "game-consoles-and-video-games:accessory_type",
+          "bottom_sheet_title": "انتخاب نوع تجهیزات بازی",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "نوع تجهیزات بازی",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_accessory_type"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "model",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "playstation1",
+              "title": "PlayStation 1",
+              "search_keywords": "PlayStation 1"
+            },
+            {
+              "key": "playstation2",
+              "title": "PlayStation 2",
+              "search_keywords": "PlayStation 2"
+            },
+            {
+              "key": "playstation3",
+              "title": "PlayStation 3",
+              "search_keywords": "PlayStation 3"
+            },
+            {
+              "key": "playstation4",
+              "title": "PlayStation 4",
+              "search_keywords": "PlayStation 4"
+            },
+            {
+              "key": "playstation5",
+              "title": "PlayStation 5",
+              "search_keywords": "PlayStation 5"
+            },
+            {
+              "key": "xbox360",
+              "title": "Xbox 360",
+              "search_keywords": "Xbox 360"
+            },
+            {
+              "key": "xbox-one",
+              "title": "Xbox One",
+              "search_keywords": "Xbox One"
+            },
+            {
+              "key": "xbox-one-s",
+              "title": "Xbox One S",
+              "search_keywords": "Xbox One S"
+            },
+            {
+              "key": "xbox-one-x",
+              "title": "Xbox One X",
+              "search_keywords": "Xbox One X"
+            },
+            {
+              "key": "xbox-series-s",
+              "title": "Xbox Series S",
+              "search_keywords": "Xbox Series S"
+            },
+            {
+              "key": "xbox-series-x",
+              "title": "Xbox Series X",
+              "search_keywords": "Xbox Series X"
+            },
+            {
+              "key": "switch-lite",
+              "title": "Switch Lite",
+              "search_keywords": "Switch Lite"
+            },
+            {
+              "key": "switch-normal",
+              "title": "Switch Normal",
+              "search_keywords": "Switch Normal"
+            },
+            {
+              "key": "switch-oled",
+              "title": "Switch OLED",
+              "search_keywords": "Switch OLED"
+            },
+            {
+              "key": "wii-u",
+              "title": "Wii U",
+              "search_keywords": "Wii U"
+            },
+            {
+              "key": "others",
+              "title": "سایر",
+              "search_keywords": "سایر"
+            }
+          ],
+          "cache_key": "game-consoles-and-video-games:model",
+          "bottom_sheet_title": "انتخاب مدل کنسول",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "مدل کنسول",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_model"
+      },
+      {
+        "widget_type": "I_SINGLE_SELECT_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.ISingleSelectRowData",
+          "has_divider": true,
+          "field": {
+            "key": "gaming_controller_quantity",
+            "validators": {},
+            "type": "str"
+          },
+          "title": "تعداد دستهٔ همراه",
+          "sheet_title": "تعداد دستهٔ همراه",
+          "placeholder": "انتخاب",
+          "clearable": true,
+          "options": [
+            {
+              "value": "0-controller",
+              "display": "بدون دسته"
+            },
+            {
+              "value": "1-controller",
+              "display": "۱ دسته"
+            },
+            {
+              "value": "2-controllers",
+              "display": "۲ دسته"
+            },
+            {
+              "value": "+2-controllers",
+              "display": "بیشتر از ۲ دسته"
+            }
+          ],
+          "options_alignment": "CENTER",
+          "small": true
+        },
+        "uid": "filter_gaming_controller_quantity"
+      },
+      {
+        "widget_type": "I_SINGLE_SELECT_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.ISingleSelectRowData",
+          "has_divider": true,
+          "field": {
+            "key": "gaming_controller_type",
+            "validators": {},
+            "type": "str"
+          },
+          "title": "نوع دسته",
+          "sheet_title": "نوع دسته",
+          "placeholder": "انتخاب",
+          "clearable": true,
+          "options": [
+            {
+              "value": "console-controller",
+              "display": "دستهٔ کنسول"
+            },
+            {
+              "value": "pc-controller",
+              "display": "دستهٔ کامپیوتر"
+            }
+          ],
+          "options_alignment": "CENTER",
+          "small": true
+        },
+        "uid": "filter_gaming_controller_type"
+      },
+      {
+        "widget_type": "I_LAZY_MULTI_SELECT_DISTRICT_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.ILazyMultiSelectHierarchyRowData",
+          "has_divider": true,
+          "field": {
+            "key": "districts",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "online_search": {
+            "min_query_length": 2,
+            "placeholder": "جستجو",
+            "delay_ms": 300,
+            "field_key": "districts",
+            "source": "filter"
+          },
+          "lazy_payload": {
+            "@type": "type.googleapis.com/post_list.LazyFilterPayload",
+            "filter_name": "districts",
+            "version": "52",
+            "place_ids": ["2"],
+            "category_slug": "game-consoles-and-video-games"
+          },
+          "show_previous_suggestions": true,
+          "cache_key": "districts",
+          "bottom_sheet_title": "انتخاب محله",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "محله",
+          "placeholder": "انتخاب"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_LAZY_MULTI_SELECT_DISTRICT"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_districts"
+      },
+      {
+        "widget_type": "I_TOGGLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IToggleRowData",
+          "title": "عکس\u200cدار",
+          "size": "SMALL",
+          "has_divider": true,
+          "field": {
+            "key": "has-photo",
+            "validators": {},
+            "type": "boolean"
+          }
+        },
+        "uid": "filter_has-photo"
+      },
+      {
+        "widget_type": "I_SINGLE_SELECT_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.ISingleSelectRowData",
+          "has_divider": true,
+          "field": {
+            "key": "exchange",
+            "validators": {},
+            "type": "str"
+          },
+          "title": "نمایش معاوضه\u200cها",
+          "sheet_title": "نمایش معاوضه\u200cها",
+          "placeholder": "انتخاب",
+          "clearable": true,
+          "options": [
+            {
+              "value": "only-exchanges",
+              "display": "نمایش فقط معاوضه\u200cها"
+            },
+            {
+              "value": "exclude-exchanges",
+              "display": "حذف معاوضه\u200cها"
+            }
+          ],
+          "options_alignment": "CENTER",
+          "small": true
+        },
+        "uid": "filter_exchange"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "addon_service_tags",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "IDENTITY_VERIFIED",
+              "title": "با تأیید هویت",
+              "search_keywords": "با تأیید هویت"
+            },
+            {
+              "key": "SECURE_PAYMENT",
+              "title": "با پرداخت امن",
+              "search_keywords": "با پرداخت امن"
+            }
+          ],
+          "cache_key": "game-consoles-and-video-games:addon_service_tags",
+          "bottom_sheet_title": "انتخاب افزونه\u200cها",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "افزونه\u200cها",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_addon_service_tags"
+      }
+    ],
+    "title": "فیلترها",
+    "submit_title": "اعمال فیلترها"
+  },
+  "base_data": {
+    "form_data": {
+      "data": {
+        "category": {
+          "str": {
+            "value": "game-consoles-and-video-games"
+          }
+        }
+      }
+    }
+  }
+}

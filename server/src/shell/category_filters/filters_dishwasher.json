@@ -1,0 +1,552 @@
+{
+  "page": {
+    "widget_list": [
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "status",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "new",
+              "title": "نو",
+              "search_keywords": "نو"
+            },
+            {
+              "key": "like-new",
+              "title": "در حد نو",
+              "search_keywords": "در حد نو"
+            },
+            {
+              "key": "used",
+              "title": "کارکرده",
+              "search_keywords": "کارکرده"
+            },
+            {
+              "key": "repair-needed",
+              "title": "نیازمند تعمیر",
+              "search_keywords": "نیازمند تعمیر"
+            }
+          ],
+          "cache_key": "dishwasher:status",
+          "bottom_sheet_title": "انتخاب وضعیت کالا",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "وضعیت کالا",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_status"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "brand",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "آ ا گ",
+              "title": "آ ا گ",
+              "search_keywords": "آ ا گ"
+            },
+            {
+              "key": "آروما",
+              "title": "آروما",
+              "search_keywords": "آروما"
+            },
+            {
+              "key": "آریستون",
+              "title": "آریستون",
+              "search_keywords": "آریستون"
+            },
+            {
+              "key": "اسمگ",
+              "title": "اسمگ",
+              "search_keywords": "اسمگ"
+            },
+            {
+              "key": "اسنوا",
+              "title": "اسنوا",
+              "search_keywords": "اسنوا"
+            },
+            {
+              "key": "اکسپریال",
+              "title": "اکسپریال",
+              "search_keywords": "اکسپریال"
+            },
+            {
+              "key": "ال جی",
+              "title": "ال جی",
+              "search_keywords": "ال جی"
+            },
+            {
+              "key": "الگانس",
+              "title": "الگانس",
+              "search_keywords": "الگانس"
+            },
+            {
+              "key": "ایندزیت",
+              "title": "ایندزیت",
+              "search_keywords": "ایندزیت"
+            },
+            {
+              "key": "برتینو",
+              "title": "برتینو",
+              "search_keywords": "برتینو"
+            },
+            {
+              "key": "بکو",
+              "title": "بکو",
+              "search_keywords": "بکو"
+            },
+            {
+              "key": "بلومبرگ",
+              "title": "بلومبرگ",
+              "search_keywords": "بلومبرگ"
+            },
+            {
+              "key": "بهی",
+              "title": "بهی",
+              "search_keywords": "بهی"
+            },
+            {
+              "key": "بوش",
+              "title": "بوش",
+              "search_keywords": "بوش"
+            },
+            {
+              "key": "پاکشوما",
+              "title": "پاکشوما",
+              "search_keywords": "پاکشوما"
+            },
+            {
+              "key": "تکنوگاز",
+              "title": "تکنوگاز",
+              "search_keywords": "تکنوگاز"
+            },
+            {
+              "key": "جنرال آدمیرال",
+              "title": "جنرال آدمیرال",
+              "search_keywords": "جنرال آدمیرال"
+            },
+            {
+              "key": "جنرال هاوس",
+              "title": "جنرال هاوس",
+              "search_keywords": "جنرال هاوس"
+            },
+            {
+              "key": "دکستر",
+              "title": "دکستر",
+              "search_keywords": "دکستر"
+            },
+            {
+              "key": "ریتون",
+              "title": "ریتون",
+              "search_keywords": "ریتون"
+            },
+            {
+              "key": "زانوسی",
+              "title": "زانوسی",
+              "search_keywords": "زانوسی"
+            },
+            {
+              "key": "زیرووات",
+              "title": "زیرووات",
+              "search_keywords": "زیرووات"
+            },
+            {
+              "key": "زیمنس",
+              "title": "زیمنس",
+              "search_keywords": "زیمنس"
+            },
+            {
+              "key": "سام",
+              "title": "سام",
+              "search_keywords": "سام"
+            },
+            {
+              "key": "سامسونگ",
+              "title": "سامسونگ",
+              "search_keywords": "سامسونگ"
+            },
+            {
+              "key": "سپهر الکتریک",
+              "title": "سپهر الکتریک",
+              "search_keywords": "سپهر الکتریک"
+            },
+            {
+              "key": "سینجر",
+              "title": "سینجر",
+              "search_keywords": "سینجر"
+            },
+            {
+              "key": "شارپ",
+              "title": "شارپ",
+              "search_keywords": "شارپ"
+            },
+            {
+              "key": "فاستر",
+              "title": "فاستر",
+              "search_keywords": "فاستر"
+            },
+            {
+              "key": "کرال",
+              "title": "کرال",
+              "search_keywords": "کرال"
+            },
+            {
+              "key": "کروپ",
+              "title": "کروپ",
+              "search_keywords": "کروپ"
+            },
+            {
+              "key": "کندی",
+              "title": "کندی",
+              "search_keywords": "کندی"
+            },
+            {
+              "key": "کنوود",
+              "title": "کنوود",
+              "search_keywords": "کنوود"
+            },
+            {
+              "key": "لوفرا",
+              "title": "لوفرا",
+              "search_keywords": "لوفرا"
+            },
+            {
+              "key": "مایدیا",
+              "title": "مایدیا",
+              "search_keywords": "مایدیا"
+            },
+            {
+              "key": "مجیک",
+              "title": "مجیک",
+              "search_keywords": "مجیک"
+            },
+            {
+              "key": "هاردستون",
+              "title": "هاردستون",
+              "search_keywords": "هاردستون"
+            },
+            {
+              "key": "وستل",
+              "title": "وستل",
+              "search_keywords": "وستل"
+            },
+            {
+              "key": "ویرپول",
+              "title": "ویرپول",
+              "search_keywords": "ویرپول"
+            },
+            {
+              "key": "غیره",
+              "title": "غیره",
+              "search_keywords": "غیره"
+            }
+          ],
+          "cache_key": "dishwasher:brand",
+          "bottom_sheet_title": "انتخاب برند",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "برند",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_brand"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "goods-business-type",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "personal",
+              "title": "شخصی",
+              "search_keywords": "شخصی"
+            },
+            {
+              "key": "marketplace",
+              "title": "فروشگاه",
+              "search_keywords": "فروشگاه"
+            }
+          ],
+          "cache_key": "dishwasher:goods-business-type",
+          "bottom_sheet_title": "انتخاب نوع آگهی\u200cدهنده",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "نوع آگهی\u200cدهنده",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_goods-business-type"
+      },
+      {
+        "widget_type": "TITLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.TitleRowData",
+          "text": "قیمت",
+          "text_color": "TEXT_PRIMARY",
+          "description": "(تومان)",
+          "description_color": "TEXT_SECONDARY",
+          "corresponding_input_widget_id": "filter_price"
+        }
+      },
+      {
+        "widget_type": "I_MANUAL_INPUT_NUMBER_RANGE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IManualInputNumberRangeRowData",
+          "has_divider": true,
+          "field": {
+            "key": "price",
+            "default": {},
+            "type": "number_range",
+            "validators": {
+              "minimum_validators": [
+                {
+                  "min": {
+                    "err": {
+                      "message": "مقدار واردشده نباید کمتر از ۰ تومان باشد."
+                    }
+                  }
+                },
+                {
+                  "max": {
+                    "err": {
+                      "message": "مقدار واردشده نباید بیشتر از ۱۰,۰۰۰,۰۰۰,۰۰۰,۰۰۰ تومان باشد."
+                    },
+                    "max": "10000000000000"
+                  }
+                }
+              ],
+              "maximum_validators": [
+                {
+                  "min": {
+                    "err": {
+                      "message": "مقدار واردشده نباید کمتر از ۰ تومان باشد."
+                    }
+                  }
+                },
+                {
+                  "max": {
+                    "err": {
+                      "message": "مقدار واردشده نباید بیشتر از ۱۰,۰۰۰,۰۰۰,۰۰۰,۰۰۰ تومان باشد."
+                    },
+                    "max": "10000000000000"
+                  }
+                }
+              ],
+              "number_range_validators": [
+                {
+                  "min_must_be_less_or_equal_max": {
+                    "err": {
+                      "message": "عدد انتخابی نباید کمتر از عدد شروع بازه باشد."
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "unit": "تومان",
+          "show_previous_suggestions": true,
+          "cache_key": "dishwasher:price",
+          "show_field_caption": true,
+          "minimum_dynamic_suggestion": "100000",
+          "maximum_dynamic_suggestion": "215333328"
+        },
+        "action_log": {
+          "server_side_info": {
+            "info": {
+              "@type": "type.googleapis.com/action_log.PostListFilterWidgetInteractedInfo",
+              "filter_name": "price",
+              "source": "FILTERS_PAGE"
+            },
+            "item_type": {
+              "type": "POST_LIST_FILTER_WIDGET_INTERACTED"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_price"
+      },
+      {
+        "widget_type": "I_LAZY_MULTI_SELECT_DISTRICT_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.ILazyMultiSelectHierarchyRowData",
+          "has_divider": true,
+          "field": {
+            "key": "districts",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "online_search": {
+            "min_query_length": 2,
+            "placeholder": "جستجو",
+            "delay_ms": 300,
+            "field_key": "districts",
+            "source": "filter"
+          },
+          "lazy_payload": {
+            "@type": "type.googleapis.com/post_list.LazyFilterPayload",
+            "filter_name": "districts",
+            "version": "52",
+            "place_ids": ["2"],
+            "category_slug": "dishwasher"
+          },
+          "show_previous_suggestions": true,
+          "cache_key": "districts",
+          "bottom_sheet_title": "انتخاب محله",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "محله",
+          "placeholder": "انتخاب"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_LAZY_MULTI_SELECT_DISTRICT"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_districts"
+      },
+      {
+        "widget_type": "I_TOGGLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IToggleRowData",
+          "title": "عکس\u200cدار",
+          "size": "SMALL",
+          "has_divider": true,
+          "field": {
+            "key": "has-photo",
+            "validators": {},
+            "type": "boolean"
+          }
+        },
+        "uid": "filter_has-photo"
+      },
+      {
+        "widget_type": "I_SINGLE_SELECT_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.ISingleSelectRowData",
+          "has_divider": true,
+          "field": {
+            "key": "exchange",
+            "validators": {},
+            "type": "str"
+          },
+          "title": "نمایش معاوضه\u200cها",
+          "sheet_title": "نمایش معاوضه\u200cها",
+          "placeholder": "انتخاب",
+          "clearable": true,
+          "options": [
+            {
+              "value": "only-exchanges",
+              "display": "نمایش فقط معاوضه\u200cها"
+            },
+            {
+              "value": "exclude-exchanges",
+              "display": "حذف معاوضه\u200cها"
+            }
+          ],
+          "options_alignment": "CENTER",
+          "small": true
+        },
+        "uid": "filter_exchange"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "addon_service_tags",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "IDENTITY_VERIFIED",
+              "title": "با تأیید هویت",
+              "search_keywords": "با تأیید هویت"
+            },
+            {
+              "key": "SECURE_PAYMENT",
+              "title": "با پرداخت امن",
+              "search_keywords": "با پرداخت امن"
+            }
+          ],
+          "cache_key": "dishwasher:addon_service_tags",
+          "bottom_sheet_title": "انتخاب افزونه\u200cها",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "افزونه\u200cها",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_addon_service_tags"
+      }
+    ],
+    "title": "فیلترها",
+    "submit_title": "اعمال فیلترها"
+  },
+  "base_data": {
+    "form_data": {
+      "data": {
+        "category": {
+          "str": {
+            "value": "dishwasher"
+          }
+        }
+      }
+    }
+  }
+}

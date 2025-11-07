@@ -57,7 +57,7 @@ export function AdminDashboard() {
   ];
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-10 px-4 py-8 md:py-12">
+    <div className="flex w-full flex-col gap-10 px-4 py-8 md:py-12">
       <div className="max-w-2xl">
         <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
           {t('title')}

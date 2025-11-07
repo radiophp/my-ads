@@ -13,7 +13,7 @@ export function HomeLanding() {
   const isAuthenticated = Boolean(auth.accessToken);
 
   return (
-    <main className="mx-auto grid w-full max-w-5xl gap-10 px-4 py-20 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-start">
+    <main className="grid w-full gap-10 px-4 py-20 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-start">
       <section className="space-y-5">
         <div className="inline-flex rounded-full border border-border/70 bg-muted px-3 py-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
           {t('badge')}

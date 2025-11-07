@@ -155,7 +155,32 @@
   },
   "dashboard": {
     "title": "داشبورد",
-    "subtitle": "به‌زودی فضای کاری شخصی‌سازی‌شده‌ی شما اینجا نمایش داده می‌شود."
+    "subtitle": "به‌زودی فضای کاری شخصی‌سازی‌شده‌ی شما اینجا نمایش داده می‌شود.",
+    "filters": {
+      "title": "فیلتر جستجو",
+      "provinceLabel": "استان",
+      "provinceAll": "تمام استان‌ها",
+      "provinceButtonSelect": "انتخاب استان",
+      "provinceModalTitle": "انتخاب استان",
+      "provinceModalDescription": "یک استان مشخص یا کل کشور را برای جستجو برگزینید.",
+      "provinceModalSelectAll": "تمام استان‌ها",
+      "provinceModalEmpty": "هنوز هیچ استانی ثبت نشده است.",
+      "provinceModalCancel": "انصراف",
+      "provinceModalConfirm": "انتخاب",
+      "cityLabel": "شهرها",
+      "cityAll": "همه شهرها",
+      "cityButtonSelect": "انتخاب شهر",
+      "cityButtonSelected": "{count} شهر",
+      "cityHelper": "برای انتخاب یک یا چند شهر دکمه بالا را بزنید.",
+      "cityDisabledHelper": "برای فعال شدن فیلتر شهر ابتدا یک استان انتخاب کنید.",
+      "cityModalTitle": "انتخاب شهرها",
+      "cityModalDescription": "شهرهایی که باید در جستجو لحاظ شوند را برگزینید.",
+      "cityModalSelectAll": "تمام شهرها",
+      "cityModalEmpty": "هنوز شهری برای این استان ثبت نشده است.",
+      "cityModalCancel": "انصراف",
+      "cityModalConfirm": "انتخاب",
+      "mobileBack": "بازگشت"
+    }
   },
   "admin": {
     "dashboard": {

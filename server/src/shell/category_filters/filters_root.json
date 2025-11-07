@@ -1,0 +1,4 @@
+{
+  "code": 3,
+  "message": "rpc error: code = InvalidArgument desc = category root is not valid"
+}

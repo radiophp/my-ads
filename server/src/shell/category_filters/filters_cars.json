@@ -1,0 +1,944 @@
+{
+  "page": {
+    "widget_list": [
+      {
+        "widget_type": "TITLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.TitleRowData",
+          "text": "قیمت",
+          "text_color": "TEXT_PRIMARY",
+          "description": "(تومان)",
+          "description_color": "TEXT_SECONDARY",
+          "corresponding_input_widget_id": "filter_price"
+        }
+      },
+      {
+        "widget_type": "I_MANUAL_INPUT_NUMBER_RANGE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IManualInputNumberRangeRowData",
+          "has_divider": true,
+          "field": {
+            "key": "price",
+            "default": {},
+            "type": "number_range",
+            "validators": {
+              "minimum_validators": [
+                {
+                  "min": {
+                    "err": {
+                      "message": "مقدار واردشده نباید کمتر از ۰ تومان باشد."
+                    }
+                  }
+                },
+                {
+                  "max": {
+                    "err": {
+                      "message": "مقدار واردشده نباید بیشتر از ۱۰,۰۰۰,۰۰۰,۰۰۰,۰۰۰ تومان باشد."
+                    },
+                    "max": "10000000000000"
+                  }
+                }
+              ],
+              "maximum_validators": [
+                {
+                  "min": {
+                    "err": {
+                      "message": "مقدار واردشده نباید کمتر از ۰ تومان باشد."
+                    }
+                  }
+                },
+                {
+                  "max": {
+                    "err": {
+                      "message": "مقدار واردشده نباید بیشتر از ۱۰,۰۰۰,۰۰۰,۰۰۰,۰۰۰ تومان باشد."
+                    },
+                    "max": "10000000000000"
+                  }
+                }
+              ],
+              "number_range_validators": [
+                {
+                  "min_must_be_less_or_equal_max": {
+                    "err": {
+                      "message": "عدد انتخابی نباید کمتر از عدد شروع بازه باشد."
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "unit": "تومان",
+          "show_previous_suggestions": true,
+          "cache_key": "cars:price",
+          "show_field_caption": true,
+          "minimum_dynamic_suggestion": "19063784",
+          "maximum_dynamic_suggestion": "14669894656"
+        },
+        "action_log": {
+          "server_side_info": {
+            "info": {
+              "@type": "type.googleapis.com/action_log.PostListFilterWidgetInteractedInfo",
+              "filter_name": "price",
+              "source": "FILTERS_PAGE"
+            },
+            "item_type": {
+              "type": "POST_LIST_FILTER_WIDGET_INTERACTED"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_price"
+      },
+      {
+        "widget_type": "TITLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.TitleRowData",
+          "text": "مدل (سال تولید)",
+          "text_color": "TEXT_PRIMARY",
+          "description_color": "TEXT_SECONDARY",
+          "corresponding_input_widget_id": "filter_production-year"
+        }
+      },
+      {
+        "widget_type": "I_SELECTIVE_RANGE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.ISelectiveRangeRowData",
+          "has_divider": true,
+          "field": {
+            "key": "production-year",
+            "default": {},
+            "type": "number_range",
+            "validators": {
+              "minimum_validators": [
+                {
+                  "min": {
+                    "err": {
+                      "message": "مقدار واردشده نباید کمتر از ۰ باشد."
+                    }
+                  }
+                },
+                {
+                  "max": {
+                    "err": {
+                      "message": "مقدار واردشده نباید بیشتر از ۳۰,۰۰۰ باشد."
+                    },
+                    "max": "30000"
+                  }
+                }
+              ],
+              "maximum_validators": [
+                {
+                  "min": {
+                    "err": {
+                      "message": "مقدار واردشده نباید کمتر از ۰ باشد."
+                    }
+                  }
+                },
+                {
+                  "max": {
+                    "err": {
+                      "message": "مقدار واردشده نباید بیشتر از ۳۰,۰۰۰ باشد."
+                    },
+                    "max": "30000"
+                  }
+                }
+              ],
+              "number_range_validators": [
+                {
+                  "min_must_be_less_or_equal_max": {
+                    "err": {
+                      "message": "عدد انتخابی نباید کمتر از عدد شروع بازه باشد."
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "show_previous_suggestions": true,
+          "cache_key": "cars:production-year",
+          "from_options": [
+            {
+              "value": "1404",
+              "display": "۱۴۰۴/۲۰۲۵"
+            },
+            {
+              "value": "1403",
+              "display": "۱۴۰۳/۲۰۲۴"
+            },
+            {
+              "value": "1402",
+              "display": "۱۴۰۲/۲۰۲۳"
+            },
+            {
+              "value": "1401",
+              "display": "۱۴۰۱/۲۰۲۲"
+            },
+            {
+              "value": "1400",
+              "display": "۱۴۰۰/۲۰۲۱"
+            },
+            {
+              "value": "1399",
+              "display": "۱۳۹۹/۲۰۲۰"
+            },
+            {
+              "value": "1398",
+              "display": "۱۳۹۸/۲۰۱۹"
+            },
+            {
+              "value": "1397",
+              "display": "۱۳۹۷/۲۰۱۸"
+            },
+            {
+              "value": "1396",
+              "display": "۱۳۹۶/۲۰۱۷"
+            },
+            {
+              "value": "1395",
+              "display": "۱۳۹۵/۲۰۱۶"
+            },
+            {
+              "value": "1394",
+              "display": "۱۳۹۴/۲۰۱۵"
+            },
+            {
+              "value": "1393",
+              "display": "۱۳۹۳/۲۰۱۴"
+            },
+            {
+              "value": "1392",
+              "display": "۱۳۹۲/۲۰۱۳"
+            },
+            {
+              "value": "1391",
+              "display": "۱۳۹۱/۲۰۱۲"
+            },
+            {
+              "value": "1390",
+              "display": "۱۳۹۰/۲۰۱۱"
+            },
+            {
+              "value": "1389",
+              "display": "۱۳۸۹/۲۰۱۰"
+            },
+            {
+              "value": "1388",
+              "display": "۱۳۸۸/۲۰۰۹"
+            },
+            {
+              "value": "1387",
+              "display": "۱۳۸۷/۲۰۰۸"
+            },
+            {
+              "value": "1386",
+              "display": "۱۳۸۶/۲۰۰۷"
+            },
+            {
+              "value": "1385",
+              "display": "۱۳۸۵/۲۰۰۶"
+            },
+            {
+              "value": "1384",
+              "display": "۱۳۸۴/۲۰۰۵"
+            },
+            {
+              "value": "1383",
+              "display": "۱۳۸۳/۲۰۰۴"
+            },
+            {
+              "value": "1382",
+              "display": "۱۳۸۲/۲۰۰۳"
+            },
+            {
+              "value": "1381",
+              "display": "۱۳۸۱/۲۰۰۲"
+            },
+            {
+              "value": "1380",
+              "display": "۱۳۸۰/۲۰۰۱"
+            },
+            {
+              "value": "1379",
+              "display": "۱۳۷۹/۲۰۰۰"
+            },
+            {
+              "value": "1378",
+              "display": "۱۳۷۸/۱۹۹۹"
+            },
+            {
+              "value": "1377",
+              "display": "۱۳۷۷/۱۹۹۸"
+            },
+            {
+              "value": "1376",
+              "display": "۱۳۷۶/۱۹۹۷"
+            },
+            {
+              "value": "1375",
+              "display": "۱۳۷۵/۱۹۹۶"
+            },
+            {
+              "value": "1374",
+              "display": "۱۳۷۴/۱۹۹۵"
+            },
+            {
+              "value": "1373",
+              "display": "۱۳۷۳/۱۹۹۴"
+            },
+            {
+              "value": "1372",
+              "display": "۱۳۷۲/۱۹۹۳"
+            },
+            {
+              "value": "1371",
+              "display": "۱۳۷۱/۱۹۹۲"
+            },
+            {
+              "value": "1370",
+              "display": "۱۳۷۰/۱۹۹۱"
+            },
+            {
+              "value": "1369",
+              "display": "۱۳۶۹/۱۹۹۰"
+            },
+            {
+              "value": "1368",
+              "display": "۱۳۶۸/۱۹۸۹"
+            },
+            {
+              "value": "1367",
+              "display": "۱۳۶۷/۱۹۸۸"
+            },
+            {
+              "value": "1366",
+              "display": "۱۳۶۶/۱۹۸۷"
+            },
+            {
+              "value": "1300",
+              "display": "قبل از ۱۹۸۷/قبل از ۱۳۶۶"
+            }
+          ],
+          "to_options": [
+            {
+              "value": "1404",
+              "display": "۱۴۰۴/۲۰۲۵"
+            },
+            {
+              "value": "1403",
+              "display": "۱۴۰۳/۲۰۲۴"
+            },
+            {
+              "value": "1402",
+              "display": "۱۴۰۲/۲۰۲۳"
+            },
+            {
+              "value": "1401",
+              "display": "۱۴۰۱/۲۰۲۲"
+            },
+            {
+              "value": "1400",
+              "display": "۱۴۰۰/۲۰۲۱"
+            },
+            {
+              "value": "1399",
+              "display": "۱۳۹۹/۲۰۲۰"
+            },
+            {
+              "value": "1398",
+              "display": "۱۳۹۸/۲۰۱۹"
+            },
+            {
+              "value": "1397",
+              "display": "۱۳۹۷/۲۰۱۸"
+            },
+            {
+              "value": "1396",
+              "display": "۱۳۹۶/۲۰۱۷"
+            },
+            {
+              "value": "1395",
+              "display": "۱۳۹۵/۲۰۱۶"
+            },
+            {
+              "value": "1394",
+              "display": "۱۳۹۴/۲۰۱۵"
+            },
+            {
+              "value": "1393",
+              "display": "۱۳۹۳/۲۰۱۴"
+            },
+            {
+              "value": "1392",
+              "display": "۱۳۹۲/۲۰۱۳"
+            },
+            {
+              "value": "1391",
+              "display": "۱۳۹۱/۲۰۱۲"
+            },
+            {
+              "value": "1390",
+              "display": "۱۳۹۰/۲۰۱۱"
+            },
+            {
+              "value": "1389",
+              "display": "۱۳۸۹/۲۰۱۰"
+            },
+            {
+              "value": "1388",
+              "display": "۱۳۸۸/۲۰۰۹"
+            },
+            {
+              "value": "1387",
+              "display": "۱۳۸۷/۲۰۰۸"
+            },
+            {
+              "value": "1386",
+              "display": "۱۳۸۶/۲۰۰۷"
+            },
+            {
+              "value": "1385",
+              "display": "۱۳۸۵/۲۰۰۶"
+            },
+            {
+              "value": "1384",
+              "display": "۱۳۸۴/۲۰۰۵"
+            },
+            {
+              "value": "1383",
+              "display": "۱۳۸۳/۲۰۰۴"
+            },
+            {
+              "value": "1382",
+              "display": "۱۳۸۲/۲۰۰۳"
+            },
+            {
+              "value": "1381",
+              "display": "۱۳۸۱/۲۰۰۲"
+            },
+            {
+              "value": "1380",
+              "display": "۱۳۸۰/۲۰۰۱"
+            },
+            {
+              "value": "1379",
+              "display": "۱۳۷۹/۲۰۰۰"
+            },
+            {
+              "value": "1378",
+              "display": "۱۳۷۸/۱۹۹۹"
+            },
+            {
+              "value": "1377",
+              "display": "۱۳۷۷/۱۹۹۸"
+            },
+            {
+              "value": "1376",
+              "display": "۱۳۷۶/۱۹۹۷"
+            },
+            {
+              "value": "1375",
+              "display": "۱۳۷۵/۱۹۹۶"
+            },
+            {
+              "value": "1374",
+              "display": "۱۳۷۴/۱۹۹۵"
+            },
+            {
+              "value": "1373",
+              "display": "۱۳۷۳/۱۹۹۴"
+            },
+            {
+              "value": "1372",
+              "display": "۱۳۷۲/۱۹۹۳"
+            },
+            {
+              "value": "1371",
+              "display": "۱۳۷۱/۱۹۹۲"
+            },
+            {
+              "value": "1370",
+              "display": "۱۳۷۰/۱۹۹۱"
+            },
+            {
+              "value": "1369",
+              "display": "۱۳۶۹/۱۹۹۰"
+            },
+            {
+              "value": "1368",
+              "display": "۱۳۶۸/۱۹۸۹"
+            },
+            {
+              "value": "1367",
+              "display": "۱۳۶۷/۱۹۸۸"
+            },
+            {
+              "value": "1366",
+              "display": "۱۳۶۶/۱۹۸۷"
+            }
+          ],
+          "open_new_bottom_sheet": true,
+          "filter_options_by_from": true,
+          "from_bottom_sheet_title": "مدل (سال تولید) از",
+          "to_bottom_sheet_title": "مدل (سال تولید) تا"
+        },
+        "action_log": {
+          "server_side_info": {
+            "info": {
+              "@type": "type.googleapis.com/action_log.PostListFilterWidgetInteractedInfo",
+              "filter_name": "production-year",
+              "source": "FILTERS_PAGE"
+            },
+            "item_type": {
+              "type": "POST_LIST_FILTER_WIDGET_INTERACTED"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_production-year"
+      },
+      {
+        "widget_type": "I_LAZY_MULTI_SELECT_DISTRICT_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.ILazyMultiSelectHierarchyRowData",
+          "has_divider": true,
+          "field": {
+            "key": "districts",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "online_search": {
+            "min_query_length": 2,
+            "placeholder": "جستجو",
+            "delay_ms": 300,
+            "field_key": "districts",
+            "source": "filter"
+          },
+          "lazy_payload": {
+            "@type": "type.googleapis.com/post_list.LazyFilterPayload",
+            "filter_name": "districts",
+            "version": "52",
+            "place_ids": ["2"],
+            "category_slug": "cars"
+          },
+          "show_previous_suggestions": true,
+          "cache_key": "districts",
+          "bottom_sheet_title": "انتخاب محله",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "محله",
+          "placeholder": "انتخاب"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_LAZY_MULTI_SELECT_DISTRICT"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_districts"
+      },
+      {
+        "widget_type": "I_TOGGLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IToggleRowData",
+          "title": "ویدیو\u200cدار",
+          "size": "SMALL",
+          "has_divider": true,
+          "field": {
+            "key": "has-video",
+            "validators": {},
+            "type": "boolean"
+          }
+        },
+        "uid": "filter_has-video"
+      },
+      {
+        "widget_type": "I_TOGGLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IToggleRowData",
+          "title": "عکس\u200cدار",
+          "size": "SMALL",
+          "has_divider": true,
+          "field": {
+            "key": "has-photo",
+            "validators": {},
+            "type": "boolean"
+          }
+        },
+        "uid": "filter_has-photo"
+      },
+      {
+        "widget_type": "TITLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.TitleRowData",
+          "text": "کارکرد",
+          "text_color": "TEXT_PRIMARY",
+          "description": "(کیلومتر)",
+          "description_color": "TEXT_SECONDARY",
+          "corresponding_input_widget_id": "filter_usage"
+        }
+      },
+      {
+        "widget_type": "I_SELECTIVE_RANGE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.ISelectiveRangeRowData",
+          "has_divider": true,
+          "field": {
+            "key": "usage",
+            "default": {},
+            "type": "number_range",
+            "validators": {
+              "minimum_validators": [
+                {
+                  "min": {
+                    "err": {
+                      "message": "مقدار واردشده نباید کمتر از ۰ کیلومتر باشد."
+                    }
+                  }
+                },
+                {
+                  "max": {
+                    "err": {
+                      "message": "مقدار واردشده نباید بیشتر از ۱,۰۰۰,۰۰۰,۰۰۰ کیلومتر باشد."
+                    },
+                    "max": "1000000000"
+                  }
+                }
+              ],
+              "maximum_validators": [
+                {
+                  "min": {
+                    "err": {
+                      "message": "مقدار واردشده نباید کمتر از ۰ کیلومتر باشد."
+                    }
+                  }
+                },
+                {
+                  "max": {
+                    "err": {
+                      "message": "مقدار واردشده نباید بیشتر از ۱,۰۰۰,۰۰۰,۰۰۰ کیلومتر باشد."
+                    },
+                    "max": "1000000000"
+                  }
+                }
+              ],
+              "number_range_validators": [
+                {
+                  "min_must_be_less_or_equal_max": {
+                    "err": {
+                      "message": "عدد انتخابی نباید کمتر از عدد شروع بازه باشد."
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "show_previous_suggestions": true,
+          "cache_key": "cars:usage",
+          "from_options": [
+            {
+              "display": "صفر"
+            },
+            {
+              "value": "1000",
+              "display": "۱ هزار کیلومتر"
+            },
+            {
+              "value": "5000",
+              "display": "۵ هزار کیلومتر"
+            },
+            {
+              "value": "10000",
+              "display": "۱۰ هزار کیلومتر"
+            },
+            {
+              "value": "20000",
+              "display": "۲۰ هزار کیلومتر"
+            },
+            {
+              "value": "30000",
+              "display": "۳۰ هزار کیلومتر"
+            },
+            {
+              "value": "40000",
+              "display": "۴۰ هزار کیلومتر"
+            },
+            {
+              "value": "50000",
+              "display": "۵۰ هزار کیلومتر"
+            },
+            {
+              "value": "60000",
+              "display": "۶۰ هزار کیلومتر"
+            },
+            {
+              "value": "70000",
+              "display": "۷۰ هزار کیلومتر"
+            },
+            {
+              "value": "80000",
+              "display": "۸۰ هزار کیلومتر"
+            },
+            {
+              "value": "90000",
+              "display": "۹۰ هزار کیلومتر"
+            },
+            {
+              "value": "100000",
+              "display": "۱۰۰ هزار کیلومتر"
+            },
+            {
+              "value": "120000",
+              "display": "۱۲۰ هزار کیلومتر"
+            },
+            {
+              "value": "140000",
+              "display": "۱۴۰ هزار کیلومتر"
+            },
+            {
+              "value": "160000",
+              "display": "۱۶۰ هزار کیلومتر"
+            },
+            {
+              "value": "180000",
+              "display": "۱۸۰ هزار کیلومتر"
+            },
+            {
+              "value": "200000",
+              "display": "۲۰۰ هزار کیلومتر"
+            },
+            {
+              "value": "250000",
+              "display": "۲۵۰ هزار کیلومتر"
+            },
+            {
+              "value": "300000",
+              "display": "۳۰۰ هزار کیلومتر"
+            },
+            {
+              "value": "350000",
+              "display": "۳۵۰ هزار کیلومتر"
+            },
+            {
+              "value": "400000",
+              "display": "۴۰۰ هزار کیلومتر"
+            }
+          ],
+          "to_options": [
+            {
+              "display": "صفر"
+            },
+            {
+              "value": "1000",
+              "display": "۱ هزار کیلومتر"
+            },
+            {
+              "value": "5000",
+              "display": "۵ هزار کیلومتر"
+            },
+            {
+              "value": "10000",
+              "display": "۱۰ هزار کیلومتر"
+            },
+            {
+              "value": "20000",
+              "display": "۲۰ هزار کیلومتر"
+            },
+            {
+              "value": "30000",
+              "display": "۳۰ هزار کیلومتر"
+            },
+            {
+              "value": "40000",
+              "display": "۴۰ هزار کیلومتر"
+            },
+            {
+              "value": "50000",
+              "display": "۵۰ هزار کیلومتر"
+            },
+            {
+              "value": "60000",
+              "display": "۶۰ هزار کیلومتر"
+            },
+            {
+              "value": "70000",
+              "display": "۷۰ هزار کیلومتر"
+            },
+            {
+              "value": "80000",
+              "display": "۸۰ هزار کیلومتر"
+            },
+            {
+              "value": "90000",
+              "display": "۹۰ هزار کیلومتر"
+            },
+            {
+              "value": "100000",
+              "display": "۱۰۰ هزار کیلومتر"
+            },
+            {
+              "value": "120000",
+              "display": "۱۲۰ هزار کیلومتر"
+            },
+            {
+              "value": "140000",
+              "display": "۱۴۰ هزار کیلومتر"
+            },
+            {
+              "value": "160000",
+              "display": "۱۶۰ هزار کیلومتر"
+            },
+            {
+              "value": "180000",
+              "display": "۱۸۰ هزار کیلومتر"
+            },
+            {
+              "value": "200000",
+              "display": "۲۰۰ هزار کیلومتر"
+            },
+            {
+              "value": "250000",
+              "display": "۲۵۰ هزار کیلومتر"
+            },
+            {
+              "value": "300000",
+              "display": "۳۰۰ هزار کیلومتر"
+            },
+            {
+              "value": "350000",
+              "display": "۳۵۰ هزار کیلومتر"
+            },
+            {
+              "value": "400000",
+              "display": "۴۰۰ هزار کیلومتر"
+            },
+            {
+              "value": "10000000",
+              "display": "بالای ۴۰۰ هزار کیلومتر"
+            }
+          ],
+          "open_new_bottom_sheet": true,
+          "filter_options_by_from": true,
+          "manual_input_option": {
+            "display": "- وارد\u200cکردن مقدار دلخواه -",
+            "unit": "کیلومتر",
+            "show_field_caption": true
+          },
+          "from_bottom_sheet_title": "کارکرد از",
+          "to_bottom_sheet_title": "کارکرد تا"
+        },
+        "action_log": {
+          "server_side_info": {
+            "info": {
+              "@type": "type.googleapis.com/action_log.PostListFilterWidgetInteractedInfo",
+              "filter_name": "usage",
+              "source": "FILTERS_PAGE"
+            },
+            "item_type": {
+              "type": "POST_LIST_FILTER_WIDGET_INTERACTED"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_usage"
+      },
+      {
+        "widget_type": "I_TOGGLE_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IToggleRowData",
+          "title": "حذف توافقی\u200cها",
+          "size": "SMALL",
+          "has_divider": true,
+          "field": {
+            "key": "non-negotiable",
+            "validators": {},
+            "type": "boolean"
+          }
+        },
+        "uid": "filter_non-negotiable"
+      },
+      {
+        "widget_type": "I_SINGLE_SELECT_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.ISingleSelectRowData",
+          "has_divider": true,
+          "field": {
+            "key": "exchange",
+            "validators": {},
+            "type": "str"
+          },
+          "title": "نمایش معاوضه\u200cها",
+          "sheet_title": "نمایش معاوضه\u200cها",
+          "placeholder": "انتخاب",
+          "clearable": true,
+          "options": [
+            {
+              "value": "only-exchanges",
+              "display": "نمایش فقط معاوضه\u200cها"
+            },
+            {
+              "value": "exclude-exchanges",
+              "display": "حذف معاوضه\u200cها"
+            }
+          ],
+          "options_alignment": "CENTER",
+          "small": true
+        },
+        "uid": "filter_exchange"
+      },
+      {
+        "widget_type": "I_MULTI_SELECT_V2_ROW",
+        "data": {
+          "@type": "type.googleapis.com/widgets.IMultiSelectV2RowData",
+          "has_divider": true,
+          "field": {
+            "key": "addon_service_tags",
+            "validators": {},
+            "type": "repeated_string"
+          },
+          "options": [
+            {
+              "key": "IDENTITY_VERIFIED",
+              "title": "با تأیید هویت",
+              "search_keywords": "با تأیید هویت"
+            },
+            {
+              "key": "SECURE_PAYMENT",
+              "title": "با پرداخت امن",
+              "search_keywords": "با پرداخت امن"
+            }
+          ],
+          "cache_key": "cars:addon_service_tags",
+          "bottom_sheet_title": "انتخاب افزونه\u200cها",
+          "bottom_sheet_confirm_button_text": "تایید",
+          "filter_page_title": "افزونه\u200cها",
+          "placeholder": "انتخاب",
+          "select_all_key": "ALL_POSSIBLE_OPTIONS",
+          "select_all_title": "همهٔ موارد"
+        },
+        "action_log": {
+          "server_side_info": {
+            "item_type": {
+              "type": "OPEN_MULTI_SELECT_V2_WIDGET"
+            }
+          },
+          "enabled": true
+        },
+        "uid": "filter_addon_service_tags"
+      }
+    ],
+    "title": "فیلترها",
+    "submit_title": "اعمال فیلترها"
+  },
+  "base_data": {
+    "form_data": {
+      "data": {
+        "category": {
+          "str": {
+            "value": "cars"
+          }
+        }
+      }
+    }
+  }
+}

@@ -47,7 +47,7 @@ export function AdminCitiesManager() {
   }, [provinces]);
 
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8">
+    <div className="flex w-full flex-col gap-6 px-4 py-8">
       <Card className="border-border/70">
         <CardHeader className="gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>

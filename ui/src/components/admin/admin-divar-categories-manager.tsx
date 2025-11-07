@@ -40,7 +40,7 @@ export function AdminDivarCategoriesManager() {
   const hasSearch = normalizedSearch.length > 0;
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8">
+    <div className="flex w-full flex-col gap-6 px-4 py-8">
       <Card className="border-border/70">
         <CardHeader className="gap-4">
           <div>

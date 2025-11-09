@@ -162,8 +162,22 @@ export const apiSlice = createApi({
       query: (provinceId) => (provinceId ? `/cities?provinceId=${provinceId}` : '/cities'),
       providesTags: ['Locations'],
     }),
-    getDistricts: builder.query<District[], number | void>({
-      query: (cityId) => (cityId ? `/districts?cityId=${cityId}` : '/districts'),
+    getDistricts: builder.query<District[], number | number[] | void>({
+      query: (cityArg) => {
+        if (cityArg === undefined || cityArg === null) {
+          return '/districts';
+        }
+
+        if (Array.isArray(cityArg)) {
+          const filtered = cityArg.filter((id) => typeof id === 'number');
+          if (filtered.length === 0) {
+            return '/districts';
+          }
+          return `/districts?cityIds=${filtered.join(',')}`;
+        }
+
+        return `/districts?cityId=${cityArg}`;
+      },
       providesTags: ['Locations'],
     }),
     updateProvinceAllowPosting: builder.mutation<Province, { id: number; allowPosting: boolean }>({
@@ -315,6 +329,7 @@ export const apiSlice = createApi({
         limit?: number;
         provinceId?: number;
         cityIds?: number[];
+        districtIds?: number[];
         categorySlug?: string | null;
         categoryDepth?: number | null;
       } | void
@@ -332,6 +347,9 @@ export const apiSlice = createApi({
         }
         if (params?.cityIds && params.cityIds.length > 0) {
           searchParams.set('cityIds', params.cityIds.join(','));
+        }
+        if (params?.districtIds && params.districtIds.length > 0) {
+          searchParams.set('districtIds', params.districtIds.join(','));
         }
         if (params?.categorySlug) {
           searchParams.set('categorySlug', params.categorySlug);

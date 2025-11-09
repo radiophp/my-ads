@@ -69,6 +69,7 @@ export class DivarPostsAdminService {
       limit?: number;
       provinceId?: number;
       cityIds?: number[];
+      districtIds?: number[];
       categorySlug?: string;
       categoryDepth?: number;
     } = {},
@@ -80,6 +81,9 @@ export class DivarPostsAdminService {
     }
     if (options.cityIds && options.cityIds.length > 0) {
       where.cityId = { in: options.cityIds };
+    }
+    if (options.districtIds && options.districtIds.length > 0) {
+      where.districtId = { in: options.districtIds };
     }
     if (options.categorySlug) {
       where.OR = [

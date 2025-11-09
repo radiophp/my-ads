@@ -10,11 +10,14 @@ import {
   setProvince,
   setSelectedCities,
   setCitySelectionMode,
+  setDistrictSelectionMode,
+  setSelectedDistricts,
   setCategorySelection,
 } from '@/features/search-filter/searchFilterSlice';
 import {
   useGetProvincesQuery,
   useGetCitiesQuery,
+  useGetDistrictsQuery,
   useGetDivarCategoriesQuery,
 } from '@/features/api/apiSlice';
 import {
@@ -32,11 +35,15 @@ export function DashboardSearchFilterPanel() {
   const locale = useLocale();
   const isRTL = ['fa', 'ar', 'he'].includes(locale);
   const dispatch = useAppDispatch();
-  const { provinceId, citySelection, categorySelection } = useAppSelector(
+  const { provinceId, citySelection, districtSelection, categorySelection } = useAppSelector(
     (state) => state.searchFilter,
   );
   const categorySlug = categorySelection.slug;
   const categoryDepth = categorySelection.depth;
+  const selectedCityIds =
+    citySelection.mode === 'custom' && citySelection.cityIds.length > 0
+      ? citySelection.cityIds
+      : [];
 
   const {
     data: provinces = [],
@@ -49,6 +56,17 @@ export function DashboardSearchFilterPanel() {
     isLoading: citiesLoading,
     isFetching: citiesFetching,
   } = useGetCitiesQuery(provinceId === null ? skipToken : provinceId);
+  const {
+    data: districts = [],
+    isLoading: districtsLoading,
+    isFetching: districtsFetching,
+  } = useGetDistrictsQuery(
+    selectedCityIds.length === 0
+      ? skipToken
+      : selectedCityIds.length === 1
+        ? selectedCityIds[0]
+        : selectedCityIds,
+  );
 
   const {
     data: categories = [],
@@ -58,15 +76,19 @@ export function DashboardSearchFilterPanel() {
 
   const [provinceDialogOpen, setProvinceDialogOpen] = useState(false);
   const [cityDialogOpen, setCityDialogOpen] = useState(false);
+  const [districtDialogOpen, setDistrictDialogOpen] = useState(false);
   const [draftProvinceId, setDraftProvinceId] = useState<number | null>(null);
   const [draftProvinceAll, setDraftProvinceAll] = useState(true);
   const [draftCityIds, setDraftCityIds] = useState<number[]>([]);
   const [draftAllCities, setDraftAllCities] = useState(true);
+  const [draftDistrictIds, setDraftDistrictIds] = useState<number[]>([]);
+  const [draftAllDistricts, setDraftAllDistricts] = useState(true);
 
   const isProvinceAll = provinceId === null;
   const isCityButtonDisabled =
     isProvinceAll || provincesLoading || provincesFetching || citiesLoading || citiesFetching;
   const categoriesBusy = categoriesLoading || categoriesFetching;
+  const districtsBusy = districtsLoading || districtsFetching;
 
   useEffect(() => {
     if (provinceId === null) {
@@ -91,6 +113,22 @@ export function DashboardSearchFilterPanel() {
       dispatch(setSelectedCities(validIds));
     }
   }, [citySelection, cities, dispatch]);
+
+  useEffect(() => {
+    if (
+      districtSelection.mode !== 'custom' ||
+      districtSelection.districtIds.length === 0 ||
+      districts.length === 0
+    ) {
+      return;
+    }
+    const validIds = districtSelection.districtIds.filter((id) =>
+      districts.some((district) => district.id === id),
+    );
+    if (validIds.length !== districtSelection.districtIds.length) {
+      dispatch(setSelectedDistricts(validIds));
+    }
+  }, [districtSelection, districts, dispatch]);
 
   useEffect(() => {
     if (!provinceDialogOpen) {
@@ -119,6 +157,20 @@ export function DashboardSearchFilterPanel() {
     }
   }, [cityDialogOpen, citySelection]);
 
+  useEffect(() => {
+    if (!districtDialogOpen) {
+      return;
+    }
+
+    if (districtSelection.mode === 'all') {
+      setDraftAllDistricts(true);
+      setDraftDistrictIds([]);
+    } else {
+      setDraftAllDistricts(false);
+      setDraftDistrictIds(districtSelection.districtIds);
+    }
+  }, [districtDialogOpen, districtSelection]);
+
   const provinceOptions = useMemo(
     () =>
       provinces.map((province) => ({
@@ -137,6 +189,17 @@ export function DashboardSearchFilterPanel() {
     [cities],
   );
 
+  const multipleCitySelection = selectedCityIds.length > 1;
+
+  const districtOptions = useMemo(
+    () =>
+      districts.map((district) => ({
+        label: multipleCitySelection ? `${district.city} • ${district.name}` : district.name,
+        value: district.id,
+      })),
+    [districts, multipleCitySelection],
+  );
+
   const selectedCityNames = useMemo(() => {
     if (citySelection.mode !== 'custom' || citySelection.cityIds.length === 0) {
       return [];
@@ -146,6 +209,22 @@ export function DashboardSearchFilterPanel() {
       .map((id) => cities.find((city) => city.id === id)?.name)
       .filter((name): name is string => Boolean(name));
   }, [citySelection, cities]);
+
+  const selectedDistrictNames = useMemo(() => {
+    if (districtSelection.mode !== 'custom' || districtSelection.districtIds.length === 0) {
+      return [];
+    }
+
+    return districtSelection.districtIds
+      .map((id) => {
+        const match = districts.find((district) => district.id === id);
+        if (!match) {
+          return null;
+        }
+        return multipleCitySelection ? `${match.city} • ${match.name}` : match.name;
+      })
+      .filter((name): name is string => Boolean(name));
+  }, [districtSelection, districts, multipleCitySelection]);
 
   const selectedProvinceName =
     provinceId !== null ? provinces.find((province) => province.id === provinceId)?.name : null;
@@ -183,6 +262,18 @@ export function DashboardSearchFilterPanel() {
     setDraftCityIds([]);
   };
 
+  const toggleDistrictSelection = (districtId: number) => {
+    setDraftAllDistricts(false);
+    setDraftDistrictIds((prev) =>
+      prev.includes(districtId) ? prev.filter((id) => id !== districtId) : [...prev, districtId],
+    );
+  };
+
+  const handleSelectAllDistricts = () => {
+    setDraftAllDistricts(true);
+    setDraftDistrictIds([]);
+  };
+
   const applyCitySelection = () => {
     if (draftAllCities || draftCityIds.length === 0) {
       dispatch(setCitySelectionMode('all'));
@@ -192,8 +283,19 @@ export function DashboardSearchFilterPanel() {
     setCityDialogOpen(false);
   };
 
+  const applyDistrictSelection = () => {
+    if (draftAllDistricts || draftDistrictIds.length === 0) {
+      dispatch(setDistrictSelectionMode('all'));
+    } else {
+      dispatch(setSelectedDistricts(draftDistrictIds));
+    }
+    setDistrictDialogOpen(false);
+  };
+
   const selectedCityCount =
     citySelection.mode === 'custom' ? citySelection.cityIds.length : undefined;
+  const selectedDistrictCount =
+    districtSelection.mode === 'custom' ? districtSelection.districtIds.length : undefined;
 
   let cityButtonLabel = isProvinceAll ? t('cityAll') : t('cityButtonSelect');
   if (!isProvinceAll) {
@@ -207,6 +309,20 @@ export function DashboardSearchFilterPanel() {
   }
 
   const cityHelperText = isProvinceAll ? t('cityDisabledHelper') : t('cityHelper');
+  const isDistrictButtonDisabled =
+    selectedCityIds.length === 0 || districtsBusy || districtOptions.length === 0;
+  let districtButtonLabel = t('districtButtonSelect');
+  if (!isDistrictButtonDisabled) {
+    if (selectedDistrictNames.length === 1) {
+      districtButtonLabel = selectedDistrictNames[0];
+    } else if (selectedDistrictCount && selectedDistrictCount > 0) {
+      districtButtonLabel = t('districtButtonSelected', { count: selectedDistrictCount });
+    } else if (districtSelection.mode === 'all') {
+      districtButtonLabel = t('districtAll');
+    }
+  }
+  const districtHelperText =
+    selectedCityIds.length === 0 ? t('districtDisabledHelper') : t('districtHelper');
 
   const allowedCategories = useMemo(
     () => categories.filter((category) => category.allowPosting),
@@ -573,6 +689,104 @@ export function DashboardSearchFilterPanel() {
                 </DialogContent>
               </Dialog>
               <p className="text-xs text-muted-foreground">{cityHelperText}</p>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-foreground">{t('districtLabel')}</label>
+              <Dialog open={districtDialogOpen} onOpenChange={setDistrictDialogOpen}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="justify-between"
+                  onClick={() => setDistrictDialogOpen(true)}
+                  disabled={isDistrictButtonDisabled}
+                >
+                  {districtButtonLabel}
+                </Button>
+                <DialogContent
+                  hideCloseButton
+                  className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] sm:left-1/2 sm:top-1/2 sm:flex sm:max-h-[90vh] sm:w-full sm:max-w-xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:flex-col sm:overflow-hidden sm:rounded-2xl sm:border sm:p-6"
+                >
+                  <div className="flex h-full flex-col overflow-hidden">
+                    <div className="border-b border-border px-6 py-4 sm:hidden">
+                      <div className="flex items-center gap-2" dir="ltr">
+                        <button
+                          type="button"
+                          className="flex items-center gap-2 text-sm font-medium text-primary"
+                          onClick={() => setDistrictDialogOpen(false)}
+                        >
+                          <ArrowLeft className="size-4" />
+                          {t('mobileBack')}
+                        </button>
+                        <p
+                          className={`flex-1 text-base font-semibold ${isRTL ? 'text-right' : 'text-center'}`}
+                          dir={isRTL ? 'rtl' : 'ltr'}
+                        >
+                          {t('districtModalTitle')}
+                        </p>
+                      </div>
+                      <p className="mt-1 text-sm text-muted-foreground">{t('districtModalDescription')}</p>
+                    </div>
+                    <div className="hidden p-0 sm:block">
+                      <DialogHeader>
+                        <DialogTitle>{t('districtModalTitle')}</DialogTitle>
+                        <DialogDescription>{t('districtModalDescription')}</DialogDescription>
+                      </DialogHeader>
+                    </div>
+
+                    <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 py-4 sm:p-0">
+                      <label className="flex items-center gap-3 rounded-lg border border-dashed border-input px-3 py-2 text-sm font-medium">
+                        <input
+                          type="checkbox"
+                          className="size-4 rounded border-input text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          checked={draftAllDistricts}
+                          onChange={handleSelectAllDistricts}
+                        />
+                        {t('districtModalSelectAll')}
+                      </label>
+
+                      <div className="rounded-xl border border-input">
+                        {districtOptions.length === 0 ? (
+                          <p className="p-4 text-sm text-muted-foreground">{t('districtModalEmpty')}</p>
+                        ) : (
+                          <ul className="divide-y divide-border">
+                            {districtOptions.map((district) => (
+                              <li key={district.value}>
+                                <label className="flex cursor-pointer items-center gap-3 px-3 py-2 text-sm">
+                                  <input
+                                    type="checkbox"
+                                    className="size-4 rounded border-input text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                    checked={!draftAllDistricts && draftDistrictIds.includes(district.value)}
+                                    onChange={() => toggleDistrictSelection(district.value)}
+                                  />
+                                  {district.label}
+                                </label>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="border-t border-border bg-background/95 px-6 py-4 sm:border-0 sm:bg-transparent sm:px-0">
+                      <div className="flex flex-row justify-end gap-3">
+                        <Button className="flex-1" type="button" onClick={applyDistrictSelection}>
+                          {t('districtModalConfirm')}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => setDistrictDialogOpen(false)}
+                        >
+                          {t('districtModalCancel')}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+              <p className="text-xs text-muted-foreground">{districtHelperText}</p>
             </div>
           </div>
         </div>

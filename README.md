@@ -181,7 +181,8 @@ npm run build          # Produces the production .next/ artefacts
 ### Dashboard & data quality upgrades
 
 - **Category-aware filter rail** – The dashboard now exposes the Divar category tree (filtered to `allowPosting=true` nodes). Breadcrumbs let users step up the hierarchy, and the chip row shows either child categories or siblings for leaf nodes. Redux keeps a `categorySelection` object (`slug` + `depth`) so the frontend knows whether the slug maps to `cat1`, `cat2`, `cat3`, or the canonical slug column.
-- **API filtering** – `/divar-posts` accepts `categorySlug`/`categoryDepth` query parameters. Depth determines which Prisma fields are queried (e.g., depth 0 → `cat1`, depth 1 → `cat2`, depth 2 → `cat3`/`categorySlug`). The service logs every query (`where`, cursor, limit) to help debug empty feeds.
+- **Hierarchical location filters** – Province, city, and district selectors share the same Redux slice. Selecting a province resets downstream filters, cities support multi-select, and the district picker activates as soon as at least one city is selected (multi-city mode prefixes each district with its city name). The resulting `districtIds` are sent to `/divar-posts` so backend queries can be narrowed to specific neighborhoods.
+- **API filtering** – `/divar-posts` accepts `categorySlug`/`categoryDepth` plus optional `districtIds`. Depth determines which Prisma fields are queried (e.g., depth 0 → `cat1`, depth 1 → `cat2`, depth 2 → `cat3`/`categorySlug`), while `districtIds` map to the `districtId` column. The service logs every query (`where`, cursor, limit) to help debug empty feeds.
 - **Visual polish** – Post cards switched to a responsive 1/3/4-column grid with edge-to-edge media, iconised overlay badges (business type, publish time, image count), and zero-value price/rent fields are suppressed automatically.
 
 ---

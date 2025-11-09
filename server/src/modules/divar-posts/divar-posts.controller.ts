@@ -20,6 +20,7 @@ export class DivarPostsController {
     @Query('limit') limitParam?: string,
     @Query('provinceId') provinceParam?: string,
     @Query('cityIds') cityIdsParam?: string,
+    @Query('districtIds') districtIdsParam?: string,
     @Query('categorySlug') categorySlug?: string,
     @Query('categoryDepth') categoryDepthParam?: string,
   ): Promise<PaginatedDivarPostsDto> {
@@ -33,12 +34,19 @@ export class DivarPostsController {
           .map((value) => Number(value.trim()))
           .filter((value) => Number.isFinite(value))
       : undefined;
+    const districtIds = districtIdsParam
+      ? districtIdsParam
+          .split(',')
+          .map((value) => Number(value.trim()))
+          .filter((value) => Number.isFinite(value))
+      : undefined;
 
     return this.divarPostsService.listNormalizedPosts({
       cursor,
       limit,
       provinceId: Number.isFinite(provinceId) ? provinceId : undefined,
       cityIds: cityIds && cityIds.length > 0 ? cityIds : undefined,
+      districtIds: districtIds && districtIds.length > 0 ? districtIds : undefined,
       categorySlug: categorySlug?.trim() ? categorySlug.trim() : undefined,
       categoryDepth: Number.isFinite(parsedDepth) ? parsedDepth : undefined,
     });

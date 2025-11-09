@@ -31,7 +31,7 @@ export function DivarPostsFeed(): JSX.Element {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [fetchPosts] = useLazyGetDivarPostsQuery();
-  const { provinceId, citySelection, categorySelection } = useAppSelector(
+  const { provinceId, citySelection, districtSelection, categorySelection } = useAppSelector(
     (state) => state.searchFilter,
   );
   const categorySlug = categorySelection.slug;
@@ -45,17 +45,27 @@ export function DivarPostsFeed(): JSX.Element {
     return citySelection.cityIds.length > 0 ? [...citySelection.cityIds] : undefined;
   }, [citySelection.mode, citySelection.cityIds]);
 
+  const districtFilterIds = useMemo(() => {
+    if (districtSelection.mode !== 'custom') {
+      return undefined;
+    }
+    return districtSelection.districtIds.length > 0 ? [...districtSelection.districtIds] : undefined;
+  }, [districtSelection.mode, districtSelection.districtIds]);
+
   const filterArgs = useMemo(() => {
     const normalizedProvince = typeof provinceId === 'number' ? provinceId : undefined;
     const normalizedCities =
       cityFilterIds && cityFilterIds.length > 0 ? [...cityFilterIds] : undefined;
+    const normalizedDistricts =
+      districtFilterIds && districtFilterIds.length > 0 ? [...districtFilterIds] : undefined;
     return {
       provinceId: normalizedProvince,
       cityIds: normalizedCities,
+      districtIds: normalizedDistricts,
       categorySlug: categorySlug ?? undefined,
       categoryDepth: typeof categoryDepth === 'number' ? categoryDepth : undefined,
     };
-  }, [provinceId, cityFilterIds, categorySlug, categoryDepth]);
+  }, [provinceId, cityFilterIds, districtFilterIds, categorySlug, categoryDepth]);
 
   useEffect(() => {
     let isMounted = true;
@@ -68,6 +78,7 @@ export function DivarPostsFeed(): JSX.Element {
       cursor: null,
       provinceId: filterArgs.provinceId,
       cityIds: filterArgs.cityIds,
+      districtIds: filterArgs.districtIds,
       categorySlug: filterArgs.categorySlug,
       categoryDepth: filterArgs.categoryDepth,
     })
@@ -104,6 +115,7 @@ export function DivarPostsFeed(): JSX.Element {
         cursor: nextCursor,
         provinceId: filterArgs.provinceId,
         cityIds: filterArgs.cityIds,
+        districtIds: filterArgs.districtIds,
         categorySlug: filterArgs.categorySlug,
         categoryDepth: filterArgs.categoryDepth,
       }).unwrap();

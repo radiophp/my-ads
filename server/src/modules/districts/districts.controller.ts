@@ -17,14 +17,21 @@ export class DistrictsController {
   @ApiOkResponse({ type: DistrictDto, isArray: true })
   async list(
     @Query('cityId') cityId?: string,
+    @Query('cityIds') cityIdsParam?: string,
     @Query('provinceId') provinceId?: string,
   ): Promise<DistrictDto[]> {
     const parsedCityId = cityId && !Number.isNaN(Number(cityId)) ? Number(cityId) : undefined;
     const parsedProvinceId =
       provinceId && !Number.isNaN(Number(provinceId)) ? Number(provinceId) : undefined;
+    const parsedCityIds =
+      cityIdsParam
+        ?.split(',')
+        .map((value) => Number(value.trim()))
+        .filter((value) => Number.isFinite(value)) ?? [];
 
     const districts = await this.districtsService.findAll({
-      cityId: parsedCityId,
+      cityId: parsedCityIds.length > 0 ? undefined : parsedCityId,
+      cityIds: parsedCityIds.length > 0 ? parsedCityIds : undefined,
       provinceId: parsedProvinceId,
     });
 

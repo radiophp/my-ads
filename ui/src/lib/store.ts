@@ -13,6 +13,7 @@ type StoredSearchFilterState = Partial<SearchFilterState> & {
   categorySlug?: string | null;
   categoryDepth?: number | null;
   categorySelection?: Partial<SearchFilterState['categorySelection']>;
+  districtSelection?: Partial<SearchFilterState['districtSelection']>;
 };
 
 const SEARCH_FILTER_STORAGE_KEY = 'search-filter-state';
@@ -33,7 +34,15 @@ const loadSearchFilterState = (): SearchFilterState => {
     const cityIds = Array.isArray(parsed.citySelection?.cityIds)
       ? parsed.citySelection.cityIds.filter((id): id is number => typeof id === 'number')
       : [];
-    const mode = parsed.citySelection?.mode === 'custom' && cityIds.length > 0 ? 'custom' : 'all';
+    const cityMode =
+      parsed.citySelection?.mode === 'custom' && cityIds.length > 0 ? 'custom' : 'all';
+    const storedDistrict: Partial<SearchFilterState['districtSelection']> =
+      parsed.districtSelection ?? {};
+    const districtIds = Array.isArray(storedDistrict.districtIds)
+      ? storedDistrict.districtIds.filter((id): id is number => typeof id === 'number')
+      : [];
+    const districtMode =
+      storedDistrict.mode === 'custom' && districtIds.length > 0 ? 'custom' : 'all';
 
     const storedCategory: Partial<SearchFilterState['categorySelection']> =
       parsed.categorySelection ?? {};
@@ -57,8 +66,12 @@ const loadSearchFilterState = (): SearchFilterState => {
     return {
       provinceId,
       citySelection: {
-        mode,
-        cityIds: mode === 'custom' ? cityIds : [],
+        mode: cityMode,
+        cityIds: cityMode === 'custom' ? cityIds : [],
+      },
+      districtSelection: {
+        mode: districtMode,
+        districtIds: districtMode === 'custom' ? districtIds : [],
       },
       categorySelection: {
         slug: categorySlug,

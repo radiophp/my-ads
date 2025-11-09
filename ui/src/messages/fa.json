@@ -37,7 +37,8 @@
       "title": "ورود با شماره تلفن",
       "description": "برای دریافت رمز یکبار مصرف، شماره تلفن خود را وارد کنید.",
       "phoneLabel": "شماره تلفن",
-      "phonePlaceholder": "+989123456789",
+      "phonePlaceholder": "9XXXXXXXXX",
+      "phoneHint": "فقط شماره موبایل ایران را وارد کنید. ۱۰ رقم بعد از صفر را تایپ کنید و +98 به‌صورت خودکار اضافه می‌شود.",
       "requestCode": "ارسال رمز",
       "requesting": "در حال ارسال…",
       "codeInfo": "کد به {phone} ارسال شد.",
@@ -211,6 +212,10 @@
         "divarFilters": {
           "title": "فیلترهای دیوار",
           "description": "پیکربندی فیلتر هر دسته‌بندی همگام‌سازی‌شده را بررسی کنید."
+        },
+        "postsToAnalyze": {
+          "title": "آگهی‌های در صف تحلیل",
+          "description": "آگهی‌های دریافت‌شده از دیوار که منتظر نرمال‌سازی هستند را بررسی کنید."
         }
       }
     },
@@ -241,6 +246,46 @@
         "loading": "در حال بارگذاری…",
         "empty": "داده‌ای برای نمایش وجود ندارد."
       }
+    },
+    "postsToAnalyze": {
+      "title": "فهرست آگهی‌های آماده تحلیل",
+      "description": "آگهی‌های دریافت‌شده از دیوار که باید در مرحله بعدی پردازش شوند را مشاهده کنید.",
+      "loading": "در حال بارگذاری آگهی‌ها…",
+      "empty": "آگهی در صف تحلیل وجود ندارد.",
+      "columns": {
+        "title": "عنوان",
+        "externalId": "شناسه دیوار",
+        "link": "لینک دیوار",
+        "status": "وضعیت",
+        "createdAt": "زمان دریافت",
+        "actions": "اقدامات"
+      },
+      "actions": {
+        "viewPayload": "نمایش JSON",
+        "openOnDivar": "باز کردن در دیوار",
+        "preview": "پیش‌نمایش"
+      },
+      "status": {
+        "pending": "در انتظار",
+        "processing": "در حال پردازش",
+        "completed": "تکمیل‌شده",
+        "failed": "ناموفق"
+      },
+      "pagination": {
+        "label": "صفحه {page} از {totalPages} • {totalItems} آگهی",
+        "previous": "قبلی",
+        "next": "بعدی"
+      },
+      "dialog": {
+        "titleFallback": "Payload آگهی",
+        "description": "دادهٔ دریافت‌شده برای آگهی {externalId}"
+      },
+      "preview": {
+        "title": "پیش‌نمایش دیوار",
+        "description": "نمایش زنده آگهی {externalId}",
+        "note": "اگر مرورگر اجازه‌ی نمایش پیش‌نمایش را ندهد، با دکمه‌ی زیر آگهی را در تب جدید باز کنید."
+      },
+      "untitled": "بدون عنوان ({externalId})"
     },
     "locations": {
       "provinces": {

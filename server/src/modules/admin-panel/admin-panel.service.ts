@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@app/platform/database/prisma.service';
+import { PostAnalysisStatus } from '@prisma/client';
 
 export type AdminEntityCounts = {
   packages: number;
@@ -8,6 +9,7 @@ export type AdminEntityCounts = {
   districts: number;
   divarCategories: number;
   divarCategoryFilters: number;
+  postsToAnalyzePending: number;
 };
 
 @Injectable()
@@ -15,16 +17,34 @@ export class AdminPanelService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getEntityCounts(): Promise<AdminEntityCounts> {
-    const [packages, provinces, cities, districts, divarCategories, divarCategoryFilters] =
-      await Promise.all([
-        this.prisma.subscriptionPackage.count(),
-        this.prisma.province.count(),
-        this.prisma.city.count(),
-        this.prisma.district.count(),
-        this.prisma.divarCategory.count({ where: { isActive: true } }),
-        this.prisma.divarCategoryFilter.count(),
-      ]);
+    const [
+      packages,
+      provinces,
+      cities,
+      districts,
+      divarCategories,
+      divarCategoryFilters,
+      postsToAnalyzePending,
+    ] = await Promise.all([
+      this.prisma.subscriptionPackage.count(),
+      this.prisma.province.count(),
+      this.prisma.city.count(),
+      this.prisma.district.count(),
+      this.prisma.divarCategory.count({ where: { isActive: true } }),
+      this.prisma.divarCategoryFilter.count(),
+      this.prisma.postToAnalyzeQueue.count({
+        where: { status: PostAnalysisStatus.PENDING },
+      }),
+    ]);
 
-    return { packages, provinces, cities, districts, divarCategories, divarCategoryFilters };
+    return {
+      packages,
+      provinces,
+      cities,
+      districts,
+      divarCategories,
+      divarCategoryFilters,
+      postsToAnalyzePending,
+    };
   }
 }

@@ -37,7 +37,8 @@
       "title": "Sign in with your phone",
       "description": "Enter your phone number to receive a one-time login code.",
       "phoneLabel": "Phone number",
-      "phonePlaceholder": "+12345678900",
+      "phonePlaceholder": "9XXXXXXXXX",
+      "phoneHint": "Iranian mobile numbers only. Enter the 10 digits after 0 — we’ll add +98 automatically.",
       "requestCode": "Send code",
       "requesting": "Sending…",
       "codeInfo": "We sent a code to {phone}.",
@@ -211,6 +212,10 @@
         "divarFilters": {
           "title": "Divar filters",
           "description": "Inspect stored filter payloads per Divar category."
+        },
+        "postsToAnalyze": {
+          "title": "Posts to analyze",
+          "description": "Review Divar posts queued for normalization."
         }
       }
     },
@@ -241,6 +246,46 @@
         "loading": "Loading payload…",
         "empty": "No payload available."
       }
+    },
+    "postsToAnalyze": {
+      "title": "Posts waiting for analysis",
+      "description": "Review the Divar posts that were fetched and are ready for the normalization pipeline.",
+      "loading": "Loading posts…",
+      "empty": "No posts are waiting for analysis.",
+      "columns": {
+        "title": "Title",
+        "externalId": "External ID",
+        "link": "Divar link",
+        "status": "Status",
+        "createdAt": "Fetched at",
+        "actions": "Actions"
+      },
+      "actions": {
+        "viewPayload": "View JSON",
+        "openOnDivar": "Open on Divar",
+        "preview": "Preview"
+      },
+      "status": {
+        "pending": "Pending",
+        "processing": "Processing",
+        "completed": "Completed",
+        "failed": "Failed"
+      },
+      "pagination": {
+        "label": "Page {page} of {totalPages} • {totalItems} posts",
+        "previous": "Previous",
+        "next": "Next"
+      },
+      "dialog": {
+        "titleFallback": "Post payload",
+        "description": "Fetched payload for ad {externalId}"
+      },
+      "preview": {
+        "title": "Divar preview",
+        "description": "Live preview for ad {externalId}",
+        "note": "If the preview cannot load because of browser restrictions, use the button below to open the ad in a new tab."
+      },
+      "untitled": "Untitled ({externalId})"
     },
     "locations": {
       "provinces": {

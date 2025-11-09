@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ConfigModule } from '@nestjs/config';
 import appConfig from './platform/config/app.config';
 import dbConfig from './platform/config/db.config';
@@ -33,6 +34,7 @@ import { ProvincesModule } from './modules/provinces/provinces.module';
 import { PackagesModule } from './modules/packages/packages.module';
 import { DivarCategoriesModule } from './modules/divar-categories/divar-categories.module';
 import { DistrictsModule } from './modules/districts/districts.module';
+import { DivarPostsModule } from './modules/divar-posts/divar-posts.module';
 
 @Module({
   imports: [
@@ -62,6 +64,7 @@ import { DistrictsModule } from './modules/districts/districts.module';
       ],
     }),
     LoggingModule,
+    ScheduleModule.forRoot(),
     MetricsModule,
     PrismaModule,
     RedisModule,
@@ -82,6 +85,7 @@ import { DistrictsModule } from './modules/districts/districts.module';
     HttpModule,
     PackagesModule,
     DivarCategoriesModule,
+    DivarPostsModule,
   ],
 })
 export class AppModule {}

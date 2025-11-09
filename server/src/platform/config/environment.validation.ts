@@ -250,6 +250,50 @@ export class EnvironmentVariables {
   @IsOptional()
   @IsString()
   OTP_SENDER_API_KEY?: string;
+
+  @IsOptional()
+  @IsString()
+  DIVAR_SESSION_COOKIE?: string;
+
+  @IsOptional()
+  @Transform(({ value }) =>
+    value === undefined || value === null || value === '' ? undefined : Number(value),
+  )
+  @IsInt()
+  @IsPositive()
+  DIVAR_HARVEST_MAX_PAGES?: number;
+
+  @IsOptional()
+  @Transform(({ value }) =>
+    value === undefined || value === null || value === '' ? undefined : Number(value),
+  )
+  @IsInt()
+  @Min(0)
+  DIVAR_HARVEST_DELAY_MS?: number;
+
+  @IsOptional()
+  @Transform(({ value }) =>
+    value === undefined || value === null || value === '' ? undefined : Number(value),
+  )
+  @IsInt()
+  @IsPositive()
+  DIVAR_HARVEST_TIMEOUT_MS?: number;
+
+  @IsOptional()
+  @Transform(({ value }) =>
+    value === undefined || value === null || value === '' ? undefined : Number(value),
+  )
+  @IsInt()
+  @IsPositive()
+  DIVAR_POST_FETCH_BATCH_SIZE?: number;
+
+  @IsOptional()
+  @Transform(({ value }) =>
+    value === undefined || value === null || value === '' ? undefined : Number(value),
+  )
+  @IsInt()
+  @IsPositive()
+  DIVAR_POST_FETCH_TIMEOUT_MS?: number;
 }
 
 export const validateEnvironment = (config: Record<string, unknown>): EnvironmentVariables => {

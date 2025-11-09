@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { Boxes, GitBranch, Map, MapPin, Route, SlidersHorizontal } from 'lucide-react';
+import { Boxes, GitBranch, Map, MapPin, Route, SlidersHorizontal, Newspaper } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Link } from '@/i18n/routing';
@@ -55,6 +55,12 @@ export function AdminDashboard() {
       icon: <SlidersHorizontal className="size-8 text-primary" aria-hidden />,
       title: t('cards.divarFilters.title'),
       countKey: 'divarCategoryFilters',
+    },
+    {
+      href: '/admin/divar-posts',
+      icon: <Newspaper className="size-8 text-primary" aria-hidden />,
+      title: t('cards.postsToAnalyze.title'),
+      countKey: 'postsToAnalyzePending',
     },
   ];
 

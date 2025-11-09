@@ -14,6 +14,25 @@ enum Role {
   ADMIN
 }
 
+enum PostQueueStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum QueueLocationScope {
+  CITY
+  PROVINCE
+}
+
+enum PostAnalysisStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
 model User {
   id                 String   @id @default(uuid())
   phone              String   @unique
@@ -33,29 +52,31 @@ model User {
 }
 
 model City {
-  id           Int        @id
-  slug         String     @unique
+  id           Int               @id
+  slug         String            @unique
   name         String
   provinceId   Int
-  province     Province   @relation(fields: [provinceId], references: [id], onUpdate: Cascade, onDelete: Restrict)
-  allowPosting Boolean    @default(false)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @default(now()) @updatedAt
+  province     Province          @relation(fields: [provinceId], references: [id], onUpdate: Cascade, onDelete: Restrict)
+  allowPosting Boolean           @default(false)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @default(now()) @updatedAt
   users        User[]
   districts    District[]
+  queuedPosts  PostToReadQueue[] @relation("CityPostQueue")
 
   @@unique([name, provinceId])
   @@index([provinceId])
 }
 
 model Province {
-  id           Int      @id
-  slug         String   @unique
-  name         String   @unique
-  allowPosting Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @default(now()) @updatedAt
+  id           Int               @id
+  slug         String            @unique
+  name         String            @unique
+  allowPosting Boolean           @default(false)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @default(now()) @updatedAt
   cities       City[]
+  queuedPosts  PostToReadQueue[] @relation("ProvincePostQueue")
 }
 
 model District {
@@ -86,6 +107,7 @@ model DivarCategory {
   isActive     Boolean              @default(true)
   allowPosting Boolean              @default(false)
   filters      DivarCategoryFilter?
+  queuedPosts  PostToReadQueue[]    @relation("CategoryPostQueue")
   createdAt    DateTime             @default(now())
   updatedAt    DateTime             @default(now()) @updatedAt
 
@@ -100,6 +122,49 @@ model DivarCategoryFilter {
   payload    Json
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @default(now()) @updatedAt
+}
+
+model PostToReadQueue {
+  id              String             @id @default(uuid())
+  source          String             @default("DIVAR")
+  externalId      String
+  categoryId      String?
+  category        DivarCategory?     @relation("CategoryPostQueue", fields: [categoryId], references: [id], onDelete: SetNull)
+  categorySlug    String
+  locationScope   QueueLocationScope @default(CITY)
+  provinceId      Int?
+  province        Province?          @relation("ProvincePostQueue", fields: [provinceId], references: [id], onDelete: SetNull)
+  cityId          Int?
+  city            City?              @relation("CityPostQueue", fields: [cityId], references: [id], onDelete: SetNull)
+  payload         Json?
+  status          PostQueueStatus    @default(PENDING)
+  fetchAttempts   Int                @default(0)
+  lastFetchedAt   DateTime?
+  requestedAt     DateTime           @default(now())
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @default(now()) @updatedAt
+  analyzeJob      PostToAnalyzeQueue?
+
+  @@unique([source, externalId])
+  @@index([categoryId])
+  @@index([provinceId])
+  @@index([cityId])
+}
+
+model PostToAnalyzeQueue {
+  id           String             @id @default(uuid())
+  source       String             @default("DIVAR")
+  externalId   String
+  readQueueId  String             @unique
+  readQueue    PostToReadQueue    @relation(fields: [readQueueId], references: [id], onDelete: Cascade)
+  payload      Json
+  status       PostAnalysisStatus @default(PENDING)
+  errorMessage String?
+  retryCount   Int                @default(0)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @default(now()) @updatedAt
+
+  @@unique([source, externalId])
 }
 
 model SubscriptionPackage {

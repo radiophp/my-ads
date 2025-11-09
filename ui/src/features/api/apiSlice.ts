@@ -7,8 +7,13 @@ import type {
   SubscriptionPackage,
   UpdatePackagePayload,
 } from '@/types/packages';
-import type { DivarCategory, DivarCategoryFilterDetail, DivarCategoryFilterSummary } from '@/types/divar-category';
+import type {
+  DivarCategory,
+  DivarCategoryFilterDetail,
+  DivarCategoryFilterSummary,
+} from '@/types/divar-category';
 import type { AdminDashboardStats } from '@/types/admin';
+import type { PaginatedPostsToAnalyze } from '@/types/divar-posts';
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:6200/api';
 
@@ -46,6 +51,7 @@ export const apiSlice = createApi({
     'DivarCategories',
     'AdminStats',
     'DivarCategoryFilters',
+    'PostsToAnalyze',
   ],
   endpoints: (builder) => ({
     getHealth: builder.query<{ status: string }, void>({
@@ -234,6 +240,16 @@ export const apiSlice = createApi({
         'DivarCategoryFilters',
       ],
     }),
+    getPostsToAnalyze: builder.query<PaginatedPostsToAnalyze, number | void>({
+      query: (page = 1) => `/admin/divar-posts/to-analyze?page=${page}`,
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.items.map((item) => ({ type: 'PostsToAnalyze' as const, id: item.id })),
+              { type: 'PostsToAnalyze' as const, id: `PAGE-${result.meta.page}` },
+            ]
+          : [{ type: 'PostsToAnalyze', id: 'LIST' }],
+    }),
   }),
 });
 
@@ -263,6 +279,7 @@ export const {
   useGetDivarCategoryFiltersQuery,
   useGetDivarCategoryFilterQuery,
   useGetAdminDashboardStatsQuery,
+  useGetPostsToAnalyzeQuery,
 } = apiSlice;
 
 type UpdateCurrentUserPayload = Partial<{

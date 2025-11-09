@@ -23,11 +23,26 @@ import { useToast } from '@/components/ui/use-toast';
 
 type Step = 'phone' | 'verify';
 
-const sanitizePhone = (input: string) =>
-  input
-    .replace(/[^\d+]/g, '')
-    .replace(/(?!^)\+/g, '')
-    .trim();
+const sanitizeIranLocalPhone = (input: string): string => {
+  let digits = input.replace(/\D/g, '');
+  if (digits.startsWith('0098')) {
+    digits = digits.slice(4);
+  } else if (digits.startsWith('098')) {
+    digits = digits.slice(3);
+  } else if (digits.startsWith('98')) {
+    digits = digits.slice(2);
+  }
+  if (digits.startsWith('0')) {
+    digits = digits.slice(1);
+  }
+  return digits.slice(0, 10);
+};
+
+const isValidIranLocalPhone = (digits: string): boolean => /^9\d{9}$/.test(digits);
+
+const toInternationalIranPhone = (digits: string): string => (digits ? `+98${digits}` : '');
+
+const formatDisplayIranPhone = (digits: string): string => (digits ? `0${digits}` : '');
 
 const sanitizeCode = (input: string) => input.replace(/\D/g, '').slice(0, 6);
 
@@ -41,19 +56,20 @@ export function PhoneOtpLoginForm() {
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
   const [step, setStep] = useState<Step>('phone');
-  const [lastRequestedPhone, setLastRequestedPhone] = useState<string | null>(null);
+  const [lastRequestedPhoneLocal, setLastRequestedPhoneLocal] = useState<string | null>(null);
 
   const [requestOtp, { isLoading: isRequesting }] = useRequestOtpMutation();
   const [verifyOtp, { isLoading: isVerifying }] = useVerifyOtpMutation();
 
   const isAuthenticated = useMemo(() => Boolean(auth.accessToken), [auth.accessToken]);
+  const displayPhone = formatDisplayIranPhone(lastRequestedPhoneLocal ?? phone) || '+98';
 
   const handleRequestOtp = useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      const sanitized = sanitizePhone(phone);
+      const sanitizedLocal = sanitizeIranLocalPhone(phone);
 
-      if (!sanitized || sanitized.length < 6) {
+      if (!isValidIranLocalPhone(sanitizedLocal)) {
         toast({
           title: t('errors.invalidPhone'),
           variant: 'destructive',
@@ -62,10 +78,14 @@ export function PhoneOtpLoginForm() {
       }
 
       try {
-        await requestOtp({ phone: sanitized }).unwrap();
+        const international = toInternationalIranPhone(sanitizedLocal);
+        await requestOtp({ phone: international }).unwrap();
         setStep('verify');
-        setLastRequestedPhone(sanitized);
-        toast({ title: t('requestToast'), description: t('codeInfo', { phone: sanitized }) });
+        setLastRequestedPhoneLocal(sanitizedLocal);
+        toast({
+          title: t('requestToast'),
+          description: t('codeInfo', { phone: formatDisplayIranPhone(sanitizedLocal) }),
+        });
       } catch (error) {
         console.error('Failed to request OTP', error);
         toast({
@@ -80,8 +100,16 @@ export function PhoneOtpLoginForm() {
   const handleVerifyOtp = useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      const sanitizedPhone = sanitizePhone(lastRequestedPhone ?? phone);
+      const localDigits = sanitizeIranLocalPhone(lastRequestedPhoneLocal ?? phone);
       const sanitizedCode = sanitizeCode(code);
+
+      if (!isValidIranLocalPhone(localDigits)) {
+        toast({
+          title: t('errors.invalidPhone'),
+          variant: 'destructive',
+        });
+        return;
+      }
 
       if (!sanitizedCode || sanitizedCode.length < 4) {
         toast({
@@ -92,7 +120,10 @@ export function PhoneOtpLoginForm() {
       }
 
       try {
-        const response = await verifyOtp({ phone: sanitizedPhone, code: sanitizedCode }).unwrap();
+        const response = await verifyOtp({
+          phone: toInternationalIranPhone(localDigits),
+          code: sanitizedCode,
+        }).unwrap();
         dispatch(setAuth(response));
         toast({ title: t('successToast') });
         setCode('');
@@ -105,18 +136,21 @@ export function PhoneOtpLoginForm() {
         });
       }
     },
-    [code, dispatch, lastRequestedPhone, phone, router, t, toast, verifyOtp],
+    [code, dispatch, lastRequestedPhoneLocal, phone, router, t, toast, verifyOtp],
   );
 
   const handleResend = useCallback(async () => {
-    const sanitized = sanitizePhone(lastRequestedPhone ?? phone);
-    if (!sanitized) {
+    const localDigits = sanitizeIranLocalPhone(lastRequestedPhoneLocal ?? phone);
+    if (!isValidIranLocalPhone(localDigits)) {
       return;
     }
 
     try {
-      await requestOtp({ phone: sanitized }).unwrap();
-      toast({ title: t('requestToast'), description: t('codeInfo', { phone: sanitized }) });
+      await requestOtp({ phone: toInternationalIranPhone(localDigits) }).unwrap();
+      toast({
+        title: t('requestToast'),
+        description: t('codeInfo', { phone: formatDisplayIranPhone(localDigits) }),
+      });
     } catch (error) {
       console.error('Failed to resend OTP', error);
       toast({
@@ -124,7 +158,7 @@ export function PhoneOtpLoginForm() {
         variant: 'destructive',
       });
     }
-  }, [lastRequestedPhone, phone, requestOtp, t, toast]);
+  }, [lastRequestedPhoneLocal, phone, requestOtp, t, toast]);
 
   if (auth.hydrated && isAuthenticated && auth.user) {
     return (
@@ -159,19 +193,25 @@ export function PhoneOtpLoginForm() {
           <CardContent className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="phone">{t('phoneLabel')}</Label>
-              <Input
-                id="phone"
-                name="phone"
-                inputMode="tel"
-                autoComplete="tel"
-                placeholder={t('phonePlaceholder')}
-                value={phone}
-                onChange={(event) => setPhone(sanitizePhone(event.target.value))}
-                disabled={isRequesting}
-                required
-                dir="ltr"
-                className="text-left"
-              />
+              <div className="relative">
+                <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm font-medium text-muted-foreground">
+                  +98
+                </span>
+                <Input
+                  id="phone"
+                  name="phone"
+                  inputMode="tel"
+                  autoComplete="tel-national"
+                  placeholder={t('phonePlaceholder')}
+                  value={phone}
+                  onChange={(event) => setPhone(sanitizeIranLocalPhone(event.target.value))}
+                  disabled={isRequesting}
+                  required
+                  dir="ltr"
+                  className="pl-14 text-left"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">{t('phoneHint')}</p>
             </div>
           </CardContent>
           <CardFooter>
@@ -184,7 +224,9 @@ export function PhoneOtpLoginForm() {
         <form onSubmit={handleVerifyOtp} noValidate>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              {t('codeDescription', { phone: lastRequestedPhone ?? phone })}
+              {t('codeDescription', {
+                phone: displayPhone,
+              })}
             </p>
             <div className="space-y-1.5">
               <Label htmlFor="code">{t('codeLabel')}</Label>

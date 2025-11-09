@@ -58,3 +58,12 @@ body {
 ::-webkit-scrollbar-thumb {
   @apply rounded-full bg-secondary;
 }
+
+.toast-close-button {
+  right: 0.75rem;
+}
+
+[dir='rtl'] .toast-close-button {
+  right: auto;
+  left: 0.75rem;
+}

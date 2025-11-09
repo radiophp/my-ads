@@ -5,4 +5,5 @@ export type AdminDashboardStats = {
   districts: number;
   divarCategories: number;
   divarCategoryFilters: number;
+  postsToAnalyzePending: number;
 };

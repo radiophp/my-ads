@@ -60,7 +60,7 @@ export function AdminProvincesManager() {
         <CardContent className="overflow-x-auto">
           <table className="min-w-full border-collapse text-sm">
             <thead>
-              <tr className="border-b border-border/70 text-left">
+              <tr className="border-b border-border/70 text-left rtl:text-right">
                 <th className="py-3 pr-4 font-medium text-muted-foreground">
                   {t('columns.id')}
                 </th>

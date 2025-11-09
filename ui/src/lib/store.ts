@@ -9,6 +9,12 @@ import searchFilterReducer, {
   searchFilterInitialState,
 } from '@/features/search-filter/searchFilterSlice';
 
+type StoredSearchFilterState = Partial<SearchFilterState> & {
+  categorySlug?: string | null;
+  categoryDepth?: number | null;
+  categorySelection?: Partial<SearchFilterState['categorySelection']>;
+};
+
 const SEARCH_FILTER_STORAGE_KEY = 'search-filter-state';
 
 const loadSearchFilterState = (): SearchFilterState => {
@@ -21,7 +27,7 @@ const loadSearchFilterState = (): SearchFilterState => {
       return searchFilterInitialState;
     }
 
-    const parsed = JSON.parse(storedValue) as Partial<SearchFilterState>;
+    const parsed = JSON.parse(storedValue) as StoredSearchFilterState;
     const provinceId =
       typeof parsed.provinceId === 'number' ? parsed.provinceId : null;
     const cityIds = Array.isArray(parsed.citySelection?.cityIds)
@@ -29,11 +35,34 @@ const loadSearchFilterState = (): SearchFilterState => {
       : [];
     const mode = parsed.citySelection?.mode === 'custom' && cityIds.length > 0 ? 'custom' : 'all';
 
+    const storedCategory: Partial<SearchFilterState['categorySelection']> =
+      parsed.categorySelection ?? {};
+    const legacyCategorySlug =
+      typeof parsed.categorySlug === 'string' && parsed.categorySlug.length > 0
+        ? parsed.categorySlug
+        : null;
+    const legacyCategoryDepth =
+      typeof parsed.categoryDepth === 'number' && Number.isFinite(parsed.categoryDepth)
+        ? parsed.categoryDepth
+        : null;
+    const categorySlug =
+      typeof storedCategory.slug === 'string' && storedCategory.slug.length > 0
+        ? storedCategory.slug
+        : legacyCategorySlug;
+    const categoryDepth =
+      typeof storedCategory.depth === 'number' && Number.isFinite(storedCategory.depth)
+        ? storedCategory.depth
+        : legacyCategoryDepth;
+
     return {
       provinceId,
       citySelection: {
         mode,
         cityIds: mode === 'custom' ? cityIds : [],
+      },
+      categorySelection: {
+        slug: categorySlug,
+        depth: categoryDepth,
       },
     };
   } catch {

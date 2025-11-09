@@ -98,6 +98,8 @@ Phone-based OTP replaces the traditional email/password flow:
 
 OTP defaults are controlled via `OTP_TTL_SECONDS`, `OTP_DIGITS`, and the optional `OTP_SENDER_BASE_URL`/`OTP_SENDER_API_KEY` environment variables. When no gateway URL is configured, OTPs are logged to the server console for local development.
 
+Sessions in the UI auto-hydrate from `localStorage` before any RTK Query hooks fire (we moved the hydration hook to `useLayoutEffect`) and refresh tokens are reused transparently: every 401 triggers a single-flight refresh call, updates Redux/local storage, and retries the original request. If refresh fails, the app clears auth state and routes back to `/`.
+
 ### 6. Docker Compose Stack
 
 From the repository root:
@@ -175,6 +177,12 @@ Vitest currently runs without spec files; once tests are added they will execute
 ```bash
 npm run build          # Produces the production .next/ artefacts
 ```
+
+### Dashboard & data quality upgrades
+
+- **Category-aware filter rail** – The dashboard now exposes the Divar category tree (filtered to `allowPosting=true` nodes). Breadcrumbs let users step up the hierarchy, and the chip row shows either child categories or siblings for leaf nodes. Redux keeps a `categorySelection` object (`slug` + `depth`) so the frontend knows whether the slug maps to `cat1`, `cat2`, `cat3`, or the canonical slug column.
+- **API filtering** – `/divar-posts` accepts `categorySlug`/`categoryDepth` query parameters. Depth determines which Prisma fields are queried (e.g., depth 0 → `cat1`, depth 1 → `cat2`, depth 2 → `cat3`/`categorySlug`). The service logs every query (`where`, cursor, limit) to help debug empty feeds.
+- **Visual polish** – Post cards switched to a responsive 1/3/4-column grid with edge-to-edge media, iconised overlay badges (business type, publish time, image count), and zero-value price/rent fields are suppressed automatically.
 
 ---
 

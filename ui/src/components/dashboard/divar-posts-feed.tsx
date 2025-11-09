@@ -3,7 +3,7 @@
 
 import type { JSX } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ExternalLink, Loader2, MapPin, Tag } from 'lucide-react';
+import { Camera, Clock3, ExternalLink, Loader2, MapPin, Store, Tag, UserRound } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { useLazyGetDivarPostsQuery } from '@/features/api/apiSlice';
 import type { DivarPostSummary } from '@/types/divar-posts';
 import { useAppSelector } from '@/lib/hooks';
@@ -31,7 +31,11 @@ export function DivarPostsFeed(): JSX.Element {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [fetchPosts] = useLazyGetDivarPostsQuery();
-  const { provinceId, citySelection } = useAppSelector((state) => state.searchFilter);
+  const { provinceId, citySelection, categorySelection } = useAppSelector(
+    (state) => state.searchFilter,
+  );
+  const categorySlug = categorySelection.slug;
+  const categoryDepth = categorySelection.depth;
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   const cityFilterIds = useMemo(() => {
@@ -48,8 +52,10 @@ export function DivarPostsFeed(): JSX.Element {
     return {
       provinceId: normalizedProvince,
       cityIds: normalizedCities,
+      categorySlug: categorySlug ?? undefined,
+      categoryDepth: typeof categoryDepth === 'number' ? categoryDepth : undefined,
     };
-  }, [provinceId, cityFilterIds]);
+  }, [provinceId, cityFilterIds, categorySlug, categoryDepth]);
 
   useEffect(() => {
     let isMounted = true;
@@ -62,6 +68,8 @@ export function DivarPostsFeed(): JSX.Element {
       cursor: null,
       provinceId: filterArgs.provinceId,
       cityIds: filterArgs.cityIds,
+      categorySlug: filterArgs.categorySlug,
+      categoryDepth: filterArgs.categoryDepth,
     })
       .unwrap()
       .then((result) => {
@@ -96,6 +104,8 @@ export function DivarPostsFeed(): JSX.Element {
         cursor: nextCursor,
         provinceId: filterArgs.provinceId,
         cityIds: filterArgs.cityIds,
+        categorySlug: filterArgs.categorySlug,
+        categoryDepth: filterArgs.categoryDepth,
       }).unwrap();
       setPosts((prev) => [...prev, ...result.items]);
       setNextCursor(result.nextCursor);
@@ -190,13 +200,43 @@ export function DivarPostsFeed(): JSX.Element {
 
   const formatPrice = useCallback(
     (value: number | null | undefined): string | null => {
-      if (typeof value !== 'number' || Number.isNaN(value)) {
+      if (typeof value !== 'number' || Number.isNaN(value) || value <= 0) {
         return null;
       }
       return currencyFormatter.format(value);
     },
     [currencyFormatter],
   );
+
+  const getBusinessTypeBadge = useCallback(
+    (value: string | null) => {
+      if (!value) {
+        return null;
+      }
+      const normalized = value.trim().toLowerCase();
+      const realtorValues = new Set(['real-estate-business', 'real-estate', 'premium-panel']);
+      if (realtorValues.has(normalized)) {
+        return {
+          label: t('businessType.realEstateBusiness'),
+          className: 'bg-black/70',
+          icon: <Store className="size-3.5" aria-hidden />,
+        };
+      }
+      if (normalized === 'personal') {
+        return {
+          label: t('businessType.personal'),
+          className: 'bg-black/70',
+          icon: <UserRound className="size-3.5" aria-hidden />,
+        };
+      }
+      return null;
+    },
+    [t],
+  );
+
+  const selectedBusinessBadge = selectedPost
+    ? getBusinessTypeBadge(selectedPost.businessType ?? null)
+    : null;
 
   const openPostModal = (post: DivarPostSummary) => {
     setSelectedPost(post);
@@ -213,84 +253,90 @@ export function DivarPostsFeed(): JSX.Element {
   };
 
   const renderPostCard = (post: DivarPostSummary) => {
-    const link = post.permalink ?? `https://divar.ir/v/${post.externalId}`;
     const publishedLabel = getRelativeLabel(post.publishedAt, post.publishedAtJalali);
     const priceLabel = formatPrice(post.priceTotal);
     const rentLabel = formatPrice(post.rentAmount);
     const pricePerSquareLabel = formatPrice(post.pricePerSquare);
+    const publishedText = publishedLabel ?? dateFormatter.format(new Date(post.createdAt));
+    const mediaCountLabel = t('mediaCount', { count: post.mediaCount ?? 0 });
+    const businessBadge = getBusinessTypeBadge(post.businessType ?? null);
 
     return (
       <article
         key={post.id}
-        className="bg-card flex flex-col gap-3 rounded-xl border border-border/70 p-4 shadow-sm transition hover:border-primary/60"
+        className="bg-card flex h-full cursor-pointer flex-col gap-3 rounded-xl border border-border/70 p-4 shadow-sm transition hover:border-primary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        role="button"
+        tabIndex={0}
+        onClick={() => openPostModal(post)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            openPostModal(post);
+          }
+        }}
       >
-        <div className="flex flex-col gap-3 sm:flex-row">
-          {post.imageUrl ? (
-            <div className="relative h-40 w-full overflow-hidden rounded-lg bg-muted sm:h-32 sm:w-56">
-              <img
-                src={post.imageUrl}
-                alt={post.title ?? post.externalId}
-                className="size-full object-cover"
-                loading="lazy"
-              />
+        <div className="flex flex-col gap-3">
+          <div className="-mx-4 -mt-4 overflow-hidden rounded-t-xl">
+            <div className="relative">
+              {businessBadge ? (
+                <span className="pointer-events-none absolute left-3 top-3 z-10 inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5 text-xs font-medium text-white">
+                  {businessBadge.icon}
+                  {businessBadge.label}
+                </span>
+              ) : null}
+              {post.imageUrl ? (
+                <div className="relative h-48 w-full bg-muted">
+                  <img
+                    src={post.imageUrl}
+                    alt={post.title ?? post.externalId}
+                    className="size-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+              ) : (
+                <div className="relative flex h-48 w-full items-center justify-center bg-muted text-sm text-muted-foreground">
+                  {t('noImage')}
+                </div>
+              )}
+              <div className="pointer-events-none absolute inset-x-3 bottom-3 flex flex-wrap gap-2 text-xs font-medium text-white">
+                <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5">
+                  <Clock3 className="size-3.5" aria-hidden />
+                  {publishedText}
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5">
+                  <Camera className="size-3.5" aria-hidden />
+                  {mediaCountLabel}
+                </span>
+              </div>
             </div>
-          ) : (
-            <div className="flex h-32 w-full items-center justify-center rounded-lg bg-muted text-sm text-muted-foreground sm:w-56">
-              {t('noImage')}
-            </div>
-          )}
-          <div className="flex flex-1 flex-col gap-2">
-            <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
+          </div>
+          <div className="flex flex-1 flex-col gap-2 pt-1">
+            <div className="flex flex-col gap-2">
               <div>
                 <h3 className="text-base font-semibold text-foreground sm:text-lg">
                   {post.title ?? t('untitled', { externalId: post.externalId })}
                 </h3>
-                {publishedLabel ? (
-                  <p className="text-sm text-muted-foreground">{publishedLabel}</p>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    {dateFormatter.format(new Date(post.createdAt))}
-                  </p>
-                )}
-              </div>
-              <div className="flex gap-2">
-                <span className="rounded-full border border-border px-2 py-0.5 text-xs uppercase text-muted-foreground">
-                  {post.categorySlug}
-                </span>
-                {post.mediaCount > 1 ? (
-                  <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                    {t('mediaCount', { count: post.mediaCount })}
-                  </span>
-                ) : null}
               </div>
             </div>
-            {post.description ? (
-              <p className="line-clamp-3 text-sm text-muted-foreground">{post.description}</p>
-            ) : null}
-            <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-              <span className="inline-flex items-center gap-1">
+            <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+              <span className="inline-flex items-center gap-1 text-foreground">
                 <MapPin className="size-4" aria-hidden />
                 {post.cityName}
                 {post.districtName ? `، ${post.districtName}` : null}
                 {post.provinceName ? `، ${post.provinceName}` : null}
               </span>
-              {post.area ? <span>{t('areaLabel', { value: post.area })}</span> : null}
-              {priceLabel ? <span>{t('priceLabel', { value: priceLabel })}</span> : null}
-              {rentLabel ? <span>{t('rentLabel', { value: rentLabel })}</span> : null}
+              {post.area ? (
+                <span>{t('areaLabel', { value: post.area })}</span>
+              ) : null}
+              {priceLabel ? (
+                <span>{t('priceLabel', { value: priceLabel })}</span>
+              ) : null}
+              {rentLabel ? (
+                <span>{t('rentLabel', { value: rentLabel })}</span>
+              ) : null}
               {pricePerSquareLabel ? (
                 <span>{t('labels.pricePerSquare', { value: pricePerSquareLabel })}</span>
               ) : null}
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <Button size="sm" variant="default" onClick={() => openPostModal(post)}>
-                {t('viewDetails')}
-              </Button>
-              <Button asChild size="sm" variant="outline">
-                <a href={link} target="_blank" rel="noreferrer">
-                  {t('openOnDivar')}
-                  <ExternalLink className="ml-2 size-4" aria-hidden />
-                </a>
-              </Button>
             </div>
           </div>
         </div>
@@ -299,18 +345,14 @@ export function DivarPostsFeed(): JSX.Element {
   };
 
   return (
-    <Card className="border-border/70">
-      <CardHeader>
-        <CardTitle>{t('title')}</CardTitle>
-        <CardDescription>{t('description')}</CardDescription>
-      </CardHeader>
+    <Card className="border-0 shadow-none">
       <CardContent className="space-y-4">
         {initializing ? (
-          <div className="flex flex-col gap-3">
-            {Array.from({ length: 3 }).map((_, index) => (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, index) => (
               <div
                 key={index}
-                className="h-32 animate-pulse rounded-xl border border-border/60 bg-muted/40"
+                className="h-40 animate-pulse rounded-xl border border-border/60 bg-muted/40"
               />
             ))}
           </div>
@@ -319,8 +361,10 @@ export function DivarPostsFeed(): JSX.Element {
             {t('empty')}
           </div>
         ) : (
-          <div className="flex flex-col gap-4">
-            {posts.map((post) => renderPostCard(post))}
+          <>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
+              {posts.map((post) => renderPostCard(post))}
+            </div>
             {hasMore ? (
               <div ref={loadMoreRef} className="flex justify-center py-4">
                 {loadingMore ? (
@@ -344,7 +388,7 @@ export function DivarPostsFeed(): JSX.Element {
             ) : (
               <p className="text-center text-sm text-muted-foreground">{t('endOfFeed')}</p>
             )}
-          </div>
+          </>
         )}
       </CardContent>
 
@@ -364,7 +408,14 @@ export function DivarPostsFeed(): JSX.Element {
               <div className="space-y-4 px-6 pb-6">
                 {selectedPost.medias.length > 0 ? (
                   <div className="space-y-2">
-                    <div className="overflow-hidden rounded-lg border border-border/60">
+                    <div className="relative overflow-hidden rounded-lg border border-border/60">
+                      {selectedBusinessBadge ? (
+                        <span
+                          className={`pointer-events-none absolute right-3 top-3 rounded-full px-3 py-1 text-xs font-semibold text-white shadow-lg ${selectedBusinessBadge.className}`}
+                        >
+                          {selectedBusinessBadge.label}
+                        </span>
+                      ) : null}
                       <img
                         src={
                           selectedPost.medias[activeMediaIndex]?.url ?? selectedPost.imageUrl ?? ''
@@ -401,7 +452,14 @@ export function DivarPostsFeed(): JSX.Element {
                     ) : null}
                   </div>
                 ) : selectedPost.imageUrl ? (
-                  <div className="overflow-hidden rounded-lg border border-border/60">
+                  <div className="relative overflow-hidden rounded-lg border border-border/60">
+                    {selectedBusinessBadge ? (
+                      <span
+                        className={`pointer-events-none absolute right-3 top-3 rounded-full px-3 py-1 text-xs font-semibold text-white shadow-lg ${selectedBusinessBadge.className}`}
+                      >
+                        {selectedBusinessBadge.label}
+                      </span>
+                    ) : null}
                     <img
                       src={selectedPost.imageUrl}
                       alt={selectedPost.title ?? selectedPost.externalId}
@@ -409,11 +467,16 @@ export function DivarPostsFeed(): JSX.Element {
                     />
                   </div>
                 ) : null}
-                {selectedPost.description ? (
-                  <p className="text-sm leading-6 text-muted-foreground">
-                    {selectedPost.description}
-                  </p>
-                ) : null}
+                <div className="flex flex-wrap gap-2 text-xs font-medium text-muted-foreground">
+                  <span className="rounded-full bg-muted px-2 py-0.5">
+                    {selectedPost.publishedAt
+                      ? dateFormatter.format(new Date(selectedPost.publishedAt))
+                      : (selectedPost.publishedAtJalali ?? t('labels.notAvailable'))}
+                  </span>
+                  <span className="rounded-full bg-muted px-2 py-0.5">
+                    {t('mediaCount', { count: selectedPost.mediaCount })}
+                  </span>
+                </div>
                 <dl className="grid gap-3 text-sm text-muted-foreground sm:grid-cols-2">
                   <div>
                     <dt className="font-medium text-foreground">{t('labels.location')}</dt>
@@ -421,14 +484,6 @@ export function DivarPostsFeed(): JSX.Element {
                       {selectedPost.cityName}
                       {selectedPost.districtName ? `، ${selectedPost.districtName}` : null}
                       {selectedPost.provinceName ? `، ${selectedPost.provinceName}` : null}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="font-medium text-foreground">{t('labels.publishedAt')}</dt>
-                    <dd>
-                      {selectedPost.publishedAt
-                        ? dateFormatter.format(new Date(selectedPost.publishedAt))
-                        : (selectedPost.publishedAtJalali ?? t('labels.notAvailable'))}
                     </dd>
                   </div>
                   {selectedPost.priceTotal ? (
@@ -459,14 +514,6 @@ export function DivarPostsFeed(): JSX.Element {
                       <dd>{formatPrice(selectedPost.pricePerSquare)}</dd>
                     </div>
                   ) : null}
-                  <div>
-                    <dt className="font-medium text-foreground">{t('labels.mediaCount')}</dt>
-                    <dd>{selectedPost.mediaCount}</dd>
-                  </div>
-                  <div>
-                    <dt className="font-medium text-foreground">{t('labels.category')}</dt>
-                    <dd>{selectedPost.categorySlug}</dd>
-                  </div>
                   <div>
                     <dt className="font-medium text-foreground">{t('labels.externalId')}</dt>
                     <dd className="font-mono text-xs">{selectedPost.externalId}</dd>

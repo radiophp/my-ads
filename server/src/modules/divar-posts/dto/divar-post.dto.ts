@@ -51,6 +51,9 @@ export class DivarPostListItemDto {
   @ApiProperty()
   categorySlug!: string;
 
+  @ApiProperty({ nullable: true })
+  businessType!: string | null;
+
   @ApiProperty({ type: String, nullable: true })
   publishedAt!: Date | null;
 

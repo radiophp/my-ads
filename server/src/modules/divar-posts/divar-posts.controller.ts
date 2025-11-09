@@ -20,10 +20,13 @@ export class DivarPostsController {
     @Query('limit') limitParam?: string,
     @Query('provinceId') provinceParam?: string,
     @Query('cityIds') cityIdsParam?: string,
+    @Query('categorySlug') categorySlug?: string,
+    @Query('categoryDepth') categoryDepthParam?: string,
   ): Promise<PaginatedDivarPostsDto> {
     const parsedLimit = Number(limitParam);
     const limit = Number.isFinite(parsedLimit) ? parsedLimit : undefined;
     const provinceId = provinceParam ? Number(provinceParam) : undefined;
+    const parsedDepth = categoryDepthParam ? Number(categoryDepthParam) : undefined;
     const cityIds = cityIdsParam
       ? cityIdsParam
           .split(',')
@@ -36,6 +39,8 @@ export class DivarPostsController {
       limit,
       provinceId: Number.isFinite(provinceId) ? provinceId : undefined,
       cityIds: cityIds && cityIds.length > 0 ? cityIds : undefined,
+      categorySlug: categorySlug?.trim() ? categorySlug.trim() : undefined,
+      categoryDepth: Number.isFinite(parsedDepth) ? parsedDepth : undefined,
     });
   }
 }

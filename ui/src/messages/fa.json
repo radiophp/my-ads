@@ -175,13 +175,19 @@
       "cityHelper": "برای انتخاب یک یا چند شهر دکمه بالا را بزنید.",
       "cityDisabledHelper": "برای فعال شدن فیلتر شهر ابتدا یک استان انتخاب کنید.",
       "cityModalTitle": "انتخاب شهرها",
-      "cityModalDescription": "شهرهایی که باید در جستجو لحاظ شوند را برگزینید.",
-      "cityModalSelectAll": "تمام شهرها",
-      "cityModalEmpty": "هنوز شهری برای این استان ثبت نشده است.",
-      "cityModalCancel": "انصراف",
-      "cityModalConfirm": "انتخاب",
-      "mobileBack": "بازگشت"
-    },
+    "cityModalDescription": "شهرهایی که باید در جستجو لحاظ شوند را برگزینید.",
+    "cityModalSelectAll": "تمام شهرها",
+    "cityModalEmpty": "هنوز شهری برای این استان ثبت نشده است.",
+    "cityModalCancel": "انصراف",
+    "cityModalConfirm": "انتخاب",
+    "mobileBack": "بازگشت",
+    "categories": {
+      "title": "دسته‌بندی‌ها",
+      "all": "همه دسته‌ها",
+      "loading": "در حال بارگذاری دسته‌ها…",
+      "empty": "هنوز دسته‌ای فعال نشده است."
+    }
+  },
     "posts": {
       "title": "آخرین آگهی‌های دیوار",
       "description": "جدیدترین آگهی‌های خزیده‌شده که آماده تحلیل هستند در اینجا نمایش داده می‌شوند.",
@@ -210,6 +216,11 @@
         "externalId": "شناسه دیوار",
         "permalink": "لینک آگهی",
         "notAvailable": "نامشخص"
+      },
+      "businessType": {
+        "realEstateBusiness": "مشاور املاک",
+        "personal": "شخصی",
+        "unknown": "آگهی‌دهنده"
       },
       "close": "بستن"
     }

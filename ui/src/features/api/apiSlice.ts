@@ -1,5 +1,8 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
 
+import { clearAuth, setAuth } from '@/features/auth/authSlice';
+import type { AuthState } from '@/features/auth/authSlice';
 import type { AuthResponse, CurrentUser, SuccessResponse } from '@/types/auth';
 import type { City, District, Province } from '@/types/location';
 import type {
@@ -23,26 +26,83 @@ const skipContentTypeEndpoints = new Set([
   'uploadPublicImage',
 ]);
 
+const rawBaseQuery = fetchBaseQuery({
+  baseUrl,
+  prepareHeaders: (headers, { getState, endpoint }) => {
+    const state = getState() as { auth?: AuthState };
+    const token = state?.auth?.accessToken;
+
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    if (!headers.has('Content-Type') && !skipContentTypeEndpoints.has(endpoint)) {
+      headers.set('Content-Type', 'application/json');
+    }
+
+    return headers;
+  },
+  credentials: 'include',
+});
+
+let refreshPromise: Promise<AuthResponse | null> | null = null;
+
+const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQueryError> = async (
+  args,
+  api,
+  extraOptions,
+) => {
+  let result = await rawBaseQuery(args, api, extraOptions);
+
+  if (result.error && result.error.status === 401) {
+    const state = api.getState() as { auth?: AuthState };
+    const refreshToken = state?.auth?.refreshToken;
+
+    if (!refreshToken) {
+      api.dispatch(clearAuth());
+      return result;
+    }
+
+    if (!refreshPromise) {
+      refreshPromise = (async () => {
+        const refreshResult = await rawBaseQuery(
+          {
+            url: '/auth/refresh',
+            method: 'POST',
+            body: { refreshToken },
+          },
+          api,
+          extraOptions,
+        );
+
+        if (refreshResult.error) {
+          return null;
+        }
+
+        return refreshResult.data as AuthResponse;
+      })();
+    }
+
+    const currentRefreshPromise = refreshPromise;
+    const refreshedAuth = await currentRefreshPromise;
+    if (refreshPromise === currentRefreshPromise) {
+      refreshPromise = null;
+    }
+
+    if (refreshedAuth) {
+      api.dispatch(setAuth(refreshedAuth));
+      result = await rawBaseQuery(args, api, extraOptions);
+    } else {
+      api.dispatch(clearAuth());
+    }
+  }
+
+  return result;
+};
+
 export const apiSlice = createApi({
   reducerPath: 'api',
-  baseQuery: fetchBaseQuery({
-    baseUrl,
-    prepareHeaders: (headers, { getState, endpoint }) => {
-      const state = getState() as { auth?: { accessToken?: string | null } };
-      const token = state?.auth?.accessToken;
-
-      if (token) {
-        headers.set('Authorization', `Bearer ${token}`);
-      }
-
-      if (!headers.has('Content-Type') && !skipContentTypeEndpoints.has(endpoint)) {
-        headers.set('Content-Type', 'application/json');
-      }
-
-      return headers;
-    },
-    credentials: 'include',
-  }),
+  baseQuery: baseQueryWithReauth,
   tagTypes: [
     'Health',
     'User',
@@ -250,7 +310,14 @@ export const apiSlice = createApi({
     }),
     getDivarPosts: builder.query<
       DivarPostListResponse,
-      { cursor?: string | null; limit?: number; provinceId?: number; cityIds?: number[] } | void
+      {
+        cursor?: string | null;
+        limit?: number;
+        provinceId?: number;
+        cityIds?: number[];
+        categorySlug?: string | null;
+        categoryDepth?: number | null;
+      } | void
     >({
       query: (params) => {
         const searchParams = new URLSearchParams();
@@ -265,6 +332,12 @@ export const apiSlice = createApi({
         }
         if (params?.cityIds && params.cityIds.length > 0) {
           searchParams.set('cityIds', params.cityIds.join(','));
+        }
+        if (params?.categorySlug) {
+          searchParams.set('categorySlug', params.categorySlug);
+        }
+        if (typeof params?.categoryDepth === 'number') {
+          searchParams.set('categoryDepth', String(params.categoryDepth));
         }
         const qs = searchParams.toString();
         return `/divar-posts${qs ? `?${qs}` : ''}`;

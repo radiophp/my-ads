@@ -8,6 +8,10 @@ export type SearchFilterState = {
     mode: CitySelectionMode;
     cityIds: number[];
   };
+  categorySelection: {
+    slug: string | null;
+    depth: number | null;
+  };
 };
 
 const initialState: SearchFilterState = {
@@ -15,6 +19,10 @@ const initialState: SearchFilterState = {
   citySelection: {
     mode: 'all',
     cityIds: [],
+  },
+  categorySelection: {
+    slug: null,
+    depth: null,
   },
 };
 
@@ -38,12 +46,23 @@ const searchFilterSlice = createSlice({
       state.citySelection.cityIds = uniqueIds;
       state.citySelection.mode = uniqueIds.length === 0 ? 'all' : 'custom';
     },
+    setCategorySelection(state, action: PayloadAction<{ slug: string | null; depth: number | null }>) {
+      state.categorySelection = {
+        slug: action.payload.slug,
+        depth: action.payload.depth,
+      };
+    },
     resetSearchFilter: () => initialState,
   },
 });
 
-export const { setProvince, setCitySelectionMode, setSelectedCities, resetSearchFilter } =
-  searchFilterSlice.actions;
+export const {
+  setProvince,
+  setCitySelectionMode,
+  setSelectedCities,
+  setCategorySelection,
+  resetSearchFilter,
+} = searchFilterSlice.actions;
 
 export default searchFilterSlice.reducer;
 export { initialState as searchFilterInitialState };

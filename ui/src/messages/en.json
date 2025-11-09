@@ -180,7 +180,13 @@
       "cityModalEmpty": "No cities are available for the selected province yet.",
       "cityModalCancel": "Cancel",
       "cityModalConfirm": "Select",
-      "mobileBack": "Back"
+      "mobileBack": "Back",
+      "categories": {
+        "title": "Categories",
+        "all": "All categories",
+        "loading": "Loading categories…",
+        "empty": "No categories are available."
+      }
     },
     "posts": {
       "title": "Latest Divar posts",
@@ -210,6 +216,11 @@
         "externalId": "External ID",
         "permalink": "Permalink",
         "notAvailable": "Not available"
+      },
+      "businessType": {
+        "realEstateBusiness": "Real estate agent",
+        "personal": "Personal",
+        "unknown": "Listing owner"
       },
       "close": "Close"
     }

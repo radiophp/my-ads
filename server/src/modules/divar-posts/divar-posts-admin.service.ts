@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@app/platform/database/prisma.service';
 import { PostAnalysisStatus, type Prisma } from '@prisma/client';
 import type { PaginatedPostsToAnalyzeDto, PostToAnalyzeItemDto } from './dto/post-to-analyze.dto';
@@ -8,6 +8,8 @@ const PAGE_SIZE_LIMIT = 100;
 
 @Injectable()
 export class DivarPostsAdminService {
+  private readonly logger = new Logger(DivarPostsAdminService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   async listPostsToAnalyze(
@@ -67,6 +69,8 @@ export class DivarPostsAdminService {
       limit?: number;
       provinceId?: number;
       cityIds?: number[];
+      categorySlug?: string;
+      categoryDepth?: number;
     } = {},
   ): Promise<PaginatedDivarPostsDto> {
     const take = Math.min(Math.max(options.limit ?? 20, 1), 50);
@@ -77,7 +81,15 @@ export class DivarPostsAdminService {
     if (options.cityIds && options.cityIds.length > 0) {
       where.cityId = { in: options.cityIds };
     }
-    const records = await this.prisma.divarPost.findMany({
+    if (options.categorySlug) {
+      where.OR = [
+        { categorySlug: options.categorySlug },
+        { cat3: options.categorySlug },
+        { cat2: options.categorySlug },
+        { cat1: options.categorySlug },
+      ];
+    }
+    const queryArgs: Prisma.DivarPostFindManyArgs = {
       orderBy: [
         { publishedAt: { sort: 'desc', nulls: 'last' } },
         { createdAt: 'desc' },
@@ -96,6 +108,19 @@ export class DivarPostsAdminService {
             cursor: { id: options.cursor },
           }
         : {}),
+    };
+
+    this.logger.debug(
+      `DivarPosts query -> where: ${JSON.stringify(queryArgs.where)}, cursor: ${options.cursor}, limit: ${options.limit}`,
+    );
+
+    const records = await this.prisma.divarPost.findMany({
+      ...queryArgs,
+      include: {
+        medias: {
+          orderBy: { position: 'asc' },
+        },
+      },
     });
     const hasMore = records.length > take;
     const items = hasMore ? records.slice(0, take) : records;
@@ -114,6 +139,7 @@ export class DivarPostsAdminService {
         districtName: record.districtName ?? null,
         provinceName: record.provinceName ?? null,
         categorySlug: record.categorySlug,
+        businessType: record.businessType ?? null,
         publishedAt: record.publishedAt,
         publishedAtJalali: record.publishedAtJalali,
         createdAt: record.createdAt,

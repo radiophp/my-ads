@@ -192,7 +192,7 @@ export function DashboardSearchFilterPanel() {
   const cityHelperText = isProvinceAll ? t('cityDisabledHelper') : t('cityHelper');
 
   return (
-    <section className="w-full max-w-sm rounded-xl border bg-card p-4 shadow-sm">
+    <section className="bg-card w-full max-w-sm rounded-xl border p-4 shadow-sm">
       <p className="text-sm font-medium text-muted-foreground">{t('title')}</p>
       <div className="mt-4 flex flex-col gap-4">
         <div className="flex flex-col gap-2">
@@ -209,7 +209,7 @@ export function DashboardSearchFilterPanel() {
             </Button>
             <DialogContent
               hideCloseButton
-              className="left-0 top-0 h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] sm:left-1/2 sm:top-1/2 sm:flex sm:max-h-[90vh] sm:w-full sm:max-w-xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:flex-col sm:overflow-hidden sm:rounded-2xl sm:border sm:p-6 sm:pb-6"
+              className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] sm:left-1/2 sm:top-1/2 sm:flex sm:max-h-[90vh] sm:w-full sm:max-w-xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:flex-col sm:overflow-hidden sm:rounded-2xl sm:border sm:p-6"
             >
               <div className="flex h-full flex-col overflow-hidden">
                 <div className="border-b border-border px-6 py-4 sm:hidden">
@@ -231,14 +231,14 @@ export function DashboardSearchFilterPanel() {
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">{t('provinceModalDescription')}</p>
                 </div>
-                <div className="hidden px-0 py-0 sm:block">
+                <div className="hidden p-0 sm:block">
                   <DialogHeader>
                     <DialogTitle>{t('provinceModalTitle')}</DialogTitle>
                     <DialogDescription>{t('provinceModalDescription')}</DialogDescription>
                   </DialogHeader>
                 </div>
 
-                <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 py-4 sm:px-0 sm:py-0">
+                <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 py-4 sm:p-0">
                   <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-input px-3 py-2 text-sm font-medium">
                     <input
                       type="radio"
@@ -313,7 +313,7 @@ export function DashboardSearchFilterPanel() {
             </Button>
             <DialogContent
               hideCloseButton
-              className="left-0 top-0 h-[100dvh] w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] sm:left-1/2 sm:top-1/2 sm:flex sm:max-h-[90vh] sm:w-full sm:max-w-xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:flex-col sm:overflow-hidden sm:rounded-2xl sm:border sm:p-6 sm:pb-6"
+              className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] sm:left-1/2 sm:top-1/2 sm:flex sm:max-h-[90vh] sm:w-full sm:max-w-xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:flex-col sm:overflow-hidden sm:rounded-2xl sm:border sm:p-6"
             >
               <div className="flex h-full flex-col overflow-hidden">
                 <div className="border-b border-border px-6 py-4 sm:hidden">
@@ -335,14 +335,14 @@ export function DashboardSearchFilterPanel() {
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">{t('cityModalDescription')}</p>
                 </div>
-                <div className="hidden px-0 py-0 sm:block">
+                <div className="hidden p-0 sm:block">
                   <DialogHeader>
                     <DialogTitle>{t('cityModalTitle')}</DialogTitle>
                     <DialogDescription>{t('cityModalDescription')}</DialogDescription>
                   </DialogHeader>
                 </div>
 
-                <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 py-4 sm:px-0 sm:py-0">
+                <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 py-4 sm:p-0">
                   <label className="flex items-center gap-3 rounded-lg border border-dashed border-input px-3 py-2 text-sm font-medium">
                     <input
                       type="checkbox"

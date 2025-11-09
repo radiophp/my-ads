@@ -80,7 +80,7 @@ export function AdminDashboard() {
           <Link
             key={item.href}
             href={item.href}
-            className="group relative h-full rounded-xl border border-border/60 bg-card p-4 transition hover:border-primary/70 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="bg-card group relative h-full rounded-xl border border-border/60 p-4 transition hover:border-primary/70 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           >
             <div className="flex flex-col items-center gap-3 text-center">
               <div className="flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">

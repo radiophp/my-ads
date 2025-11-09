@@ -63,6 +63,7 @@ model City {
   users        User[]
   districts    District[]
   queuedPosts  PostToReadQueue[] @relation("CityPostQueue")
+  posts        DivarPost[]
 
   @@unique([name, provinceId])
   @@index([provinceId])
@@ -77,6 +78,7 @@ model Province {
   updatedAt    DateTime          @default(now()) @updatedAt
   cities       City[]
   queuedPosts  PostToReadQueue[] @relation("ProvincePostQueue")
+  posts        DivarPost[]
 }
 
 model District {
@@ -87,6 +89,7 @@ model District {
   city      City     @relation(fields: [cityId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
+  posts     DivarPost[]
 
   @@unique([cityId, slug])
   @@unique([cityId, name])
@@ -108,6 +111,7 @@ model DivarCategory {
   allowPosting Boolean              @default(false)
   filters      DivarCategoryFilter?
   queuedPosts  PostToReadQueue[]    @relation("CategoryPostQueue")
+  posts        DivarPost[]
   createdAt    DateTime             @default(now())
   updatedAt    DateTime             @default(now()) @updatedAt
 
@@ -144,6 +148,7 @@ model PostToReadQueue {
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @default(now()) @updatedAt
   analyzeJob      PostToAnalyzeQueue?
+  normalizedPost  DivarPost?
 
   @@unique([source, externalId])
   @@index([categoryId])
@@ -165,6 +170,122 @@ model PostToAnalyzeQueue {
   updatedAt    DateTime           @default(now()) @updatedAt
 
   @@unique([source, externalId])
+}
+
+model DivarPost {
+  id              String             @id @default(uuid())
+  source          String             @default("DIVAR")
+  externalId      String             @unique
+  readQueueId     String             @unique
+  readQueue       PostToReadQueue    @relation(fields: [readQueueId], references: [id], onDelete: Cascade)
+  categoryId      String?
+  category        DivarCategory?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  categorySlug    String
+  cat1            String?
+  cat2            String?
+  cat3            String?
+  title           String?
+  seoTitle        String?
+  seoDescription  String?
+  displayTitle    String?
+  displaySubtitle String?
+  shareTitle      String?
+  shareUrl        String?
+  permalink       String?
+  description     String?
+  contactUuid     String?
+  businessType    String?
+  conversionType  String?
+  listedAt        DateTime?
+  expiresAt       DateTime?
+  status          PostAnalysisStatus @default(PENDING)
+  priceTotal      Decimal?           @db.Decimal(18, 0)
+  pricePerSquare  Decimal?           @db.Decimal(18, 0)
+  depositAmount   Decimal?           @db.Decimal(18, 0)
+  rentAmount      Decimal?           @db.Decimal(18, 0)
+  dailyRateNormal Decimal?           @db.Decimal(18, 0)
+  dailyRateWeekend Decimal?          @db.Decimal(18, 0)
+  dailyRateHoliday Decimal?          @db.Decimal(18, 0)
+  extraPersonFee  Decimal?           @db.Decimal(18, 0)
+  area            Int?
+  areaLabel       String?
+  landArea        Int?
+  landAreaLabel   String?
+  rooms           Int?
+  roomsLabel      String?
+  floor           Int?
+  floorLabel      String?
+  floorsCount     Int?
+  unitPerFloor    Int?
+  yearBuilt       Int?
+  yearBuiltLabel  String?
+  capacity        Int?
+  capacityLabel   String?
+  hasParking      Boolean?
+  hasElevator     Boolean?
+  hasWarehouse    Boolean?
+  hasBalcony      Boolean?
+  isRebuilt       Boolean?
+  photosVerified  Boolean?
+  imageCount      Int?
+  latitude        Decimal?           @db.Decimal(12, 8)
+  longitude       Decimal?           @db.Decimal(12, 8)
+  provinceId      Int?
+  province        Province?          @relation(fields: [provinceId], references: [id], onDelete: SetNull)
+  provinceName    String?
+  cityId          Int?
+  city            City?              @relation(fields: [cityId], references: [id], onDelete: SetNull)
+  citySlug        String?
+  cityName        String?
+  districtId      Int?
+  district        District?          @relation(fields: [districtId], references: [id], onDelete: SetNull)
+  districtSlug    String?
+  districtName    String?
+  rawPayload      Json
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @default(now()) @updatedAt
+  medias          DivarPostMedia[]
+  attributes      DivarPostAttribute[]
+
+  @@index([categoryId])
+  @@index([categorySlug])
+  @@index([cityId])
+  @@index([districtId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model DivarPostMedia {
+  id           String    @id @default(uuid())
+  postId       String
+  post         DivarPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  position     Int
+  url          String
+  thumbnailUrl String?
+  alt          String?
+  metadata     Json?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @default(now()) @updatedAt
+
+  @@index([postId])
+}
+
+model DivarPostAttribute {
+  id          String    @id @default(uuid())
+  postId      String
+  post        DivarPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  key         String
+  label       String?
+  type        String?
+  stringValue String?
+  numberValue Decimal?  @db.Decimal(18, 2)
+  boolValue   Boolean?
+  unit        String?
+  rawValue    Json?
+  createdAt   DateTime  @default(now())
+
+  @@index([postId])
+  @@index([key])
 }
 
 model SubscriptionPackage {

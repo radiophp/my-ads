@@ -1,5 +1,11 @@
--- CreateEnum
-CREATE TYPE "PostAnalysisStatus" AS ENUM ('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED');
+-- CreateEnum (guarded to avoid duplicate when enum already exists)
+DO $$
+BEGIN
+    CREATE TYPE "PostAnalysisStatus" AS ENUM ('PENDING', 'PROCESSING', 'COMPLETED', 'FAILED');
+EXCEPTION
+    WHEN duplicate_object THEN NULL;
+END
+$$;
 
 -- AlterTable
 ALTER TABLE "PostToReadQueue" ADD COLUMN     "fetchAttempts" INTEGER NOT NULL DEFAULT 0,
@@ -38,3 +44,28 @@ ALTER TABLE "PostToReadQueue" ADD CONSTRAINT "PostToReadQueue_cityId_fkey" FOREI
 
 -- AddForeignKey
 ALTER TABLE "PostToAnalyzeQueue" ADD CONSTRAINT "PostToAnalyzeQueue_readQueueId_fkey" FOREIGN KEY ("readQueueId") REFERENCES "PostToReadQueue"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey (Divar posts link to analyze queue once table exists)
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = current_schema()
+          AND table_name = 'DivarPost'
+          AND column_name = 'analyzeQueueId'
+    ) THEN
+        ALTER TABLE "DivarPost"
+        ADD CONSTRAINT "DivarPost_analyzeQueueId_fkey"
+        FOREIGN KEY ("analyzeQueueId") REFERENCES "PostToAnalyzeQueue"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+    END IF;
+END
+$$;
+
+-- AddForeignKey (Divar posts optional relations when backing tables exist)
+ALTER TABLE "DivarPost" ADD CONSTRAINT "DivarPost_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "DivarCategory"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+ALTER TABLE "DivarPost" ADD CONSTRAINT "DivarPost_provinceId_fkey" FOREIGN KEY ("provinceId") REFERENCES "Province"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+ALTER TABLE "DivarPost" ADD CONSTRAINT "DivarPost_cityId_fkey" FOREIGN KEY ("cityId") REFERENCES "City"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+ALTER TABLE "DivarPost" ADD CONSTRAINT "DivarPost_districtId_fkey" FOREIGN KEY ("districtId") REFERENCES "District"("id") ON DELETE SET NULL ON UPDATE CASCADE;

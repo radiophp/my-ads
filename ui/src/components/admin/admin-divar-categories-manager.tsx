@@ -60,7 +60,7 @@ export function AdminDivarCategoriesManager() {
                 active: activeCount,
               })}
             </p>
-            <label className="flex flex-col gap-1 text-sm text-muted-foreground sm:min-w-[16rem]">
+            <label className="flex flex-col gap-1 text-sm text-muted-foreground sm:min-w-64">
               <span className="font-medium text-foreground">{t('search.label')}</span>
               <Input
                 value={searchTerm}

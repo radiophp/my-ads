@@ -92,7 +92,7 @@ useEffect(() => {
                   const next = event.target.value;
                   setSelectedProvinceId(next === 'all' ? 'all' : Number(next));
                 }}
-                className="min-w-[12rem] rounded-md border border-border/60 bg-background px-3 py-2 text-sm text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="min-w-48 rounded-md border border-border/60 bg-background px-3 py-2 text-sm text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <option value="all">{t('filters.allProvinces')}</option>
                 {provinces.map((province) => (
@@ -110,7 +110,7 @@ useEffect(() => {
                   const next = event.target.value;
                   setSelectedCityId(next === 'none' ? null : Number(next));
                 }}
-                className="min-w-[12rem] rounded-md border border-border/60 bg-background px-3 py-2 text-sm text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="min-w-48 rounded-md border border-border/60 bg-background px-3 py-2 text-sm text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 disabled={isLoadingSelectors || cities.length === 0}
               >
                 <option value="none">{t('filters.selectCity')}</option>
@@ -121,7 +121,7 @@ useEffect(() => {
                 ))}
               </select>
             </label>
-            <label className="flex flex-col gap-1 text-sm text-muted-foreground sm:min-w-[14rem]">
+            <label className="flex flex-col gap-1 text-sm text-muted-foreground sm:min-w-56">
               <span className="font-medium text-foreground">{t('search.label')}</span>
               <Input
                 value={searchTerm}

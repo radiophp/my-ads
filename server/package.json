@@ -12,7 +12,7 @@
     "build": "nest build",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write \"src/**/*.ts\"",
-    "lint": "eslint \"{src,tests}/**/*.ts\"",
+    "lint": "cross-env ESLINT_USE_FLAT_CONFIG=false eslint \"{src,tests}/**/*.ts\"",
     "test": "dotenv --quiet -e ../.env -- jest",
     "test:watch": "dotenv --quiet -e ../.env -- jest --watch",
     "test:cov": "dotenv --quiet -e ../.env -- jest --coverage",
@@ -24,6 +24,7 @@
     "sync:divar-category-filters": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/sync-divar-category-filters.ts",
     "divar:harvest-posts": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-divar-post-harvest.ts",
     "divar:fetch-posts": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-divar-post-fetch.ts",
+    "divar:analyze-posts": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-divar-post-analyze.ts",
     "prepare": "husky install",
     "lint-staged": "lint-staged"
   },

@@ -111,13 +111,13 @@ export function AdminPostsToAnalyzeManager() {
         <CardContent className="overflow-x-auto">
           <table className="min-w-full border-collapse text-sm">
             <thead>
-              <tr className="border-b border-border/70 text-left rtl:text-right text-xs uppercase text-muted-foreground">
+              <tr className="border-b border-border/70 text-left text-xs uppercase text-muted-foreground rtl:text-right">
                 <th className="py-3 pr-4 font-medium">{t('columns.title')}</th>
                 <th className="py-3 pr-4 font-medium">{t('columns.externalId')}</th>
                 <th className="py-3 pr-4 font-medium">{t('columns.link')}</th>
                 <th className="py-3 pr-4 font-medium">{t('columns.status')}</th>
                 <th className="py-3 pr-4 font-medium">{t('columns.createdAt')}</th>
-                <th className="py-3 pr-4 font-medium text-right">{t('columns.actions')}</th>
+                <th className="py-3 pr-4 text-right font-medium">{t('columns.actions')}</th>
               </tr>
             </thead>
             <tbody>

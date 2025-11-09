@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { toGregorian } from 'jalaali-js';
 import { Prisma } from '@prisma/client';
 
 export interface ParsedMedia {
@@ -74,6 +75,10 @@ export interface ParsedDivarPost {
   latitude?: number | null;
   longitude?: number | null;
   expiresAt?: Date | null;
+  publishedAtJalali?: string | null;
+  jalaliGregorianDate?: Date | null;
+  relativePublishMs?: number | null;
+  relativePublishText?: string | null;
   medias: ParsedMedia[];
   attributes: ParsedAttribute[];
 }
@@ -105,6 +110,38 @@ const PERSIAN_DIGITS: Record<string, string> = {
   '٩': '9',
 };
 
+const PERSIAN_NUMBER_WORDS: Record<string, number> = {
+  صفر: 0,
+  یک: 1,
+  دو: 2,
+  سه: 3,
+  چهار: 4,
+  پنج: 5,
+  شش: 6,
+  هفت: 7,
+  هشت: 8,
+  نه: 9,
+  ده: 10,
+  یازده: 11,
+  دوازده: 12,
+  سیزده: 13,
+  چهارده: 14,
+  پانزده: 15,
+  شانزده: 16,
+  هفده: 17,
+  هجده: 18,
+  نوزده: 19,
+  بیست: 20,
+  سی: 30,
+  چهل: 40,
+  پنجاه: 50,
+  شصت: 60,
+  هفتاد: 70,
+  هشتاد: 80,
+  نود: 90,
+  صد: 100,
+};
+
 const ROOM_WORD_MAP: Record<string, number> = {
   'بدون اتاق': 0,
   یک: 1,
@@ -117,6 +154,33 @@ const ROOM_WORD_MAP: Record<string, number> = {
   هشت: 8,
   نه: 9,
   ده: 10,
+};
+
+const JALALI_MONTHS: Record<string, number> = {
+  فروردین: 1,
+  اردیبهشت: 2,
+  خرداد: 3,
+  تیر: 4,
+  مرداد: 5,
+  شهریور: 6,
+  مهر: 7,
+  آبان: 8,
+  آذر: 9,
+  دی: 10,
+  بهمن: 11,
+  اسفند: 12,
+};
+
+const RELATIVE_UNITS_MS: Record<string, number> = {
+  ثانیه: 1000,
+  ثانيه: 1000,
+  دقیقه: 60 * 1000,
+  دقيقه: 60 * 1000,
+  ساعت: 60 * 60 * 1000,
+  روز: 24 * 60 * 60 * 1000,
+  هفته: 7 * 24 * 60 * 60 * 1000,
+  ماه: 30 * 24 * 60 * 60 * 1000,
+  سال: 365 * 24 * 60 * 60 * 1000,
 };
 
 const normalizeLabel = (value: string): string =>
@@ -238,6 +302,11 @@ class ParserState {
   private floorLabel?: string | null;
   private photosVerified?: boolean | null;
   private isRebuilt?: boolean | null;
+  private jalaliDateString?: string | null;
+  private jalaliDateComponents?: { year: number; month: number; day: number } | null;
+  private jalaliGregorianDate?: Date | null;
+  private relativePublishMs?: number | null;
+  private relativePublishText?: string | null;
 
   constructor(private readonly root: JsonObject) {}
 
@@ -260,6 +329,7 @@ class ParserState {
 
     this.seoTitle = this.asString(seo['title']);
     this.seoDescription = this.asString(seo['description']);
+    this.extractJalaliDateComponents(this.seoTitle ?? undefined);
 
     const unavailable = this.asString(seo['unavailable_after']);
     if (unavailable) {
@@ -274,6 +344,9 @@ class ParserState {
       this.title = this.asString(webInfo['title']) ?? this.title;
       this.cityName = this.cityName ?? this.asString(webInfo['city_persian']);
       this.districtName = this.districtName ?? this.asString(webInfo['district_persian']);
+      if (!this.jalaliDateString) {
+        this.extractJalaliDateComponents(this.title ?? undefined);
+      }
     }
 
     const schema = this.asObject(seo['post_seo_schema']);
@@ -411,10 +484,19 @@ class ParserState {
       case 'type.googleapis.com/widgets.GroupFeatureRow':
         this.handleGroupFeatureRow(data);
         break;
-      case 'type.googleapis.com/widgets.LegendTitleRowData':
+      case 'type.googleapis.com/widgets.LegendTitleRowData': {
         this.displayTitle = this.asString(data['title']) ?? this.displayTitle;
-        this.displaySubtitle = this.asString(data['subtitle']) ?? this.displaySubtitle;
+        const subtitle = this.asString(data['subtitle']);
+        if (subtitle) {
+          this.displaySubtitle = subtitle;
+          this.relativePublishText = subtitle;
+          const relativeMs = this.parseRelativeSubtitle(subtitle);
+          if (relativeMs !== null) {
+            this.relativePublishMs = relativeMs;
+          }
+        }
         break;
+      }
       case 'type.googleapis.com/widgets.DescriptionRowData':
         this.handleDescriptionRow(data);
         break;
@@ -639,6 +721,124 @@ class ParserState {
     }
   }
 
+  private extractJalaliDateComponents(title?: string | null): void {
+    if (!title || this.jalaliDateString) {
+      return;
+    }
+
+    const normalizedDigits = this.replacePersianDigits(title);
+    const hyphenIndex = normalizedDigits.lastIndexOf('-');
+    if (hyphenIndex === -1) {
+      return;
+    }
+
+    const datePart = normalizedDigits.slice(hyphenIndex + 1).trim();
+    const tokens = datePart.replace(/[،,.]/g, ' ').split(/\s+/).filter(Boolean);
+
+    if (tokens.length < 3) {
+      return;
+    }
+
+    const day = Number(tokens[0]);
+    const monthKey = this.normalizePersianWord(tokens[1]);
+    const year = Number(tokens[2]);
+    const month = JALALI_MONTHS[monthKey];
+
+    if (!Number.isFinite(day) || !Number.isFinite(year) || !month) {
+      return;
+    }
+
+    this.jalaliDateString = `${year}-${month.toString().padStart(2, '0')}-${day
+      .toString()
+      .padStart(2, '0')}`;
+    this.jalaliDateComponents = { year, month, day };
+
+    try {
+      const gregorian = toGregorian(year, month, day);
+      if (
+        Number.isFinite(gregorian.gy) &&
+        Number.isFinite(gregorian.gm) &&
+        Number.isFinite(gregorian.gd)
+      ) {
+        this.jalaliGregorianDate = new Date(Date.UTC(gregorian.gy, gregorian.gm - 1, gregorian.gd));
+      }
+    } catch {
+      // ignore conversion failures
+    }
+  }
+
+  private parseRelativeSubtitle(subtitle: string): number | null {
+    if (!subtitle) {
+      return null;
+    }
+
+    const markers = [' در ', ' در', 'در '];
+    let relativePart = subtitle;
+    for (const marker of markers) {
+      const idx = subtitle.indexOf(marker);
+      if (idx !== -1) {
+        relativePart = subtitle.slice(0, idx);
+        break;
+      }
+    }
+
+    const normalizedDigits = this.replacePersianDigits(relativePart);
+    const relativeMatch = normalizedDigits.match(
+      /(?:(\d+(?:\.\d+)?)|([^\s]+))\s+(ثانیه|ثانيه|دقیقه|دقيقه|ساعت|روز|هفته|ماه|سال)/,
+    );
+
+    if (!relativeMatch) {
+      if (normalizedDigits.includes('لحظه')) {
+        return 60 * 1000;
+      }
+      return null;
+    }
+
+    const rawValue = relativeMatch[1] ?? relativeMatch[2] ?? '';
+    const unitKey = this.normalizePersianWord(relativeMatch[3]);
+    const value = this.parseRelativeNumberToken(rawValue);
+    if (value === null) {
+      return null;
+    }
+
+    const unitMs = RELATIVE_UNITS_MS[unitKey];
+    if (!unitMs) {
+      return null;
+    }
+
+    return value * unitMs;
+  }
+
+  private parseRelativeNumberToken(value: string): number | null {
+    if (!value) {
+      return null;
+    }
+
+    const numeric = this.parseNumberFromText(value);
+    if (numeric !== null) {
+      return numeric;
+    }
+
+    const normalizedWord = this.normalizePersianWord(value);
+    if (!normalizedWord) {
+      return null;
+    }
+
+    if (PERSIAN_NUMBER_WORDS[normalizedWord] !== undefined) {
+      return PERSIAN_NUMBER_WORDS[normalizedWord];
+    }
+
+    if (normalizedWord === 'چند') {
+      return 3;
+    }
+
+    if (normalizedWord === 'نیم') {
+      return 0.5;
+    }
+
+    return null;
+  }
+
   private buildResult(): ParsedDivarPost {
     const areaLabel = this.getGroupValue('متراژ') ?? this.areaLabelFromSchema ?? null;
     const area = this.parseNumberFromText(areaLabel ?? undefined) ?? this.areaFromSchema ?? null;
@@ -750,6 +950,10 @@ class ParserState {
       latitude: this.latitude ?? null,
       longitude: this.longitude ?? null,
       expiresAt: this.expiresAt ?? null,
+      publishedAtJalali: this.jalaliDateString ?? null,
+      jalaliGregorianDate: this.jalaliGregorianDate ?? null,
+      relativePublishMs: this.relativePublishMs ?? null,
+      relativePublishText: this.relativePublishText ?? null,
       medias: [...this.medias],
       attributes: [...this.attributes],
     };
@@ -850,10 +1054,7 @@ class ParserState {
       return null;
     }
 
-    const normalizedDigits = value
-      .split('')
-      .map((char) => PERSIAN_DIGITS[char] ?? char)
-      .join('')
+    const normalizedDigits = this.replacePersianDigits(value)
       .replace(/[,،]/g, '')
       .replace(/٫/g, '.')
       .replace(/[\u200c\u200e\u200f]/g, '');
@@ -865,6 +1066,23 @@ class ParserState {
 
     const parsed = Number(match[0]);
     return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  private replacePersianDigits(value: string): string {
+    return value
+      .split('')
+      .map((char) => PERSIAN_DIGITS[char] ?? char)
+      .join('');
+  }
+
+  private normalizePersianWord(value: string): string {
+    return value
+      .replace(/ي/g, 'ی')
+      .replace(/ك/g, 'ک')
+      .replace(/ۀ/g, 'ه')
+      .replace(/[^\u0600-\u06FF\s]/g, '')
+      .replace(/[\u200c\u200e\u200f]/g, '')
+      .trim();
   }
 
   private addAttribute(

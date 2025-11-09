@@ -23,34 +23,15 @@
     "noFallthroughCasesInSwitch": true,
     "resolveJsonModule": true,
     "paths": {
-      "*": [
-        "node_modules/*"
-      ],
-      "@app/*": [
-        "src/*"
-      ],
-      "@platform/*": [
-        "src/platform/*"
-      ],
-      "@modules/*": [
-        "src/modules/*"
-      ],
-      "@common/*": [
-        "src/common/*"
-      ],
-      "@config/*": [
-        "src/platform/config/*"
-      ]
-    }
+      "*": ["node_modules/*"],
+      "@app/*": ["src/*"],
+      "@platform/*": ["src/platform/*"],
+      "@modules/*": ["src/modules/*"],
+      "@common/*": ["src/common/*"],
+      "@config/*": ["src/platform/config/*"]
+    },
+    "typeRoots": ["./node_modules/@types", "./src/types"]
   },
-  "include": [
-    "src/**/*",
-    "config/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "test",
-    "**/*spec.ts"
-  ]
+  "include": ["src/**/*", "config/**/*"],
+  "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
 }

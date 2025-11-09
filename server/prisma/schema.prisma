@@ -198,6 +198,8 @@ model DivarPost {
   conversionType  String?
   listedAt        DateTime?
   expiresAt       DateTime?
+  publishedAt     DateTime?
+  publishedAtJalali String?
   status          PostAnalysisStatus @default(PENDING)
   priceTotal      Decimal?           @db.Decimal(18, 0)
   pricePerSquare  Decimal?           @db.Decimal(18, 0)

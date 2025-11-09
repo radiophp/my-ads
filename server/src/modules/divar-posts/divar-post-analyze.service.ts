@@ -18,6 +18,7 @@ import {
 const MAX_ANALYZE_ATTEMPTS = 5;
 const RATE_LIMIT_BATCH_SIZE = 50;
 const RATE_LIMIT_INTERVAL_MS = 1000;
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 interface AnalyzeJob extends PostToAnalyzeQueue {
   readQueue: PostToReadQueue & {
@@ -147,6 +148,9 @@ export class DivarPostAnalyzeService {
     const provinceName = readQueue.province?.name ?? parsed.provinceName ?? null;
     const cityName = readQueue.city?.name ?? parsed.cityName ?? null;
     const citySlug = parsed.citySlug ?? readQueue.city?.slug ?? null;
+    const baseTimestamp = this.resolveBaseTimestamp(job);
+    const publishedAt = this.resolvePublishedAt(baseTimestamp, parsed);
+    const publishedAtJalali = parsed.publishedAtJalali ?? null;
 
     const decimal = (value?: number | null): Prisma.Decimal | null => {
       if (value === null || value === undefined || Number.isNaN(value)) {
@@ -186,6 +190,8 @@ export class DivarPostAnalyzeService {
         businessType: parsed.businessType ?? null,
         conversionType: parsed.conversionType ?? null,
         expiresAt: parsed.expiresAt ?? null,
+        publishedAt,
+        publishedAtJalali,
         status: PostAnalysisStatus.COMPLETED,
         priceTotal: decimal(parsed.priceTotal),
         pricePerSquare: decimal(parsed.pricePerSquare),
@@ -294,6 +300,35 @@ export class DivarPostAnalyzeService {
         Prisma.DbNull) as Prisma.NullableJsonNullValueInput | Prisma.InputJsonValue,
       createdAt: new Date(),
     } satisfies Prisma.DivarPostAttributeUncheckedCreateInput;
+  }
+
+  private resolveBaseTimestamp(job: AnalyzeJob): Date | null {
+    return (
+      job.readQueue.lastFetchedAt ??
+      job.readQueue.updatedAt ??
+      job.readQueue.requestedAt ??
+      job.readQueue.createdAt ??
+      job.createdAt ??
+      null
+    );
+  }
+
+  private resolvePublishedAt(baseTimestamp: Date | null, parsed: ParsedDivarPost): Date | null {
+    const relativeMs = parsed.relativePublishMs ?? null;
+
+    if (baseTimestamp && relativeMs !== null && relativeMs < ONE_DAY_MS) {
+      return new Date(baseTimestamp.getTime() - relativeMs);
+    }
+
+    if (parsed.jalaliGregorianDate) {
+      return parsed.jalaliGregorianDate;
+    }
+
+    if (baseTimestamp && relativeMs !== null) {
+      return new Date(baseTimestamp.getTime() - relativeMs);
+    }
+
+    return null;
   }
 
   private async resolveDistrictId(

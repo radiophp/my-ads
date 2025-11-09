@@ -13,7 +13,7 @@ import type {
   DivarCategoryFilterSummary,
 } from '@/types/divar-category';
 import type { AdminDashboardStats } from '@/types/admin';
-import type { PaginatedPostsToAnalyze } from '@/types/divar-posts';
+import type { PaginatedPostsToAnalyze, DivarPostListResponse } from '@/types/divar-posts';
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:6200/api';
 
@@ -52,6 +52,7 @@ export const apiSlice = createApi({
     'AdminStats',
     'DivarCategoryFilters',
     'PostsToAnalyze',
+    'DivarPosts',
   ],
   endpoints: (builder) => ({
     getHealth: builder.query<{ status: string }, void>({
@@ -98,24 +99,21 @@ export const apiSlice = createApi({
       providesTags: ['Locations'],
     }),
     getCities: builder.query<City[], number | void>({
-      query: (provinceId) =>
-        provinceId ? `/cities?provinceId=${provinceId}` : '/cities',
+      query: (provinceId) => (provinceId ? `/cities?provinceId=${provinceId}` : '/cities'),
       providesTags: ['Locations'],
     }),
     getDistricts: builder.query<District[], number | void>({
       query: (cityId) => (cityId ? `/districts?cityId=${cityId}` : '/districts'),
       providesTags: ['Locations'],
     }),
-    updateProvinceAllowPosting: builder.mutation<Province, { id: number; allowPosting: boolean }>(
-      {
-        query: ({ id, allowPosting }) => ({
-          url: `/provinces/${id}/allow-posting`,
-          method: 'PATCH',
-          body: { allowPosting },
-        }),
-        invalidatesTags: ['Locations'],
-      },
-    ),
+    updateProvinceAllowPosting: builder.mutation<Province, { id: number; allowPosting: boolean }>({
+      query: ({ id, allowPosting }) => ({
+        url: `/provinces/${id}/allow-posting`,
+        method: 'PATCH',
+        body: { allowPosting },
+      }),
+      invalidatesTags: ['Locations'],
+    }),
     updateCityAllowPosting: builder.mutation<City, { id: number; allowPosting: boolean }>({
       query: ({ id, allowPosting }) => ({
         url: `/cities/${id}/allow-posting`,
@@ -250,6 +248,38 @@ export const apiSlice = createApi({
             ]
           : [{ type: 'PostsToAnalyze', id: 'LIST' }],
     }),
+    getDivarPosts: builder.query<
+      DivarPostListResponse,
+      { cursor?: string | null; limit?: number; provinceId?: number; cityIds?: number[] } | void
+    >({
+      query: (params) => {
+        const searchParams = new URLSearchParams();
+        if (params?.cursor) {
+          searchParams.set('cursor', params.cursor);
+        }
+        if (params?.limit) {
+          searchParams.set('limit', String(params.limit));
+        }
+        if (typeof params?.provinceId === 'number') {
+          searchParams.set('provinceId', String(params.provinceId));
+        }
+        if (params?.cityIds && params.cityIds.length > 0) {
+          searchParams.set('cityIds', params.cityIds.join(','));
+        }
+        const qs = searchParams.toString();
+        return `/divar-posts${qs ? `?${qs}` : ''}`;
+      },
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.items.map((item) => ({
+                type: 'DivarPosts' as const,
+                id: item.id,
+              })),
+              { type: 'DivarPosts' as const, id: result.nextCursor ?? 'END' },
+            ]
+          : [{ type: 'DivarPosts' as const, id: 'LIST' }],
+    }),
   }),
 });
 
@@ -280,6 +310,8 @@ export const {
   useGetDivarCategoryFilterQuery,
   useGetAdminDashboardStatsQuery,
   useGetPostsToAnalyzeQuery,
+  useGetDivarPostsQuery,
+  useLazyGetDivarPostsQuery,
 } = apiSlice;
 
 type UpdateCurrentUserPayload = Partial<{

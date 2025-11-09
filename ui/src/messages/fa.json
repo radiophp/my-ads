@@ -181,6 +181,37 @@
       "cityModalCancel": "انصراف",
       "cityModalConfirm": "انتخاب",
       "mobileBack": "بازگشت"
+    },
+    "posts": {
+      "title": "آخرین آگهی‌های دیوار",
+      "description": "جدیدترین آگهی‌های خزیده‌شده که آماده تحلیل هستند در اینجا نمایش داده می‌شوند.",
+      "empty": "هنوز آگهی‌ای پردازش نشده است. خزنده را اجرا کنید تا محتوا نمایش داده شود.",
+      "noImage": "بدون تصویر",
+      "untitled": "بدون عنوان ({externalId})",
+      "mediaCount": "{count, plural, one {# عکس} other {# عکس}}",
+      "areaLabel": "{value} مترمربع",
+      "priceLabel": "قیمت کل: {value} تومان",
+      "rentLabel": "اجاره: {value} تومان",
+      "viewDetails": "جزئیات آگهی",
+      "openOnDivar": "مشاهده در دیوار",
+      "loading": "در حال بارگذاری…",
+      "loadMore": "مشاهده موارد بیشتر",
+      "endOfFeed": "به انتهای فهرست رسیدید.",
+      "labels": {
+        "location": "موقعیت",
+        "publishedAt": "زمان انتشار",
+        "createdAt": "زمان دریافت",
+        "price": "قیمت کل",
+        "rent": "اجاره",
+        "area": "متراژ",
+        "pricePerSquare": "قیمت هر متر",
+        "mediaCount": "تعداد عکس",
+        "category": "دسته بندی",
+        "externalId": "شناسه دیوار",
+        "permalink": "لینک آگهی",
+        "notAvailable": "نامشخص"
+      },
+      "close": "بستن"
     }
   },
   "admin": {

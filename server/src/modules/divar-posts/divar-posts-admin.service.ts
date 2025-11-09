@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@app/platform/database/prisma.service';
 import { PostAnalysisStatus, type Prisma } from '@prisma/client';
 import type { PaginatedPostsToAnalyzeDto, PostToAnalyzeItemDto } from './dto/post-to-analyze.dto';
+import type { PaginatedDivarPostsDto } from './dto/divar-post.dto';
 
 const PAGE_SIZE_LIMIT = 100;
 
@@ -57,6 +58,79 @@ export class DivarPostsAdminService {
         hasPreviousPage,
         hasNextPage,
       },
+    };
+  }
+
+  async listNormalizedPosts(
+    options: {
+      cursor?: string;
+      limit?: number;
+      provinceId?: number;
+      cityIds?: number[];
+    } = {},
+  ): Promise<PaginatedDivarPostsDto> {
+    const take = Math.min(Math.max(options.limit ?? 20, 1), 50);
+    const where: Prisma.DivarPostWhereInput = {};
+    if (typeof options.provinceId === 'number') {
+      where.provinceId = options.provinceId;
+    }
+    if (options.cityIds && options.cityIds.length > 0) {
+      where.cityId = { in: options.cityIds };
+    }
+    const records = await this.prisma.divarPost.findMany({
+      orderBy: [
+        { publishedAt: { sort: 'desc', nulls: 'last' } },
+        { createdAt: 'desc' },
+        { id: 'desc' },
+      ],
+      include: {
+        medias: {
+          orderBy: { position: 'asc' },
+        },
+      },
+      take: take + 1,
+      where,
+      ...(options.cursor
+        ? {
+            skip: 1,
+            cursor: { id: options.cursor },
+          }
+        : {}),
+    });
+    const hasMore = records.length > take;
+    const items = hasMore ? records.slice(0, take) : records;
+
+    return {
+      items: items.map((record) => ({
+        id: record.id,
+        externalId: record.externalId,
+        title: record.title ?? record.displayTitle ?? record.seoTitle ?? null,
+        description: record.description ?? null,
+        priceTotal: record.priceTotal ? Number(record.priceTotal) : null,
+        rentAmount: record.rentAmount ? Number(record.rentAmount) : null,
+        pricePerSquare: record.pricePerSquare ? Number(record.pricePerSquare) : null,
+        area: record.area ?? null,
+        cityName: record.cityName ?? null,
+        districtName: record.districtName ?? null,
+        provinceName: record.provinceName ?? null,
+        categorySlug: record.categorySlug,
+        publishedAt: record.publishedAt,
+        publishedAtJalali: record.publishedAtJalali,
+        createdAt: record.createdAt,
+        permalink:
+          record.permalink ??
+          (record.externalId ? `https://divar.ir/v/${record.externalId}` : null),
+        imageUrl: record.medias[0]?.url ?? null,
+        mediaCount: record.medias.length,
+        medias: record.medias.map((media) => ({
+          id: media.id,
+          url: media.url,
+          thumbnailUrl: media.thumbnailUrl,
+          alt: media.alt,
+        })),
+      })),
+      nextCursor: hasMore ? items[items.length - 1].id : null,
+      hasMore,
     };
   }
 

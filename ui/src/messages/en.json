@@ -181,6 +181,37 @@
       "cityModalCancel": "Cancel",
       "cityModalConfirm": "Select",
       "mobileBack": "Back"
+    },
+    "posts": {
+      "title": "Latest Divar posts",
+      "description": "Freshly crawled listings ready for analysis will appear here.",
+      "empty": "No posts have been processed yet. Trigger the crawler to see live content.",
+      "noImage": "No photo",
+      "untitled": "Untitled ({externalId})",
+      "mediaCount": "{count, plural, one {# photo} other {# photos}}",
+      "areaLabel": "{value} m²",
+      "priceLabel": "Total: {value} IRR",
+      "rentLabel": "Rent: {value} IRR",
+      "viewDetails": "View details",
+      "openOnDivar": "Open on Divar",
+      "loading": "Loading…",
+      "loadMore": "Load more",
+      "endOfFeed": "You have reached the end of the feed.",
+      "labels": {
+        "location": "Location",
+        "publishedAt": "Published",
+        "createdAt": "Imported",
+        "price": "Total price",
+        "rent": "Rent",
+        "area": "Area",
+        "pricePerSquare": "Price per m²",
+        "mediaCount": "Photos",
+        "category": "Category",
+        "externalId": "External ID",
+        "permalink": "Permalink",
+        "notAvailable": "Not available"
+      },
+      "close": "Close"
     }
   },
   "admin": {

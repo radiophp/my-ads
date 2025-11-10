@@ -2,6 +2,14 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 export type SelectionMode = 'all' | 'custom';
 
+export type CategoryFilterValue =
+  | { kind: 'numberRange'; min?: number | null; max?: number | null }
+  | { kind: 'multiSelect'; values: string[] }
+  | { kind: 'singleSelect'; value: string | null }
+  | { kind: 'boolean'; value: boolean | null };
+
+export type CategoryFilterBuckets = Record<string, Record<string, CategoryFilterValue>>;
+
 export type SearchFilterState = {
   provinceId: number | null;
   citySelection: {
@@ -16,6 +24,7 @@ export type SearchFilterState = {
     slug: string | null;
     depth: number | null;
   };
+  categoryFilters: CategoryFilterBuckets;
 };
 
 const initialState: SearchFilterState = {
@@ -32,6 +41,7 @@ const initialState: SearchFilterState = {
     slug: null,
     depth: null,
   },
+  categoryFilters: {},
 };
 
 const searchFilterSlice = createSlice({
@@ -74,6 +84,38 @@ const searchFilterSlice = createSlice({
         depth: action.payload.depth,
       };
     },
+    setCategoryFilterValue(
+      state,
+      action: PayloadAction<{
+        slug: string;
+        key: string;
+        value: CategoryFilterValue | null;
+      }>,
+    ) {
+      const { slug, key, value } = action.payload;
+      if (!slug || !key) {
+        return;
+      }
+      if (!state.categoryFilters[slug]) {
+        state.categoryFilters[slug] = {};
+      }
+      const bucket = state.categoryFilters[slug]!;
+      if (shouldRemoveFilterValue(value)) {
+        delete bucket[key];
+        if (Object.keys(bucket).length === 0) {
+          delete state.categoryFilters[slug];
+        }
+      } else {
+        bucket[key] = value as CategoryFilterValue;
+      }
+    },
+    clearCategoryFilters(state, action: PayloadAction<{ slug: string }>) {
+      const { slug } = action.payload;
+      if (!slug) {
+        return;
+      }
+      delete state.categoryFilters[slug];
+    },
     resetSearchFilter: () => initialState,
   },
 });
@@ -85,8 +127,28 @@ export const {
   setDistrictSelectionMode,
   setSelectedDistricts,
   setCategorySelection,
+  setCategoryFilterValue,
+  clearCategoryFilters,
   resetSearchFilter,
 } = searchFilterSlice.actions;
 
 export default searchFilterSlice.reducer;
 export { initialState as searchFilterInitialState };
+
+function shouldRemoveFilterValue(value: CategoryFilterValue | null): boolean {
+  if (!value) {
+    return true;
+  }
+  switch (value.kind) {
+    case 'numberRange':
+      return value.min === undefined && value.max === undefined;
+    case 'multiSelect':
+      return !value.values || value.values.length === 0;
+    case 'singleSelect':
+      return value.value === null || value.value === undefined || value.value === '';
+    case 'boolean':
+      return value.value !== true;
+    default:
+      return false;
+  }
+}

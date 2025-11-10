@@ -11,7 +11,7 @@ async function bootstrap(): Promise<void> {
 
   try {
     const analyzer = app.get(DivarPostAnalyzeService);
-    const summary = await analyzer.processPendingJobs(10_000);
+    const summary = await analyzer.processPendingJobs(1000);
     logger.log(
       `Divar post analysis completed: processed=${summary.processed} failed=${summary.failed}.`,
     );

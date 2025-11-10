@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import type { DivarCategory } from '@/types/divar-category';
+import { CategoryFiltersPreview } from './category-filters-preview';
 
 export function DashboardSearchFilterPanel() {
   const t = useTranslations('dashboard.filters');
@@ -788,6 +789,7 @@ export function DashboardSearchFilterPanel() {
               </Dialog>
               <p className="text-xs text-muted-foreground">{districtHelperText}</p>
             </div>
+            <CategoryFiltersPreview categorySlug={categorySlug} locale={locale} isRTL={isRTL} />
           </div>
         </div>
       </div>

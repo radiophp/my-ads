@@ -6,6 +6,8 @@ import counterReducer from '@/features/counter/counterSlice';
 import authReducer from '@/features/auth/authSlice';
 import searchFilterReducer, {
   type SearchFilterState,
+  type CategoryFilterBuckets,
+  type CategoryFilterValue,
   searchFilterInitialState,
 } from '@/features/search-filter/searchFilterSlice';
 
@@ -77,6 +79,7 @@ const loadSearchFilterState = (): SearchFilterState => {
         slug: categorySlug,
         depth: categoryDepth,
       },
+      categoryFilters: parseCategoryFilters(parsed.categoryFilters),
     };
   } catch {
     return searchFilterInitialState;
@@ -124,3 +127,68 @@ if (typeof window !== 'undefined') {
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function parseCategoryFilters(input: unknown): CategoryFilterBuckets {
+  if (!isRecord(input)) {
+    return {};
+  }
+  const result: CategoryFilterBuckets = {};
+  for (const [slug, value] of Object.entries(input)) {
+    if (typeof slug !== 'string' || !isRecord(value)) {
+      continue;
+    }
+    const normalized: Record<string, CategoryFilterValue> = {};
+    for (const [key, raw] of Object.entries(value)) {
+      if (typeof key !== 'string') {
+        continue;
+      }
+      const parsed = parseCategoryFilterValue(raw);
+      if (parsed) {
+        normalized[key] = parsed;
+      }
+    }
+    if (Object.keys(normalized).length > 0) {
+      result[slug] = normalized;
+    }
+  }
+  return result;
+}
+
+function parseCategoryFilterValue(raw: unknown): CategoryFilterValue | null {
+  if (!isRecord(raw) || typeof raw.kind !== 'string') {
+    return null;
+  }
+  switch (raw.kind) {
+    case 'numberRange': {
+      const min = typeof raw.min === 'number' && Number.isFinite(raw.min) ? raw.min : undefined;
+      const max = typeof raw.max === 'number' && Number.isFinite(raw.max) ? raw.max : undefined;
+      if (min === undefined && max === undefined) {
+        return null;
+      }
+      return { kind: 'numberRange', min, max };
+    }
+    case 'multiSelect': {
+      if (!Array.isArray(raw.values)) {
+        return null;
+      }
+      const values = raw.values.filter((value): value is string => typeof value === 'string');
+      return values.length > 0 ? { kind: 'multiSelect', values } : null;
+    }
+    case 'singleSelect': {
+      const value = typeof raw.value === 'string' && raw.value.length > 0 ? raw.value : null;
+      return value ? { kind: 'singleSelect', value } : null;
+    }
+    case 'boolean': {
+      if (typeof raw.value !== 'boolean') {
+        return null;
+      }
+      return raw.value ? { kind: 'boolean', value: true } : null;
+    }
+    default:
+      return null;
+  }
+}

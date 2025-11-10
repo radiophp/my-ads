@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, Logger } from '@nestjs/common';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '@app/modules/auth/guards/jwt-auth.guard';
 import { DivarPostsAdminService } from './divar-posts-admin.service';
@@ -8,6 +8,8 @@ import type { PaginatedDivarPostsDto } from './dto/divar-post.dto';
 @UseGuards(JwtAuthGuard)
 @ApiTags('divar-posts')
 export class DivarPostsController {
+  private readonly logger = new Logger(DivarPostsController.name);
+
   constructor(private readonly divarPostsService: DivarPostsAdminService) {}
 
   @Get()
@@ -23,6 +25,7 @@ export class DivarPostsController {
     @Query('districtIds') districtIdsParam?: string,
     @Query('categorySlug') categorySlug?: string,
     @Query('categoryDepth') categoryDepthParam?: string,
+    @Query('filters') filtersParam?: string,
   ): Promise<PaginatedDivarPostsDto> {
     const parsedLimit = Number(limitParam);
     const limit = Number.isFinite(parsedLimit) ? parsedLimit : undefined;
@@ -41,6 +44,18 @@ export class DivarPostsController {
           .filter((value) => Number.isFinite(value))
       : undefined;
 
+    let parsedFilters: Record<string, unknown> | undefined;
+    if (filtersParam && filtersParam.length > 2) {
+      try {
+        const decoded = JSON.parse(filtersParam) as Record<string, unknown>;
+        if (decoded && typeof decoded === 'object' && !Array.isArray(decoded)) {
+          parsedFilters = decoded;
+        }
+      } catch (error) {
+        this.logger.warn(`Ignoring invalid filters payload: ${(error as Error).message}`);
+      }
+    }
+
     return this.divarPostsService.listNormalizedPosts({
       cursor,
       limit,
@@ -49,6 +64,7 @@ export class DivarPostsController {
       districtIds: districtIds && districtIds.length > 0 ? districtIds : undefined,
       categorySlug: categorySlug?.trim() ? categorySlug.trim() : undefined,
       categoryDepth: Number.isFinite(parsedDepth) ? parsedDepth : undefined,
+      filters: parsedFilters,
     });
   }
 }

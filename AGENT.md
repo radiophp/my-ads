@@ -15,6 +15,7 @@ This repository hosts the **My Ads** NestJS backend (`server/`). Key operational
   - The UI persists the category filter as `searchFilter.categorySelection` (an object with `slug`/`depth`). Always dispatch `setCategorySelection({ slug, depth })` so the dashboard rail and API params stay in sync.
   - Location filters cascade: `provinceId` → `citySelection` (multi-select) → `districtSelection` (enabled whenever at least one city is selected; multi-city mode prefixes district labels with the city name). Province changes reset both cities and districts; changing city selections resets districts as well.
   - `/divar-posts` accepts `categorySlug`, `categoryDepth`, and optional `districtIds`. The service maps categories to `cat1`/`cat2`/`cat3` (or the canonical slug) and filters `districtId` when provided. Every call logs the Prisma `where` clause, cursor, and limit—search for `DivarPosts query -> ...` before assuming “no data”.
+  - For the full widget DSL that powers per-category filters, see `docs/category-filters.md`.
 
 - **Husky pre-commit hook**
   - Runs `lint-staged`, `npm run typecheck`, and targeted Jest tests. Expect hook failures if ESLint or tests fail; fix and re-stage.

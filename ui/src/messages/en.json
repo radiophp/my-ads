@@ -198,6 +198,29 @@
         "all": "All categories",
         "loading": "Loading categories…",
         "empty": "No categories are available."
+      },
+      "categoryFilters": {
+        "title": "Category filters",
+        "selectCategory": "Select a category to load its filters.",
+        "loading": "Loading filters…",
+        "error": "Unable to load filters right now.",
+        "empty": "No filters are available for this category yet.",
+        "lastSynced": "Last synced {value}",
+        "widgetFallback": "",
+        "widgetLabels": {
+          "filter_price": "Price",
+          "filter_size": "Size",
+          "filter_price_per_square": "Price per area"
+        },
+        "fieldLabel": "Field: {key}",
+        "clear": "Clear filters",
+        "activeCount": "{count, plural, one {# active filter} other {# active filters}}",
+        "singleSelectPlaceholder": "Choose an option",
+        "unsupportedField": "This filter isn't supported yet ({type}).",
+        "numberRange": {
+          "from": "Min",
+          "to": "Max"
+        }
       }
     },
     "posts": {

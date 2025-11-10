@@ -198,6 +198,29 @@
       "all": "همه دسته‌ها",
       "loading": "در حال بارگذاری دسته‌ها…",
       "empty": "هنوز دسته‌ای فعال نشده است."
+    },
+    "categoryFilters": {
+      "title": "فیلترهای اختصاصی دسته",
+      "selectCategory": "برای نمایش فیلترها یک دسته را انتخاب کنید.",
+      "loading": "در حال بارگذاری فیلترها…",
+      "error": "امکان بارگذاری فیلترها وجود ندارد.",
+      "empty": "برای این دسته فیلتری ثبت نشده است.",
+      "lastSynced": "آخرین به‌روزرسانی {value}",
+      "widgetFallback": "",
+      "widgetLabels": {
+        "filter_price": "قیمت",
+        "filter_size": "متراژ",
+        "filter_price_per_square": "قیمت بر مساحت"
+      },
+      "fieldLabel": "شناسه فیلتر: {key}",
+      "clear": "حذف فیلترها",
+      "activeCount": "{count} فیلتر فعال",
+      "singleSelectPlaceholder": "یک گزینه را انتخاب کنید",
+      "unsupportedField": "این فیلتر هنوز پشتیبانی نمی‌شود ({type}).",
+      "numberRange": {
+        "from": "از",
+        "to": "تا"
+      }
     }
   },
     "posts": {

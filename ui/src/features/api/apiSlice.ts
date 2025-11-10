@@ -312,6 +312,13 @@ export const apiSlice = createApi({
         'DivarCategoryFilters',
       ],
     }),
+    getPublicDivarCategoryFilter: builder.query<DivarCategoryFilterDetail, string>({
+      query: (slug) => `/public/divar-categories/${slug}/filters`,
+      providesTags: (result, error, slug) => [
+        { type: 'DivarCategoryFilters', id: `public-${slug}` },
+        'DivarCategoryFilters',
+      ],
+    }),
     getPostsToAnalyze: builder.query<PaginatedPostsToAnalyze, number | void>({
       query: (page = 1) => `/admin/divar-posts/to-analyze?page=${page}`,
       providesTags: (result) =>
@@ -332,6 +339,7 @@ export const apiSlice = createApi({
         districtIds?: number[];
         categorySlug?: string | null;
         categoryDepth?: number | null;
+        filters?: Record<string, unknown>;
       } | void
     >({
       query: (params) => {
@@ -356,6 +364,9 @@ export const apiSlice = createApi({
         }
         if (typeof params?.categoryDepth === 'number') {
           searchParams.set('categoryDepth', String(params.categoryDepth));
+        }
+        if (params?.filters && Object.keys(params.filters).length > 0) {
+          searchParams.set('filters', JSON.stringify(params.filters));
         }
         const qs = searchParams.toString();
         return `/divar-posts${qs ? `?${qs}` : ''}`;
@@ -399,6 +410,7 @@ export const {
   useUpdateDivarCategoryAllowPostingMutation,
   useGetDivarCategoryFiltersQuery,
   useGetDivarCategoryFilterQuery,
+  useGetPublicDivarCategoryFilterQuery,
   useGetAdminDashboardStatsQuery,
   useGetPostsToAnalyzeQuery,
   useGetDivarPostsQuery,

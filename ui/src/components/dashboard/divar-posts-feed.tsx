@@ -18,6 +18,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useLazyGetDivarPostsQuery } from '@/features/api/apiSlice';
 import type { DivarPostSummary } from '@/types/divar-posts';
 import { useAppSelector } from '@/lib/hooks';
+import type { CategoryFilterValue } from '@/features/search-filter/searchFilterSlice';
 
 export function DivarPostsFeed(): JSX.Element {
   const t = useTranslations('dashboard.posts');
@@ -31,7 +32,13 @@ export function DivarPostsFeed(): JSX.Element {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [fetchPosts] = useLazyGetDivarPostsQuery();
-  const { provinceId, citySelection, districtSelection, categorySelection } = useAppSelector(
+  const {
+    provinceId,
+    citySelection,
+    districtSelection,
+    categorySelection,
+    categoryFilters,
+  } = useAppSelector(
     (state) => state.searchFilter,
   );
   const categorySlug = categorySelection.slug;
@@ -52,6 +59,17 @@ export function DivarPostsFeed(): JSX.Element {
     return districtSelection.districtIds.length > 0 ? [...districtSelection.districtIds] : undefined;
   }, [districtSelection.mode, districtSelection.districtIds]);
 
+  const categoryFilterPayload = useMemo(() => {
+    if (!categorySelection.slug) {
+      return undefined;
+    }
+    const activeFilters = categoryFilters[categorySelection.slug];
+    if (!activeFilters) {
+      return undefined;
+    }
+    return serializeCategoryFilterValues(activeFilters);
+  }, [categorySelection.slug, categoryFilters]);
+
   const filterArgs = useMemo(() => {
     const normalizedProvince = typeof provinceId === 'number' ? provinceId : undefined;
     const normalizedCities =
@@ -64,8 +82,16 @@ export function DivarPostsFeed(): JSX.Element {
       districtIds: normalizedDistricts,
       categorySlug: categorySlug ?? undefined,
       categoryDepth: typeof categoryDepth === 'number' ? categoryDepth : undefined,
+      filters: categoryFilterPayload,
     };
-  }, [provinceId, cityFilterIds, districtFilterIds, categorySlug, categoryDepth]);
+  }, [
+    provinceId,
+    cityFilterIds,
+    districtFilterIds,
+    categorySlug,
+    categoryDepth,
+    categoryFilterPayload,
+  ]);
 
   useEffect(() => {
     let isMounted = true;
@@ -81,6 +107,7 @@ export function DivarPostsFeed(): JSX.Element {
       districtIds: filterArgs.districtIds,
       categorySlug: filterArgs.categorySlug,
       categoryDepth: filterArgs.categoryDepth,
+      filters: filterArgs.filters,
     })
       .unwrap()
       .then((result) => {
@@ -118,6 +145,7 @@ export function DivarPostsFeed(): JSX.Element {
         districtIds: filterArgs.districtIds,
         categorySlug: filterArgs.categorySlug,
         categoryDepth: filterArgs.categoryDepth,
+        filters: filterArgs.filters,
       }).unwrap();
       setPosts((prev) => [...prev, ...result.items]);
       setNextCursor(result.nextCursor);
@@ -570,4 +598,52 @@ export function DivarPostsFeed(): JSX.Element {
       </Dialog>
     </Card>
   );
+}
+
+function serializeCategoryFilterValues(
+  filters: Record<string, CategoryFilterValue>,
+): Record<string, unknown> | undefined {
+  const payload: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(filters)) {
+    if (!value) {
+      continue;
+    }
+    switch (value.kind) {
+      case 'numberRange': {
+        const range: Record<string, number> = {};
+        if (isFiniteNumber(value.min)) {
+          range.min = value.min;
+        }
+        if (isFiniteNumber(value.max)) {
+          range.max = value.max;
+        }
+        if (Object.keys(range).length > 0) {
+          payload[key] = range;
+        }
+        break;
+      }
+      case 'multiSelect':
+        if (value.values.length > 0) {
+          payload[key] = value.values;
+        }
+        break;
+      case 'singleSelect':
+        if (typeof value.value === 'string' && value.value.length > 0) {
+          payload[key] = value.value;
+        }
+        break;
+      case 'boolean':
+        if (value.value === true) {
+          payload[key] = true;
+        }
+        break;
+      default:
+        break;
+    }
+  }
+  return Object.keys(payload).length > 0 ? payload : undefined;
+}
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
 }

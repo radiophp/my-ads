@@ -140,6 +140,7 @@ const PERSIAN_NUMBER_WORDS: Record<string, number> = {
   هشتاد: 80,
   نود: 90,
   صد: 100,
+  ربع: 0.25,
 };
 
 const ROOM_WORD_MAP: Record<string, number> = {
@@ -181,6 +182,9 @@ const RELATIVE_UNITS_MS: Record<string, number> = {
   هفته: 7 * 24 * 60 * 60 * 1000,
   ماه: 30 * 24 * 60 * 60 * 1000,
   سال: 365 * 24 * 60 * 60 * 1000,
+  ربع: 15 * 60 * 1000,
+  'ربع ساعت': 15 * 60 * 1000,
+  ربعساعت: 15 * 60 * 1000,
 };
 
 const normalizeLabel = (value: string): string =>
@@ -783,13 +787,15 @@ class ParserState {
     }
 
     const normalizedDigits = this.replacePersianDigits(relativePart);
-    const relativeMatch = normalizedDigits.match(
-      /(?:(\d+(?:\.\d+)?)|([^\s]+))\s+(ثانیه|ثانيه|دقیقه|دقيقه|ساعت|روز|هفته|ماه|سال)/,
+    const cleanedRelative = normalizedDigits.replace(/[\u200c\u200e\u200f]/g, ' ');
+    const relativeMatch = cleanedRelative.match(
+      /(?:(\d+(?:\.\d+)?)|([^\s]+))\s+(ثانیه|ثانيه|دقیقه|دقيقه|ساعت|روز|هفته|ماه|سال|ربع(?:\s*ساعت)?)/,
     );
 
     if (!relativeMatch) {
-      if (normalizedDigits.includes('لحظه')) {
-        return 60 * 1000;
+      const relativeTokens = ['لحظه', 'لحظات', 'لحظه‌ای', 'دقایقی', 'دقايقي'];
+      if (relativeTokens.some((token) => cleanedRelative.includes(token))) {
+        return 5 * 60 * 1000;
       }
       return null;
     }
@@ -801,7 +807,8 @@ class ParserState {
       return null;
     }
 
-    const unitMs = RELATIVE_UNITS_MS[unitKey];
+    const sanitizedUnitKey = unitKey.replace(/\s+/g, '');
+    const unitMs = RELATIVE_UNITS_MS[unitKey] ?? RELATIVE_UNITS_MS[sanitizedUnitKey];
     if (!unitMs) {
       return null;
     }

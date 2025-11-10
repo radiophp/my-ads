@@ -35,6 +35,7 @@ import { PackagesModule } from './modules/packages/packages.module';
 import { DivarCategoriesModule } from './modules/divar-categories/divar-categories.module';
 import { DistrictsModule } from './modules/districts/districts.module';
 import { DivarPostsModule } from './modules/divar-posts/divar-posts.module';
+import schedulerConfig from './platform/config/scheduler.config';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { DivarPostsModule } from './modules/divar-posts/divar-posts.module';
         loggerConfig,
         healthConfig,
         otpConfig,
+        schedulerConfig,
       ],
     }),
     LoggingModule,

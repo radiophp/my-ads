@@ -6,6 +6,37 @@ import type { PaginatedDivarPostsDto } from './dto/divar-post.dto';
 
 const PAGE_SIZE_LIMIT = 100;
 
+const DIVAR_POST_SUMMARY_SELECT = {
+  id: true,
+  externalId: true,
+  title: true,
+  displayTitle: true,
+  seoTitle: true,
+  description: true,
+  priceTotal: true,
+  rentAmount: true,
+  pricePerSquare: true,
+  area: true,
+  cityName: true,
+  districtName: true,
+  provinceName: true,
+  categorySlug: true,
+  businessType: true,
+  publishedAt: true,
+  publishedAtJalali: true,
+  createdAt: true,
+  permalink: true,
+  medias: {
+    orderBy: { position: 'asc' },
+    select: {
+      id: true,
+      url: true,
+      thumbnailUrl: true,
+      alt: true,
+    },
+  },
+} satisfies Prisma.DivarPostSelect;
+
 const NUMBER_RANGE_FIELD_MAP = {
   price: { column: 'priceTotal', type: 'decimal' },
   price_per_square: { column: 'pricePerSquare', type: 'decimal' },
@@ -128,17 +159,13 @@ export class DivarPostsAdminService {
     if (options.filters) {
       this.applyCategoryFilters(where, options.filters);
     }
-    const queryArgs: Prisma.DivarPostFindManyArgs = {
+    const queryArgs = {
       orderBy: [
         { publishedAt: { sort: 'desc', nulls: 'last' } },
         { createdAt: 'desc' },
         { id: 'desc' },
       ],
-      include: {
-        medias: {
-          orderBy: { position: 'asc' },
-        },
-      },
+      select: DIVAR_POST_SUMMARY_SELECT,
       take: take + 1,
       where,
       ...(options.cursor
@@ -147,7 +174,7 @@ export class DivarPostsAdminService {
             cursor: { id: options.cursor },
           }
         : {}),
-    };
+    } satisfies Prisma.DivarPostFindManyArgs;
 
     this.logger.debug(
       `DivarPosts query -> where: ${JSON.stringify(queryArgs.where)}, cursor: ${
@@ -155,14 +182,7 @@ export class DivarPostsAdminService {
       }, limit: ${options.limit}, filters: ${options.filters ? JSON.stringify(options.filters) : 'none'}`,
     );
 
-    const records = await this.prisma.divarPost.findMany({
-      ...queryArgs,
-      include: {
-        medias: {
-          orderBy: { position: 'asc' },
-        },
-      },
-    });
+    const records = await this.prisma.divarPost.findMany(queryArgs);
     const hasMore = records.length > take;
     const items = hasMore ? records.slice(0, take) : records;
 

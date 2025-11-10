@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Cron } from '@nestjs/schedule';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '@app/platform/database/prisma.service';
 import {
@@ -8,12 +8,35 @@ import {
   type PostToReadQueue,
   type Prisma,
 } from '@prisma/client';
+import { schedulerCronExpressions } from '@app/platform/config/scheduler.config';
 
 const DIVAR_POST_DETAILS_URL = 'https://api.divar.ir/v8/posts-v2/web';
 const DEFAULT_BATCH_SIZE = 2;
 const MAX_ATTEMPTS = 5;
 const MIN_BATCH_INTERVAL_MS = 1000;
 const DEFAULT_RATE_LIMIT_SLEEP_MS = 5000;
+const BROWSER_USER_AGENTS: readonly string[] = [
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.86 Safari/537.36',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.86 Safari/537.36',
+  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.70 Safari/537.36',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Edg/131.0.2903.51 Safari/537.36',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15',
+  'Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1',
+  'Mozilla/5.0 (iPad; CPU OS 18_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1',
+  'Mozilla/5.0 (Linux; Android 14; Pixel 8 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.70 Mobile Safari/537.36',
+  'Mozilla/5.0 (Linux; Android 14; SM-S921B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.70 Mobile Safari/537.36',
+  'Mozilla/5.0 (Linux; Android 13; SM-A536E) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.6723.70 Mobile Safari/537.36',
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:131.0) Gecko/20100101 Firefox/131.0',
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 14.5; rv:131.0) Gecko/20100101 Firefox/131.0',
+  'Mozilla/5.0 (X11; Linux x86_64; rv:131.0) Gecko/20100101 Firefox/131.0',
+  'Mozilla/5.0 (Linux; Android 14; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.86 Mobile Safari/537.36',
+  'Mozilla/5.0 (Linux; Android 13; Mi 11) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.70 Mobile Safari/537.36',
+  'Mozilla/5.0 (Windows NT 11.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.86 Safari/537.36',
+  'Mozilla/5.0 (Macintosh; Apple Silicon Mac OS X 14_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15',
+  'Mozilla/5.0 (iPhone; CPU iPhone OS 17_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Mobile/15E148 Safari/604.1',
+  'Mozilla/5.0 (Linux; Android 12; Redmi Note 11) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.6668.100 Mobile Safari/537.36',
+  'Mozilla/5.0 (Linux; Android 13; ONEPLUS A6013) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.6723.69 Mobile Safari/537.36',
+];
 
 class DivarHttpError extends Error {
   constructor(
@@ -55,6 +78,9 @@ export class DivarPostFetchService {
   private readonly sessionCookie?: string;
   private readonly batchSize: number;
   private readonly requestTimeoutMs: number;
+  private fetchRunning = false;
+  private readonly schedulerEnabled: boolean;
+  private readonly userAgents = BROWSER_USER_AGENTS;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -66,14 +92,27 @@ export class DivarPostFetchService {
       DEFAULT_BATCH_SIZE;
     this.requestTimeoutMs =
       this.configService.get<number>('DIVAR_POST_FETCH_TIMEOUT_MS', { infer: true }) ?? 15000;
+    this.schedulerEnabled =
+      this.configService.get<boolean>('scheduler.enabled', { infer: true }) ?? false;
   }
 
-  @Cron(CronExpression.EVERY_MINUTE, {
+  @Cron(schedulerCronExpressions.divarFetch, {
     name: 'divar-post-fetch',
-    disabled: true, // Enable once cron should run automatically.
   })
   async scheduledFetch(): Promise<void> {
-    await this.fetchNextPosts();
+    if (!this.schedulerEnabled) {
+      return;
+    }
+    if (this.fetchRunning) {
+      this.logger.warn('Skipping fetch cron tick because a previous run is still in progress.');
+      return;
+    }
+    this.fetchRunning = true;
+    try {
+      await this.fetchNextPosts();
+    } finally {
+      this.fetchRunning = false;
+    }
   }
 
   async fetchNextPosts(): Promise<{ attempted: number; succeeded: number; failed: number }> {
@@ -196,12 +235,14 @@ export class DivarPostFetchService {
   private async fetchPostPayload(token: string): Promise<unknown> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), this.requestTimeoutMs);
+    const userAgent = this.pickUserAgent();
+    await this.delayJitter();
 
     try {
       const response = await fetch(`${DIVAR_POST_DETAILS_URL}/${token}`, {
         method: 'GET',
         headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; MyAdsBot/1.0)',
+          'User-Agent': userAgent,
           Accept: 'application/json, text/plain, */*',
           Referer: 'https://divar.ir/',
           Origin: 'https://divar.ir',
@@ -248,5 +289,20 @@ export class DivarPostFetchService {
 
   private sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  private pickUserAgent(): string {
+    if (this.userAgents.length === 0) {
+      return 'Mozilla/5.0 (compatible; MyAdsBot/1.0)';
+    }
+    const index = Math.floor(Math.random() * this.userAgents.length);
+    return this.userAgents[index] ?? this.userAgents[0];
+  }
+
+  private async delayJitter(): Promise<void> {
+    const min = 50;
+    const max = 150;
+    const jitter = Math.floor(Math.random() * (max - min + 1)) + min;
+    await this.sleep(jitter);
   }
 }

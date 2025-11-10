@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Cron } from '@nestjs/schedule';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '@app/platform/database/prisma.service';
 import {
@@ -14,6 +14,7 @@ import {
   type ParsedAttribute,
   type ParsedMedia,
 } from './divar-post-parser';
+import { schedulerCronExpressions } from '@app/platform/config/scheduler.config';
 
 const MAX_ANALYZE_ATTEMPTS = 5;
 const RATE_LIMIT_BATCH_SIZE = 50;
@@ -39,6 +40,8 @@ export class DivarPostAnalyzeService {
   private readonly parser = new DivarPostParser();
   private readonly batchSize: number;
   private readonly districtCache = new Map<string, number | null>();
+  private analyzeRunning = false;
+  private readonly schedulerEnabled: boolean;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -46,11 +49,25 @@ export class DivarPostAnalyzeService {
   ) {
     this.batchSize =
       configService.get<number>('DIVAR_POST_ANALYZE_BATCH_SIZE', { infer: true }) ?? 100;
+    this.schedulerEnabled =
+      configService.get<boolean>('scheduler.enabled', { infer: true }) ?? false;
   }
 
-  @Cron(CronExpression.EVERY_MINUTE, { name: 'divar-post-analyze', disabled: true })
+  @Cron(schedulerCronExpressions.divarAnalyze, { name: 'divar-post-analyze' })
   async scheduledAnalyze(): Promise<void> {
-    await this.processPendingJobs();
+    if (!this.schedulerEnabled) {
+      return;
+    }
+    if (this.analyzeRunning) {
+      this.logger.warn('Skipping analyze cron tick because a previous run is still in progress.');
+      return;
+    }
+    this.analyzeRunning = true;
+    try {
+      await this.processPendingJobs();
+    } finally {
+      this.analyzeRunning = false;
+    }
   }
 
   async processPendingJobs(batchSize = this.batchSize): Promise<ProcessSummary> {
@@ -320,12 +337,12 @@ export class DivarPostAnalyzeService {
       return new Date(baseTimestamp.getTime() - relativeMs);
     }
 
-    if (parsed.jalaliGregorianDate) {
-      return parsed.jalaliGregorianDate;
-    }
-
     if (baseTimestamp && relativeMs !== null) {
       return new Date(baseTimestamp.getTime() - relativeMs);
+    }
+
+    if (parsed.jalaliGregorianDate) {
+      return parsed.jalaliGregorianDate;
     }
 
     return null;

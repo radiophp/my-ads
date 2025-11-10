@@ -293,6 +293,10 @@ All configuration is validated at startup (`platform/config/environment.validati
 | `OTP_DIGITS` | `6` | Number of digits generated for OTP codes. |
 | `OTP_SENDER_BASE_URL` | — | Optional HTTP endpoint invoked to deliver OTP codes. |
 | `OTP_SENDER_API_KEY` | — | Optional bearer token used when calling the OTP provider. |
+| `ENABLE_CRON_JOBS` | `false` | Set to `true` to allow scheduled jobs to execute (used by `npm run cron:scheduler`). |
+| `DIVAR_HARVEST_CRON` | `0 */30 * * * *` | Cron expression controlling the Divar harvest scheduler (defaults to every 30 minutes). |
+| `DIVAR_FETCH_CRON` | `*/1 * * * *` | Cron expression for the Divar post fetch scheduler (defaults to every minute). |
+| `DIVAR_ANALYZE_CRON` | `*/1 * * * *` | Cron expression for the Divar post analyze scheduler (defaults to every minute). |
 
 Environment variables not listed above are either optional feature toggles or inherit defaults inside module configuration files.
 

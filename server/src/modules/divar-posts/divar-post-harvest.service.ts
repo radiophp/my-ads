@@ -1,14 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Cron } from '@nestjs/schedule';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '@app/platform/database/prisma.service';
-import { QueueLocationScope, type Prisma } from '@prisma/client';
+import { QueueLocationScope, PostQueueStatus, type Prisma } from '@prisma/client';
+import { schedulerCronExpressions } from '@app/platform/config/scheduler.config';
 
 const DIVAR_SEARCH_URL = 'https://api.divar.ir/v8/postlist/w/search';
 const PAGINATION_TYPE = 'type.googleapis.com/post_list.PaginationData';
 const SERVER_PAYLOAD_TYPE = 'type.googleapis.com/widgets.SearchData.ServerPayload';
 const MAX_REQUESTS_PER_SECOND = 3;
 const RATE_LIMIT_WINDOW_MS = 1000;
+const PUBLISH_REACTIVATION_WINDOW_MS = 60 * 60 * 1000;
 
 type PaginationPayload = {
   '@type': string;
@@ -66,6 +68,8 @@ export class DivarPostHarvestService {
   private readonly requestDelayMs: number;
   private readonly requestTimeoutMs: number;
   private readonly requestTimestamps: number[] = [];
+  private harvestRunning = false;
+  private readonly schedulerEnabled: boolean;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -79,14 +83,27 @@ export class DivarPostHarvestService {
       this.configService.get<number>('DIVAR_HARVEST_DELAY_MS', { infer: true }) ?? 750;
     this.requestTimeoutMs =
       this.configService.get<number>('DIVAR_HARVEST_TIMEOUT_MS', { infer: true }) ?? 15000;
+    this.schedulerEnabled =
+      this.configService.get<boolean>('scheduler.enabled', { infer: true }) ?? false;
   }
 
-  @Cron(CronExpression.EVERY_30_MINUTES, {
+  @Cron(schedulerCronExpressions.divarHarvest, {
     name: 'divar-post-harvest',
-    disabled: true, // Remove "disabled" when you want the cronjob to run automatically.
   })
   async scheduledHarvest(): Promise<void> {
-    await this.harvestAllowedScopes();
+    if (!this.schedulerEnabled) {
+      return;
+    }
+    if (this.harvestRunning) {
+      this.logger.warn('Skipping harvest cron tick because a previous run is still in progress.');
+      return;
+    }
+    this.harvestRunning = true;
+    try {
+      await this.harvestAllowedScopes();
+    } finally {
+      this.harvestRunning = false;
+    }
   }
 
   async harvestAllowedScopes(): Promise<HarvestSummary> {
@@ -212,12 +229,11 @@ export class DivarPostHarvestService {
     category: CategoryScope,
     location: LocationScope,
   ): Promise<number> {
-    let page = 1;
+    let page = 0;
     let lastPostDate: string | null = null;
     let cumulativeWidgets = 50;
     let inserted = 0;
-
-    while (!this.maxPagesPerCombo || page <= this.maxPagesPerCombo) {
+    while (!this.maxPagesPerCombo || page < this.maxPagesPerCombo) {
       this.logger.log(
         `Divar fetch start | category=${category.slug} (${category.id}, ${category.name}) | ${location.scope === QueueLocationScope.PROVINCE ? 'province' : 'city'}=${location.slug} (${location.apiId}, ${location.name}) | page=${page}`,
       );
@@ -228,6 +244,10 @@ export class DivarPostHarvestService {
         cumulativeWidgets,
         lastPostDate,
       });
+      const curlCommand = this.formatCurlCommand(body);
+      this.logger.log(
+        `Divar fetch curl | category=${category.slug} | location=${location.label} | page=${page} | ${curlCommand}`,
+      );
 
       const payload = await this.callDivarSearch(body);
       const postRows = this.extractPostRows(payload);
@@ -241,6 +261,7 @@ export class DivarPostHarvestService {
         category,
         location,
       );
+      const queueItemLookup = new Map(queueItems.map((item) => [item.externalId, item]));
 
       if (logEntries.length > 0) {
         this.logger.log(
@@ -256,24 +277,89 @@ export class DivarPostHarvestService {
         ),
       );
 
-      let duplicatesInDb = new Set<string>();
-      if (queueItems.length > 0) {
+      const reactivatedTokens = new Set<string>();
+      if (queueItems.length > 0 && tokensForInsert.length > 0) {
         const existing = await this.prisma.postToReadQueue.findMany({
           where: {
             source: 'DIVAR',
             externalId: { in: tokensForInsert },
           },
-          select: { externalId: true },
+          select: { id: true, externalId: true, payload: true, status: true },
         });
-        duplicatesInDb = new Set(existing.map((row) => row.externalId));
-        duplicatesInDb.forEach((token) =>
-          this.logger.warn(
-            `Skipped duplicate token already in queue | token=${token} | category=${category.slug} | location=${location.label}`,
-          ),
-        );
+
+        if (existing.length > 0) {
+          const publishTimestamps = await this.prisma.divarPost.findMany({
+            where: { externalId: { in: existing.map((record) => record.externalId) } },
+            select: { externalId: true, publishedAt: true },
+          });
+          const publishLookup = new Map(
+            publishTimestamps.map((record) => [record.externalId, record.publishedAt ?? null]),
+          );
+          const now = new Date();
+          const threshold = now.getTime() - PUBLISH_REACTIVATION_WINDOW_MS;
+
+          const eligible = existing.filter((record) => {
+            if (record.status === PostQueueStatus.PROCESSING) {
+              this.logger.debug(
+                `Duplicate token currently processing, skipping reactivation | token=${record.externalId} | category=${category.slug} | location=${location.label}`,
+              );
+              return false;
+            }
+            const publishedAt = publishLookup.get(record.externalId);
+            return Boolean(publishedAt && publishedAt.getTime() <= threshold);
+          });
+
+          const skippedDueToRecency = existing
+            .filter((record) => !eligible.includes(record))
+            .map((record) => record.externalId);
+          skippedDueToRecency.forEach((token) =>
+            this.logger.debug(
+              `Duplicate token still fresh (published <2h) | token=${token} | category=${category.slug} | location=${location.label}`,
+            ),
+          );
+
+          if (eligible.length > 0) {
+            await this.prisma.$transaction(
+              eligible.map((record) => {
+                const latest = queueItemLookup.get(record.externalId);
+                const updateData: Prisma.PostToReadQueueUncheckedUpdateInput = {
+                  status: PostQueueStatus.PENDING,
+                  requestedAt: now,
+                };
+
+                if (latest) {
+                  updateData.categoryId = latest.categoryId ?? null;
+                  updateData.categorySlug = latest.categorySlug;
+                  updateData.locationScope = latest.locationScope;
+                  updateData.provinceId = latest.provinceId ?? null;
+                  updateData.cityId = latest.cityId ?? null;
+                  if (latest.payload !== undefined) {
+                    updateData.payload = latest.payload as Prisma.InputJsonValue;
+                  }
+                } else if (record.payload) {
+                  updateData.payload = record.payload as Prisma.InputJsonValue;
+                }
+
+                return this.prisma.postToReadQueue.update({
+                  where: { id: record.id },
+                  data: updateData,
+                });
+              }),
+            );
+
+            eligible.forEach((record) => {
+              reactivatedTokens.add(record.externalId);
+              this.logger.log(
+                `Reactivated token for refetch | token=${record.externalId} | category=${category.slug} | location=${location.label}`,
+              );
+            });
+          }
+        }
       }
 
-      const filteredQueueItems = queueItems.filter((item) => !duplicatesInDb.has(item.externalId));
+      const filteredQueueItems = queueItems.filter(
+        (item) => !reactivatedTokens.has(item.externalId),
+      );
 
       if (filteredQueueItems.length > 0) {
         const result = await this.prisma.postToReadQueue.createMany({
@@ -483,6 +569,25 @@ export class DivarPostHarvestService {
 
   private sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  private formatCurlCommand(body: Record<string, unknown>): string {
+    const headers = [
+      `-X POST '${DIVAR_SEARCH_URL}'`,
+      `-H 'User-Agent: Mozilla/5.0 (compatible; MyAdsBot/1.0)'`,
+      `-H 'Content-Type: application/json'`,
+      `-H 'Referer: https://divar.ir/'`,
+      `-H 'Origin: https://divar.ir'`,
+    ];
+    if (this.sessionCookie) {
+      headers.push(`-H 'Cookie: <DIVAR_SESSION_COOKIE>'`);
+    }
+    const payload = JSON.stringify(body);
+    return `curl ${headers.join(' ')} --data-raw '${this.escapeForCurl(payload)}'`;
+  }
+
+  private escapeForCurl(value: string): string {
+    return value.replace(/'/g, `'"'"'`);
   }
 
   private async enforceRateLimit(): Promise<void> {

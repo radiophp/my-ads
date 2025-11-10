@@ -2,7 +2,7 @@
 
 import { skipToken } from '@reduxjs/toolkit/query';
 import { useMemo, type ReactNode } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, type TranslationValues } from 'next-intl';
 
 import { useGetPublicDivarCategoryFilterQuery } from '@/features/api/apiSlice';
 import { Button } from '@/components/ui/button';
@@ -84,7 +84,7 @@ const SUPPORTED_NUMBER_RANGE_KEYS = new Set([
   'land_area',
 ]);
 
-const SUPPORTED_MULTI_SELECT_KEYS = new Set(['business-type']);
+const SUPPORTED_MULTI_SELECT_KEYS = new Set(['business-type', 'addon_service_tags']);
 
 const SUPPORTED_SINGLE_SELECT_KEYS = new Set(['recent_ads']);
 
@@ -96,7 +96,7 @@ const TRANSLATED_WIDGET_LABEL_KEYS = ['filter_price', 'filter_size', 'filter_pri
 type TranslatedWidgetLabelKey = (typeof TRANSLATED_WIDGET_LABEL_KEYS)[number];
 const TRANSLATED_WIDGET_LABEL_KEY_SET = new Set<TranslatedWidgetLabelKey>(TRANSLATED_WIDGET_LABEL_KEYS);
 
-type TranslateFn = (key: string, values?: Record<string, unknown>) => string;
+type TranslateFn = (key: string, values?: TranslationValues) => string;
 
 export function CategoryFiltersPreview({ categorySlug, locale, isRTL }: CategoryFiltersPreviewProps) {
   const t = useTranslations('dashboard.filters');

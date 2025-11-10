@@ -321,6 +321,7 @@ class ParserState {
     this.extractAnalytics();
     this.extractCityReference();
     this.extractWebengage();
+    this.extractAddonServiceTags();
     this.processSections();
     return this.buildResult();
   }
@@ -458,6 +459,26 @@ class ParserState {
       const widgets = this.asArray(sectionObj['widgets']);
       this.processWidgetList(widgets);
     }
+  }
+
+  private extractAddonServiceTags(): void {
+    const rawTags = this.root['addon_service_tags'];
+    if (!Array.isArray(rawTags)) {
+      return;
+    }
+
+    rawTags
+      .map((entry) => this.normalizeAddonServiceTag(entry))
+      .filter((tag): tag is string => Boolean(tag))
+      .forEach((tag) => {
+        this.attributes.push({
+          key: 'addon_service_tags',
+          label: 'addon_service_tags',
+          type: 'addon_service',
+          stringValue: tag,
+          rawValue: tag,
+        });
+      });
   }
 
   private processWidgetList(widgets: unknown[]): void {
@@ -1029,6 +1050,25 @@ class ParserState {
       return false;
     }
 
+    return null;
+  }
+
+  private normalizeAddonServiceTag(value: unknown): string | null {
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      return trimmed.length > 0 ? trimmed : null;
+    }
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      const obj = value as JsonObject;
+      const key =
+        this.asString(obj['key']) ??
+        this.asString(obj['value']) ??
+        this.asString(obj['slug']) ??
+        null;
+      if (key && key.trim().length > 0) {
+        return key.trim();
+      }
+    }
     return null;
   }
 

@@ -238,6 +238,10 @@ export class DivarPostsAdminService {
           handledKeys.add(key);
           this.applyBusinessTypeFilter(where, value);
           break;
+        case 'addon_service_tags':
+          handledKeys.add(key);
+          this.applyAddonServiceTagsFilter(where, value);
+          break;
         case 'recent_ads':
           handledKeys.add(key);
           this.applyRecentAdsFilter(where, value);
@@ -328,6 +332,22 @@ export class DivarPostsAdminService {
     Object.assign(where, { businessType: { in: Array.from(resolved) } });
   }
 
+  private applyAddonServiceTagsFilter(where: Prisma.DivarPostWhereInput, value: unknown): void {
+    const tags = this.normalizeStringArray(value);
+    if (tags.length === 0) {
+      return;
+    }
+    const condition: Prisma.DivarPostWhereInput = {
+      attributes: {
+        some: {
+          key: 'addon_service_tags',
+          stringValue: { in: tags },
+        },
+      },
+    };
+    this.appendAndCondition(where, condition);
+  }
+
   private applyRecentAdsFilter(where: Prisma.DivarPostWhereInput, value: unknown): void {
     if (typeof value !== 'string') {
       return;
@@ -405,6 +425,21 @@ export class DivarPostsAdminService {
       return trimmed.length > 0 ? [trimmed] : [];
     }
     return [];
+  }
+
+  private appendAndCondition(
+    where: Prisma.DivarPostWhereInput,
+    condition: Prisma.DivarPostWhereInput,
+  ): void {
+    if (!where.AND) {
+      where.AND = [condition];
+      return;
+    }
+    if (Array.isArray(where.AND)) {
+      where.AND.push(condition);
+      return;
+    }
+    where.AND = [where.AND, condition];
   }
 
   private extractSeoTitle(payload: Prisma.JsonValue): string | null {

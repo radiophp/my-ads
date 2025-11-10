@@ -3,3 +3,6 @@
 npm run lint-staged --prefix server || exit 1
 npm run typecheck --prefix server || exit 1
 npm test --prefix server -- --runInBand --bail --passWithNoTests || exit 1
+npm run lint --prefix ui || exit 1
+npm run typecheck --prefix ui || exit 1
+npm test --prefix ui || exit 1

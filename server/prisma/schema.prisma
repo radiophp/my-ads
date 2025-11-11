@@ -264,6 +264,8 @@ model DivarPostMedia {
   position     Int
   url          String
   thumbnailUrl String?
+  localUrl     String?
+  localThumbnailUrl String?
   alt          String?
   metadata     Json?
   createdAt    DateTime  @default(now())

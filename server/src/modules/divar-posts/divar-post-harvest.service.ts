@@ -11,6 +11,7 @@ const SERVER_PAYLOAD_TYPE = 'type.googleapis.com/widgets.SearchData.ServerPayloa
 const MAX_REQUESTS_PER_SECOND = 3;
 const RATE_LIMIT_WINDOW_MS = 1000;
 const PUBLISH_REACTIVATION_WINDOW_MS = 60 * 60 * 1000;
+const TEHRAN_TZ = 'Asia/Tehran';
 
 type PaginationPayload = {
   '@type': string;
@@ -65,6 +66,9 @@ export class DivarPostHarvestService {
   private readonly logger = new Logger(DivarPostHarvestService.name);
   private readonly sessionCookie?: string;
   private readonly maxPagesPerCombo?: number;
+  private readonly nightMaxPagesPerCombo?: number;
+  private readonly nightStartHour?: number;
+  private readonly nightEndHour?: number;
   private readonly requestDelayMs: number;
   private readonly requestTimeoutMs: number;
   private readonly requestTimestamps: number[] = [];
@@ -76,9 +80,10 @@ export class DivarPostHarvestService {
     private readonly configService: ConfigService,
   ) {
     this.sessionCookie = this.configService.get<string>('DIVAR_SESSION_COOKIE');
-    this.maxPagesPerCombo = this.configService.get<number>('DIVAR_HARVEST_MAX_PAGES', {
-      infer: true,
-    });
+    this.maxPagesPerCombo = this.parseNumberEnv('DIVAR_HARVEST_MAX_PAGES');
+    this.nightMaxPagesPerCombo = this.parseNumberEnv('DIVAR_HARVEST_MAX_PAGES_NIGHT');
+    this.nightStartHour = this.parseNumberEnv('DIVAR_HARVEST_NIGHT_START_HOUR');
+    this.nightEndHour = this.parseNumberEnv('DIVAR_HARVEST_NIGHT_END_HOUR');
     this.requestDelayMs =
       this.configService.get<number>('DIVAR_HARVEST_DELAY_MS', { infer: true }) ?? 750;
     this.requestTimeoutMs =
@@ -233,7 +238,14 @@ export class DivarPostHarvestService {
     let lastPostDate: string | null = null;
     let cumulativeWidgets = 50;
     let inserted = 0;
-    while (!this.maxPagesPerCombo || page < this.maxPagesPerCombo) {
+    const pageLimit = this.resolvePageLimit();
+    if (pageLimit) {
+      this.logger.debug(
+        `Harvest page limit for current window set to ${pageLimit} pages (category=${category.slug}, location=${location.label}).`,
+      );
+    }
+
+    while (!pageLimit || page < pageLimit) {
       this.logger.log(
         `Divar fetch start | category=${category.slug} (${category.id}, ${category.name}) | ${location.scope === QueueLocationScope.PROVINCE ? 'province' : 'city'}=${location.slug} (${location.apiId}, ${location.name}) | page=${page}`,
       );
@@ -298,23 +310,43 @@ export class DivarPostHarvestService {
           const now = new Date();
           const threshold = now.getTime() - PUBLISH_REACTIVATION_WINDOW_MS;
 
-          const eligible = existing.filter((record) => {
+          const eligible: typeof existing = [];
+          const freshTokens: string[] = [];
+          const missingTimestampTokens: string[] = [];
+          const thresholdMinutes = Math.round(PUBLISH_REACTIVATION_WINDOW_MS / 60000);
+
+          existing.forEach((record) => {
             if (record.status === PostQueueStatus.PROCESSING) {
               this.logger.debug(
                 `Duplicate token currently processing, skipping reactivation | token=${record.externalId} | category=${category.slug} | location=${location.label}`,
               );
-              return false;
+              return;
             }
             const publishedAt = publishLookup.get(record.externalId);
-            return Boolean(publishedAt && publishedAt.getTime() <= threshold);
+            if (!publishedAt) {
+              missingTimestampTokens.push(record.externalId);
+              return;
+            }
+            if (publishedAt.getTime() <= threshold) {
+              const diffMs = now.getTime() - publishedAt.getTime();
+              const diffMinutes = Math.round(diffMs / 60000);
+              this.logger.log(
+                `Reactivating token for refetch | token=${record.externalId} | category=${category.slug} | location=${location.label} | publishedAt=${publishedAt.toISOString()} | staleBy=${diffMinutes}m | threshold=${thresholdMinutes}m`,
+              );
+              eligible.push(record);
+            } else {
+              freshTokens.push(record.externalId);
+            }
           });
 
-          const skippedDueToRecency = existing
-            .filter((record) => !eligible.includes(record))
-            .map((record) => record.externalId);
-          skippedDueToRecency.forEach((token) =>
+          freshTokens.forEach((token) =>
             this.logger.debug(
-              `Duplicate token still fresh (published <2h) | token=${token} | category=${category.slug} | location=${location.label}`,
+              `Duplicate token still fresh (published within ${thresholdMinutes}m) | token=${token} | category=${category.slug} | location=${location.label}`,
+            ),
+          );
+          missingTimestampTokens.forEach((token) =>
+            this.logger.warn(
+              `Duplicate token missing publishedAt, skipping reactivation | token=${token} | category=${category.slug} | location=${location.label}`,
             ),
           );
 
@@ -325,6 +357,7 @@ export class DivarPostHarvestService {
                 const updateData: Prisma.PostToReadQueueUncheckedUpdateInput = {
                   status: PostQueueStatus.PENDING,
                   requestedAt: now,
+                  fetchAttempts: 0,
                 };
 
                 if (latest) {
@@ -388,6 +421,55 @@ export class DivarPostHarvestService {
     }
 
     return inserted;
+  }
+
+  private resolvePageLimit(now: Date = new Date()): number | undefined {
+    if (
+      typeof this.nightMaxPagesPerCombo === 'number' &&
+      typeof this.nightStartHour === 'number' &&
+      typeof this.nightEndHour === 'number' &&
+      this.isWithinNightWindow(now)
+    ) {
+      return this.nightMaxPagesPerCombo;
+    }
+    return this.maxPagesPerCombo;
+  }
+
+  private isWithinNightWindow(date: Date): boolean {
+    if (this.nightStartHour === undefined || this.nightEndHour === undefined) {
+      return false;
+    }
+    const tehranHour = this.getTehranHour(date);
+    if (this.nightStartHour === this.nightEndHour) {
+      return true;
+    }
+    if (this.nightStartHour < this.nightEndHour) {
+      return tehranHour >= this.nightStartHour && tehranHour < this.nightEndHour;
+    }
+    return tehranHour >= this.nightStartHour || tehranHour < this.nightEndHour;
+  }
+
+  private getTehranHour(date: Date): number {
+    try {
+      const tehranTime = new Intl.DateTimeFormat('en-US', {
+        timeZone: TEHRAN_TZ,
+        hour12: false,
+        hour: '2-digit',
+      }).format(date);
+      return Number(tehranTime);
+    } catch (error) {
+      this.logger.warn(`Failed to compute Tehran time, falling back to server time: ${error}`);
+      return date.getHours();
+    }
+  }
+
+  private parseNumberEnv(key: string): number | undefined {
+    const value = this.configService.get<string>(key);
+    if (typeof value === 'undefined' || value === null) {
+      return undefined;
+    }
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
   }
 
   private buildRequestBody({

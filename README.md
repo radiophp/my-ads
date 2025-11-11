@@ -297,6 +297,11 @@ All configuration is validated at startup (`platform/config/environment.validati
 | `DIVAR_HARVEST_CRON` | `0 */30 * * * *` | Cron expression controlling the Divar harvest scheduler (defaults to every 30 minutes). |
 | `DIVAR_FETCH_CRON` | `*/1 * * * *` | Cron expression for the Divar post fetch scheduler (defaults to every minute). |
 | `DIVAR_ANALYZE_CRON` | `*/1 * * * *` | Cron expression for the Divar post analyze scheduler (defaults to every minute). |
+| `DIVAR_MEDIA_SYNC_CRON` | `0 0 * * * *` | Cron expression for mirroring Divar media into MinIO (defaults to hourly). |
+| `DIVAR_HARVEST_MAX_PAGES` | `20` | Maximum number of pages to fetch per category/location during normal hours (set to `-1` for unlimited). |
+| `DIVAR_HARVEST_MAX_PAGES_NIGHT` | `2` | Maximum number of pages between the configured night hours (omit to reuse the normal limit). |
+| `DIVAR_HARVEST_NIGHT_START_HOUR` | `0` | Local hour (0-23) when the reduced harvest window starts. |
+| `DIVAR_HARVEST_NIGHT_END_HOUR` | `5` | Local hour (0-23) when the reduced harvest window ends (exclusive). |
 
 Environment variables not listed above are either optional feature toggles or inherit defaults inside module configuration files.
 

@@ -31,7 +31,9 @@ const DIVAR_POST_SUMMARY_SELECT = {
     select: {
       id: true,
       url: true,
+      localUrl: true,
       thumbnailUrl: true,
+      localThumbnailUrl: true,
       alt: true,
     },
   },
@@ -207,12 +209,12 @@ export class DivarPostsAdminService {
         permalink:
           record.permalink ??
           (record.externalId ? `https://divar.ir/v/${record.externalId}` : null),
-        imageUrl: record.medias[0]?.url ?? null,
+        imageUrl: record.medias[0]?.localUrl ?? record.medias[0]?.url ?? null,
         mediaCount: record.medias.length,
         medias: record.medias.map((media) => ({
           id: media.id,
-          url: media.url,
-          thumbnailUrl: media.thumbnailUrl,
+          url: media.localUrl ?? media.url,
+          thumbnailUrl: media.localThumbnailUrl ?? media.thumbnailUrl,
           alt: media.alt,
         })),
       })),

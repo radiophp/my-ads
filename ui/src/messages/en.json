@@ -22,7 +22,8 @@
     "loggingOut": "Logging out…",
     "menu": {
       "profile": "Profile"
-    }
+    },
+    "installApp": "Install app"
   },
   "landing": {
     "title": "Welcome to My Ads",
@@ -605,7 +606,27 @@
     "installDescription": "Get offline access and an app-like experience.",
     "installButton": "Install",
     "installedTitle": "Success",
-    "installedDescription": "The app is installing on your device."
+    "installedDescription": "The app is installing on your device.",
+    "installingLabel": "Installing…",
+    "manualTitle": "Install on your device",
+    "manualDescription": "Follow these quick steps to add My Ads directly from your browser.",
+    "manualSteps": {
+      "android": {
+        "title": "Android (Chrome)",
+        "step1": "Open the ⋮ menu in Chrome.",
+        "step2": "Tap \"Add to Home screen\".",
+        "step3": "Confirm by tapping \"Add\"."
+      },
+      "ios": {
+        "title": "iOS (Safari)",
+        "step1": "Tap the Share (↑) button in Safari.",
+        "step2": "Choose \"Add to Home Screen\".",
+        "step3": "Tap \"Add\" to confirm."
+      }
+    },
+    "alreadyInstalledTitle": "You already installed the app",
+    "alreadyInstalledDescription": "Open the installed version from your home screen for the best experience.",
+    "openAppButton": "Open app"
   },
   "offline": {
     "title": "You are offline",

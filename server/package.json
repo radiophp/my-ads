@@ -26,6 +26,7 @@
     "divar:harvest-posts": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-divar-post-harvest.ts",
     "divar:fetch-posts": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-divar-post-fetch.ts",
     "divar:analyze-posts": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-divar-post-analyze.ts",
+    "divar:sync-media": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-divar-post-media-sync.ts",
     "prepare": "husky install",
     "lint-staged": "lint-staged"
   },

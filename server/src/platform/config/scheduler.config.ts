@@ -5,6 +5,7 @@ export type SchedulerConfig = {
   divarHarvestCron: string;
   divarFetchCron: string;
   divarAnalyzeCron: string;
+  divarMediaSyncCron: string;
   enabled: boolean;
 };
 
@@ -22,14 +23,18 @@ const schedulerRuntimeConfig = {
 export const schedulerCronExpressions = {
   divarHarvest: resolveCronExpression(
     process.env['DIVAR_HARVEST_CRON'],
-    CronExpression.EVERY_10_SECONDS,
+    CronExpression.EVERY_30_SECONDS,
   ),
   divarFetch: resolveCronExpression(
     process.env['DIVAR_FETCH_CRON'],
-    CronExpression.EVERY_30_SECONDS,
+    CronExpression.EVERY_10_SECONDS,
   ),
   divarAnalyze: resolveCronExpression(
     process.env['DIVAR_ANALYZE_CRON'],
+    CronExpression.EVERY_10_SECONDS,
+  ),
+  divarMediaSync: resolveCronExpression(
+    process.env['DIVAR_MEDIA_SYNC_CRON'],
     CronExpression.EVERY_10_SECONDS,
   ),
 } satisfies Record<string, string>;
@@ -40,6 +45,7 @@ export default registerAs(
     divarHarvestCron: schedulerCronExpressions.divarHarvest,
     divarFetchCron: schedulerCronExpressions.divarFetch,
     divarAnalyzeCron: schedulerCronExpressions.divarAnalyze,
+    divarMediaSyncCron: schedulerCronExpressions.divarMediaSync,
     enabled: schedulerRuntimeConfig.enabled,
   }),
 );

@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Pro UI Base",
-    "description": "Production-ready Next.js 15 starter for the My Ads platform.",
+    "description": "Production-ready Next.js 15 starter for the Mahan File platform.",
     "canonical": "https://example.com"
   },
   "header": {
@@ -26,7 +26,7 @@
     "installApp": "Install app"
   },
   "landing": {
-    "title": "Welcome to My Ads",
+    "title": "Welcome to Mahan File",
     "subtitle": "Build and manage your classifieds experience with a modern, localized interface.",
     "badge": "Secure OTP login",
     "bullets": {
@@ -132,7 +132,7 @@
   "home": {
     "badge": "Production ready",
     "heroTitle": "Ship your frontend faster with a batteries-included Next.js stack.",
-    "heroDescription": "This template pairs Redux Toolkit, RTK Query, Tailwind, and shadcn/ui with testing and PWA tooling pre-configured. Hook it up to the My Ads backend and focus on your features, not wiring.",
+    "heroDescription": "This template pairs Redux Toolkit, RTK Query, Tailwind, and shadcn/ui with testing and PWA tooling pre-configured. Hook it up to the Mahan File backend and focus on your features, not wiring.",
     "ctaDocs": "Explore docs",
     "ctaQuickStart": "Quick start",
     "quickStart": {
@@ -231,6 +231,7 @@
       "noImage": "No photo",
       "untitled": "Untitled ({externalId})",
       "mediaCount": "{count, plural, one {# photo} other {# photos}}",
+      "mediaScrollHint": "Swipe to see more photos",
       "areaLabel": "{value} m²",
       "priceLabel": "Total: {value} IRR",
       "rentLabel": "Rent: {value} IRR",
@@ -248,6 +249,28 @@
         "area": "Area",
         "pricePerSquare": "Price per m²",
         "mediaCount": "Photos",
+        "description": "Description",
+        "attributes": "Attributes",
+        "amenities": "Amenities",
+        "booleanYes": "Yes",
+        "booleanNo": "No",
+        "depositAmount": "Deposit",
+        "dailyRateNormal": "Weekday rate",
+        "dailyRateWeekend": "Weekend rate",
+        "dailyRateHoliday": "Holiday rate",
+        "extraPersonFee": "Extra person fee",
+        "landArea": "Land area",
+        "rooms": "Rooms",
+        "floor": "Floor",
+        "floorsCount": "Floors count",
+        "unitPerFloor": "Units per floor",
+        "yearBuilt": "Year built",
+        "capacity": "Capacity",
+        "hasParking": "Parking",
+        "hasElevator": "Elevator",
+        "hasWarehouse": "Storage room",
+        "hasBalcony": "Balcony",
+        "isRebuilt": "Renovated",
         "category": "Category",
         "externalId": "External ID",
         "permalink": "Permalink",
@@ -258,6 +281,7 @@
         "personal": "Personal",
         "unknown": "Listing owner"
       },
+      "mobileBack": "Back",
       "close": "Close"
     }
   },
@@ -577,7 +601,7 @@
       },
       "company": {
         "label": "Company (optional)",
-        "placeholder": "My Ads",
+        "placeholder": "Mahan File",
         "description": "Used to personalize notification templates."
       },
       "terms": {
@@ -609,7 +633,7 @@
     "installedDescription": "The app is installing on your device.",
     "installingLabel": "Installing…",
     "manualTitle": "Install on your device",
-    "manualDescription": "Follow these quick steps to add My Ads directly from your browser.",
+    "manualDescription": "Follow these quick steps to add Mahan File directly from your browser.",
     "manualSteps": {
       "android": {
         "title": "Android (Chrome)",

@@ -15,8 +15,31 @@ const DIVAR_POST_SUMMARY_SELECT = {
   description: true,
   priceTotal: true,
   rentAmount: true,
+  depositAmount: true,
+  dailyRateNormal: true,
+  dailyRateWeekend: true,
+  dailyRateHoliday: true,
+  extraPersonFee: true,
   pricePerSquare: true,
   area: true,
+  areaLabel: true,
+  landArea: true,
+  landAreaLabel: true,
+  rooms: true,
+  roomsLabel: true,
+  floor: true,
+  floorLabel: true,
+  floorsCount: true,
+  unitPerFloor: true,
+  yearBuilt: true,
+  yearBuiltLabel: true,
+  capacity: true,
+  capacityLabel: true,
+  hasParking: true,
+  hasElevator: true,
+  hasWarehouse: true,
+  hasBalcony: true,
+  isRebuilt: true,
   cityName: true,
   districtName: true,
   provinceName: true,
@@ -35,6 +58,20 @@ const DIVAR_POST_SUMMARY_SELECT = {
       thumbnailUrl: true,
       localThumbnailUrl: true,
       alt: true,
+    },
+  },
+  attributes: {
+    orderBy: { createdAt: 'asc' },
+    select: {
+      id: true,
+      key: true,
+      label: true,
+      type: true,
+      stringValue: true,
+      numberValue: true,
+      boolValue: true,
+      unit: true,
+      rawValue: true,
     },
   },
 } satisfies Prisma.DivarPostSelect;
@@ -194,10 +231,57 @@ export class DivarPostsAdminService {
         externalId: record.externalId,
         title: record.title ?? record.displayTitle ?? record.seoTitle ?? null,
         description: record.description ?? null,
-        priceTotal: record.priceTotal ? Number(record.priceTotal) : null,
-        rentAmount: record.rentAmount ? Number(record.rentAmount) : null,
-        pricePerSquare: record.pricePerSquare ? Number(record.pricePerSquare) : null,
+        priceTotal:
+          record.priceTotal !== null && record.priceTotal !== undefined
+            ? Number(record.priceTotal)
+            : null,
+        rentAmount:
+          record.rentAmount !== null && record.rentAmount !== undefined
+            ? Number(record.rentAmount)
+            : null,
+        depositAmount:
+          record.depositAmount !== null && record.depositAmount !== undefined
+            ? Number(record.depositAmount)
+            : null,
+        dailyRateNormal:
+          record.dailyRateNormal !== null && record.dailyRateNormal !== undefined
+            ? Number(record.dailyRateNormal)
+            : null,
+        dailyRateWeekend:
+          record.dailyRateWeekend !== null && record.dailyRateWeekend !== undefined
+            ? Number(record.dailyRateWeekend)
+            : null,
+        dailyRateHoliday:
+          record.dailyRateHoliday !== null && record.dailyRateHoliday !== undefined
+            ? Number(record.dailyRateHoliday)
+            : null,
+        extraPersonFee:
+          record.extraPersonFee !== null && record.extraPersonFee !== undefined
+            ? Number(record.extraPersonFee)
+            : null,
+        pricePerSquare:
+          record.pricePerSquare !== null && record.pricePerSquare !== undefined
+            ? Number(record.pricePerSquare)
+            : null,
         area: record.area ?? null,
+        areaLabel: record.areaLabel ?? null,
+        landArea: record.landArea ?? null,
+        landAreaLabel: record.landAreaLabel ?? null,
+        rooms: record.rooms ?? null,
+        roomsLabel: record.roomsLabel ?? null,
+        floor: record.floor ?? null,
+        floorLabel: record.floorLabel ?? null,
+        floorsCount: record.floorsCount ?? null,
+        unitPerFloor: record.unitPerFloor ?? null,
+        yearBuilt: record.yearBuilt ?? null,
+        yearBuiltLabel: record.yearBuiltLabel ?? null,
+        capacity: record.capacity ?? null,
+        capacityLabel: record.capacityLabel ?? null,
+        hasParking: record.hasParking ?? null,
+        hasElevator: record.hasElevator ?? null,
+        hasWarehouse: record.hasWarehouse ?? null,
+        hasBalcony: record.hasBalcony ?? null,
+        isRebuilt: record.isRebuilt ?? null,
         cityName: record.cityName ?? null,
         districtName: record.districtName ?? null,
         provinceName: record.provinceName ?? null,
@@ -217,6 +301,21 @@ export class DivarPostsAdminService {
           thumbnailUrl: media.localThumbnailUrl ?? media.thumbnailUrl,
           alt: media.alt,
         })),
+        attributes:
+          record.attributes?.map((attribute) => ({
+            id: attribute.id,
+            key: attribute.key,
+            label: attribute.label ?? null,
+            type: attribute.type ?? null,
+            stringValue: attribute.stringValue ?? null,
+            numberValue:
+              attribute.numberValue !== null && attribute.numberValue !== undefined
+                ? Number(attribute.numberValue)
+                : null,
+            boolValue: attribute.boolValue ?? null,
+            unit: attribute.unit ?? null,
+            rawValue: attribute.rawValue ?? null,
+          })) ?? [],
       })),
       nextCursor: hasMore ? items[items.length - 1].id : null,
       hasMore,

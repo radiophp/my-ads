@@ -63,7 +63,7 @@ Create `.env` in the repository root (same folder as `docker-compose.yml`). A st
 cp .env.example .env
 ```
 
-The server loads `.env`, `.env.local`, and environment-specific variants automatically, including parent-directory files when running inside `/server`.
+The server loads `.env`, `.env.local`, and environment-specific variants automatically, including parent-directory files when running inside `/server`. This single `.env` file is shared by both `server/` and `ui/`, so keep every setting in the repo root instead of creating per-package env files.
 
 ### 3. Database Migrations
 
@@ -131,6 +131,38 @@ npm run start:prod   # serves compiled dist/main.js
 ```
 
 Ensure the same environment variables are available in production.
+
+---
+
+## Background Jobs & Divar Pipelines
+
+### Scheduler entrypoint
+
+Scheduled workloads (Divar harvest/fetch/analyze plus media mirroring) do **not** run automatically when you call `npm run start:dev`. Instead, boot the scheduler explicitly:
+
+```bash
+cd server
+npm run cron:scheduler
+```
+
+The script sets `ENABLE_CRON_JOBS=true` and executes `src/scripts/run-cron-scheduler.ts`, which wires Nest’s `ScheduleModule`. Every cron-backed service double-checks the env flag **and** keeps its own `isRunning`/`Promise` guard so a new tick returns immediately if the previous run is still busy. When authoring a new job, follow the same pattern: gate on `ENABLE_CRON_JOBS`, set the guard at the top, and release it in a `finally` block.
+
+Need a one-off run for debugging? Use the single-shot scripts, each of which loads the shared `.env`:
+
+- `npm run divar:harvest-posts`
+- `npm run divar:fetch-posts`
+- `npm run divar:analyze-posts`
+- `npm run divar:sync-media`
+
+### Harvest / fetch / analyze flow
+
+- **Reactivation policy:** When the harvester spots a duplicated token it compares the stored `DivarPost.publishedAt` with the fresh payload. If the delta exceeds one hour, the token is reactivated for refetch. Logs now include the prior timestamp, the number of minutes stale, the threshold, and any skip reason (e.g., “already processing”). Reactivation also resets `fetchAttempts` so the fetch worker retries immediately.
+- **Tehran-aware page limits:** `DIVAR_HARVEST_MAX_PAGES` caps how deep each category/location is crawled during daytime. Between `DIVAR_HARVEST_NIGHT_START_HOUR` and `DIVAR_HARVEST_NIGHT_END_HOUR` (evaluated in the `Asia/Tehran` timezone) the system switches to `DIVAR_HARVEST_MAX_PAGES_NIGHT`. Setting either limit to `-1` disables the cap and the harvester keeps paging until Divar has no more data.
+- **Concurrency coordination:** While `divar:fetch-posts` is working on a token it marks the queue row so harvest skips reactivation for that record until the fetch job finishes or times out. That prevents thrash whenever Divar reshuffles publish times.
+
+### Media mirroring
+
+`DivarPostMedia` now stores `localUrl`/`localThumbnailUrl`. The `divar:sync-media` cron consumes CDN-backed rows in batches of 25, downloads both the primary and thumbnail assets (capped at two downloads per second with five retries and graceful 404 handling), and uploads them to MinIO using the same path layout (`https://<our-domain>/<bucket>/static/photo/...`). API responses automatically prefer local URLs when present and fall back to the original Divar CDN links otherwise. Control the cadence via `DIVAR_MEDIA_SYNC_CRON`.
 
 ---
 

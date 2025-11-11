@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "پرو UI بیس",
-    "description": "استارتر آماده‌ی تولید Next.js 15 برای پلتفرم My Ads.",
+    "description": "استارتر آماده‌ی تولید Next.js 15 برای پلتفرم ماهان فایل.",
     "canonical": "https://example.com/fa"
   },
   "header": {
@@ -26,7 +26,7 @@
     "installApp": "نصب برنامه"
   },
   "landing": {
-    "title": "به مای آگهی خوش آمدید",
+    "title": "به ماهان فایل خوش آمدید",
     "subtitle": "با یک رابط کاربری مدرن و چندزبانه به سادگی آگهی‌های خود را مدیریت کنید.",
     "badge": "ورود امن با رمز یکبار مصرف",
     "bullets": {
@@ -132,7 +132,7 @@
   "home": {
     "badge": "آماده‌ی تولید",
     "heroTitle": "با یک استک کامل Next.js سریع‌تر فرانت‌اند خود را منتشر کنید.",
-    "heroDescription": "این تمپلیت، Redux Toolkit، RTK Query، Tailwind و shadcn/ui را همراه با تست و PWA از پیش پیکربندی کرده است. آن را به بک‌اند My Ads متصل کنید و روی امکانات تمرکز کنید، نه سیم‌کشی.",
+    "heroDescription": "این تمپلیت، Redux Toolkit، RTK Query، Tailwind و shadcn/ui را همراه با تست و PWA از پیش پیکربندی کرده است. آن را به بک‌اند ماهان فایل متصل کنید و روی امکانات تمرکز کنید، نه سیم‌کشی.",
     "ctaDocs": "مطالعه مستندات",
     "ctaQuickStart": "شروع سریع",
     "quickStart": {
@@ -231,6 +231,7 @@
       "noImage": "بدون تصویر",
       "untitled": "بدون عنوان ({externalId})",
       "mediaCount": "{count, plural, one {# عکس} other {# عکس}}",
+      "mediaScrollHint": "برای دیدن عکس‌های بیشتر بکشید",
       "areaLabel": "{value} مترمربع",
       "priceLabel": "قیمت کل: {value} تومان",
       "rentLabel": "اجاره: {value} تومان",
@@ -248,6 +249,28 @@
         "area": "متراژ",
         "pricePerSquare": "قیمت هر متر",
         "mediaCount": "تعداد عکس",
+        "description": "توضیحات",
+        "attributes": "ویژگی‌ها",
+        "amenities": "امکانات",
+        "booleanYes": "دارد",
+        "booleanNo": "ندارد",
+        "depositAmount": "ودیعه",
+        "dailyRateNormal": "نرخ روزهای عادی",
+        "dailyRateWeekend": "نرخ آخر هفته",
+        "dailyRateHoliday": "نرخ تعطیلات",
+        "extraPersonFee": "هزینه نفر اضافه",
+        "landArea": "متراژ زمین",
+        "rooms": "تعداد اتاق",
+        "floor": "طبقه",
+        "floorsCount": "تعداد طبقات",
+        "unitPerFloor": "واحد در هر طبقه",
+        "yearBuilt": "سال ساخت",
+        "capacity": "ظرفیت",
+        "hasParking": "پارکینگ",
+        "hasElevator": "آسانسور",
+        "hasWarehouse": "انباری",
+        "hasBalcony": "بالکن",
+        "isRebuilt": "نوسازی شده",
         "category": "دسته بندی",
         "externalId": "شناسه دیوار",
         "permalink": "لینک آگهی",
@@ -258,6 +281,7 @@
         "personal": "شخصی",
         "unknown": "آگهی‌دهنده"
       },
+      "mobileBack": "بازگشت",
       "close": "بستن"
     }
   },
@@ -577,7 +601,7 @@
       },
       "company": {
         "label": "سازمان (اختیاری)",
-        "placeholder": "My Ads",
+        "placeholder": "ماهان فایل",
         "description": "برای شخصی‌سازی قالب‌های اعلان استفاده می‌شود."
       },
       "terms": {
@@ -609,7 +633,7 @@
     "installedDescription": "اپلیکیشن روی دستگاه شما در حال نصب است.",
     "installingLabel": "در حال نصب…",
     "manualTitle": "نصب روی دستگاه شما",
-    "manualDescription": "برای افزودن مای آگهی به صفحهٔ اصلی، مراحل زیر را اجرا کنید.",
+    "manualDescription": "برای افزودن ماهان فایل به صفحهٔ اصلی، مراحل زیر را اجرا کنید.",
     "manualSteps": {
       "android": {
         "title": "اندروید (مرورگر کروم)",

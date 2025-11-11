@@ -2,9 +2,9 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: '1000file',
-    short_name: '1000file',
-    description: 'Manage your My Ads listings anywhere with offline support.',
+    name: 'Mahan File',
+    short_name: 'Mahan File',
+    description: 'Manage your Mahan File listings anywhere with offline support.',
     start_url: '/',
     display: 'standalone',
     background_color: '#464646',

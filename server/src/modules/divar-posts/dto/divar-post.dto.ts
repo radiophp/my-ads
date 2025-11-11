@@ -14,6 +14,35 @@ class DivarPostMediaDto {
   alt!: string | null;
 }
 
+class DivarPostAttributeDto {
+  @ApiProperty()
+  id!: string;
+
+  @ApiProperty()
+  key!: string;
+
+  @ApiProperty({ nullable: true })
+  label!: string | null;
+
+  @ApiProperty({ nullable: true })
+  type!: string | null;
+
+  @ApiProperty({ nullable: true })
+  stringValue!: string | null;
+
+  @ApiProperty({ nullable: true })
+  numberValue!: number | null;
+
+  @ApiProperty({ nullable: true })
+  boolValue!: boolean | null;
+
+  @ApiProperty({ nullable: true })
+  unit!: string | null;
+
+  @ApiProperty({ nullable: true })
+  rawValue!: unknown;
+}
+
 export class DivarPostListItemDto {
   @ApiProperty()
   id!: string;
@@ -34,10 +63,79 @@ export class DivarPostListItemDto {
   rentAmount!: number | null;
 
   @ApiProperty({ nullable: true })
+  depositAmount!: number | null;
+
+  @ApiProperty({ nullable: true })
+  dailyRateNormal!: number | null;
+
+  @ApiProperty({ nullable: true })
+  dailyRateWeekend!: number | null;
+
+  @ApiProperty({ nullable: true })
+  dailyRateHoliday!: number | null;
+
+  @ApiProperty({ nullable: true })
+  extraPersonFee!: number | null;
+
+  @ApiProperty({ nullable: true })
   pricePerSquare!: number | null;
 
   @ApiProperty({ nullable: true })
   area!: number | null;
+
+  @ApiProperty({ nullable: true })
+  areaLabel!: string | null;
+
+  @ApiProperty({ nullable: true })
+  landArea!: number | null;
+
+  @ApiProperty({ nullable: true })
+  landAreaLabel!: string | null;
+
+  @ApiProperty({ nullable: true })
+  rooms!: number | null;
+
+  @ApiProperty({ nullable: true })
+  roomsLabel!: string | null;
+
+  @ApiProperty({ nullable: true })
+  floor!: number | null;
+
+  @ApiProperty({ nullable: true })
+  floorLabel!: string | null;
+
+  @ApiProperty({ nullable: true })
+  floorsCount!: number | null;
+
+  @ApiProperty({ nullable: true })
+  unitPerFloor!: number | null;
+
+  @ApiProperty({ nullable: true })
+  yearBuilt!: number | null;
+
+  @ApiProperty({ nullable: true })
+  yearBuiltLabel!: string | null;
+
+  @ApiProperty({ nullable: true })
+  capacity!: number | null;
+
+  @ApiProperty({ nullable: true })
+  capacityLabel!: string | null;
+
+  @ApiProperty({ nullable: true })
+  hasParking!: boolean | null;
+
+  @ApiProperty({ nullable: true })
+  hasElevator!: boolean | null;
+
+  @ApiProperty({ nullable: true })
+  hasWarehouse!: boolean | null;
+
+  @ApiProperty({ nullable: true })
+  hasBalcony!: boolean | null;
+
+  @ApiProperty({ nullable: true })
+  isRebuilt!: boolean | null;
 
   @ApiProperty({ nullable: true })
   cityName!: string | null;
@@ -74,6 +172,9 @@ export class DivarPostListItemDto {
 
   @ApiProperty({ type: [DivarPostMediaDto] })
   medias!: DivarPostMediaDto[];
+
+  @ApiProperty({ type: [DivarPostAttributeDto], required: false })
+  attributes?: DivarPostAttributeDto[];
 }
 
 export class PaginatedDivarPostsDto {

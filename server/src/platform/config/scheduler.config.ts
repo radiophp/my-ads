@@ -23,7 +23,7 @@ const schedulerRuntimeConfig = {
 export const schedulerCronExpressions = {
   divarHarvest: resolveCronExpression(
     process.env['DIVAR_HARVEST_CRON'],
-    CronExpression.EVERY_30_SECONDS,
+    CronExpression.EVERY_10_SECONDS,
   ),
   divarFetch: resolveCronExpression(
     process.env['DIVAR_FETCH_CRON'],

@@ -24,6 +24,18 @@ export type PaginatedPostsToAnalyze = {
   };
 };
 
+export type DivarPostAttribute = {
+  id: string;
+  key: string;
+  label: string | null;
+  type: string | null;
+  stringValue: string | null;
+  numberValue: number | null;
+  boolValue: boolean | null;
+  unit: string | null;
+  rawValue: unknown;
+};
+
 export type DivarPostSummary = {
   id: string;
   externalId: string;
@@ -31,8 +43,31 @@ export type DivarPostSummary = {
   description: string | null;
   priceTotal: number | null;
   rentAmount: number | null;
+  depositAmount: number | null;
+  dailyRateNormal: number | null;
+  dailyRateWeekend: number | null;
+  dailyRateHoliday: number | null;
+  extraPersonFee: number | null;
   pricePerSquare: number | null;
   area: number | null;
+  areaLabel: string | null;
+  landArea: number | null;
+  landAreaLabel: string | null;
+  rooms: number | null;
+  roomsLabel: string | null;
+  floor: number | null;
+  floorLabel: string | null;
+  floorsCount: number | null;
+  unitPerFloor: number | null;
+  yearBuilt: number | null;
+  yearBuiltLabel: string | null;
+  capacity: number | null;
+  capacityLabel: string | null;
+  hasParking: boolean | null;
+  hasElevator: boolean | null;
+  hasWarehouse: boolean | null;
+  hasBalcony: boolean | null;
+  isRebuilt: boolean | null;
   cityName: string | null;
   districtName: string | null;
   provinceName: string | null;
@@ -50,6 +85,7 @@ export type DivarPostSummary = {
     thumbnailUrl: string | null;
     alt: string | null;
   }>;
+  attributes?: DivarPostAttribute[] | null;
 };
 
 export type DivarPostListResponse = {

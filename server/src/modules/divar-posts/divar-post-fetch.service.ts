@@ -11,7 +11,7 @@ import {
 import { schedulerCronExpressions } from '@app/platform/config/scheduler.config';
 
 const DIVAR_POST_DETAILS_URL = 'https://api.divar.ir/v8/posts-v2/web';
-const DEFAULT_BATCH_SIZE = 2;
+const DEFAULT_BATCH_SIZE = 3;
 const MAX_ATTEMPTS = 5;
 const MIN_BATCH_INTERVAL_MS = 1000;
 const DEFAULT_RATE_LIMIT_SLEEP_MS = 5000;

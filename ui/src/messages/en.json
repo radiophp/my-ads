@@ -235,6 +235,7 @@
       "areaLabel": "{value} m²",
       "priceLabel": "Total: {value} IRR",
       "rentLabel": "Rent: {value} IRR",
+      "downloadPhotos": "Download photos",
       "viewDetails": "View details",
       "openOnDivar": "Open on Divar",
       "loading": "Loading…",

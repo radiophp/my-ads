@@ -322,6 +322,30 @@ export class DivarPostsAdminService {
     };
   }
 
+  async getPostWithMedias(id: string): Promise<{
+    id: string;
+    externalId: string | null;
+    title: string | null;
+    medias: { id: string; url: string | null; localUrl: string | null }[];
+  } | null> {
+    return this.prisma.divarPost.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        externalId: true,
+        title: true,
+        medias: {
+          orderBy: { position: 'asc' },
+          select: {
+            id: true,
+            url: true,
+            localUrl: true,
+          },
+        },
+      },
+    });
+  }
+
   private applyCategoryFilters(
     where: Prisma.DivarPostWhereInput,
     filters: Record<string, unknown>,

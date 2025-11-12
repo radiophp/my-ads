@@ -13,6 +13,7 @@ import {
   ExternalLink,
   Loader2,
   MapPin,
+  Download,
   PanelsTopLeft,
   Store,
   Tag,
@@ -66,12 +67,24 @@ const EXCLUDED_ATTRIBUTE_LABELS = new Set(['آسانسور', 'پارکینگ', '
 const INFO_ROW_KEYS = ['labels.rooms', 'labels.floor', 'labels.yearBuilt'] as const;
 const isInfoRowKey = (labelKey: string): boolean =>
   INFO_ROW_KEYS.includes(labelKey as (typeof INFO_ROW_KEYS)[number]);
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL && process.env.NEXT_PUBLIC_API_BASE_URL.length > 0
+    ? process.env.NEXT_PUBLIC_API_BASE_URL.replace(/\/$/, '')
+    : '/api';
+const buildPhotoDownloadUrl = (postId: string): string =>
+  `${API_BASE_URL}/divar-posts/${postId}/photos.zip`;
 
 type DetailEntry = {
   id: string;
   labelKey: string;
   label: string;
   value: string | null;
+};
+
+const getMediaDownloadUrl = (media: DivarPostSummary['medias'][number]): string | null => {
+  const candidate = (media as DivarPostSummary['medias'][number] & { localUrl?: string | null })
+    .localUrl;
+  return candidate ?? media.url ?? null;
 };
 
 export function DivarPostsFeed(): JSX.Element {
@@ -350,6 +363,20 @@ export function DivarPostsFeed(): JSX.Element {
     selectedPost && (selectedPost.districtName || selectedPost.cityName)
       ? [selectedPost.districtName, selectedPost.cityName].filter(Boolean).join('، ')
       : null;
+  const selectedMedias = selectedPost?.medias ?? [];
+  const hasMultiplePhotos = selectedMedias.length > 1;
+  const singleMediaDownloadUrl =
+    selectedMedias.length === 1
+      ? getMediaDownloadUrl(selectedMedias[0]) ?? selectedPost?.imageUrl ?? null
+      : null;
+  const fallbackImageDownloadUrl =
+    selectedMedias.length === 0 ? selectedPost?.imageUrl ?? null : null;
+  const photoDownloadUrl = selectedPost
+    ? hasMultiplePhotos
+      ? buildPhotoDownloadUrl(selectedPost.id)
+      : singleMediaDownloadUrl ?? fallbackImageDownloadUrl
+    : null;
+  const isZipDownload = Boolean(selectedPost && hasMultiplePhotos);
   const selectedDescriptionLines = selectedPost?.description
     ? selectedPost.description.split('\n')
     : null;
@@ -472,13 +499,6 @@ export function DivarPostsFeed(): JSX.Element {
         return numberFormatter.format(numericValue);
       }
       return null;
-    };
-
-    const addBooleanEntry = (labelKey: string, value?: boolean | null) => {
-      if (typeof value !== 'boolean') {
-        return;
-      }
-      addEntry(labelKey, value ? t('labels.booleanYes') : t('labels.booleanNo'));
     };
 
     addPriceEntry('labels.price', selectedPost.priceTotal);
@@ -805,7 +825,7 @@ export function DivarPostsFeed(): JSX.Element {
                       {selectedPost.medias.length > 1 ? (
                         <>
                           <div className="relative">
-                            <div className="flex gap-2 overflow-x-auto flex-nowrap pr-8 pb-1">
+                            <div className="flex flex-nowrap gap-2 overflow-x-auto pb-1 pr-8">
                               {selectedPost.medias.map((media, index) => (
                                 <button
                                   key={media.id}
@@ -829,12 +849,6 @@ export function DivarPostsFeed(): JSX.Element {
                               <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-background to-transparent" />
                             ) : null}
                           </div>
-                          {showThumbnailScrollHint ? (
-                            <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground sm:hidden">
-                              <ArrowLeftRight className="size-3.5" aria-hidden />
-                              <span>{t('mediaScrollHint')}</span>
-                            </div>
-                          ) : null}
                         </>
                       ) : null}
                     </div>
@@ -867,6 +881,27 @@ export function DivarPostsFeed(): JSX.Element {
                             </span>
                           ) : null}
                         </div>
+                      ) : null}
+                    </div>
+                ) : null}
+                  {(showThumbnailScrollHint || photoDownloadUrl) ? (
+                    <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                      {showThumbnailScrollHint ? (
+                        <div className="flex items-center gap-2 text-muted-foreground sm:hidden">
+                          <ArrowLeftRight className="size-3.5" aria-hidden />
+                          <span>{t('mediaScrollHint')}</span>
+                        </div>
+                      ) : null}
+                      {photoDownloadUrl ? (
+                        <a
+                          href={photoDownloadUrl}
+                          className="flex items-center gap-1 text-primary hover:text-primary/80"
+                          download
+                          {...(!isZipDownload ? { target: '_blank', rel: 'noreferrer' } : {})}
+                        >
+                          <Download className="size-3.5" aria-hidden />
+                          <span>{t('downloadPhotos')}</span>
+                        </a>
                       ) : null}
                     </div>
                   ) : null}
@@ -1001,12 +1036,12 @@ export function DivarPostsFeed(): JSX.Element {
                   <Button
                     type="button"
                     variant="secondary"
-                    className="flex-1 min-w-[140px] sm:flex-none"
+                    className="min-w-[140px] flex-1 sm:flex-none"
                     onClick={() => closeDialog(false)}
                   >
                     {t('close')}
                   </Button>
-                  <Button asChild className="flex-1 min-w-[140px] sm:flex-none">
+                  <Button asChild className="min-w-[140px] flex-1 sm:flex-none">
                     <a
                       href={
                         selectedPost.permalink ?? `https://divar.ir/v/${selectedPost.externalId}`

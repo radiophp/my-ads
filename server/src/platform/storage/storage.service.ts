@@ -3,10 +3,12 @@ import {
   DeleteObjectCommand,
   GetObjectCommand,
   HeadBucketCommand,
+  HeadObjectCommand,
   PutObjectCommand,
   S3Client,
   S3ServiceException,
   type GetObjectCommandOutput,
+  type HeadObjectCommandOutput,
   type PutObjectCommandOutput,
 } from '@aws-sdk/client-s3';
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
@@ -112,6 +114,18 @@ export class StorageService implements OnModuleInit {
   async deleteObject(key: string): Promise<void> {
     const command = new DeleteObjectCommand({ Bucket: this.bucket, Key: key });
     await this.s3Client.send(command);
+  }
+
+  async getObjectMetadata(key: string): Promise<HeadObjectCommandOutput | null> {
+    try {
+      const command = new HeadObjectCommand({ Bucket: this.bucket, Key: key });
+      return await this.s3Client.send(command);
+    } catch (error) {
+      if (error instanceof S3ServiceException && this.isNotFound(error)) {
+        return null;
+      }
+      throw error;
+    }
   }
 
   async healthCheck(): Promise<void> {

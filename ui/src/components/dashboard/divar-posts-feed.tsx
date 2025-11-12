@@ -584,6 +584,16 @@ export function DivarPostsFeed(): JSX.Element {
         <DialogContent
           hideCloseButton
           className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] sm:left-1/2 sm:top-1/2 sm:flex sm:max-h-[90vh] sm:w-full sm:max-w-3xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:flex-col sm:overflow-hidden sm:rounded-2xl sm:border sm:p-6"
+          onPointerDownOutside={(event) => {
+            if (downloadDialogOpen) {
+              event.preventDefault();
+            }
+          }}
+          onInteractOutside={(event) => {
+            if (downloadDialogOpen) {
+              event.preventDefault();
+            }
+          }}
         >
           {selectedPost ? (
             <div className="flex h-full flex-col overflow-hidden">
@@ -691,7 +701,9 @@ export function DivarPostsFeed(): JSX.Element {
 
       <DownloadPhotosDialog
         open={downloadDialogOpen}
-        onOpenChange={setDownloadDialogOpen}
+        onOpenChange={(value) => {
+          setDownloadDialogOpen(value);
+        }}
         post={selectedPost}
         isRTL={isRTL}
         t={t}

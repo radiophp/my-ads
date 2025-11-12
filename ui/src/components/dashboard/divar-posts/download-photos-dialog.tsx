@@ -95,6 +95,8 @@ export function DownloadPhotosDialog({
       <DialogContent
         hideCloseButton
         className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] sm:left-1/2 sm:top-1/2 sm:flex sm:h-[90vh] sm:w-full sm:max-w-3xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:flex-col sm:overflow-hidden sm:rounded-2xl sm:border sm:p-6"
+        onPointerDownOutside={(event) => event.preventDefault()}
+        onInteractOutside={(event) => event.preventDefault()}
       >
         <div className="flex h-full flex-col overflow-hidden">
           <div className="border-b border-border px-6 py-4 sm:hidden">
@@ -121,26 +123,27 @@ export function DownloadPhotosDialog({
                           draggable={false}
                         />
                       </div>
-                      {downloadUrl ? (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={isDownloading}
-                          className="flex items-center justify-center gap-1 text-xs"
-                          onClick={() => {
-                            void handleSingleDownload(media, index);
-                          }}
-                        >
-                          <Download className="size-4" aria-hidden />
-                          <span>
-                            {isDownloading ? t('downloadInProgress') : t('downloadSingle')}
+                        {downloadUrl ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={isDownloading}
+                            className="flex items-center justify-center gap-1 text-xs"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void handleSingleDownload(media, index);
+                            }}
+                          >
+                            <Download className="size-4" aria-hidden />
+                            <span>
+                              {isDownloading ? t('downloadInProgress') : t('downloadSingle')}
+                            </span>
+                          </Button>
+                        ) : (
+                          <span className="text-center text-xs text-muted-foreground">
+                            {t('downloadUnavailable')}
                           </span>
-                        </Button>
-                      ) : (
-                        <span className="text-center text-xs text-muted-foreground">
-                          {t('downloadUnavailable')}
-                        </span>
-                      )}
+                        )}
                     </div>
                   );
                 })}
@@ -166,8 +169,11 @@ export function DownloadPhotosDialog({
                   <Button
                     className="flex flex-1 min-w-[140px] justify-center"
                     disabled={downloadingId === 'zip'}
-                  onClick={handleZipDownload}
-                >
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      handleZipDownload();
+                    }}
+                  >
                   {downloadingId === 'zip' ? (
                     <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
                   ) : (

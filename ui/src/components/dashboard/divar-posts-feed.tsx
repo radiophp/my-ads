@@ -1,4 +1,4 @@
-/* eslint-disable @next/next/no-img-element */
+/* eslint-disable @next/next/no-img-element, tailwindcss/classnames-order */
 'use client';
 
 import type { JSX, TouchEvent } from 'react';
@@ -39,6 +39,7 @@ import { useLazyGetDivarPostsQuery } from '@/features/api/apiSlice';
 import type { DivarPostSummary } from '@/types/divar-posts';
 import { useAppSelector } from '@/lib/hooks';
 import type { CategoryFilterValue } from '@/features/search-filter/searchFilterSlice';
+import { cn } from '@/lib/utils';
 
 type AmenityKey = 'hasParking' | 'hasElevator' | 'hasWarehouse' | 'hasBalcony';
 
@@ -83,19 +84,45 @@ type DetailEntry = {
   value: string | null;
 };
 
-const getMediaDownloadUrl = (media: DivarPostSummary['medias'][number]): string | null => {
-  const candidate = (media as DivarPostSummary['medias'][number] & { localUrl?: string | null })
-    .localUrl;
+type DownloadableMedia = {
+  id: string;
+  url: string | null;
+  thumbnailUrl: string | null;
+  alt: string | null;
+};
+
+const getMediaDownloadUrl = (
+  media: DivarPostSummary['medias'][number] | DownloadableMedia,
+): string | null => {
+  if (!media) {
+    return null;
+  }
+  const candidate =
+    'localUrl' in media
+      ? (media as DivarPostSummary['medias'][number] & { localUrl?: string | null }).localUrl
+      : null;
   return candidate ?? media.url ?? null;
 };
 
 const resolveMediaSrc = (
-  media: DivarPostSummary['medias'][number] | null | undefined,
+  media: DivarPostSummary['medias'][number] | DownloadableMedia | null | undefined,
   fallback?: string | null,
-): string => media?.url ?? fallback ?? '';
+): string => {
+  if (!media) {
+    return fallback ?? '';
+  }
+  if (
+    'localUrl' in media &&
+    typeof (media as { localUrl?: string | null }).localUrl === 'string' &&
+    (media as { localUrl?: string | null }).localUrl
+  ) {
+    return (media as { localUrl?: string | null }).localUrl as string;
+  }
+  return media.url ?? fallback ?? '';
+};
 
 const resolveMediaAlt = (
-  media: DivarPostSummary['medias'][number] | null | undefined,
+  media: DivarPostSummary['medias'][number] | DownloadableMedia | null | undefined,
   fallbackTitle?: string | null,
   fallbackId?: string,
 ): string =>
@@ -113,6 +140,8 @@ export function DivarPostsFeed(): JSX.Element {
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [downloadingMediaId, setDownloadingMediaId] = useState<string | null>(null);
+  const [downloadDialogOpen, setDownloadDialogOpen] = useState(false);
   const [fetchPosts] = useLazyGetDivarPostsQuery();
   const {
     provinceId,
@@ -400,6 +429,42 @@ export function DivarPostsFeed(): JSX.Element {
       : singleMediaDownloadUrl ?? fallbackImageDownloadUrl
     : null;
   const isZipDownload = Boolean(selectedPost && hasMultiplePhotos);
+  const downloadMedias = useMemo<DownloadableMedia[]>(() => {
+    if (!selectedPost) {
+      return [];
+    }
+    if (selectedPost.medias.length > 0) {
+      return selectedPost.medias.map((media) => {
+        const enriched = media as typeof media & {
+          localUrl?: string | null;
+          localThumbnailUrl?: string | null;
+        };
+        return {
+          id: media.id,
+          url: enriched.localUrl ?? media.url ?? null,
+          thumbnailUrl:
+            enriched.localThumbnailUrl ??
+            media.thumbnailUrl ??
+            enriched.localUrl ??
+            media.url ??
+            null,
+          alt: media.alt,
+        };
+      });
+    }
+    if (selectedPost.imageUrl) {
+      return [
+        {
+          id: `${selectedPost.id}-fallback`,
+          url: selectedPost.imageUrl,
+          thumbnailUrl: selectedPost.imageUrl,
+          alt: selectedPost.title ?? selectedPost.externalId ?? null,
+        },
+      ];
+    }
+    return [];
+  }, [selectedPost]);
+  const hasDownloadableMedia = downloadMedias.length > 0;
   const previousPhotoLabel = isRTL ? 'عکس قبلی' : 'Previous photo';
   const nextPhotoLabel = isRTL ? 'عکس بعدی' : 'Next photo';
   const PreviousIcon = isRTL ? ChevronRight : ChevronLeft;
@@ -471,6 +536,61 @@ export function DivarPostsFeed(): JSX.Element {
     }
     setSwipeDelta(0);
   }, [goToNextMedia, goToPreviousMedia, hasMultiplePhotos]);
+  const handleOpenDownloadDialog = useCallback(() => {
+    if (!hasDownloadableMedia) {
+      return;
+    }
+    setDownloadDialogOpen(true);
+  }, [hasDownloadableMedia]);
+  useEffect(() => {
+    setDownloadDialogOpen(false);
+    setDownloadingMediaId(null);
+  }, [selectedPost]);
+
+  const sanitizeFileName = useCallback((value: string): string => {
+    if (!value) {
+      return 'photo';
+    }
+    return value.replace(/[^a-zA-Z0-9-_]/g, '_');
+  }, []);
+
+  const handleSingleDownload = useCallback(
+    async (media: DownloadableMedia, index: number) => {
+      const downloadUrl = media.url;
+      if (!downloadUrl) {
+        console.warn('No download URL available for media', media.id);
+        return;
+      }
+      try {
+        setDownloadingMediaId(media.id);
+        const response = await fetch(downloadUrl);
+        if (!response.ok) {
+          throw new Error(`Failed to download: ${response.status}`);
+        }
+        const blob = await response.blob();
+        const objectUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        const label =
+          media.alt ??
+          selectedPost?.title ??
+          selectedPost?.externalId ??
+          `photo-${index + 1}`;
+        const extensionMatch = downloadUrl.match(/\.(jpe?g|png|webp|gif|heic|heif)(?:\?|$)/i);
+        const extension = extensionMatch ? extensionMatch[0].split('?')[0] : '.jpg';
+        link.href = objectUrl;
+        link.download = `${sanitizeFileName(label)}${extension}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(objectUrl);
+      } catch (error) {
+        console.error('Failed to download media', error);
+      } finally {
+        setDownloadingMediaId(null);
+      }
+    },
+    [sanitizeFileName, selectedPost],
+  );
   const selectedDescriptionLines = selectedPost?.description
     ? selectedPost.description.split('\n')
     : null;
@@ -770,7 +890,7 @@ export function DivarPostsFeed(): JSX.Element {
           <div className="flex flex-1 flex-col gap-2 pt-1">
             <div className="flex flex-col gap-2">
               <div>
-                <h3 className="text-base font-semibold text-foreground sm:text-lg">
+                <h3 className="break-words text-base font-semibold text-foreground sm:text-lg">
                   {post.title ?? t('untitled', { externalId: post.externalId })}
                 </h3>
               </div>
@@ -858,7 +978,7 @@ export function DivarPostsFeed(): JSX.Element {
             <div className="flex h-full flex-col overflow-hidden">
               <div className="border-b border-border px-6 py-4 sm:hidden">
                 <p
-                  className={`text-base font-semibold ${isRTL ? 'text-right' : 'text-center'}`}
+                  className={`break-words text-base font-semibold ${isRTL ? 'text-right' : 'text-center'}`}
                   dir={isRTL ? 'rtl' : 'ltr'}
                 >
                   {selectedPost.title ?? t('untitled', { externalId: selectedPost.externalId })}
@@ -866,7 +986,7 @@ export function DivarPostsFeed(): JSX.Element {
               </div>
               <div className="hidden p-0 sm:block">
                 <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2">
+                  <DialogTitle className="flex flex-wrap items-center gap-2 break-words">
                     {selectedPost.title ?? t('untitled', { externalId: selectedPost.externalId })}
                   </DialogTitle>
                   <DialogDescription className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
@@ -898,16 +1018,15 @@ export function DivarPostsFeed(): JSX.Element {
                               ) : null}
                             </div>
                             <div className="flex flex-1 justify-end">
-                              {photoDownloadUrl ? (
-                                <a
-                                  href={photoDownloadUrl}
+                              {hasDownloadableMedia ? (
+                                <button
+                                  type="button"
+                                  onClick={handleOpenDownloadDialog}
                                   className="pointer-events-auto inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5 text-xs text-white shadow-lg hover:bg-black/80"
-                                  download
-                                  {...(!isZipDownload ? { target: '_blank', rel: 'noreferrer' } : {})}
                                 >
                                   <Download className="size-3.5" aria-hidden />
                                   <span>{t('downloadPhotos')}</span>
-                                </a>
+                                </button>
                               ) : null}
                             </div>
                           </div>
@@ -1063,16 +1182,15 @@ export function DivarPostsFeed(): JSX.Element {
                             ) : null}
                           </div>
                           <div className="flex flex-1 justify-end">
-                            {photoDownloadUrl ? (
-                              <a
-                                href={photoDownloadUrl}
+                            {hasDownloadableMedia ? (
+                              <button
+                                type="button"
+                                onClick={handleOpenDownloadDialog}
                                 className="pointer-events-auto inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5 text-xs text-white shadow-lg hover:bg-black/80"
-                                download
-                                {...(!isZipDownload ? { target: '_blank', rel: 'noreferrer' } : {})}
                               >
                                 <Download className="size-3.5" aria-hidden />
                                 <span>{t('downloadPhotos')}</span>
-                              </a>
+                              </button>
                             ) : null}
                           </div>
                         </div>
@@ -1140,28 +1258,27 @@ export function DivarPostsFeed(): JSX.Element {
                       <div className="flex flex-wrap gap-4">
                         {amenityItems.map((amenity) => {
                           const Icon = amenity.icon;
+                          const statusClass = amenity.value ? 'text-emerald-600' : 'text-destructive';
                           return (
                             <div
                               key={amenity.key}
                               className="flex min-w-[70px] flex-1 flex-col items-center gap-2 text-center"
                             >
-                              <span className="text-xs text-muted-foreground">{t(amenity.labelKey)}</span>
-                                  <div
-                                    className={`flex size-12 items-center justify-center rounded-full border ${
-                                      amenity.value
-                                        ? 'border-emerald-500 bg-emerald-500/10 text-emerald-600'
-                                        : 'border-destructive bg-destructive/10 text-destructive'
-                                    }`}
-                                  >
-                                <Icon className="size-5" aria-hidden />
-                              </div>
-                              <span
-                                className={`text-sm font-semibold ${
-                                  amenity.value ? 'text-emerald-600' : 'text-destructive'
+                              <div
+                                className={`flex size-10 items-center justify-center rounded-full border ${
+                                  amenity.value
+                                    ? 'border-emerald-500 bg-emerald-500/10 text-emerald-600'
+                                    : 'border-destructive bg-destructive/10 text-destructive'
                                 }`}
                               >
-                                {amenity.value ? t('labels.booleanYes') : t('labels.booleanNo')}
-                              </span>
+                                <Icon className="size-5" aria-hidden />
+                              </div>
+                              <div className={`flex items-center gap-1 text-sm ${statusClass}`}>
+                                <span>{t(amenity.labelKey)}</span>
+                                <span>
+                                  {amenity.value ? t('labels.booleanYes') : t('labels.booleanNo')}
+                                </span>
+                              </div>
                             </div>
                           );
                         })}
@@ -1172,9 +1289,14 @@ export function DivarPostsFeed(): JSX.Element {
                   {infoRowEntries.length > 0 ? (
                     <div className="mb-4 flex w-full flex-nowrap gap-4">
                       {infoRowEntries.map((entry) => (
-                        <div key={entry.id} className="flex-1 text-center">
+                        <div
+                          key={entry.id}
+                          className="flex flex-1 flex-col items-center gap-2 text-center"
+                        >
                           <span className="text-xs text-muted-foreground">{entry.label}</span>
-                          <p className="mt-2 text-sm text-foreground">{entry.value}</p>
+                          <div className="rounded-full border border-input px-4 py-2">
+                            <span className="text-sm text-foreground">{entry.value}</span>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -1190,7 +1312,7 @@ export function DivarPostsFeed(): JSX.Element {
                     {selectedDescriptionLines ? (
                       <div className="col-span-full space-y-1">
                         <dt className="font-medium text-foreground">{t('labels.description')}</dt>
-                        <dd className="text-sm text-muted-foreground">
+                        <dd className="break-words text-sm text-muted-foreground">
                           {selectedDescriptionLines.map((line, index) => (
                             <span key={`description-line-${index}`}>
                               {line || '\u00A0'}
@@ -1269,6 +1391,125 @@ export function DivarPostsFeed(): JSX.Element {
               </div>
             </div>
           ) : null}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={downloadDialogOpen} onOpenChange={setDownloadDialogOpen}>
+        <DialogContent
+          hideCloseButton
+          className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] sm:left-1/2 sm:top-1/2 sm:flex sm:h-[90vh] sm:w-full sm:max-w-3xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:flex-col sm:overflow-hidden sm:rounded-2xl sm:border sm:p-6"
+        >
+          <div className="flex h-full flex-col overflow-hidden">
+            <div className="border-b border-border px-6 py-4 sm:hidden">
+              <p className="text-center text-base font-semibold">{t('downloadPhotos')}</p>
+            </div>
+            <div className="hidden px-6 py-4 sm:block">
+              <DialogHeader>
+                <DialogTitle>{t('downloadPhotos')}</DialogTitle>
+              </DialogHeader>
+            </div>
+            <div className="flex-1 overflow-y-auto px-6 pb-4 pt-2 sm:px-6">
+              {hasDownloadableMedia ? (
+                <div className="grid grid-cols-3 gap-3 md:grid-cols-8 lg:grid-cols-12">
+                  {downloadMedias.map((media, index) => {
+                    const downloadUrl = getMediaDownloadUrl(media) ?? media.url ?? null;
+                    const isDownloading = downloadingMediaId === media.id;
+                    return (
+                      <div
+                        key={media.id ?? `download-media-${index}`}
+                        className="flex flex-col gap-2"
+                      >
+                        <div className="aspect-[4/3] overflow-hidden rounded-xl border border-border/80">
+                          <img
+                            src={media.thumbnailUrl ?? media.url ?? ''}
+                            alt={resolveMediaAlt(
+                              media,
+                              selectedPost?.title,
+                              selectedPost?.externalId,
+                            )}
+                            className="size-full object-cover"
+                            draggable={false}
+                          />
+                        </div>
+                        {downloadUrl ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={isDownloading}
+                            className="flex items-center justify-center gap-1 text-xs"
+                            onClick={() => {
+                              void handleSingleDownload(media, index);
+                            }}
+                          >
+                            <Download className="size-4" aria-hidden />
+                            <span>
+                              {isDownloading
+                                ? t('downloadInProgress')
+                                : t('downloadSingle')}
+                            </span>
+                          </Button>
+                        ) : (
+                          <span className="text-center text-xs text-muted-foreground">
+                            {t('downloadUnavailable')}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">{t('downloadNoPhotos')}</p>
+              )}
+            </div>
+            <div
+              className={cn(
+                'px-6 py-4 bg-background/95 border-t border-border',
+                'sm:px-6 sm:bg-transparent sm:border-0',
+              )}
+            >
+              <div
+                className={cn(
+                  'flex flex-col gap-3',
+                  'sm:flex-row sm:flex-wrap',
+                  isRTL ? 'sm:flex-row-reverse' : 'sm:flex-row',
+                )}
+              >
+                {isZipDownload && photoDownloadUrl ? (
+                  <Button
+                    className="flex flex-1 min-w-[140px] justify-center"
+                    disabled={downloadingMediaId === 'zip'}
+                    onClick={() => {
+                      setDownloadingMediaId('zip');
+                      const link = document.createElement('a');
+                      link.href = photoDownloadUrl;
+                      link.download = `${sanitizeFileName(
+                        selectedPost?.externalId ?? selectedPost?.id ?? 'post',
+                      )}-photos.zip`;
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      setTimeout(() => setDownloadingMediaId(null), 3000);
+                    }}
+                  >
+                    {downloadingMediaId === 'zip' ? (
+                      <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
+                    ) : (
+                      <Download className="mr-2 size-4" aria-hidden />
+                    )}
+                    {downloadingMediaId === 'zip' ? t('downloadInProgress') : t('downloadAllZip')}
+                  </Button>
+                ) : null}
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="flex-1 min-w-[140px]"
+                  onClick={() => setDownloadDialogOpen(false)}
+                >
+                  {t('close')}
+                </Button>
+              </div>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </Card>

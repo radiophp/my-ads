@@ -11,6 +11,7 @@ import {
 import type { DivarPostSummary } from '@/types/divar-posts';
 import type { AmenityConfig, DetailEntry } from '@/types/divar-posts-feed';
 import type { useTranslations } from 'next-intl';
+import { cn } from '@/lib/utils';
 
 export const AMENITY_CONFIG: AmenityConfig[] = [
   { key: 'hasParking', icon: Car, labelKey: 'labels.hasParking' },
@@ -28,7 +29,6 @@ export const FEATURED_RTL_ORDER: Record<string, number> = {
 const PRIMARY_PRICE_KEYS = ['labels.price', 'labels.pricePerSquare'] as const;
 const RENT_PRICE_KEYS = ['labels.depositAmount', 'labels.rent'] as const;
 export const INFO_ROW_KEYS = ['labels.rooms', 'labels.floor', 'labels.yearBuilt'] as const;
-export const EXCLUDED_ATTRIBUTE_LABELS = new Set(['آسانسور', 'پارکینگ', 'انباری']);
 
 export const isFeaturedDetailKey = (labelKey: string): boolean =>
   FEATURED_DETAIL_KEYS.includes(labelKey as (typeof FEATURED_DETAIL_KEYS)[number]);
@@ -61,12 +61,14 @@ type PriceSummaryRowProps = {
   detailEntries: DetailEntry[];
   isRTL: boolean;
   entries?: DetailEntry[];
+  className?: string;
 };
 
 export function PriceSummaryRow({
   detailEntries,
   isRTL,
   entries: providedEntries,
+  className,
 }: PriceSummaryRowProps): JSX.Element | null {
   const entries = providedEntries ?? buildFeaturedDetailEntries(detailEntries);
   if (entries.length === 0) {
@@ -80,7 +82,7 @@ export function PriceSummaryRow({
     : entries;
 
   return (
-    <div className="mb-4 flex w-full flex-nowrap gap-4">
+    <div className={cn('mb-4 flex w-full flex-nowrap gap-4', className)}>
       {ordered.map((entry, index) => {
         const flexClasses = index === 1 ? 'flex-1 sm:flex-[2]' : 'flex-1 sm:flex-[5]';
         return (
@@ -102,11 +104,13 @@ export function PriceSummaryRow({
 type InfoRowsProps = {
   detailEntries: DetailEntry[];
   entries?: DetailEntry[];
+  className?: string;
 };
 
 export function InfoRowSection({
   detailEntries,
   entries: providedEntries,
+  className,
 }: InfoRowsProps): JSX.Element | null {
   const entries = providedEntries ?? buildInfoRowEntries(detailEntries);
   if (entries.length === 0) {
@@ -114,7 +118,7 @@ export function InfoRowSection({
   }
 
   return (
-    <div className="mb-4 flex w-full flex-nowrap gap-4">
+    <div className={cn('mb-4 flex w-full flex-nowrap gap-4', className)}>
       {entries.map((entry) => (
         <div key={entry.id} className="flex flex-1 flex-col items-center gap-2 text-center">
           <span className="text-xs text-muted-foreground">{entry.label}</span>
@@ -140,9 +144,6 @@ export function AmenitiesSection({ post, t }: AmenitiesSectionProps): JSX.Elemen
   const items = AMENITY_CONFIG.map((config) => {
     const value = post[config.key];
     if (typeof value !== 'boolean') {
-      return null;
-    }
-    if (EXCLUDED_ATTRIBUTE_LABELS.has(t(config.labelKey))) {
       return null;
     }
     return { ...config, value };

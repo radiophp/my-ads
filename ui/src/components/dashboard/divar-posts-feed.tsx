@@ -3,17 +3,11 @@
 
 import type { JSX } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ExternalLink, Loader2, Store, Tag, UserRound } from 'lucide-react';
+import { ExternalLink, Loader2 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { useLazyGetDivarPostsQuery } from '@/features/api/apiSlice';
 import type { DivarPostSummary } from '@/types/divar-posts';
@@ -21,18 +15,9 @@ import { useAppSelector } from '@/lib/hooks';
 import { DownloadPhotosDialog } from '@/components/dashboard/divar-posts/download-photos-dialog';
 import { serializeCategoryFilterValues } from '@/components/dashboard/divar-posts/helpers';
 import { PostCard } from '@/components/dashboard/divar-posts/post-card';
-import { PostMediaCarousel } from '@/components/dashboard/divar-posts/post-media-carousel';
-import {
-  AmenitiesSection,
-  AttributeLabelGrid,
-  AttributeValueGrid,
-  InfoRowSection,
-  PriceSummaryRow,
-  EXCLUDED_ATTRIBUTE_LABELS,
-  buildFeaturedDetailEntries,
-  buildInfoRowEntries,
-} from '@/components/dashboard/divar-posts/post-detail-sections';
-import type { DetailEntry } from '@/types/divar-posts-feed';
+import { buildPostDetailData } from '@/components/dashboard/divar-posts/post-detail-data';
+import { PostDetailView } from '@/components/dashboard/divar-posts/post-detail-view';
+import { getBusinessTypeBadge } from '@/components/dashboard/divar-posts/business-badge';
 
 export function DivarPostsFeed(): JSX.Element {
   const t = useTranslations('dashboard.posts');
@@ -271,35 +256,10 @@ export function DivarPostsFeed(): JSX.Element {
     [currencyFormatter],
   );
 
-  const getBusinessTypeBadge = useCallback(
-    (value: string | null) => {
-      if (!value) {
-        return null;
-      }
-      const normalized = value.trim().toLowerCase();
-      const realtorValues = new Set(['real-estate-business', 'real-estate', 'premium-panel']);
-      if (realtorValues.has(normalized)) {
-        return {
-          label: t('businessType.realEstateBusiness'),
-          className: 'bg-black/70',
-          icon: <Store className="size-3.5" aria-hidden />,
-        };
-      }
-      if (normalized === 'personal') {
-        return {
-          label: t('businessType.personal'),
-          className: 'bg-black/70',
-          icon: <UserRound className="size-3.5" aria-hidden />,
-        };
-      }
-      return null;
-    },
-    [t],
+  const selectedBusinessBadge = useMemo(
+    () => (selectedPost ? getBusinessTypeBadge(selectedPost.businessType ?? null, t) : null),
+    [selectedPost, t],
   );
-
-  const selectedBusinessBadge = selectedPost
-    ? getBusinessTypeBadge(selectedPost.businessType ?? null)
-    : null;
   const selectedPublishedDisplay = selectedPost
     ? selectedPost.publishedAt
       ? dateFormatter.format(new Date(selectedPost.publishedAt))
@@ -321,191 +281,17 @@ export function DivarPostsFeed(): JSX.Element {
   useEffect(() => {
     setDownloadDialogOpen(false);
   }, [selectedPost]);
-  const selectedDescriptionLines = selectedPost?.description
-    ? selectedPost.description.split('\n')
-    : null;
-  const selectedAttributes =
-    selectedPost?.attributes && selectedPost.attributes.length > 0
-      ? selectedPost.attributes
-      : null;
-  const formatAttributeValue = useCallback(
-    (attribute: NonNullable<typeof selectedAttributes>[number]): string | null => {
-      const normalizedString = attribute.stringValue?.trim();
-      if (normalizedString) {
-        return normalizedString;
-      }
-      if (typeof attribute.numberValue === 'number' && !Number.isNaN(attribute.numberValue)) {
-        const formatted = numberFormatter.format(attribute.numberValue);
-        return attribute.unit ? `${formatted} ${attribute.unit}` : formatted;
-      }
-      if (typeof attribute.boolValue === 'boolean') {
-        return attribute.boolValue ? t('labels.booleanYes') : t('labels.booleanNo');
-      }
-      if (typeof attribute.rawValue === 'string' && attribute.rawValue.trim().length > 0) {
-        return attribute.rawValue.trim();
-      }
-      if (attribute.rawValue !== null && attribute.rawValue !== undefined) {
-        try {
-          return JSON.stringify(attribute.rawValue);
-        } catch (error) {
-          console.warn('Failed to stringify attribute rawValue', error);
-        }
-      }
-      return null;
-    },
-    [numberFormatter, t],
-  );
-  const attributeValueEntries: { id: string; label: string; value: string }[] = [];
-  const attributeLabelOnlyEntries: { id: string; label: string }[] = [];
-  if (selectedAttributes && selectedAttributes.length > 0) {
-    const seenValueKeys = new Set<string>();
-    const seenLabelKeys = new Set<string>();
-    selectedAttributes.forEach((attribute, index) => {
-      const label = attribute.label?.trim() || attribute.key;
-      const value = formatAttributeValue(attribute);
-      if (!label || !value) {
-        return;
-      }
-      const id = attribute.id ?? `${attribute.key}-${index}`;
-      const normalizedLabel = label;
-      const normalizedValue = value;
-      const isLabelOnly = normalizedLabel === normalizedValue;
-      if (isLabelOnly) {
-        if (!seenLabelKeys.has(normalizedLabel)) {
-          attributeLabelOnlyEntries.push({ id, label: normalizedLabel });
-          seenLabelKeys.add(normalizedLabel);
-        }
-      } else {
-        const key = `${normalizedLabel}|${normalizedValue}`;
-        if (seenValueKeys.has(key) || EXCLUDED_ATTRIBUTE_LABELS.has(normalizedLabel)) {
-          return;
-        }
-        seenValueKeys.add(key);
-        attributeValueEntries.push({ id, label: normalizedLabel, value: normalizedValue });
-      }
-    });
-    attributeLabelOnlyEntries.sort((a, b) => a.label.length - b.label.length);
-  }
-
-  if (selectedPost && typeof selectedPost.isRebuilt === 'boolean') {
-    const rebuildLabel = `${t('labels.isRebuilt')} ${
-      selectedPost.isRebuilt ? t('labels.booleanYes') : t('labels.booleanNo')
-    }`;
-    if (!attributeLabelOnlyEntries.some((entry) => entry.label === rebuildLabel)) {
-      attributeLabelOnlyEntries.push({
-        id: 'detail-isRebuilt',
-        label: rebuildLabel,
-      });
-      attributeLabelOnlyEntries.sort((a, b) => a.label.length - b.label.length);
-    }
-  }
-
-  const detailEntries = useMemo<DetailEntry[]>(() => {
+  const detailData = useMemo(() => {
     if (!selectedPost) {
-      return [];
-    }
-
-    const entries: DetailEntry[] = [];
-    let counter = 0;
-
-    const addEntry = (labelKey: string, value?: string | null) => {
-      if (!value || value.trim().length === 0) {
-        return;
-      }
-      entries.push({
-        id: `${labelKey}-${counter++}`,
-        labelKey,
-        label: t(labelKey),
-        value: value.trim(),
-      });
-    };
-
-    const addPriceEntry = (labelKey: string, amount?: number | null) => {
-      const formatted = formatPrice(amount ?? null);
-      if (formatted) {
-        addEntry(labelKey, formatted);
-      }
-    };
-
-    const formatLabeledValue = (
-      labelValue?: string | null,
-      numericValue?: number | null,
-      fallback?: (value: number) => string,
-    ): string | null => {
-      const trimmed = labelValue?.trim();
-      if (trimmed) {
-        return trimmed;
-      }
-      if (typeof numericValue === 'number' && !Number.isNaN(numericValue)) {
-        if (fallback) {
-          return fallback(numericValue);
-        }
-        return numberFormatter.format(numericValue);
-      }
       return null;
-    };
-
-    addPriceEntry('labels.price', selectedPost.priceTotal);
-    addPriceEntry('labels.pricePerSquare', selectedPost.pricePerSquare);
-    addPriceEntry('labels.depositAmount', selectedPost.depositAmount);
-    addPriceEntry('labels.rent', selectedPost.rentAmount);
-    addPriceEntry('labels.dailyRateNormal', selectedPost.dailyRateNormal);
-    addPriceEntry('labels.dailyRateWeekend', selectedPost.dailyRateWeekend);
-    addPriceEntry('labels.dailyRateHoliday', selectedPost.dailyRateHoliday);
-    addPriceEntry('labels.extraPersonFee', selectedPost.extraPersonFee);
-
-    addEntry(
-      'labels.area',
-      formatLabeledValue(selectedPost.areaLabel, selectedPost.area, (value) =>
-        t('areaLabel', { value }),
-      ),
-    );
-    addEntry(
-      'labels.landArea',
-      formatLabeledValue(selectedPost.landAreaLabel, selectedPost.landArea),
-    );
-    addEntry(
-      'labels.rooms',
-      formatLabeledValue(selectedPost.roomsLabel, selectedPost.rooms),
-    );
-    addEntry(
-      'labels.floor',
-      formatLabeledValue(selectedPost.floorLabel, selectedPost.floor),
-    );
-    addEntry('labels.floorsCount', formatLabeledValue(null, selectedPost.floorsCount));
-    addEntry('labels.unitPerFloor', formatLabeledValue(null, selectedPost.unitPerFloor));
-    addEntry(
-      'labels.yearBuilt',
-      formatLabeledValue(selectedPost.yearBuiltLabel, selectedPost.yearBuilt),
-    );
-    addEntry(
-      'labels.capacity',
-      formatLabeledValue(selectedPost.capacityLabel, selectedPost.capacity),
-    );
-
-    return entries;
-  }, [formatPrice, numberFormatter, selectedPost, t]);
-
-  const featuredDetailEntries = useMemo(
-    () => buildFeaturedDetailEntries(detailEntries),
-    [detailEntries],
-  );
-  const infoRowEntries = useMemo(() => buildInfoRowEntries(detailEntries), [detailEntries]);
-  const featuredKeys = useMemo(
-    () => new Set(featuredDetailEntries.map((entry) => entry.labelKey)),
-    [featuredDetailEntries],
-  );
-  const infoKeys = useMemo(
-    () => new Set(infoRowEntries.map((entry) => entry.labelKey)),
-    [infoRowEntries],
-  );
-  const secondaryDetailEntries = useMemo(
-    () =>
-      detailEntries.filter(
-        (entry) => !featuredKeys.has(entry.labelKey) && !infoKeys.has(entry.labelKey),
-      ),
-    [detailEntries, featuredKeys, infoKeys],
-  );
+    }
+    return buildPostDetailData({
+      post: selectedPost,
+      t,
+      formatPrice,
+      numberFormatter,
+    });
+  }, [selectedPost, t, formatPrice, numberFormatter]);
 
   const openPostModal = (post: DivarPostSummary) => {
     setSelectedPost(post);
@@ -525,7 +311,6 @@ export function DivarPostsFeed(): JSX.Element {
       post={post}
       t={t}
       onSelect={openPostModal}
-      getBusinessBadge={getBusinessTypeBadge}
       formatPrice={formatPrice}
       getRelativeLabel={getRelativeLabel}
       dateFormatter={dateFormatter}
@@ -583,7 +368,7 @@ export function DivarPostsFeed(): JSX.Element {
       <Dialog open={dialogOpen} onOpenChange={closeDialog}>
         <DialogContent
           hideCloseButton
-          className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] sm:left-1/2 sm:top-1/2 sm:flex sm:max-h-[90vh] sm:w-full sm:max-w-3xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:flex-col sm:overflow-hidden sm:rounded-2xl sm:border sm:p-6"
+          className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] sm:left-1/2 sm:top-1/2 sm:flex sm:max-h-[90vh] sm:w-full sm:max-w-[1200px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:flex-col sm:overflow-hidden sm:rounded-2xl sm:border sm:p-8"
           onPointerDownOutside={(event) => {
             if (downloadDialogOpen) {
               event.preventDefault();
@@ -610,57 +395,23 @@ export function DivarPostsFeed(): JSX.Element {
                   <DialogTitle className="flex flex-wrap items-center gap-2 break-words">
                     {selectedPost.title ?? t('untitled', { externalId: selectedPost.externalId })}
                   </DialogTitle>
-                  <DialogDescription className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                    <Tag className="size-4" aria-hidden />
-                    {selectedPost.categorySlug}
-                  </DialogDescription>
                 </DialogHeader>
               </div>
 
               <div className="flex-1 overflow-y-auto px-6 py-4 sm:p-0">
-                <div className="space-y-4">
-                  <PostMediaCarousel
+                {detailData ? (
+                  <PostDetailView
                     post={selectedPost}
+                    t={t}
                     isRTL={isRTL}
                     businessBadge={selectedBusinessBadge}
                     cityDistrict={selectedCityDistrict}
                     publishedDisplay={selectedPublishedDisplay}
                     hasDownloadableMedia={hasDownloadableMedia}
                     onRequestDownload={handleOpenDownloadDialog}
-                    t={t}
+                    detailData={detailData}
                   />
-                  <PriceSummaryRow
-                    detailEntries={detailEntries}
-                    entries={featuredDetailEntries}
-                    isRTL={isRTL}
-                  />
-                  <AmenitiesSection post={selectedPost} t={t} />
-                  <InfoRowSection detailEntries={detailEntries} entries={infoRowEntries} />
-
-                  <dl className="grid gap-3 text-sm text-muted-foreground sm:grid-cols-2">
-                    {secondaryDetailEntries.map((entry) => (
-                      <div key={entry.id}>
-                        <dt className="font-medium text-foreground">{entry.label}</dt>
-                        <dd className="text-muted-foreground">{entry.value}</dd>
-                      </div>
-                    ))}
-                    {selectedDescriptionLines ? (
-                      <div className="col-span-full space-y-1">
-                        <dt className="font-medium text-foreground">{t('labels.description')}</dt>
-                        <dd className="break-words text-sm text-muted-foreground">
-                          {selectedDescriptionLines.map((line, index) => (
-                            <span key={`description-line-${index}`}>
-                              {line || '\u00A0'}
-                              {index < selectedDescriptionLines.length - 1 ? <br /> : null}
-                            </span>
-                          ))}
-                        </dd>
-                      </div>
-                    ) : null}
-                    <AttributeValueGrid entries={attributeValueEntries} />
-                    <AttributeLabelGrid entries={attributeLabelOnlyEntries} />
-                  </dl>
-                </div>
+                ) : null}
               </div>
 
               <div className="border-t border-border bg-background/95 px-6 py-4 sm:border-0 sm:bg-transparent sm:px-0">

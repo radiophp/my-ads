@@ -248,6 +248,9 @@
       "loading": "Loading…",
       "loadMore": "Load more",
       "endOfFeed": "You have reached the end of the feed.",
+      "decorativePhotos": "decorative",
+      "detailLoadFailed": "We could not load this post. Please try again.",
+      "backToDashboard": "Back to dashboard",
       "labels": {
         "location": "Location",
         "publishedAt": "Published",

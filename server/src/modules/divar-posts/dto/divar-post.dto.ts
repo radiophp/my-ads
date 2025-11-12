@@ -138,6 +138,9 @@ export class DivarPostListItemDto {
   isRebuilt!: boolean | null;
 
   @ApiProperty({ nullable: true })
+  photosVerified!: boolean | null;
+
+  @ApiProperty({ nullable: true })
   cityName!: string | null;
 
   @ApiProperty({ nullable: true })

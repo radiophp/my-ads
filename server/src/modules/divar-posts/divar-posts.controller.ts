@@ -21,7 +21,7 @@ import { JwtAuthGuard } from '@app/modules/auth/guards/jwt-auth.guard';
 import { Public } from '@app/common/decorators/public.decorator';
 import { StorageService } from '@app/platform/storage/storage.service';
 import { DivarPostsAdminService } from './divar-posts-admin.service';
-import type { PaginatedDivarPostsDto } from './dto/divar-post.dto';
+import { DivarPostListItemDto, type PaginatedDivarPostsDto } from './dto/divar-post.dto';
 
 type PostWithMedias = NonNullable<Awaited<ReturnType<DivarPostsAdminService['getPostWithMedias']>>>;
 
@@ -94,6 +94,20 @@ export class DivarPostsController {
     });
   }
 
+  @Get(':id')
+  @ApiOperation({ summary: 'Get a normalized Divar post by id' })
+  @ApiOkResponse({ type: DivarPostListItemDto })
+  async getPostById(@Param('id') id: string): Promise<DivarPostListItemDto> {
+    return this.fetchPostOrThrow(id);
+  }
+
+  @Get('detail/:id')
+  @ApiOperation({ summary: 'Get a normalized Divar post by id (stable path)' })
+  @ApiOkResponse({ type: DivarPostListItemDto })
+  async getPostByIdDetail(@Param('id') id: string): Promise<DivarPostListItemDto> {
+    return this.fetchPostOrThrow(id);
+  }
+
   @Get(':id/photos.zip')
   @Public()
   @ApiOperation({ summary: 'Download a ZIP archive containing all post photos' })
@@ -134,6 +148,17 @@ export class DivarPostsController {
 
   private buildPhotoArchiveKey(postId: string, downloadName: string): string {
     return `divar-posts/${postId}/${downloadName}`;
+  }
+
+  private async fetchPostOrThrow(id: string): Promise<DivarPostListItemDto> {
+    if (!id || typeof id !== 'string') {
+      throw new BadRequestException('A valid post id is required.');
+    }
+    const post = await this.divarPostsService.getNormalizedPostById(id);
+    if (!post) {
+      throw new NotFoundException('Post not found.');
+    }
+    return post;
   }
 
   private async ensurePhotoArchiveExists(

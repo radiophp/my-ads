@@ -248,6 +248,9 @@
       "loading": "در حال بارگذاری…",
       "loadMore": "مشاهده موارد بیشتر",
       "endOfFeed": "به انتهای فهرست رسیدید.",
+      "decorativePhotos": "تزئینی",
+      "detailLoadFailed": "امکان بارگذاری این آگهی وجود ندارد. لطفاً دوباره تلاش کنید.",
+      "backToDashboard": "بازگشت به داشبورد",
       "labels": {
         "location": "موقعیت",
         "publishedAt": "زمان انتشار",

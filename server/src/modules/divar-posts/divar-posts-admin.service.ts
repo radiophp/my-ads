@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@app/platform/database/prisma.service';
 import { PostAnalysisStatus, Prisma } from '@prisma/client';
 import type { PaginatedPostsToAnalyzeDto, PostToAnalyzeItemDto } from './dto/post-to-analyze.dto';
-import type { PaginatedDivarPostsDto } from './dto/divar-post.dto';
+import type { PaginatedDivarPostsDto, DivarPostListItemDto } from './dto/divar-post.dto';
 
 const PAGE_SIZE_LIMIT = 100;
 
@@ -40,6 +40,7 @@ const DIVAR_POST_SUMMARY_SELECT = {
   hasWarehouse: true,
   hasBalcony: true,
   isRebuilt: true,
+  photosVerified: true,
   cityName: true,
   districtName: true,
   provinceName: true,
@@ -226,97 +227,7 @@ export class DivarPostsAdminService {
     const items = hasMore ? records.slice(0, take) : records;
 
     return {
-      items: items.map((record) => ({
-        id: record.id,
-        externalId: record.externalId,
-        title: record.title ?? record.displayTitle ?? record.seoTitle ?? null,
-        description: record.description ?? null,
-        priceTotal:
-          record.priceTotal !== null && record.priceTotal !== undefined
-            ? Number(record.priceTotal)
-            : null,
-        rentAmount:
-          record.rentAmount !== null && record.rentAmount !== undefined
-            ? Number(record.rentAmount)
-            : null,
-        depositAmount:
-          record.depositAmount !== null && record.depositAmount !== undefined
-            ? Number(record.depositAmount)
-            : null,
-        dailyRateNormal:
-          record.dailyRateNormal !== null && record.dailyRateNormal !== undefined
-            ? Number(record.dailyRateNormal)
-            : null,
-        dailyRateWeekend:
-          record.dailyRateWeekend !== null && record.dailyRateWeekend !== undefined
-            ? Number(record.dailyRateWeekend)
-            : null,
-        dailyRateHoliday:
-          record.dailyRateHoliday !== null && record.dailyRateHoliday !== undefined
-            ? Number(record.dailyRateHoliday)
-            : null,
-        extraPersonFee:
-          record.extraPersonFee !== null && record.extraPersonFee !== undefined
-            ? Number(record.extraPersonFee)
-            : null,
-        pricePerSquare:
-          record.pricePerSquare !== null && record.pricePerSquare !== undefined
-            ? Number(record.pricePerSquare)
-            : null,
-        area: record.area ?? null,
-        areaLabel: record.areaLabel ?? null,
-        landArea: record.landArea ?? null,
-        landAreaLabel: record.landAreaLabel ?? null,
-        rooms: record.rooms ?? null,
-        roomsLabel: record.roomsLabel ?? null,
-        floor: record.floor ?? null,
-        floorLabel: record.floorLabel ?? null,
-        floorsCount: record.floorsCount ?? null,
-        unitPerFloor: record.unitPerFloor ?? null,
-        yearBuilt: record.yearBuilt ?? null,
-        yearBuiltLabel: record.yearBuiltLabel ?? null,
-        capacity: record.capacity ?? null,
-        capacityLabel: record.capacityLabel ?? null,
-        hasParking: record.hasParking ?? null,
-        hasElevator: record.hasElevator ?? null,
-        hasWarehouse: record.hasWarehouse ?? null,
-        hasBalcony: record.hasBalcony ?? null,
-        isRebuilt: record.isRebuilt ?? null,
-        cityName: record.cityName ?? null,
-        districtName: record.districtName ?? null,
-        provinceName: record.provinceName ?? null,
-        categorySlug: record.categorySlug,
-        businessType: record.businessType ?? null,
-        publishedAt: record.publishedAt,
-        publishedAtJalali: record.publishedAtJalali,
-        createdAt: record.createdAt,
-        permalink:
-          record.permalink ??
-          (record.externalId ? `https://divar.ir/v/${record.externalId}` : null),
-        imageUrl: record.medias[0]?.localUrl ?? record.medias[0]?.url ?? null,
-        mediaCount: record.medias.length,
-        medias: record.medias.map((media) => ({
-          id: media.id,
-          url: media.localUrl ?? media.url,
-          thumbnailUrl: media.localThumbnailUrl ?? media.thumbnailUrl,
-          alt: media.alt,
-        })),
-        attributes:
-          record.attributes?.map((attribute) => ({
-            id: attribute.id,
-            key: attribute.key,
-            label: attribute.label ?? null,
-            type: attribute.type ?? null,
-            stringValue: attribute.stringValue ?? null,
-            numberValue:
-              attribute.numberValue !== null && attribute.numberValue !== undefined
-                ? Number(attribute.numberValue)
-                : null,
-            boolValue: attribute.boolValue ?? null,
-            unit: attribute.unit ?? null,
-            rawValue: attribute.rawValue ?? null,
-          })) ?? [],
-      })),
+      items: items.map((record) => this.mapRecordToListItem(record)),
       nextCursor: hasMore ? items[items.length - 1].id : null,
       hasMore,
     };
@@ -344,6 +255,17 @@ export class DivarPostsAdminService {
         },
       },
     });
+  }
+
+  async getNormalizedPostById(id: string): Promise<DivarPostListItemDto | null> {
+    const record = await this.prisma.divarPost.findUnique({
+      where: { id },
+      select: DIVAR_POST_SUMMARY_SELECT,
+    });
+    if (!record) {
+      return null;
+    }
+    return this.mapRecordToListItem(record);
   }
 
   private applyCategoryFilters(
@@ -567,6 +489,102 @@ export class DivarPostsAdminService {
     where.AND = [where.AND, condition];
   }
 
+  // eslint-disable-next-line @typescript-eslint/class-methods-use-this
+  private mapRecordToListItem(record: DivarPostSummaryRecord): DivarPostListItemDto {
+    return {
+      id: record.id,
+      externalId: record.externalId ?? '',
+      title: record.title ?? record.displayTitle ?? record.seoTitle ?? null,
+      description: record.description ?? null,
+      priceTotal:
+        record.priceTotal !== null && record.priceTotal !== undefined
+          ? Number(record.priceTotal)
+          : null,
+      rentAmount:
+        record.rentAmount !== null && record.rentAmount !== undefined
+          ? Number(record.rentAmount)
+          : null,
+      depositAmount:
+        record.depositAmount !== null && record.depositAmount !== undefined
+          ? Number(record.depositAmount)
+          : null,
+      dailyRateNormal:
+        record.dailyRateNormal !== null && record.dailyRateNormal !== undefined
+          ? Number(record.dailyRateNormal)
+          : null,
+      dailyRateWeekend:
+        record.dailyRateWeekend !== null && record.dailyRateWeekend !== undefined
+          ? Number(record.dailyRateWeekend)
+          : null,
+      dailyRateHoliday:
+        record.dailyRateHoliday !== null && record.dailyRateHoliday !== undefined
+          ? Number(record.dailyRateHoliday)
+          : null,
+      extraPersonFee:
+        record.extraPersonFee !== null && record.extraPersonFee !== undefined
+          ? Number(record.extraPersonFee)
+          : null,
+      pricePerSquare:
+        record.pricePerSquare !== null && record.pricePerSquare !== undefined
+          ? Number(record.pricePerSquare)
+          : null,
+      area: record.area ?? null,
+      areaLabel: record.areaLabel ?? null,
+      landArea: record.landArea ?? null,
+      landAreaLabel: record.landAreaLabel ?? null,
+      rooms: record.rooms ?? null,
+      roomsLabel: record.roomsLabel ?? null,
+      floor: record.floor ?? null,
+      floorLabel: record.floorLabel ?? null,
+      floorsCount: record.floorsCount ?? null,
+      unitPerFloor: record.unitPerFloor ?? null,
+      yearBuilt: record.yearBuilt ?? null,
+      yearBuiltLabel: record.yearBuiltLabel ?? null,
+      capacity: record.capacity ?? null,
+      capacityLabel: record.capacityLabel ?? null,
+      hasParking: record.hasParking ?? null,
+      hasElevator: record.hasElevator ?? null,
+      hasWarehouse: record.hasWarehouse ?? null,
+      hasBalcony: record.hasBalcony ?? null,
+      isRebuilt: record.isRebuilt ?? null,
+      photosVerified: record.photosVerified ?? null,
+      cityName: record.cityName ?? null,
+      districtName: record.districtName ?? null,
+      provinceName: record.provinceName ?? null,
+      categorySlug: record.categorySlug,
+      businessType: record.businessType ?? null,
+      publishedAt: record.publishedAt,
+      publishedAtJalali: record.publishedAtJalali ?? null,
+      createdAt: record.createdAt,
+      permalink:
+        record.permalink ?? (record.externalId ? `https://divar.ir/v/${record.externalId}` : null),
+      imageUrl: record.medias[0]?.localUrl ?? record.medias[0]?.url ?? null,
+      mediaCount: record.medias.length,
+      medias: record.medias.map((media) => ({
+        id: media.id,
+        url: media.localUrl ?? media.url ?? '',
+        thumbnailUrl:
+          media.localThumbnailUrl ?? media.thumbnailUrl ?? media.localUrl ?? media.url ?? null,
+        alt: media.alt ?? null,
+      })),
+      attributes:
+        record.attributes?.map((attribute) => ({
+          id: attribute.id,
+          key: attribute.key,
+          label: attribute.label ?? null,
+          type: attribute.type ?? null,
+          stringValue: attribute.stringValue ?? null,
+          numberValue:
+            attribute.numberValue !== null && attribute.numberValue !== undefined
+              ? Number(attribute.numberValue)
+              : null,
+          boolValue: attribute.boolValue ?? null,
+          unit: attribute.unit ?? null,
+          rawValue: attribute.rawValue ?? null,
+        })) ?? [],
+    };
+  }
+
   private extractSeoTitle(payload: Prisma.JsonValue): string | null {
     if (!payload || typeof payload !== 'object') {
       return null;
@@ -581,3 +599,7 @@ export class DivarPostsAdminService {
     return typeof title === 'string' && title.trim().length > 0 ? title.trim() : null;
   }
 }
+
+type DivarPostSummaryRecord = Prisma.DivarPostGetPayload<{
+  select: typeof DIVAR_POST_SUMMARY_SELECT;
+}>;

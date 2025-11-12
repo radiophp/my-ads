@@ -68,6 +68,7 @@ export type DivarPostSummary = {
   hasWarehouse: boolean | null;
   hasBalcony: boolean | null;
   isRebuilt: boolean | null;
+  photosVerified: boolean | null;
   cityName: string | null;
   districtName: string | null;
   provinceName: string | null;

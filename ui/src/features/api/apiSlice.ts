@@ -16,7 +16,11 @@ import type {
   DivarCategoryFilterSummary,
 } from '@/types/divar-category';
 import type { AdminDashboardStats } from '@/types/admin';
-import type { PaginatedPostsToAnalyze, DivarPostListResponse } from '@/types/divar-posts';
+import type {
+  PaginatedPostsToAnalyze,
+  DivarPostListResponse,
+  DivarPostSummary,
+} from '@/types/divar-posts';
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:6200/api';
 
@@ -382,6 +386,10 @@ export const apiSlice = createApi({
             ]
           : [{ type: 'DivarPosts' as const, id: 'LIST' }],
     }),
+    getDivarPost: builder.query<DivarPostSummary, string>({
+      query: (id) => `/divar-posts/detail/${id}`,
+      providesTags: (result, error, id) => [{ type: 'DivarPosts', id }],
+    }),
   }),
 });
 
@@ -415,6 +423,7 @@ export const {
   useGetPostsToAnalyzeQuery,
   useGetDivarPostsQuery,
   useLazyGetDivarPostsQuery,
+  useGetDivarPostQuery,
 } = apiSlice;
 
 type UpdateCurrentUserPayload = Partial<{

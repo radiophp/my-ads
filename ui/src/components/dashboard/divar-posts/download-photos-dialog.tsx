@@ -54,11 +54,10 @@ export function DownloadPhotosDialog({
         const blob = await response.blob();
         const objectUrl = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
-        const label =
-          media.alt ??
-          post?.title ??
-          post?.externalId ??
-          `photo-${String(index + 1).padStart(2, '0')}`;
+        const rawLabel =
+          media.id ??
+          (post?.externalId ? `${post.externalId}-${index + 1}` : `photo-${index + 1}`);
+        const label = sanitizeFileName(rawLabel);
         const extensionMatch = downloadUrl.match(/\.(jpe?g|png|webp|gif|heic|heif)(?:\?|$)/i);
         const extension = extensionMatch ? extensionMatch[0].split('?')[0] : '.jpg';
         link.href = objectUrl;

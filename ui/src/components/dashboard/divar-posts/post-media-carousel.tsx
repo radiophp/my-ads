@@ -284,10 +284,10 @@ export function PostMediaCarousel({
 
   return (
     <div className="space-y-2">
-      {renderMediaBlock()}
+      <div className="mx-auto w-full max-w-[400px]">{renderMediaBlock()}</div>
       {mediaCount > 1 ? (
         <>
-          <div className="relative">
+          <div className="relative mx-auto w-full max-w-[400px]">
             <div className="flex flex-nowrap gap-2 overflow-x-auto pb-1 pr-8">
               {post.medias.map((media, index) => (
                 <button

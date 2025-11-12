@@ -1,29 +1,9 @@
-/* eslint-disable @next/next/no-img-element, tailwindcss/classnames-order */
+/* eslint-disable @next/next/no-img-element */
 'use client';
 
-import type { JSX, TouchEvent } from 'react';
+import type { JSX } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { LucideIcon } from 'lucide-react';
-import {
-  ArrowLeftRight,
-  ArrowUpDown,
-  Camera,
-  Car,
-  Clock3,
-  ExternalLink,
-  Loader2,
-  MapPin,
-  Download,
-  PanelsTopLeft,
-  Store,
-  Tag,
-  UserRound,
-  Warehouse,
-  CheckCircle2,
-  InfoIcon,
-  ChevronLeft,
-  ChevronRight,
-} from 'lucide-react';
+import { ExternalLink, Loader2, Store, Tag, UserRound } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
@@ -38,95 +18,21 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useLazyGetDivarPostsQuery } from '@/features/api/apiSlice';
 import type { DivarPostSummary } from '@/types/divar-posts';
 import { useAppSelector } from '@/lib/hooks';
-import type { CategoryFilterValue } from '@/features/search-filter/searchFilterSlice';
-import { cn } from '@/lib/utils';
-
-type AmenityKey = 'hasParking' | 'hasElevator' | 'hasWarehouse' | 'hasBalcony';
-
-type AmenityConfig = {
-  key: AmenityKey;
-  icon: LucideIcon;
-  labelKey: string;
-};
-
-const AMENITY_CONFIG: AmenityConfig[] = [
-  { key: 'hasParking', icon: Car, labelKey: 'labels.hasParking' },
-  { key: 'hasElevator', icon: ArrowUpDown, labelKey: 'labels.hasElevator' },
-  { key: 'hasWarehouse', icon: Warehouse, labelKey: 'labels.hasWarehouse' },
-  { key: 'hasBalcony', icon: PanelsTopLeft, labelKey: 'labels.hasBalcony' },
-];
-
-const PRIMARY_PRICE_KEYS = ['labels.price', 'labels.pricePerSquare'] as const;
-const RENT_PRICE_KEYS = ['labels.depositAmount', 'labels.rent'] as const;
-const FEATURED_DETAIL_KEYS = ['labels.price', 'labels.pricePerSquare', 'labels.area'] as const;
-const isFeaturedDetailKey = (labelKey: string): boolean =>
-  FEATURED_DETAIL_KEYS.includes(labelKey as (typeof FEATURED_DETAIL_KEYS)[number]);
-const FEATURED_RTL_ORDER: Record<string, number> = {
-  'labels.price': 0,
-  'labels.area': 1,
-  'labels.pricePerSquare': 2,
-};
-const EXCLUDED_ATTRIBUTE_LABELS = new Set(['آسانسور', 'پارکینگ', 'انباری']);
-const INFO_ROW_KEYS = ['labels.rooms', 'labels.floor', 'labels.yearBuilt'] as const;
-const isInfoRowKey = (labelKey: string): boolean =>
-  INFO_ROW_KEYS.includes(labelKey as (typeof INFO_ROW_KEYS)[number]);
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL && process.env.NEXT_PUBLIC_API_BASE_URL.length > 0
-    ? process.env.NEXT_PUBLIC_API_BASE_URL.replace(/\/$/, '')
-    : '/api';
-const buildPhotoDownloadUrl = (postId: string): string =>
-  `${API_BASE_URL}/divar-posts/${postId}/photos.zip`;
-
-type DetailEntry = {
-  id: string;
-  labelKey: string;
-  label: string;
-  value: string | null;
-};
-
-type DownloadableMedia = {
-  id: string;
-  url: string | null;
-  thumbnailUrl: string | null;
-  alt: string | null;
-};
-
-const getMediaDownloadUrl = (
-  media: DivarPostSummary['medias'][number] | DownloadableMedia,
-): string | null => {
-  if (!media) {
-    return null;
-  }
-  const candidate =
-    'localUrl' in media
-      ? (media as DivarPostSummary['medias'][number] & { localUrl?: string | null }).localUrl
-      : null;
-  return candidate ?? media.url ?? null;
-};
-
-const resolveMediaSrc = (
-  media: DivarPostSummary['medias'][number] | DownloadableMedia | null | undefined,
-  fallback?: string | null,
-): string => {
-  if (!media) {
-    return fallback ?? '';
-  }
-  if (
-    'localUrl' in media &&
-    typeof (media as { localUrl?: string | null }).localUrl === 'string' &&
-    (media as { localUrl?: string | null }).localUrl
-  ) {
-    return (media as { localUrl?: string | null }).localUrl as string;
-  }
-  return media.url ?? fallback ?? '';
-};
-
-const resolveMediaAlt = (
-  media: DivarPostSummary['medias'][number] | DownloadableMedia | null | undefined,
-  fallbackTitle?: string | null,
-  fallbackId?: string,
-): string =>
-  media?.alt ?? media?.id ?? fallbackTitle ?? fallbackId ?? 'post-media';
+import { DownloadPhotosDialog } from '@/components/dashboard/divar-posts/download-photos-dialog';
+import { serializeCategoryFilterValues } from '@/components/dashboard/divar-posts/helpers';
+import { PostCard } from '@/components/dashboard/divar-posts/post-card';
+import { PostMediaCarousel } from '@/components/dashboard/divar-posts/post-media-carousel';
+import {
+  AmenitiesSection,
+  AttributeLabelGrid,
+  AttributeValueGrid,
+  InfoRowSection,
+  PriceSummaryRow,
+  EXCLUDED_ATTRIBUTE_LABELS,
+  buildFeaturedDetailEntries,
+  buildInfoRowEntries,
+} from '@/components/dashboard/divar-posts/post-detail-sections';
+import type { DetailEntry } from '@/types/divar-posts-feed';
 
 export function DivarPostsFeed(): JSX.Element {
   const t = useTranslations('dashboard.posts');
@@ -137,10 +43,8 @@ export function DivarPostsFeed(): JSX.Element {
   const [hasMore, setHasMore] = useState(true);
   const [initializing, setInitializing] = useState(true);
   const [selectedPost, setSelectedPost] = useState<DivarPostSummary | null>(null);
-  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [downloadingMediaId, setDownloadingMediaId] = useState<string | null>(null);
   const [downloadDialogOpen, setDownloadDialogOpen] = useState(false);
   const [fetchPosts] = useLazyGetDivarPostsQuery();
   const {
@@ -401,141 +305,13 @@ export function DivarPostsFeed(): JSX.Element {
       ? dateFormatter.format(new Date(selectedPost.publishedAt))
       : (selectedPost.publishedAtJalali ?? t('labels.notAvailable'))
     : null;
-  const showThumbnailScrollHint = selectedPost ? selectedPost.medias.length > 3 : false;
   const selectedCityDistrict =
     selectedPost && (selectedPost.districtName || selectedPost.cityName)
       ? [selectedPost.districtName, selectedPost.cityName].filter(Boolean).join('، ')
       : null;
-  const selectedMedias = selectedPost?.medias ?? [];
-  const mediaCount = selectedMedias.length;
-  const hasMultiplePhotos = mediaCount > 1;
-  const currentMedia =
-    mediaCount > 0 ? selectedMedias[activeMediaIndex % mediaCount] ?? selectedMedias[0] : null;
-  const previousMedia = hasMultiplePhotos
-    ? selectedMedias[(activeMediaIndex - 1 + mediaCount) % mediaCount]
-    : null;
-  const nextMedia = hasMultiplePhotos
-    ? selectedMedias[(activeMediaIndex + 1) % mediaCount]
-    : null;
-  const singleMediaDownloadUrl =
-    selectedMedias.length === 1
-      ? getMediaDownloadUrl(selectedMedias[0]) ?? selectedPost?.imageUrl ?? null
-      : null;
-  const fallbackImageDownloadUrl =
-    selectedMedias.length === 0 ? selectedPost?.imageUrl ?? null : null;
-  const photoDownloadUrl = selectedPost
-    ? hasMultiplePhotos
-      ? buildPhotoDownloadUrl(selectedPost.id)
-      : singleMediaDownloadUrl ?? fallbackImageDownloadUrl
-    : null;
-  const isZipDownload = Boolean(selectedPost && hasMultiplePhotos);
-  const downloadMedias = useMemo<DownloadableMedia[]>(() => {
-    if (!selectedPost) {
-      return [];
-    }
-    if (selectedPost.medias.length > 0) {
-      return selectedPost.medias.map((media) => {
-        const enriched = media as typeof media & {
-          localUrl?: string | null;
-          localThumbnailUrl?: string | null;
-        };
-        return {
-          id: media.id,
-          url: enriched.localUrl ?? media.url ?? null,
-          thumbnailUrl:
-            enriched.localThumbnailUrl ??
-            media.thumbnailUrl ??
-            enriched.localUrl ??
-            media.url ??
-            null,
-          alt: media.alt,
-        };
-      });
-    }
-    if (selectedPost.imageUrl) {
-      return [
-        {
-          id: `${selectedPost.id}-fallback`,
-          url: selectedPost.imageUrl,
-          thumbnailUrl: selectedPost.imageUrl,
-          alt: selectedPost.title ?? selectedPost.externalId ?? null,
-        },
-      ];
-    }
-    return [];
-  }, [selectedPost]);
-  const hasDownloadableMedia = downloadMedias.length > 0;
-  const previousPhotoLabel = isRTL ? 'عکس قبلی' : 'Previous photo';
-  const nextPhotoLabel = isRTL ? 'عکس بعدی' : 'Next photo';
-  const PreviousIcon = isRTL ? ChevronRight : ChevronLeft;
-  const NextIcon = isRTL ? ChevronLeft : ChevronRight;
-  const [swipeDelta, setSwipeDelta] = useState(0);
-  const [isSwiping, setIsSwiping] = useState(false);
-  const goToPreviousMedia = useCallback(() => {
-    if (!hasMultiplePhotos || mediaCount === 0) {
-      return;
-    }
-    setActiveMediaIndex((prev) => (prev - 1 + mediaCount) % mediaCount);
-  }, [hasMultiplePhotos, mediaCount]);
-  const goToNextMedia = useCallback(() => {
-    if (!hasMultiplePhotos || mediaCount === 0) {
-      return;
-    }
-    setActiveMediaIndex((prev) => (prev + 1) % mediaCount);
-  }, [hasMultiplePhotos, mediaCount]);
-  const swipeStartXRef = useRef<number | null>(null);
-  const swipeLastXRef = useRef<number | null>(null);
-  const handleTouchStart = useCallback(
-    (event: TouchEvent<HTMLDivElement>) => {
-    if (!hasMultiplePhotos) {
-      return;
-    }
-    const touch = event.touches[0];
-    swipeStartXRef.current = touch.clientX;
-    swipeLastXRef.current = touch.clientX;
-    setIsSwiping(true);
-    setSwipeDelta(0);
-    },
-    [hasMultiplePhotos],
+  const hasDownloadableMedia = Boolean(
+    selectedPost && (selectedPost.medias.length > 0 || selectedPost.imageUrl),
   );
-  const handleTouchMove = useCallback(
-    (event: TouchEvent<HTMLDivElement>) => {
-    if (!hasMultiplePhotos) {
-      return;
-    }
-    const touch = event.touches[0];
-    swipeLastXRef.current = touch.clientX;
-    if (swipeStartXRef.current !== null) {
-      setSwipeDelta(touch.clientX - swipeStartXRef.current);
-    }
-    },
-    [hasMultiplePhotos],
-  );
-  const handleTouchEnd = useCallback(() => {
-    if (!hasMultiplePhotos) {
-      return;
-    }
-    const startX = swipeStartXRef.current;
-    const endX = swipeLastXRef.current;
-    swipeStartXRef.current = null;
-    swipeLastXRef.current = null;
-    setIsSwiping(false);
-    if (startX === null || endX === null) {
-      setSwipeDelta(0);
-      return;
-    }
-    const deltaX = endX - startX;
-    if (Math.abs(deltaX) < 40) {
-      setSwipeDelta(0);
-      return;
-    }
-    if (deltaX > 0) {
-      goToPreviousMedia();
-    } else {
-      goToNextMedia();
-    }
-    setSwipeDelta(0);
-  }, [goToNextMedia, goToPreviousMedia, hasMultiplePhotos]);
   const handleOpenDownloadDialog = useCallback(() => {
     if (!hasDownloadableMedia) {
       return;
@@ -544,53 +320,7 @@ export function DivarPostsFeed(): JSX.Element {
   }, [hasDownloadableMedia]);
   useEffect(() => {
     setDownloadDialogOpen(false);
-    setDownloadingMediaId(null);
   }, [selectedPost]);
-
-  const sanitizeFileName = useCallback((value: string): string => {
-    if (!value) {
-      return 'photo';
-    }
-    return value.replace(/[^a-zA-Z0-9-_]/g, '_');
-  }, []);
-
-  const handleSingleDownload = useCallback(
-    async (media: DownloadableMedia, index: number) => {
-      const downloadUrl = media.url;
-      if (!downloadUrl) {
-        console.warn('No download URL available for media', media.id);
-        return;
-      }
-      try {
-        setDownloadingMediaId(media.id);
-        const response = await fetch(downloadUrl);
-        if (!response.ok) {
-          throw new Error(`Failed to download: ${response.status}`);
-        }
-        const blob = await response.blob();
-        const objectUrl = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        const label =
-          media.alt ??
-          selectedPost?.title ??
-          selectedPost?.externalId ??
-          `photo-${index + 1}`;
-        const extensionMatch = downloadUrl.match(/\.(jpe?g|png|webp|gif|heic|heif)(?:\?|$)/i);
-        const extension = extensionMatch ? extensionMatch[0].split('?')[0] : '.jpg';
-        link.href = objectUrl;
-        link.download = `${sanitizeFileName(label)}${extension}`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(objectUrl);
-      } catch (error) {
-        console.error('Failed to download media', error);
-      } finally {
-        setDownloadingMediaId(null);
-      }
-    },
-    [sanitizeFileName, selectedPost],
-  );
   const selectedDescriptionLines = selectedPost?.description
     ? selectedPost.description.split('\n')
     : null;
@@ -756,68 +486,29 @@ export function DivarPostsFeed(): JSX.Element {
     return entries;
   }, [formatPrice, numberFormatter, selectedPost, t]);
 
-  const amenityItems = useMemo(() => {
-    if (!selectedPost) {
-      return [];
-    }
-
-    return AMENITY_CONFIG.map((config) => {
-      const value = selectedPost[config.key];
-      if (typeof value !== 'boolean') {
-        return null;
-      }
-      return {
-        ...config,
-        value,
-      };
-    }).filter(
-      (item): item is AmenityConfig & { value: boolean } => item !== null,
-    );
-  }, [selectedPost]);
-
-  const featuredDetailEntries = useMemo(() => {
-    const featured = detailEntries.filter((entry) => isFeaturedDetailKey(entry.labelKey));
-    const hasPrimaryPrices = featured.some((entry) => PRIMARY_PRICE_KEYS.includes(entry.labelKey as (typeof PRIMARY_PRICE_KEYS)[number]));
-    const rentEntries = detailEntries.filter((entry) =>
-      RENT_PRICE_KEYS.includes(entry.labelKey as (typeof RENT_PRICE_KEYS)[number]),
-    );
-    if (!hasPrimaryPrices && rentEntries.length > 0) {
-      const areaEntry = featured.find((entry) => entry.labelKey === 'labels.area');
-      return [...rentEntries, ...(areaEntry ? [areaEntry] : [])];
-    }
-    return featured;
-  }, [detailEntries]);
-  const infoRowEntries = useMemo(
-    () =>
-      INFO_ROW_KEYS.map((key) => detailEntries.find((entry) => entry.labelKey === key)).filter(
-        (entry): entry is DetailEntry => Boolean(entry),
-      ),
+  const featuredDetailEntries = useMemo(
+    () => buildFeaturedDetailEntries(detailEntries),
     [detailEntries],
   );
-  const orderedFeaturedEntries = useMemo(() => {
-    if (!isRTL) {
-      return featuredDetailEntries;
-    }
-    return [...featuredDetailEntries].sort(
-      (a, b) => (FEATURED_RTL_ORDER[a.labelKey] ?? 0) - (FEATURED_RTL_ORDER[b.labelKey] ?? 0),
-    );
-  }, [featuredDetailEntries, isRTL]);
+  const infoRowEntries = useMemo(() => buildInfoRowEntries(detailEntries), [detailEntries]);
   const featuredKeys = useMemo(
     () => new Set(featuredDetailEntries.map((entry) => entry.labelKey)),
     [featuredDetailEntries],
   );
-
+  const infoKeys = useMemo(
+    () => new Set(infoRowEntries.map((entry) => entry.labelKey)),
+    [infoRowEntries],
+  );
   const secondaryDetailEntries = useMemo(
     () =>
       detailEntries.filter(
-        (entry) => !featuredKeys.has(entry.labelKey) && !isInfoRowKey(entry.labelKey),
+        (entry) => !featuredKeys.has(entry.labelKey) && !infoKeys.has(entry.labelKey),
       ),
-    [detailEntries, featuredKeys],
+    [detailEntries, featuredKeys, infoKeys],
   );
 
   const openPostModal = (post: DivarPostSummary) => {
     setSelectedPost(post);
-    setActiveMediaIndex(0);
     setDialogOpen(true);
   };
 
@@ -825,101 +516,21 @@ export function DivarPostsFeed(): JSX.Element {
     setDialogOpen(open);
     if (!open) {
       setSelectedPost(null);
-      setActiveMediaIndex(0);
     }
   };
 
-  const renderPostCard = (post: DivarPostSummary) => {
-    const publishedLabel = getRelativeLabel(post.publishedAt, post.publishedAtJalali);
-    const priceLabel = formatPrice(post.priceTotal);
-    const rentLabel = formatPrice(post.rentAmount);
-    const pricePerSquareLabel = formatPrice(post.pricePerSquare);
-    const publishedText = publishedLabel ?? dateFormatter.format(new Date(post.createdAt));
-    const mediaCountLabel = t('mediaCount', { count: post.mediaCount ?? 0 });
-    const businessBadge = getBusinessTypeBadge(post.businessType ?? null);
-
-    return (
-      <article
-        key={post.id}
-        className="bg-card flex h-full cursor-pointer flex-col gap-3 rounded-xl border border-border/70 p-4 shadow-sm transition hover:border-primary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-        role="button"
-        tabIndex={0}
-        onClick={() => openPostModal(post)}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            openPostModal(post);
-          }
-        }}
-      >
-        <div className="flex flex-col gap-3">
-          <div className="-mx-4 -mt-4 overflow-hidden rounded-t-xl">
-            <div className="relative">
-              {businessBadge ? (
-                <span className="pointer-events-none absolute left-3 top-3 z-10 inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5 text-xs font-medium text-white">
-                  {businessBadge.icon}
-                  {businessBadge.label}
-                </span>
-              ) : null}
-              {post.imageUrl ? (
-                <div className="relative h-48 w-full bg-muted">
-                  <img
-                    src={post.imageUrl}
-                    alt={post.title ?? post.externalId}
-                    className="size-full object-cover"
-                    loading="lazy"
-                  />
-                </div>
-              ) : (
-                <div className="relative flex h-48 w-full items-center justify-center bg-muted text-sm text-muted-foreground">
-                  {t('noImage')}
-                </div>
-              )}
-              <div className="pointer-events-none absolute inset-x-3 bottom-3 flex flex-wrap gap-2 text-xs font-medium text-white">
-                <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5">
-                  <Clock3 className="size-3.5" aria-hidden />
-                  {publishedText}
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5">
-                  <Camera className="size-3.5" aria-hidden />
-                  {mediaCountLabel}
-                </span>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-1 flex-col gap-2 pt-1">
-            <div className="flex flex-col gap-2">
-              <div>
-                <h3 className="break-words text-base font-semibold text-foreground sm:text-lg">
-                  {post.title ?? t('untitled', { externalId: post.externalId })}
-                </h3>
-              </div>
-            </div>
-            <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-              <span className="inline-flex items-center gap-1 text-foreground">
-                <MapPin className="size-4" aria-hidden />
-                {post.cityName}
-                {post.districtName ? `، ${post.districtName}` : null}
-                {post.provinceName ? `، ${post.provinceName}` : null}
-              </span>
-              {post.area ? (
-                <span>{t('areaLabel', { value: post.area })}</span>
-              ) : null}
-              {priceLabel ? (
-                <span>{t('priceLabel', { value: priceLabel })}</span>
-              ) : null}
-              {rentLabel ? (
-                <span>{t('rentLabel', { value: rentLabel })}</span>
-              ) : null}
-              {pricePerSquareLabel ? (
-                <span>{t('labels.pricePerSquare', { value: pricePerSquareLabel })}</span>
-              ) : null}
-            </div>
-          </div>
-        </div>
-      </article>
-    );
-  };
+  const renderPostCard = (post: DivarPostSummary) => (
+    <PostCard
+      key={post.id}
+      post={post}
+      t={t}
+      onSelect={openPostModal}
+      getBusinessBadge={getBusinessTypeBadge}
+      formatPrice={formatPrice}
+      getRelativeLabel={getRelativeLabel}
+      dateFormatter={dateFormatter}
+    />
+  );
 
   return (
     <Card className="border-0 shadow-none">
@@ -998,309 +609,23 @@ export function DivarPostsFeed(): JSX.Element {
 
               <div className="flex-1 overflow-y-auto px-6 py-4 sm:p-0">
                 <div className="space-y-4">
-                  {selectedPost.medias.length > 0 ? (
-                    <div className="space-y-2">
-                      <div
-                        className="relative overflow-hidden rounded-lg border border-border/60"
-                        onTouchStart={handleTouchStart}
-                        onTouchMove={handleTouchMove}
-                        onTouchEnd={handleTouchEnd}
-                      >
-                        {(selectedBusinessBadge || photoDownloadUrl) ? (
-                          <div className="pointer-events-none absolute inset-x-3 top-3 z-10 flex items-center text-xs font-medium text-white">
-                            <div className="flex flex-1 justify-start">
-                              {selectedBusinessBadge ? (
-                                <span
-                                  className={`pointer-events-none rounded-full px-3 py-1 text-xs font-medium text-white shadow-lg ${selectedBusinessBadge.className}`}
-                                >
-                                  {selectedBusinessBadge.label}
-                                </span>
-                              ) : null}
-                            </div>
-                            <div className="flex flex-1 justify-end">
-                              {hasDownloadableMedia ? (
-                                <button
-                                  type="button"
-                                  onClick={handleOpenDownloadDialog}
-                                  className="pointer-events-auto inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5 text-xs text-white shadow-lg hover:bg-black/80"
-                                >
-                                  <Download className="size-3.5" aria-hidden />
-                                  <span>{t('downloadPhotos')}</span>
-                                </button>
-                              ) : null}
-                            </div>
-                          </div>
-                        ) : null}
-                        <div className="relative h-64 w-full overflow-hidden">
-                          {hasMultiplePhotos ? (
-                            <img
-                              src={resolveMediaSrc(
-                                previousMedia,
-                                selectedPost.medias[activeMediaIndex]?.url ?? selectedPost.imageUrl,
-                              )}
-                              alt={resolveMediaAlt(
-                                previousMedia,
-                                selectedPost.title,
-                                selectedPost.externalId,
-                              )}
-                              className="absolute inset-0 size-full select-none object-cover"
-                              draggable={false}
-                              style={{
-                                transform: `translateX(calc(-100% + ${swipeDelta}px))`,
-                                transition: isSwiping ? 'none' : 'transform 200ms ease',
-                                opacity: hasMultiplePhotos ? 1 : 0,
-                              }}
-                            />
-                          ) : null}
-                          <img
-                            src={
-                              resolveMediaSrc(
-                                currentMedia,
-                                selectedPost.medias[activeMediaIndex]?.url ?? selectedPost.imageUrl,
-                              ) ?? ''
-                            }
-                            alt={resolveMediaAlt(
-                              currentMedia,
-                              selectedPost.title,
-                              selectedPost.externalId,
-                            )}
-                            className="relative size-full select-none object-cover"
-                            draggable={false}
-                            style={{
-                              transform: `translateX(${swipeDelta}px)`,
-                              transition: isSwiping ? 'none' : 'transform 200ms ease',
-                            }}
-                          />
-                          {hasMultiplePhotos ? (
-                            <img
-                              src={resolveMediaSrc(
-                                nextMedia,
-                                selectedPost.medias[activeMediaIndex]?.url ?? selectedPost.imageUrl,
-                              )}
-                              alt={resolveMediaAlt(
-                                nextMedia,
-                                selectedPost.title,
-                                selectedPost.externalId,
-                              )}
-                              className="absolute inset-0 size-full select-none object-cover"
-                              draggable={false}
-                              style={{
-                                transform: `translateX(calc(100% + ${swipeDelta}px))`,
-                                transition: isSwiping ? 'none' : 'transform 200ms ease',
-                                opacity: hasMultiplePhotos ? 1 : 0,
-                              }}
-                            />
-                          ) : null}
-                        </div>
-                        {hasMultiplePhotos ? (
-                          <>
-                            <button
-                              type="button"
-                              onClick={goToPreviousMedia}
-                              className="absolute left-3 top-1/2 hidden size-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white shadow-lg transition hover:bg-black/80 sm:flex"
-                              aria-label={previousPhotoLabel}
-                            >
-                              <PreviousIcon className="size-5" aria-hidden />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={goToNextMedia}
-                              className="absolute right-3 top-1/2 hidden size-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/60 text-white shadow-lg transition hover:bg-black/80 sm:flex"
-                              aria-label={nextPhotoLabel}
-                            >
-                              <NextIcon className="size-5" aria-hidden />
-                            </button>
-                          </>
-                        ) : null}
-                        {(selectedPublishedDisplay || selectedCityDistrict) ? (
-                          <div className="pointer-events-none absolute inset-x-3 bottom-3 z-10 flex items-center text-xs font-medium text-white">
-                            <div className="flex flex-1 justify-start">
-                              {selectedCityDistrict ? (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5">
-                                  <MapPin className="size-3.5" aria-hidden />
-                                  {selectedCityDistrict}
-                                </span>
-                              ) : null}
-                            </div>
-                            <div className="flex flex-1 justify-end">
-                              {selectedPublishedDisplay ? (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5">
-                                  <Clock3 className="size-3.5" aria-hidden />
-                                  {selectedPublishedDisplay}
-                                </span>
-                              ) : null}
-                            </div>
-                          </div>
-                        ) : null}
-                      </div>
-                      {selectedPost.medias.length > 1 ? (
-                        <>
-                          <div className="relative">
-                            <div className="flex flex-nowrap gap-2 overflow-x-auto pb-1 pr-8">
-                              {selectedPost.medias.map((media, index) => (
-                                <button
-                                  key={media.id}
-                                  type="button"
-                                  onClick={() => setActiveMediaIndex(index)}
-                                  className={`shrink-0 overflow-hidden rounded-md border ${
-                                    index === activeMediaIndex
-                                      ? 'border-primary'
-                                      : 'border-border hover:border-border/80'
-                                  }`}
-                                >
-                                  <img
-                                    src={media.thumbnailUrl ?? media.url}
-                                    alt={media.alt ?? media.id}
-                                    className="size-16 object-cover"
-                                  />
-                                </button>
-                              ))}
-                            </div>
-                            {showThumbnailScrollHint ? (
-                              <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-background to-transparent" />
-                            ) : null}
-                          </div>
-                        </>
-                      ) : null}
-                    </div>
-                  ) : selectedPost.imageUrl ? (
-                    <div
-                      className="relative overflow-hidden rounded-lg border border-border/60"
-                      onTouchStart={handleTouchStart}
-                      onTouchMove={handleTouchMove}
-                      onTouchEnd={handleTouchEnd}
-                    >
-                      {(selectedBusinessBadge || photoDownloadUrl) ? (
-                        <div className="pointer-events-none absolute inset-x-3 top-3 z-10 flex items-center text-xs font-medium text-white">
-                          <div className="flex flex-1 justify-start">
-                            {selectedBusinessBadge ? (
-                              <span
-                                className={`pointer-events-none rounded-full px-3 py-1 text-xs font-medium text-white shadow-lg ${selectedBusinessBadge.className}`}
-                              >
-                                {selectedBusinessBadge.label}
-                              </span>
-                            ) : null}
-                          </div>
-                          <div className="flex flex-1 justify-end">
-                            {hasDownloadableMedia ? (
-                              <button
-                                type="button"
-                                onClick={handleOpenDownloadDialog}
-                                className="pointer-events-auto inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5 text-xs text-white shadow-lg hover:bg-black/80"
-                              >
-                                <Download className="size-3.5" aria-hidden />
-                                <span>{t('downloadPhotos')}</span>
-                              </button>
-                            ) : null}
-                          </div>
-                        </div>
-                      ) : null}
-                      <img
-                        src={selectedPost.imageUrl}
-                        alt={selectedPost.title ?? selectedPost.externalId}
-                        className="h-64 w-full object-cover"
-                        style={{
-                          transform: `translateX(${swipeDelta}px)`,
-                          transition: isSwiping ? 'none' : 'transform 200ms ease',
-                        }}
-                      />
-                      {(selectedPublishedDisplay || selectedCityDistrict) ? (
-                        <div className="pointer-events-none absolute inset-x-3 bottom-3 z-10 flex items-center text-xs font-medium text-white">
-                          <div className="flex flex-1 justify-start">
-                            {selectedCityDistrict ? (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5">
-                                <MapPin className="size-3.5" aria-hidden />
-                                {selectedCityDistrict}
-                              </span>
-                            ) : null}
-                          </div>
-                          <div className="flex flex-1 justify-end">
-                            {selectedPublishedDisplay ? (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5">
-                                <Clock3 className="size-3.5" aria-hidden />
-                                {selectedPublishedDisplay}
-                              </span>
-                            ) : null}
-                          </div>
-                        </div>
-                      ) : null}
-                    </div>
-                ) : null}
-                  {showThumbnailScrollHint ? (
-                    <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-2 text-muted-foreground sm:hidden">
-                        <ArrowLeftRight className="size-3.5" aria-hidden />
-                        <span>{t('mediaScrollHint')}</span>
-                      </div>
-                    </div>
-                  ) : null}
-                  {orderedFeaturedEntries.length > 0 ? (
-                    <div className="mb-4 flex w-full flex-nowrap gap-4">
-                      {orderedFeaturedEntries.map((entry, index) => {
-                        const flexClasses = index === 1 ? 'flex-1 sm:flex-[2]' : 'flex-1 sm:flex-[5]';
-                        return (
-                          <div
-                            key={entry.id}
-                            className={`flex flex-col items-center gap-2 text-center ${flexClasses}`}
-                          >
-                            <span className="text-xs text-muted-foreground">{entry.label}</span>
-                            <div className="rounded-full border border-input px-4 py-2">
-                              <span className="text-sm text-foreground">{entry.value}</span>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : null}
-
-                  {amenityItems.length > 0 ? (
-                    <div className="mb-4">
-                      <div className="flex flex-wrap gap-4">
-                        {amenityItems.map((amenity) => {
-                          const Icon = amenity.icon;
-                          const statusClass = amenity.value ? 'text-emerald-600' : 'text-destructive';
-                          return (
-                            <div
-                              key={amenity.key}
-                              className="flex min-w-[70px] flex-1 flex-col items-center gap-2 text-center"
-                            >
-                              <div
-                                className={`flex size-10 items-center justify-center rounded-full border ${
-                                  amenity.value
-                                    ? 'border-emerald-500 bg-emerald-500/10 text-emerald-600'
-                                    : 'border-destructive bg-destructive/10 text-destructive'
-                                }`}
-                              >
-                                <Icon className="size-5" aria-hidden />
-                              </div>
-                              <div className={`flex items-center gap-1 text-sm ${statusClass}`}>
-                                <span>{t(amenity.labelKey)}</span>
-                                <span>
-                                  {amenity.value ? t('labels.booleanYes') : t('labels.booleanNo')}
-                                </span>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ) : null}
-
-                  {infoRowEntries.length > 0 ? (
-                    <div className="mb-4 flex w-full flex-nowrap gap-4">
-                      {infoRowEntries.map((entry) => (
-                        <div
-                          key={entry.id}
-                          className="flex flex-1 flex-col items-center gap-2 text-center"
-                        >
-                          <span className="text-xs text-muted-foreground">{entry.label}</span>
-                          <div className="rounded-full border border-input px-4 py-2">
-                            <span className="text-sm text-foreground">{entry.value}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : null}
+                  <PostMediaCarousel
+                    post={selectedPost}
+                    isRTL={isRTL}
+                    businessBadge={selectedBusinessBadge}
+                    cityDistrict={selectedCityDistrict}
+                    publishedDisplay={selectedPublishedDisplay}
+                    hasDownloadableMedia={hasDownloadableMedia}
+                    onRequestDownload={handleOpenDownloadDialog}
+                    t={t}
+                  />
+                  <PriceSummaryRow
+                    detailEntries={detailEntries}
+                    entries={featuredDetailEntries}
+                    isRTL={isRTL}
+                  />
+                  <AmenitiesSection post={selectedPost} t={t} />
+                  <InfoRowSection detailEntries={detailEntries} entries={infoRowEntries} />
 
                   <dl className="grid gap-3 text-sm text-muted-foreground sm:grid-cols-2">
                     {secondaryDetailEntries.map((entry) => (
@@ -1322,38 +647,8 @@ export function DivarPostsFeed(): JSX.Element {
                         </dd>
                       </div>
                     ) : null}
-                    {attributeValueEntries.length > 0 ? (
-                      <div className="col-span-full">
-                        <div className="grid gap-4 sm:grid-cols-3">
-                          {attributeValueEntries.map((attribute) => (
-                            <div
-                              key={attribute.id}
-                              className="flex items-center gap-2 text-sm text-muted-foreground"
-                            >
-                              <InfoIcon className="size-4 text-emerald-600" aria-hidden />
-                              <span className="text-foreground">
-                                {attribute.label}: {attribute.value}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ) : null}
-                    {attributeLabelOnlyEntries.length > 0 ? (
-                      <div className="col-span-full">
-                        <div className="grid gap-4 sm:grid-cols-3">
-                          {attributeLabelOnlyEntries.map((attribute) => (
-                            <div
-                              key={attribute.id}
-                              className="flex items-center gap-2 text-sm text-muted-foreground"
-                            >
-                              <CheckCircle2 className="size-4 text-primary" aria-hidden />
-                              <span className="text-foreground">{attribute.label}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ) : null}
+                    <AttributeValueGrid entries={attributeValueEntries} />
+                    <AttributeLabelGrid entries={attributeLabelOnlyEntries} />
                   </dl>
                 </div>
               </div>
@@ -1394,172 +689,13 @@ export function DivarPostsFeed(): JSX.Element {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={downloadDialogOpen} onOpenChange={setDownloadDialogOpen}>
-        <DialogContent
-          hideCloseButton
-          className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] sm:left-1/2 sm:top-1/2 sm:flex sm:h-[90vh] sm:w-full sm:max-w-3xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:flex-col sm:overflow-hidden sm:rounded-2xl sm:border sm:p-6"
-        >
-          <div className="flex h-full flex-col overflow-hidden">
-            <div className="border-b border-border px-6 py-4 sm:hidden">
-              <p className="text-center text-base font-semibold">{t('downloadPhotos')}</p>
-            </div>
-            <div className="hidden px-6 py-4 sm:block">
-              <DialogHeader>
-                <DialogTitle>{t('downloadPhotos')}</DialogTitle>
-              </DialogHeader>
-            </div>
-            <div className="flex-1 overflow-y-auto px-6 pb-4 pt-2 sm:px-6">
-              {hasDownloadableMedia ? (
-                <div className="grid grid-cols-3 gap-3 md:grid-cols-8 lg:grid-cols-12">
-                  {downloadMedias.map((media, index) => {
-                    const downloadUrl = getMediaDownloadUrl(media) ?? media.url ?? null;
-                    const isDownloading = downloadingMediaId === media.id;
-                    return (
-                      <div
-                        key={media.id ?? `download-media-${index}`}
-                        className="flex flex-col gap-2"
-                      >
-                        <div className="aspect-[4/3] overflow-hidden rounded-xl border border-border/80">
-                          <img
-                            src={media.thumbnailUrl ?? media.url ?? ''}
-                            alt={resolveMediaAlt(
-                              media,
-                              selectedPost?.title,
-                              selectedPost?.externalId,
-                            )}
-                            className="size-full object-cover"
-                            draggable={false}
-                          />
-                        </div>
-                        {downloadUrl ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={isDownloading}
-                            className="flex items-center justify-center gap-1 text-xs"
-                            onClick={() => {
-                              void handleSingleDownload(media, index);
-                            }}
-                          >
-                            <Download className="size-4" aria-hidden />
-                            <span>
-                              {isDownloading
-                                ? t('downloadInProgress')
-                                : t('downloadSingle')}
-                            </span>
-                          </Button>
-                        ) : (
-                          <span className="text-center text-xs text-muted-foreground">
-                            {t('downloadUnavailable')}
-                          </span>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">{t('downloadNoPhotos')}</p>
-              )}
-            </div>
-            <div
-              className={cn(
-                'px-6 py-4 bg-background/95 border-t border-border',
-                'sm:px-6 sm:bg-transparent sm:border-0',
-              )}
-            >
-              <div
-                className={cn(
-                  'flex flex-col gap-3',
-                  'sm:flex-row sm:flex-wrap',
-                  isRTL ? 'sm:flex-row-reverse' : 'sm:flex-row',
-                )}
-              >
-                {isZipDownload && photoDownloadUrl ? (
-                  <Button
-                    className="flex flex-1 min-w-[140px] justify-center"
-                    disabled={downloadingMediaId === 'zip'}
-                    onClick={() => {
-                      setDownloadingMediaId('zip');
-                      const link = document.createElement('a');
-                      link.href = photoDownloadUrl;
-                      link.download = `${sanitizeFileName(
-                        selectedPost?.externalId ?? selectedPost?.id ?? 'post',
-                      )}-photos.zip`;
-                      document.body.appendChild(link);
-                      link.click();
-                      document.body.removeChild(link);
-                      setTimeout(() => setDownloadingMediaId(null), 3000);
-                    }}
-                  >
-                    {downloadingMediaId === 'zip' ? (
-                      <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
-                    ) : (
-                      <Download className="mr-2 size-4" aria-hidden />
-                    )}
-                    {downloadingMediaId === 'zip' ? t('downloadInProgress') : t('downloadAllZip')}
-                  </Button>
-                ) : null}
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="flex-1 min-w-[140px]"
-                  onClick={() => setDownloadDialogOpen(false)}
-                >
-                  {t('close')}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <DownloadPhotosDialog
+        open={downloadDialogOpen}
+        onOpenChange={setDownloadDialogOpen}
+        post={selectedPost}
+        isRTL={isRTL}
+        t={t}
+      />
     </Card>
   );
-}
-
-function serializeCategoryFilterValues(
-  filters: Record<string, CategoryFilterValue>,
-): Record<string, unknown> | undefined {
-  const payload: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(filters)) {
-    if (!value) {
-      continue;
-    }
-    switch (value.kind) {
-      case 'numberRange': {
-        const range: Record<string, number> = {};
-        if (isFiniteNumber(value.min)) {
-          range.min = value.min;
-        }
-        if (isFiniteNumber(value.max)) {
-          range.max = value.max;
-        }
-        if (Object.keys(range).length > 0) {
-          payload[key] = range;
-        }
-        break;
-      }
-      case 'multiSelect':
-        if (value.values.length > 0) {
-          payload[key] = value.values;
-        }
-        break;
-      case 'singleSelect':
-        if (typeof value.value === 'string' && value.value.length > 0) {
-          payload[key] = value.value;
-        }
-        break;
-      case 'boolean':
-        if (value.value === true) {
-          payload[key] = true;
-        }
-        break;
-      default:
-        break;
-    }
-  }
-  return Object.keys(payload).length > 0 ? payload : undefined;
-}
-
-function isFiniteNumber(value: unknown): value is number {
-  return typeof value === 'number' && Number.isFinite(value);
 }

@@ -1,6 +1,6 @@
 'use client';
 import { useTranslations } from 'next-intl';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
@@ -309,6 +309,7 @@ function MobileNavigationDrawer({
   closeLabel,
   themeToggleLabel,
 }: MobileNavigationDrawerProps) {
+  const themeToggleRef = useRef<HTMLButtonElement>(null);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {/* eslint-disable tailwindcss/classnames-order */}
@@ -378,11 +379,23 @@ function MobileNavigationDrawer({
               </Link>
             ))}
           </nav>
-          <div className="space-y-3 border-t border-border/60 p-4">
-            <div className="flex items-center justify-between text-sm font-medium text-foreground">
+          <div className="space-y-4 border-t border-border/60 p-4">
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => themeToggleRef.current?.click()}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  themeToggleRef.current?.click();
+                }
+              }}
+              className="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
               <span>{themeToggleLabel}</span>
-              <ThemeToggle />
+              <ThemeToggle ref={themeToggleRef} />
             </div>
+            <div className="border-t border-border/60 pt-3">
             {showInstallButton ? (
               <Button
                 className="w-full border-0 bg-primary/90 text-right text-primary-foreground hover:bg-primary"
@@ -398,6 +411,7 @@ function MobileNavigationDrawer({
                 </span>
               </Button>
             ) : null}
+            </div>
           </div>
           {isAuthenticated ? (
             <div className="mt-auto border-t border-border/60 p-4">

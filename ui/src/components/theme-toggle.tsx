@@ -5,6 +5,7 @@ import * as React from 'react';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 const STORAGE_KEY = 'ui-theme';
 
@@ -30,7 +31,12 @@ function applyTheme(theme: Theme) {
   root.classList.toggle('dark', theme === 'dark');
 }
 
-export function ThemeToggle() {
+type ThemeToggleProps = React.ComponentPropsWithoutRef<typeof Button>;
+
+export const ThemeToggle = React.forwardRef<HTMLButtonElement, ThemeToggleProps>(function ThemeToggle(
+  { className, ...props },
+  ref,
+) {
   const [theme, setTheme] = React.useState<Theme>('light');
   const [mounted, setMounted] = React.useState(false);
   const [userOverride, setUserOverride] = React.useState(false);
@@ -81,13 +87,15 @@ export function ThemeToggle() {
 
   return (
     <Button
+      ref={ref}
       variant="ghost"
       size="icon"
       aria-label={t('themeToggle')}
       onClick={toggleTheme}
-      className="size-9"
+      className={cn('size-9', className)}
+      {...props}
     >
       {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
     </Button>
   );
-}
+});

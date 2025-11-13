@@ -40,9 +40,8 @@ export function DivarPostsFeed(): JSX.Element {
     districtSelection,
     categorySelection,
     categoryFilters,
-  } = useAppSelector(
-    (state) => state.searchFilter,
-  );
+    ringBinderFolderId,
+  } = useAppSelector((state) => state.searchFilter);
   const categorySlug = categorySelection.slug;
   const categoryDepth = categorySelection.depth;
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
@@ -85,6 +84,7 @@ export function DivarPostsFeed(): JSX.Element {
       categorySlug: categorySlug ?? undefined,
       categoryDepth: typeof categoryDepth === 'number' ? categoryDepth : undefined,
       filters: categoryFilterPayload,
+      ringFolderId: ringBinderFolderId ?? undefined,
     };
   }, [
     provinceId,
@@ -93,6 +93,7 @@ export function DivarPostsFeed(): JSX.Element {
     categorySlug,
     categoryDepth,
     categoryFilterPayload,
+    ringBinderFolderId,
   ]);
 
   useEffect(() => {
@@ -110,6 +111,7 @@ export function DivarPostsFeed(): JSX.Element {
       categorySlug: filterArgs.categorySlug,
       categoryDepth: filterArgs.categoryDepth,
       filters: filterArgs.filters,
+      ringFolderId: filterArgs.ringFolderId,
     })
       .unwrap()
       .then((result) => {
@@ -148,6 +150,7 @@ export function DivarPostsFeed(): JSX.Element {
         categorySlug: filterArgs.categorySlug,
         categoryDepth: filterArgs.categoryDepth,
         filters: filterArgs.filters,
+        ringFolderId: filterArgs.ringFolderId,
       }).unwrap();
       setPosts((prev) => [...prev, ...result.items]);
       setNextCursor(result.nextCursor);

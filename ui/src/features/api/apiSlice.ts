@@ -350,6 +350,7 @@ export const apiSlice = createApi({
         categorySlug?: string | null;
         categoryDepth?: number | null;
         filters?: Record<string, unknown>;
+        ringFolderId?: string | null;
       } | void
     >({
       query: (params) => {
@@ -377,6 +378,9 @@ export const apiSlice = createApi({
         }
         if (params?.filters && Object.keys(params.filters).length > 0) {
           searchParams.set('filters', JSON.stringify(params.filters));
+        }
+        if (params?.ringFolderId) {
+          searchParams.set('ringFolderId', params.ringFolderId);
         }
         const qs = searchParams.toString();
         return `/divar-posts${qs ? `?${qs}` : ''}`;

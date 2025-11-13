@@ -163,7 +163,13 @@
     "title": "Dashboard",
     "subtitle": "Your personalized workspace will land here soon.",
     "filters": {
-      "title": "Search filters",
+    "title": "Search filters",
+    "ringBinder": {
+      "label": "Ring binder",
+      "all": "All posts",
+      "loading": "Loading folders…",
+      "empty": "Create a folder in your ring binder to filter saved posts."
+    },
       "provinceLabel": "Province",
       "provinceAll": "All provinces",
       "provinceButtonSelect": "Select province",

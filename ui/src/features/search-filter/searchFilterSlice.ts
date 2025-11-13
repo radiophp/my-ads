@@ -25,6 +25,7 @@ export type SearchFilterState = {
     depth: number | null;
   };
   categoryFilters: CategoryFilterBuckets;
+  ringBinderFolderId: string | null;
 };
 
 const initialState: SearchFilterState = {
@@ -42,6 +43,7 @@ const initialState: SearchFilterState = {
     depth: null,
   },
   categoryFilters: {},
+  ringBinderFolderId: null,
 };
 
 const searchFilterSlice = createSlice({
@@ -83,6 +85,9 @@ const searchFilterSlice = createSlice({
         slug: action.payload.slug,
         depth: action.payload.depth,
       };
+    },
+    setRingBinderFolder(state, action: PayloadAction<string | null>) {
+      state.ringBinderFolderId = action.payload;
     },
     setCategoryFilterValue(
       state,
@@ -129,6 +134,7 @@ export const {
   setCategorySelection,
   setCategoryFilterValue,
   clearCategoryFilters,
+  setRingBinderFolder,
   resetSearchFilter,
 } = searchFilterSlice.actions;
 

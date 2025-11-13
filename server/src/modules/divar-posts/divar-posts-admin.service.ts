@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@app/platform/database/prisma.service';
 import { PostAnalysisStatus, Prisma } from '@prisma/client';
 import type { PaginatedPostsToAnalyzeDto, PostToAnalyzeItemDto } from './dto/post-to-analyze.dto';
@@ -175,6 +175,8 @@ export class DivarPostsAdminService {
       categorySlug?: string;
       categoryDepth?: number;
       filters?: Record<string, unknown>;
+      ringFolderId?: string;
+      userId?: string | null;
     } = {},
   ): Promise<PaginatedDivarPostsDto> {
     const take = Math.min(Math.max(options.limit ?? 20, 1), 50);
@@ -198,6 +200,33 @@ export class DivarPostsAdminService {
     }
     if (options.filters) {
       this.applyCategoryFilters(where, options.filters);
+    }
+    if (options.ringFolderId) {
+      if (!options.userId) {
+        throw new BadRequestException('Ring binder filter requires authentication.');
+      }
+      const folder = await this.prisma.ringBinderFolder.findFirst({
+        where: {
+          id: options.ringFolderId,
+          userId: options.userId,
+          deletedAt: null,
+        },
+        select: { id: true },
+      });
+      if (!folder) {
+        return {
+          items: [],
+          nextCursor: null,
+          hasMore: false,
+        };
+      }
+      this.appendAndCondition(where, {
+        savedInFolders: {
+          some: {
+            folderId: folder.id,
+          },
+        },
+      });
     }
     const queryArgs = {
       orderBy: [

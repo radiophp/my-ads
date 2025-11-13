@@ -44,6 +44,7 @@ export class DivarPostsController {
     description: 'Paginated list of normalized Divar posts.',
   })
   async listPosts(
+    @Req() request: { user?: { sub?: string } },
     @Query('cursor') cursor?: string,
     @Query('limit') limitParam?: string,
     @Query('provinceId') provinceParam?: string,
@@ -52,6 +53,7 @@ export class DivarPostsController {
     @Query('categorySlug') categorySlug?: string,
     @Query('categoryDepth') categoryDepthParam?: string,
     @Query('filters') filtersParam?: string,
+    @Query('ringFolderId') ringFolderId?: string,
   ): Promise<PaginatedDivarPostsDto> {
     const parsedLimit = Number(limitParam);
     const limit = Number.isFinite(parsedLimit) ? parsedLimit : undefined;
@@ -91,6 +93,8 @@ export class DivarPostsController {
       categorySlug: categorySlug?.trim() ? categorySlug.trim() : undefined,
       categoryDepth: Number.isFinite(parsedDepth) ? parsedDepth : undefined,
       filters: parsedFilters,
+      ringFolderId: ringFolderId?.trim() ? ringFolderId.trim() : undefined,
+      userId: request.user?.sub,
     });
   }
 

@@ -13,12 +13,14 @@ import {
   setDistrictSelectionMode,
   setSelectedDistricts,
   setCategorySelection,
+  setRingBinderFolder,
 } from '@/features/search-filter/searchFilterSlice';
 import {
   useGetProvincesQuery,
   useGetCitiesQuery,
   useGetDistrictsQuery,
   useGetDivarCategoriesQuery,
+  useGetRingBinderFoldersQuery,
 } from '@/features/api/apiSlice';
 import {
   Dialog,
@@ -36,9 +38,8 @@ export function DashboardSearchFilterPanel() {
   const locale = useLocale();
   const isRTL = ['fa', 'ar', 'he'].includes(locale);
   const dispatch = useAppDispatch();
-  const { provinceId, citySelection, districtSelection, categorySelection } = useAppSelector(
-    (state) => state.searchFilter,
-  );
+  const { provinceId, citySelection, districtSelection, categorySelection, ringBinderFolderId } =
+    useAppSelector((state) => state.searchFilter);
   const categorySlug = categorySelection.slug;
   const categoryDepth = categorySelection.depth;
   const selectedCityIds =
@@ -74,6 +75,13 @@ export function DashboardSearchFilterPanel() {
     isLoading: categoriesLoading,
     isFetching: categoriesFetching,
   } = useGetDivarCategoriesQuery();
+
+  const {
+    data: ringBinderData,
+    isLoading: ringBinderLoading,
+    isFetching: ringBinderFetching,
+  } = useGetRingBinderFoldersQuery();
+  const ringBinderFolders = ringBinderData?.folders ?? [];
 
   const [provinceDialogOpen, setProvinceDialogOpen] = useState(false);
   const [cityDialogOpen, setCityDialogOpen] = useState(false);
@@ -428,6 +436,32 @@ export function DashboardSearchFilterPanel() {
   return (
     <section className="bg-card w-full rounded-xl border p-4 shadow-sm">
       <div className="flex flex-col gap-5">
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-foreground">
+            {t('ringBinder.label')}
+          </label>
+          <select
+            className="w-full rounded-lg border border-border/70 bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none"
+            value={ringBinderFolderId ?? ''}
+            onChange={(event) => {
+              const value = event.target.value;
+              dispatch(setRingBinderFolder(value === '' ? null : value));
+            }}
+            disabled={ringBinderLoading || ringBinderFetching}
+          >
+            <option value="">{t('ringBinder.all')}</option>
+            {ringBinderFolders.map((folder) => (
+              <option key={folder.id} value={folder.id}>
+                {folder.name}
+              </option>
+            ))}
+          </select>
+          {ringBinderLoading || ringBinderFetching ? (
+            <p className="text-xs text-muted-foreground">{t('ringBinder.loading')}</p>
+          ) : ringBinderFolders.length === 0 ? (
+            <p className="text-xs text-muted-foreground">{t('ringBinder.empty')}</p>
+          ) : null}
+        </div>
         <div>
           <p className="text-sm font-medium text-muted-foreground">{t('categories.title')}</p>
           {categoriesBusy ? (

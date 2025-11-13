@@ -32,7 +32,7 @@ const defaultAppUrl =
     : `http://localhost:${defaultPort}`;
 const defaultApiBaseUrl =
   process.env.NODE_ENV === 'production'
-    ? 'https://mahan.toncloud.observer/backend'
+    ? 'https://mahan.toncloud.observer/api'
     : 'http://localhost:6200/api';
 
 if (!process.env.NEXT_PUBLIC_APP_URL) {
@@ -40,6 +40,12 @@ if (!process.env.NEXT_PUBLIC_APP_URL) {
 }
 if (!process.env.NEXT_PUBLIC_API_BASE_URL) {
   process.env.NEXT_PUBLIC_API_BASE_URL = defaultApiBaseUrl;
+}
+if (!process.env.APP_URL) {
+  process.env.APP_URL = process.env.NEXT_PUBLIC_APP_URL;
+}
+if (!process.env.API_BASE_URL) {
+  process.env.API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 }
 
 const withPWA = withPWAInit({
@@ -99,13 +105,6 @@ if (configWithPlugins.experimental) {
   (configWithPlugins.experimental as Record<string, unknown>).serverActions ??= {
     bodySizeLimit: '2mb',
   };
-  const experimental = configWithPlugins.experimental as Record<string, unknown>;
-  const allowedOrigins = experimental.allowedDevOrigins as string[] | undefined;
-  if (!allowedOrigins) {
-    experimental.allowedDevOrigins = ['https://mahan.toncloud.observer'];
-  } else if (!allowedOrigins.includes('https://mahan.toncloud.observer')) {
-    experimental.allowedDevOrigins = [...allowedOrigins, 'https://mahan.toncloud.observer'];
-  }
 }
 
 configWithPlugins.turbopack ??= {};

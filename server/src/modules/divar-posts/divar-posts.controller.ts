@@ -95,6 +95,7 @@ export class DivarPostsController {
   }
 
   @Get(':id')
+  @Public()
   @ApiOperation({ summary: 'Get a normalized Divar post by id' })
   @ApiOkResponse({ type: DivarPostListItemDto })
   async getPostById(@Param('id') id: string): Promise<DivarPostListItemDto> {
@@ -102,6 +103,7 @@ export class DivarPostsController {
   }
 
   @Get('detail/:id')
+  @Public()
   @ApiOperation({ summary: 'Get a normalized Divar post by id (stable path)' })
   @ApiOkResponse({ type: DivarPostListItemDto })
   async getPostByIdDetail(@Param('id') id: string): Promise<DivarPostListItemDto> {

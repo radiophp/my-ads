@@ -18,11 +18,13 @@ import { PostCard } from '@/components/dashboard/divar-posts/post-card';
 import { buildPostDetailData } from '@/components/dashboard/divar-posts/post-detail-data';
 import { PostDetailView } from '@/components/dashboard/divar-posts/post-detail-view';
 import { getBusinessTypeBadge } from '@/components/dashboard/divar-posts/business-badge';
+import { useToast } from '@/components/ui/use-toast';
 
 export function DivarPostsFeed(): JSX.Element {
   const t = useTranslations('dashboard.posts');
   const locale = useLocale();
   const isRTL = ['fa', 'ar', 'he'].includes(locale);
+  const { toast } = useToast();
   const [posts, setPosts] = useState<DivarPostSummary[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
@@ -293,6 +295,88 @@ export function DivarPostsFeed(): JSX.Element {
     });
   }, [selectedPost, t, formatPrice, numberFormatter]);
 
+  const shareableDetailEntries = useMemo(() => {
+    if (!detailData) {
+      return [];
+    }
+    return [
+      ...detailData.featuredDetailEntries,
+      ...detailData.infoRowEntries,
+      ...detailData.secondaryDetailEntries,
+    ];
+  }, [detailData]);
+
+  const sharePayload = useMemo(() => {
+    if (!selectedPost) {
+      return null;
+    }
+    const title =
+      selectedPost.title ?? t('untitled', { externalId: selectedPost.externalId });
+    const parts: string[] = [`🏷️ ${title}`];
+    if (selectedCityDistrict) {
+      parts.push(`📍 ${selectedCityDistrict}`);
+    }
+    shareableDetailEntries.forEach((entry) => {
+      parts.push(`🔹 ${entry.label}: ${entry.value}`);
+    });
+    if (selectedPost.description) {
+      parts.push(`📝 ${selectedPost.description}`);
+    }
+    const origin =
+      (typeof window !== 'undefined' && window.location.origin) ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      '';
+    const normalizedOrigin = origin.endsWith('/') ? origin.slice(0, -1) : origin;
+    const url = `${normalizedOrigin}/dashboard/posts/${selectedPost.id}`;
+    parts.push(`🔗 ${url}`);
+    const message = parts.join('\n');
+    const smsHref = `sms:?body=${encodeURIComponent(message)}`;
+    return {
+      title,
+      url,
+      summary: message,
+      message,
+      smsHref,
+    };
+  }, [selectedPost, selectedCityDistrict, shareableDetailEntries, t]);
+
+  const handleShareWhatsapp = useCallback(() => {
+    if (!sharePayload) {
+      return;
+    }
+    const url = `https://wa.me/?text=${encodeURIComponent(sharePayload.message)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }, [sharePayload]);
+
+  const handleShareTelegram = useCallback(() => {
+    if (!sharePayload) {
+      return;
+    }
+    const url = `https://t.me/share/url?url=${encodeURIComponent(sharePayload.url)}&text=${encodeURIComponent(sharePayload.message)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }, [sharePayload]);
+
+  const handleCopyLink = useCallback(() => {
+    if (!sharePayload) {
+      return;
+    }
+    navigator.clipboard
+      .writeText(sharePayload.message)
+      .then(() => {
+        toast({
+          title: t('copySuccessTitle'),
+          description: t('copySuccessDescription'),
+        });
+      })
+      .catch(() => {
+        toast({
+          title: t('copyErrorTitle'),
+          description: t('copyErrorDescription'),
+          variant: 'destructive',
+        });
+      });
+  }, [sharePayload, t, toast]);
+
   const openPostModal = (post: DivarPostSummary) => {
     setSelectedPost(post);
     setDialogOpen(true);
@@ -410,6 +494,11 @@ export function DivarPostsFeed(): JSX.Element {
                     hasDownloadableMedia={hasDownloadableMedia}
                     onRequestDownload={handleOpenDownloadDialog}
                     detailData={detailData}
+                    onShareWhatsapp={sharePayload ? handleShareWhatsapp : undefined}
+                    onShareTelegram={sharePayload ? handleShareTelegram : undefined}
+                    smsHref={sharePayload?.smsHref ?? null}
+                    onCopyLink={sharePayload ? handleCopyLink : undefined}
+                    copyLinkLabel={t('copyLink')}
                   />
                 ) : null}
               </div>

@@ -1,10 +1,15 @@
 import type { JSX } from 'react';
+import { useState } from 'react';
 import type { useTranslations } from 'next-intl';
 import type { DivarPostSummary } from '@/types/divar-posts';
 import { PostMediaCarousel } from './post-media-carousel';
 import { AmenitiesSection, AttributeLabelGrid, AttributeValueGrid } from './post-detail-sections';
 import type { BusinessBadge } from './business-badge';
 import type { PostDetailData } from './post-detail-data';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { FaTelegramPlane, FaWhatsapp, FaSms, FaRegCopy } from 'react-icons/fa';
+import { Share2 } from 'lucide-react';
 
 export type PostDetailViewProps = {
   post: DivarPostSummary;
@@ -16,6 +21,11 @@ export type PostDetailViewProps = {
   hasDownloadableMedia: boolean;
   onRequestDownload: () => void;
   detailData: PostDetailData;
+  onShareWhatsapp?: () => void;
+  onShareTelegram?: () => void;
+  smsHref?: string | null;
+  onCopyLink?: () => void;
+  copyLinkLabel?: string;
 };
 
 export function PostDetailView({
@@ -28,17 +38,105 @@ export function PostDetailView({
   hasDownloadableMedia,
   onRequestDownload,
   detailData,
+  onShareWhatsapp,
+  onShareTelegram,
+  smsHref,
+  onCopyLink,
+  copyLinkLabel,
 }: PostDetailViewProps): JSX.Element {
   const combinedDetailEntries = [
     ...detailData.featuredDetailEntries,
     ...detailData.infoRowEntries,
     ...detailData.secondaryDetailEntries,
   ];
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
 
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-6 lg:flex-row">
         <div className="order-2 flex-1 space-y-6 lg:order-1">
+          {onShareWhatsapp || onShareTelegram || smsHref || onCopyLink ? (
+            <>
+              <div className="flex justify-start">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2 px-3 py-1 text-xs"
+                  onClick={() => setShareDialogOpen(true)}
+                >
+                  <Share2 className="size-3.5" />
+                  <span>{t('sharePost')}</span>
+                </Button>
+              </div>
+              <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+                <DialogContent
+                  className="max-w-sm"
+                  hideCloseButton={false}
+                >
+                  <DialogHeader>
+                    <DialogTitle>{t('sharePost')}</DialogTitle>
+                  </DialogHeader>
+                  <div className="flex flex-col gap-3">
+                    {onShareWhatsapp ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="flex items-center gap-2"
+                        onClick={() => {
+                          onShareWhatsapp();
+                          setShareDialogOpen(false);
+                        }}
+                      >
+                        <FaWhatsapp className="text-green-600" />
+                        <span>{t('shareWhatsApp')}</span>
+                      </Button>
+                    ) : null}
+                    {onShareTelegram ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="flex items-center gap-2"
+                        onClick={() => {
+                          onShareTelegram();
+                          setShareDialogOpen(false);
+                        }}
+                      >
+                        <FaTelegramPlane className="text-sky-500" />
+                        <span>{t('shareTelegram')}</span>
+                      </Button>
+                    ) : null}
+                    {smsHref ? (
+                      <Button
+                        asChild
+                        variant="outline"
+                        className="flex items-center gap-2 sm:hidden"
+                      >
+                        <a href={smsHref} onClick={() => setShareDialogOpen(false)}>
+                          <FaSms className="text-primary" />
+                          <span>{t('shareSms')}</span>
+                        </a>
+                      </Button>
+                    ) : null}
+                    {onCopyLink ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="flex items-center gap-2"
+                        onClick={() => {
+                          onCopyLink();
+                          setShareDialogOpen(false);
+                        }}
+                      >
+                        <FaRegCopy />
+                        <span>{copyLinkLabel ?? t('copyLink')}</span>
+                      </Button>
+                    ) : null}
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </>
+          ) : null}
           {combinedDetailEntries.length > 0 ? (
             <div className="grid grid-cols-3 gap-3">
               {combinedDetailEntries.map((entry) => (

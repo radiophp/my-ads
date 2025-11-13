@@ -11,3 +11,14 @@ export type RingBinderFolderListResponse = {
   folders: RingBinderFolder[];
   maxFolders: number;
 };
+
+export type SavedFolderEntry = {
+  id: string;
+  folderId: string;
+  folderName: string;
+  createdAt: string;
+};
+
+export type PostSavedFoldersResponse = {
+  saved: SavedFolderEntry[];
+};

@@ -20,6 +20,21 @@ export class RingBindersService {
     });
   }
 
+  private async assertNameAvailable(userId: string, name: string, excludeId?: string) {
+    const existing = await this.prismaService.ringBinderFolder.findFirst({
+      where: {
+        userId,
+        name,
+        deletedAt: null,
+        NOT: excludeId ? { id: excludeId } : undefined,
+      },
+      select: { id: true },
+    });
+    if (existing) {
+      throw new ConflictException('A folder with this name already exists.');
+    }
+  }
+
   private async ensureActiveFolder(userId: string, folderId: string) {
     const folder = await this.prismaService.ringBinderFolder.findUnique({
       where: { id: folderId },
@@ -43,6 +58,8 @@ export class RingBindersService {
       throw new BadRequestException(`You can create up to ${MAX_RING_BINDER_FOLDERS} folders.`);
     }
 
+    await this.assertNameAvailable(userId, sanitizedName);
+
     try {
       return await this.prismaService.ringBinderFolder.create({
         data: {
@@ -59,14 +76,15 @@ export class RingBindersService {
   }
 
   async renameFolder(userId: string, folderId: string, name: string) {
-    const folder = await this.ensureActiveFolder(userId, folderId);
     const sanitizedName = name.trim();
     if (!sanitizedName) {
       throw new BadRequestException('Folder name cannot be empty.');
     }
+    const folder = await this.ensureActiveFolder(userId, folderId);
     if (sanitizedName === folder.name) {
       return folder;
     }
+    await this.assertNameAvailable(userId, sanitizedName, folderId);
     try {
       return await this.prismaService.ringBinderFolder.update({
         where: { id: folderId },
@@ -86,5 +104,75 @@ export class RingBindersService {
       where: { id: folderId },
       data: { deletedAt: new Date() },
     });
+  }
+
+  async savePostToFolder(userId: string, folderId: string, postId: string) {
+    const folder = await this.ensureActiveFolder(userId, folderId);
+    const post = await this.prismaService.divarPost.findUnique({
+      where: { id: postId },
+      select: { id: true },
+    });
+    if (!post) {
+      throw new NotFoundException('Post not found.');
+    }
+
+    const existing = await this.prismaService.ringBinderFolderPost.findUnique({
+      where: { folderId_postId: { folderId: folder.id, postId } },
+    });
+    if (existing) {
+      throw new ConflictException('This post is already saved in the selected folder.');
+    }
+
+    await this.prismaService.ringBinderFolderPost.create({
+      data: {
+        folderId: folder.id,
+        postId,
+      },
+    });
+
+    return { success: true };
+  }
+
+  async removePostFromFolder(userId: string, folderId: string, postId: string) {
+    await this.ensureActiveFolder(userId, folderId);
+    const link = await this.prismaService.ringBinderFolderPost.findUnique({
+      where: { folderId_postId: { folderId, postId } },
+    });
+    if (!link) {
+      throw new NotFoundException('Saved post not found.');
+    }
+    await this.prismaService.ringBinderFolderPost.delete({
+      where: { id: link.id },
+    });
+    return { success: true };
+  }
+
+  async listSavedFolders(userId: string, postId: string) {
+    const entries = await this.prismaService.ringBinderFolderPost.findMany({
+      where: {
+        postId,
+        folder: {
+          userId,
+          deletedAt: null,
+        },
+      },
+      select: {
+        id: true,
+        folderId: true,
+        createdAt: true,
+        folder: {
+          select: {
+            name: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+    return entries.map((entry) => ({
+      id: entry.id,
+      folderId: entry.folderId,
+      createdAt: entry.createdAt.toISOString(),
+      folderName: entry.folder.name,
+    }));
   }
 }

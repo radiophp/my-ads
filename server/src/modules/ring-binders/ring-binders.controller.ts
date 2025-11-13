@@ -14,6 +14,7 @@ import {
 import { JwtAuthGuard } from '@app/modules/auth/guards/jwt-auth.guard';
 import { CreateRingBinderFolderDto } from './dto/create-ring-binder-folder.dto';
 import { UpdateRingBinderFolderDto } from './dto/update-ring-binder-folder.dto';
+import { SavePostToFolderDto } from './dto/save-post-to-folder.dto';
 import { MAX_RING_BINDER_FOLDERS, RingBindersService } from './ring-binders.service';
 
 @Controller('ring-binders')
@@ -67,5 +68,46 @@ export class RingBindersController {
     }
     await this.ringBindersService.deleteFolder(userId, id);
     return { success: true };
+  }
+
+  @Post('folders/:id/posts')
+  async savePostToFolder(
+    @Req() request: { user?: { sub?: string } },
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() dto: SavePostToFolderDto,
+  ) {
+    const userId = request.user?.sub;
+    if (!userId) {
+      throw new UnauthorizedException();
+    }
+    return this.ringBindersService.savePostToFolder(userId, id, dto.postId);
+  }
+
+  @Delete('folders/:folderId/posts/:postId')
+  async removePostFromFolder(
+    @Req() request: { user?: { sub?: string } },
+    @Param('folderId', new ParseUUIDPipe()) folderId: string,
+    @Param('postId', new ParseUUIDPipe()) postId: string,
+  ) {
+    const userId = request.user?.sub;
+    if (!userId) {
+      throw new UnauthorizedException();
+    }
+    return this.ringBindersService.removePostFromFolder(userId, folderId, postId);
+  }
+
+  @Get('posts/:postId')
+  async getPostFolders(
+    @Req() request: { user?: { sub?: string } },
+    @Param('postId', new ParseUUIDPipe()) postId: string,
+  ) {
+    const userId = request.user?.sub;
+    if (!userId) {
+      throw new UnauthorizedException();
+    }
+    const saved = await this.ringBindersService.listSavedFolders(userId, postId);
+    return {
+      saved,
+    };
   }
 }

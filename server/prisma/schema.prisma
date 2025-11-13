@@ -249,6 +249,7 @@ model DivarPost {
   updatedAt       DateTime           @default(now()) @updatedAt
   medias          DivarPostMedia[]
   attributes      DivarPostAttribute[]
+  savedInFolders  RingBinderFolderPost[]
 
   @@index([categoryId])
   @@index([categorySlug])
@@ -318,8 +319,21 @@ model RingBinderFolder {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   deletedAt DateTime?
+  posts     RingBinderFolderPost[]
 
   @@unique([userId, name, deletedAt])
   @@index([userId])
   @@index([userId, deletedAt])
+}
+
+model RingBinderFolderPost {
+  id        String             @id @default(uuid())
+  folderId  String
+  postId    String
+  folder    RingBinderFolder   @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  post      DivarPost          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime           @default(now())
+
+  @@unique([folderId, postId])
+  @@index([postId])
 }

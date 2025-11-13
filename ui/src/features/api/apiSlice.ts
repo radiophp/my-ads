@@ -21,7 +21,11 @@ import type {
   DivarPostListResponse,
   DivarPostSummary,
 } from '@/types/divar-posts';
-import type { RingBinderFolder, RingBinderFolderListResponse } from '@/types/ring-binder';
+import type {
+  RingBinderFolder,
+  RingBinderFolderListResponse,
+  PostSavedFoldersResponse,
+} from '@/types/ring-binder';
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:6200/api';
 
@@ -424,6 +428,29 @@ export const apiSlice = createApi({
         { type: 'RingBinderFolders', id: 'LIST' },
       ],
     }),
+    savePostToRingBinderFolder: builder.mutation<
+      { success: boolean },
+      { folderId: string; postId: string }
+    >({
+      query: ({ folderId, postId }) => ({
+        url: `/ring-binders/folders/${folderId}/posts`,
+        method: 'POST',
+        body: { postId },
+      }),
+    }),
+    removePostFromRingBinderFolder: builder.mutation<
+      { success: boolean },
+      { folderId: string; postId: string }
+    >({
+      query: ({ folderId, postId }) => ({
+        url: `/ring-binders/folders/${folderId}/posts/${postId}`,
+        method: 'DELETE',
+      }),
+    }),
+    getPostSavedFolders: builder.query<PostSavedFoldersResponse, string>({
+      query: (postId) => `/ring-binders/posts/${postId}`,
+      providesTags: (result, error, postId) => [{ type: 'RingBinderFolders', id: `post-${postId}` }],
+    }),
     deleteRingBinderFolder: builder.mutation<{ success: boolean }, string>({
       query: (id) => ({
         url: `/ring-binders/folders/${id}`,
@@ -472,6 +499,9 @@ export const {
   useGetRingBinderFoldersQuery,
   useCreateRingBinderFolderMutation,
   useUpdateRingBinderFolderMutation,
+  useSavePostToRingBinderFolderMutation,
+  useRemovePostFromRingBinderFolderMutation,
+  useGetPostSavedFoldersQuery,
   useDeleteRingBinderFolderMutation,
 } = apiSlice;
 

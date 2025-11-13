@@ -1,5 +1,5 @@
 import type { JSX } from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { useTranslations } from 'next-intl';
 import type { DivarPostSummary } from '@/types/divar-posts';
 import { PostMediaCarousel } from './post-media-carousel';
@@ -9,7 +9,12 @@ import type { PostDetailData } from './post-detail-data';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FaTelegramPlane, FaWhatsapp, FaSms, FaRegCopy } from 'react-icons/fa';
-import { Share2 } from 'lucide-react';
+import { Bookmark, BookmarkCheck, Share2 } from 'lucide-react';
+import { SaveToFolderDialog } from '@/components/ring-binder/save-to-folder-dialog';
+import { SavedFoldersDialog } from '@/components/ring-binder/saved-folders-dialog';
+import { useGetPostSavedFoldersQuery, useRemovePostFromRingBinderFolderMutation } from '@/features/api/apiSlice';
+import { toast } from '@/components/ui/use-toast';
+import { cn } from '@/lib/utils';
 
 export type PostDetailViewProps = {
   post: DivarPostSummary;
@@ -50,14 +55,51 @@ export function PostDetailView({
     ...detailData.secondaryDetailEntries,
   ];
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [savedDialogOpen, setSavedDialogOpen] = useState(false);
+  const { data: savedData, refetch: refetchSaved, isFetching: isFetchingSaved } =
+    useGetPostSavedFoldersQuery(post.id, { skip: !post.id });
+  const [removePostFromFolder, { isLoading: isRemoving }] =
+    useRemovePostFromRingBinderFolderMutation();
+  const savedFolders = savedData?.saved ?? [];
+  const isSaved = savedFolders.length > 0;
+  useEffect(() => {
+    if (!isSaved && savedDialogOpen) {
+      setSavedDialogOpen(false);
+    }
+  }, [isSaved, savedDialogOpen]);
+  const handleSaveButtonClick = () => {
+    if (isSaved) {
+      setSavedDialogOpen(true);
+    } else {
+      setSaveDialogOpen(true);
+    }
+  };
+
+  const handleRemoveFromFolder = async (folderId: string) => {
+    try {
+      await removePostFromFolder({ folderId, postId: post.id }).unwrap();
+      toast({
+        title: t('savedDialog.removedTitle'),
+        description: t('savedDialog.removedDescription'),
+      });
+      await refetchSaved();
+    } catch (error) {
+      console.error('Failed to remove saved post', error);
+      toast({
+        title: t('savedDialog.removeError'),
+        variant: 'destructive',
+      });
+    }
+  };
 
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-6 lg:flex-row">
         <div className="order-2 flex-1 space-y-6 lg:order-1">
-          {onShareWhatsapp || onShareTelegram || smsHref || onCopyLink ? (
-            <>
-              <div className="flex justify-start">
+          <div className="flex flex-wrap gap-2">
+            {onShareWhatsapp || onShareTelegram || smsHref || onCopyLink ? (
+              <>
                 <Button
                   type="button"
                   variant="outline"
@@ -68,75 +110,94 @@ export function PostDetailView({
                   <Share2 className="size-3.5" />
                   <span>{t('sharePost')}</span>
                 </Button>
-              </div>
-              <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
-                <DialogContent
-                  className="max-w-sm"
-                  hideCloseButton={false}
-                >
-                  <DialogHeader>
-                    <DialogTitle>{t('sharePost')}</DialogTitle>
-                  </DialogHeader>
-                  <div className="flex flex-col gap-3">
-                    {onShareWhatsapp ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="flex items-center gap-2"
-                        onClick={() => {
-                          onShareWhatsapp();
-                          setShareDialogOpen(false);
-                        }}
-                      >
-                        <FaWhatsapp className="text-green-600" />
-                        <span>{t('shareWhatsApp')}</span>
-                      </Button>
-                    ) : null}
-                    {onShareTelegram ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="flex items-center gap-2"
-                        onClick={() => {
-                          onShareTelegram();
-                          setShareDialogOpen(false);
-                        }}
-                      >
-                        <FaTelegramPlane className="text-sky-500" />
-                        <span>{t('shareTelegram')}</span>
-                      </Button>
-                    ) : null}
-                    {smsHref ? (
-                      <Button
-                        asChild
-                        variant="outline"
-                        className="flex items-center gap-2 sm:hidden"
-                      >
-                        <a href={smsHref} onClick={() => setShareDialogOpen(false)}>
-                          <FaSms className="text-primary" />
-                          <span>{t('shareSms')}</span>
-                        </a>
-                      </Button>
-                    ) : null}
-                    {onCopyLink ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="flex items-center gap-2"
-                        onClick={() => {
-                          onCopyLink();
-                          setShareDialogOpen(false);
-                        }}
-                      >
-                        <FaRegCopy />
-                        <span>{copyLinkLabel ?? t('copyLink')}</span>
-                      </Button>
-                    ) : null}
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </>
-          ) : null}
+                <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+                  <DialogContent className="max-w-sm" hideCloseButton={false}>
+                    <DialogHeader>
+                      <DialogTitle>{t('sharePost')}</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex flex-col gap-3">
+                      {onShareWhatsapp ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="flex items-center gap-2"
+                          onClick={() => {
+                            onShareWhatsapp();
+                            setShareDialogOpen(false);
+                          }}
+                        >
+                          <FaWhatsapp className="text-green-600" />
+                          <span>{t('shareWhatsApp')}</span>
+                        </Button>
+                      ) : null}
+                      {onShareTelegram ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="flex items-center gap-2"
+                          onClick={() => {
+                            onShareTelegram();
+                            setShareDialogOpen(false);
+                          }}
+                        >
+                          <FaTelegramPlane className="text-sky-500" />
+                          <span>{t('shareTelegram')}</span>
+                        </Button>
+                      ) : null}
+                      {smsHref ? (
+                        <Button
+                          asChild
+                          variant="outline"
+                          className="flex items-center gap-2 sm:hidden"
+                        >
+                          <a href={smsHref} onClick={() => setShareDialogOpen(false)}>
+                            <FaSms className="text-primary" />
+                            <span>{t('shareSms')}</span>
+                          </a>
+                        </Button>
+                      ) : null}
+                      {onCopyLink ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="flex items-center gap-2"
+                          onClick={() => {
+                            onCopyLink();
+                            setShareDialogOpen(false);
+                          }}
+                        >
+                          <FaRegCopy />
+                          <span>{copyLinkLabel ?? t('copyLink')}</span>
+                        </Button>
+                      ) : null}
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </>
+            ) : null}
+            <Button
+              type="button"
+              variant={isSaved ? 'outline' : 'secondary'}
+              size="sm"
+              className={cn(
+                'flex items-center gap-2 px-3 py-1 text-xs',
+                isSaved && 'border-emerald-500 text-emerald-600 hover:bg-emerald-50',
+              )}
+              onClick={handleSaveButtonClick}
+            >
+              {isSaved ? (
+                <>
+                  <BookmarkCheck className="size-3.5" />
+                  <span>{t('savedLabel')}</span>
+                </>
+              ) : (
+                <>
+                  <Bookmark className="size-3.5" />
+                  <span>{t('saveToFolder')}</span>
+                </>
+              )}
+            </Button>
+          </div>
           {combinedDetailEntries.length > 0 ? (
             <div className="grid grid-cols-3 gap-3">
               {combinedDetailEntries.map((entry) => (
@@ -188,6 +249,23 @@ export function PostDetailView({
           />
         </div>
       </div>
+      <SaveToFolderDialog
+        post={post}
+        open={saveDialogOpen}
+        onOpenChange={setSaveDialogOpen}
+        onSaved={refetchSaved}
+      />
+      <SavedFoldersDialog
+        open={savedDialogOpen}
+        onOpenChange={setSavedDialogOpen}
+        folders={savedFolders}
+        isLoading={isFetchingSaved || isRemoving}
+        onRemove={handleRemoveFromFolder}
+        onAddMore={() => {
+          setSavedDialogOpen(false);
+          setSaveDialogOpen(true);
+        }}
+      />
     </div>
   );
 }

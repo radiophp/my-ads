@@ -8,6 +8,7 @@
     "brand": "Pro UI Base",
     "nav": {
       "dashboard": "Dashboard",
+      "ringBinder": "Ring binder",
       "admin": "Admin",
       "guides": "Guides"
     },
@@ -646,6 +647,56 @@
       "decrement": "Decrease",
       "increment": "Increase",
       "reset": "Reset"
+    }
+  },
+  "ringBinder": {
+    "badge": "Ring binder",
+    "title": "Ring binder folders",
+    "description": "Organize future leads by creating quick folders for each category or customer.",
+    "form": {
+      "title": "Create a folder",
+      "placeholder": "Folder name",
+      "submit": "Create folder",
+      "creating": "Creating…",
+      "limitHelper": "{count} / {max} folders used",
+      "limitReached": "You reached the maximum number of folders."
+    },
+    "list": {
+      "title": "Your folders",
+      "emptyTitle": "No folders yet",
+      "emptyDescription": "Add your first folder to keep upcoming posts tidy.",
+      "createdAt": "Created {date}",
+      "error": "Unable to load folders. Please try again later.",
+      "refreshing": "Updating list…"
+    },
+    "actions": {
+      "rename": "Rename",
+      "delete": "Delete"
+    },
+    "renameDialog": {
+      "title": "Rename folder",
+      "description": "Update the folder name to keep things organized.",
+      "submit": "Save changes",
+      "saving": "Saving…"
+    },
+    "deleteDialog": {
+      "title": "Delete folder",
+      "description": "Are you sure you want to delete “{name}”? You can always recreate it later.",
+      "confirm": "Delete",
+      "confirming": "Deleting…",
+      "cancel": "Cancel"
+    },
+    "toast": {
+      "successTitle": "Folder added",
+      "successDescription": "“{name}” is ready to use.",
+      "errorTitle": "Creation failed",
+      "errorDescription": "We couldn't create the folder. Please try again.",
+      "renameSuccessTitle": "Folder renamed",
+      "renameSuccessDescription": "“{name}” was updated.",
+      "renameErrorDescription": "We couldn't rename this folder. Please try again.",
+      "deleteSuccessTitle": "Folder deleted",
+      "deleteSuccessDescription": "We archived “{name}”.",
+      "deleteErrorDescription": "We couldn't delete this folder. Please try again."
     }
   },
   "pwa": {

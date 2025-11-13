@@ -22,6 +22,16 @@ import { clearAuth } from '@/features/auth/authSlice';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import { Menu, X, DownloadCloud, LogOut } from 'lucide-react';
 
+type NavIconKey = 'dashboard' | 'ringBinder' | 'admin';
+
+type NavItemConfig = {
+  key: string;
+  label: string;
+  href: string;
+  visible: boolean;
+  icon: NavIconKey;
+};
+
 export function SiteHeader() {
   const t = useTranslations();
   const pwaT = useTranslations('pwa');
@@ -77,13 +87,20 @@ export function SiteHeader() {
     }
   };
 
-  const availableNavItems = [
+  const availableNavItems: NavItemConfig[] = [
     {
       key: 'dashboard',
       label: t('header.nav.dashboard'),
       href: '/dashboard',
       visible: isAuthenticated,
       icon: 'dashboard' as const,
+    },
+    {
+      key: 'ring-binder',
+      label: t('header.nav.ringBinder'),
+      href: '/dashboard/ring-binder',
+      visible: isAuthenticated,
+      icon: 'ringBinder' as const,
     },
     {
       key: 'admin',
@@ -135,6 +152,14 @@ export function SiteHeader() {
               className="hidden rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
             >
               {t('header.nav.dashboard')}
+            </Link>
+          )}
+          {isAuthenticated && (
+            <Link
+              href="/dashboard/ring-binder"
+              className="hidden rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
+            >
+              {t('header.nav.ringBinder')}
             </Link>
           )}
           {isAuthenticated && auth.user?.role === 'ADMIN' && (
@@ -273,7 +298,7 @@ function InstalledNoticeDialog({ open, onOpenChange, onOpenApp }: InstalledNotic
 type MobileNavigationDrawerProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  navItems: Array<{ key: string; label: string; href: string; visible: boolean; icon: 'dashboard' | 'admin' }>;
+  navItems: NavItemConfig[];
   showInstallButton: boolean;
   installLabel: string;
   onInstallClick: () => void;
@@ -310,6 +335,41 @@ function MobileNavigationDrawer({
   themeToggleLabel,
 }: MobileNavigationDrawerProps) {
   const themeToggleRef = useRef<HTMLButtonElement>(null);
+  const renderIcon = (icon: NavIconKey) => {
+    switch (icon) {
+      case 'dashboard':
+        return (
+          <svg viewBox="0 0 24 24" className="size-4" aria-hidden>
+            <path d="M3 13h8V3H3zm10 8h8v-8h-8zM3 21h8v-6H3zm10-18v6h8V3z" fill="currentColor" />
+          </svg>
+        );
+      case 'ringBinder':
+        return (
+          <svg viewBox="0 0 24 24" className="size-4" aria-hidden>
+            <path
+              d="M3 7h7l2 2h9v9a2 2 0 0 1-2 2H3V7Z"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+            <path d="M7 11h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        );
+      default:
+        return (
+          <svg viewBox="0 0 24 24" className="size-4" aria-hidden>
+            <path
+              d="M3 7h18M3 12h18M3 17h18"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
+        );
+    }
+  };
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       {/* eslint-disable tailwindcss/classnames-order */}
@@ -366,15 +426,7 @@ function MobileNavigationDrawer({
                 className="flex items-center gap-2 rounded-lg border border-transparent px-3 py-2 text-sm font-medium text-foreground transition hover:border-border/70 hover:bg-secondary/60"
                 onClick={() => onOpenChange(false)}
               >
-                {item.icon === 'dashboard' ? (
-                  <svg viewBox="0 0 24 24" className="size-4" aria-hidden>
-                    <path d="M3 13h8V3H3zm10 8h8v-8h-8zM3 21h8v-6H3zm10-18v6h8V3z" fill="currentColor" />
-                  </svg>
-                ) : (
-                  <svg viewBox="0 0 24 24" className="size-4" aria-hidden>
-                    <path d="M3 7h18M3 12h18M3 17h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                  </svg>
-                )}
+                {renderIcon(item.icon)}
                 {item.label}
               </Link>
             ))}

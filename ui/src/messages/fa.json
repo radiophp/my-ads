@@ -8,6 +8,7 @@
     "brand": "پرو UI بیس",
     "nav": {
       "dashboard": "داشبورد",
+      "ringBinder": "کلاسور",
       "admin": "مدیریت",
       "guides": "راهنماها"
     },
@@ -646,6 +647,56 @@
       "decrement": "کاهش",
       "increment": "افزایش",
       "reset": "بازنشانی"
+    }
+  },
+  "ringBinder": {
+    "badge": "کلاسور",
+    "title": "کلاسور شخصی",
+    "description": "برای هر مشتری یا دسته، پوشه بسازید و سرنخ‌های بعدی را سریع‌تر پیدا کنید.",
+    "form": {
+      "title": "ساخت پوشه جدید",
+      "placeholder": "نام پوشه",
+      "submit": "ساخت پوشه",
+      "creating": "در حال ساخت…",
+      "limitHelper": "{count} از {max} پوشه استفاده شده است",
+      "limitReached": "به حداکثر تعداد مجاز پوشه رسیده‌اید."
+    },
+    "list": {
+      "title": "پوشه‌های شما",
+      "emptyTitle": "پوشه‌ای ثبت نشده است",
+      "emptyDescription": "اولین پوشه را بسازید تا موارد بعدی را راحت‌تر ساماندهی کنید.",
+      "createdAt": "ساخته شده در {date}",
+      "error": "امکان بارگذاری پوشه‌ها نیست. کمی بعد دوباره تلاش کنید.",
+      "refreshing": "در حال به‌روزرسانی…"
+    },
+    "actions": {
+      "rename": "تغییر نام",
+      "delete": "حذف"
+    },
+    "renameDialog": {
+      "title": "تغییر نام پوشه",
+      "description": "برای نظم بهتر، نام پوشه را به‌روزرسانی کنید.",
+      "submit": "ذخیره تغییرات",
+      "saving": "در حال ذخیره…"
+    },
+    "deleteDialog": {
+      "title": "حذف پوشه",
+      "description": "آیا از حذف «{name}» مطمئن هستید؟ هر زمان می‌توانید دوباره آن را بسازید.",
+      "confirm": "حذف",
+      "confirming": "در حال حذف…",
+      "cancel": "انصراف"
+    },
+    "toast": {
+      "successTitle": "پوشه اضافه شد",
+      "successDescription": "«{name}» آماده استفاده است.",
+      "errorTitle": "ساخت پوشه ناموفق بود",
+      "errorDescription": "امکان ساخت این پوشه نبود. لطفاً دوباره تلاش کنید.",
+      "renameSuccessTitle": "پوشه به‌روزرسانی شد",
+      "renameSuccessDescription": "نام «{name}» تغییر کرد.",
+      "renameErrorDescription": "امکان تغییر نام این پوشه نبود. دوباره تلاش کنید.",
+      "deleteSuccessTitle": "پوشه حذف شد",
+      "deleteSuccessDescription": "«{name}» بایگانی شد.",
+      "deleteErrorDescription": "امکان حذف این پوشه نبود. لطفاً دوباره تلاش کنید."
     }
   },
   "pwa": {

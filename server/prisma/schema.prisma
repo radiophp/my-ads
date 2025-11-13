@@ -47,6 +47,7 @@ model User {
   hashedRefreshToken String?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
+  ringBinderFolders  RingBinderFolder[]
 
   @@index([cityId])
 }
@@ -307,4 +308,18 @@ model SubscriptionPackage {
   updatedAt       DateTime @updatedAt
 
   @@index([isActive])
+}
+
+model RingBinderFolder {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@unique([userId, name, deletedAt])
+  @@index([userId])
+  @@index([userId, deletedAt])
 }

@@ -100,7 +100,7 @@ export function PostCard({
           </div>
 
           <div className="flex flex-1 flex-col gap-2 pt-1">
-            <h3 className="break-words text-base font-semibold text-foreground sm:text-lg">
+            <h3 className="break-words text-sm font-semibold text-foreground sm:text-base">
               {post.title ?? t('untitled', { externalId: post.externalId })}
             </h3>
             <div className="flex flex-col gap-2 text-sm text-muted-foreground">

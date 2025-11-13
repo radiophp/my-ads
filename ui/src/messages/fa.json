@@ -18,6 +18,9 @@
       "fa": "فارسی"
     },
     "themeToggle": "تغییر پوسته",
+    "mobileMenuOpen": "باز کردن منوی ناوبری",
+    "mobileMenuClose": "بستن منو",
+    "mobileMenuTitle": "منو",
     "logout": "خروج",
     "loggingOut": "در حال خروج…",
     "menu": {

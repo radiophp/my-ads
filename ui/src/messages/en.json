@@ -20,6 +20,9 @@
     "themeToggle": "Toggle theme",
     "logout": "Log out",
     "loggingOut": "Logging out…",
+    "mobileMenuOpen": "Open navigation menu",
+    "mobileMenuClose": "Close menu",
+    "mobileMenuTitle": "Menu",
     "menu": {
       "profile": "Profile"
     },

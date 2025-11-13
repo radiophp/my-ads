@@ -2,6 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'IRANSans';
+  src: url('/font/IRANSans/IRANSans%20UltraLight/IRANSans%20UltraLight.ttf') format('truetype');
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IRANSans';
+  src: url('/font/IRANSans/IRANSans%20Regular/IRANSans%20Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'IRANSans';
+  src: url('/font/IRANSans/IRANSans%20Medium/IRANSans%20Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --background: 213 31% 94%;
   --foreground: 222 47% 11%;
@@ -48,6 +72,7 @@
 }
 
 body {
+  font-family: 'IRANSans', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   @apply bg-background text-foreground antialiased transition-colors;
 }
 

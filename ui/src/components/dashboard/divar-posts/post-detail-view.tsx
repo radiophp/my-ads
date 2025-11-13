@@ -59,7 +59,7 @@ export function PostDetailView({
                 <dt className="font-medium text-foreground">{t('labels.description')}</dt>
                 <dd
                   className="text-sm text-muted-foreground"
-                  style={{ wordBreak: 'break-all', whiteSpace: 'pre-wrap' }}
+                  style={{ wordBreak: 'break-all', whiteSpace: 'pre-wrap', lineHeight: '2' }}
                 >
                   {detailData.descriptionLines.map((line, index) => (
                     <span

@@ -270,7 +270,7 @@ export function PostDetailView({
             </Button>
           </div>
           {noteContent || isEditingNote ? (
-            <div className="rounded-xl border border-border/70 bg-muted/30 px-3 py-3 text-sm">
+            <div className="rounded-xl border border-border/70 bg-muted/30 p-3 text-sm">
               <div className="flex items-center justify-between gap-3">
                 <p className="font-medium text-foreground">{t('noteSection.heading')}</p>
                 {isEditingNote ? (

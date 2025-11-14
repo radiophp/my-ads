@@ -3,8 +3,37 @@ import * as React from 'react';
 import { X } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
+import { useBackButtonClose } from '@/hooks/use-back-button-close';
 
-const Dialog = DialogPrimitive.Root;
+type DialogRootProps = DialogPrimitive.DialogProps;
+
+const Dialog = ({
+  open: openProp,
+  defaultOpen = false,
+  onOpenChange,
+  ...rest
+}: DialogRootProps) => {
+  const isControlled = openProp !== undefined;
+  const [internalOpen, setInternalOpen] = React.useState(defaultOpen);
+  const open = isControlled ? openProp : internalOpen;
+
+  const handleOpenChange = React.useCallback(
+    (next: boolean) => {
+      if (!isControlled) {
+        setInternalOpen(next);
+      }
+      onOpenChange?.(next);
+    },
+    [isControlled, onOpenChange],
+  );
+
+  useBackButtonClose(Boolean(open), () => {
+    handleOpenChange(false);
+  });
+
+  return <DialogPrimitive.Root {...rest} open={open} onOpenChange={handleOpenChange} />;
+};
+
 const DialogTrigger = DialogPrimitive.Trigger;
 const DialogPortal = DialogPrimitive.Portal;
 const DialogClose = DialogPrimitive.Close;

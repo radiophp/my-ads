@@ -48,6 +48,7 @@ model User {
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
   ringBinderFolders  RingBinderFolder[]
+  postNotes          DivarPostNote[]
 
   @@index([cityId])
 }
@@ -250,6 +251,7 @@ model DivarPost {
   medias          DivarPostMedia[]
   attributes      DivarPostAttribute[]
   savedInFolders  RingBinderFolderPost[]
+  notes           DivarPostNote[]
 
   @@index([categoryId])
   @@index([categorySlug])
@@ -335,5 +337,19 @@ model RingBinderFolderPost {
   createdAt DateTime           @default(now())
 
   @@unique([folderId, postId])
+  @@index([postId])
+}
+
+model DivarPostNote {
+  id        String   @id @default(uuid())
+  userId    String
+  postId    String
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      DivarPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
   @@index([postId])
 }

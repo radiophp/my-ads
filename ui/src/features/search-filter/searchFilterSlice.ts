@@ -10,6 +10,8 @@ export type CategoryFilterValue =
 
 export type CategoryFilterBuckets = Record<string, Record<string, CategoryFilterValue>>;
 
+export type NoteFilterOption = 'all' | 'has' | 'none';
+
 export type SearchFilterState = {
   provinceId: number | null;
   citySelection: {
@@ -26,6 +28,7 @@ export type SearchFilterState = {
   };
   categoryFilters: CategoryFilterBuckets;
   ringBinderFolderId: string | null;
+  noteFilter: NoteFilterOption;
 };
 
 const initialState: SearchFilterState = {
@@ -44,6 +47,7 @@ const initialState: SearchFilterState = {
   },
   categoryFilters: {},
   ringBinderFolderId: null,
+  noteFilter: 'all',
 };
 
 const searchFilterSlice = createSlice({
@@ -88,6 +92,9 @@ const searchFilterSlice = createSlice({
     },
     setRingBinderFolder(state, action: PayloadAction<string | null>) {
       state.ringBinderFolderId = action.payload;
+    },
+    setNoteFilter(state, action: PayloadAction<NoteFilterOption>) {
+      state.noteFilter = action.payload;
     },
     setCategoryFilterValue(
       state,
@@ -135,6 +142,7 @@ export const {
   setCategoryFilterValue,
   clearCategoryFilters,
   setRingBinderFolder,
+  setNoteFilter,
   resetSearchFilter,
 } = searchFilterSlice.actions;
 

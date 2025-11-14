@@ -21,4 +21,8 @@ export type SavedFolderEntry = {
 
 export type PostSavedFoldersResponse = {
   saved: SavedFolderEntry[];
+  note: {
+    content: string;
+    updatedAt: string;
+  } | null;
 };

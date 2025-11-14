@@ -170,6 +170,14 @@
       "loading": "Loading folders…",
       "empty": "Create a folder in your ring binder to filter saved posts."
     },
+    "noteFilter": {
+      "label": "Notes",
+      "options": {
+        "all": "All posts",
+        "has": "Has note",
+        "none": "No note"
+      }
+    },
       "provinceLabel": "Province",
       "provinceAll": "All provinces",
       "provinceButtonSelect": "Select province",
@@ -264,7 +272,7 @@
       "shareWhatsApp": "Share on WhatsApp",
       "shareTelegram": "Share on Telegram",
       "sharePost": "Share",
-      "saveToFolder": "Save to folder",
+      "saveToFolder": "Save",
       "savedLabel": "Saved",
       "copyLink": "Copy link",
       "copySuccessTitle": "Link copied",
@@ -291,6 +299,8 @@
         "createError": "We couldn’t add this folder. Please try again.",
         "duplicateError": "You already have a folder with this name.",
         "limitReached": "You reached the maximum number of folders.",
+        "noteLabel": "Add a note (optional)",
+        "notePlaceholder": "Add context or reminders for this post…",
         "cancel": "Cancel",
         "confirm": "Save",
         "successTitle": "Post saved",
@@ -298,6 +308,19 @@
         "saving": "Saving…",
         "saveError": "We couldn’t save this post. Please try again.",
         "alreadySaved": "This post is already inside the selected folder."
+      },
+      "noteSection": {
+        "heading": "Your note",
+        "editButton": "Edit note",
+        "buttonLabel": "Note",
+        "placeholder": "Write your note here...",
+        "save": "Save note",
+        "saving": "Saving...",
+        "cancel": "Cancel",
+        "updateSuccess": "Note updated",
+        "updateSuccessDescription": "Your note for this post has been saved.",
+        "deleteSuccess": "Note removed",
+        "updateError": "Unable to update note. Please try again."
       },
       "savedDialog": {
         "title": "Saved folders",

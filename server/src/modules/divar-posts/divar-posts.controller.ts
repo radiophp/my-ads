@@ -54,6 +54,7 @@ export class DivarPostsController {
     @Query('categoryDepth') categoryDepthParam?: string,
     @Query('filters') filtersParam?: string,
     @Query('ringFolderId') ringFolderId?: string,
+    @Query('noteFilter') noteFilter?: string,
   ): Promise<PaginatedDivarPostsDto> {
     const parsedLimit = Number(limitParam);
     const limit = Number.isFinite(parsedLimit) ? parsedLimit : undefined;
@@ -84,6 +85,9 @@ export class DivarPostsController {
       }
     }
 
+    const normalizedNoteFilter =
+      noteFilter === 'has' || noteFilter === 'none' ? (noteFilter as 'has' | 'none') : undefined;
+
     return this.divarPostsService.listNormalizedPosts({
       cursor,
       limit,
@@ -94,6 +98,7 @@ export class DivarPostsController {
       categoryDepth: Number.isFinite(parsedDepth) ? parsedDepth : undefined,
       filters: parsedFilters,
       ringFolderId: ringFolderId?.trim() ? ringFolderId.trim() : undefined,
+      noteFilter: normalizedNoteFilter,
       userId: request.user?.sub,
     });
   }

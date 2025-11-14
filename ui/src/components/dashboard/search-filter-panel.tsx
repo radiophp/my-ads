@@ -14,6 +14,8 @@ import {
   setSelectedDistricts,
   setCategorySelection,
   setRingBinderFolder,
+  setNoteFilter,
+  type NoteFilterOption,
 } from '@/features/search-filter/searchFilterSlice';
 import {
   useGetProvincesQuery,
@@ -38,8 +40,14 @@ export function DashboardSearchFilterPanel() {
   const locale = useLocale();
   const isRTL = ['fa', 'ar', 'he'].includes(locale);
   const dispatch = useAppDispatch();
-  const { provinceId, citySelection, districtSelection, categorySelection, ringBinderFolderId } =
-    useAppSelector((state) => state.searchFilter);
+  const {
+    provinceId,
+    citySelection,
+    districtSelection,
+    categorySelection,
+    ringBinderFolderId,
+    noteFilter,
+  } = useAppSelector((state) => state.searchFilter);
   const categorySlug = categorySelection.slug;
   const categoryDepth = categorySelection.depth;
   const selectedCityIds =
@@ -461,6 +469,25 @@ export function DashboardSearchFilterPanel() {
           ) : ringBinderFolders.length === 0 ? (
             <p className="text-xs text-muted-foreground">{t('ringBinder.empty')}</p>
           ) : null}
+        </div>
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-foreground">{t('noteFilter.label')}</label>
+          <select
+            className="w-full rounded-lg border border-border/70 bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none"
+            value={noteFilter}
+            onChange={(event) => {
+              const value = event.target.value as NoteFilterOption;
+              if (value === 'has' || value === 'none') {
+                dispatch(setNoteFilter(value));
+              } else {
+                dispatch(setNoteFilter('all'));
+              }
+            }}
+          >
+            <option value="all">{t('noteFilter.options.all')}</option>
+            <option value="has">{t('noteFilter.options.has')}</option>
+            <option value="none">{t('noteFilter.options.none')}</option>
+          </select>
         </div>
         <div>
           <p className="text-sm font-medium text-muted-foreground">{t('categories.title')}</p>

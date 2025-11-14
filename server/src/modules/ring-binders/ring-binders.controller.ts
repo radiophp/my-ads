@@ -7,6 +7,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Put,
   Req,
   UnauthorizedException,
   UseGuards,
@@ -15,6 +16,7 @@ import { JwtAuthGuard } from '@app/modules/auth/guards/jwt-auth.guard';
 import { CreateRingBinderFolderDto } from './dto/create-ring-binder-folder.dto';
 import { UpdateRingBinderFolderDto } from './dto/update-ring-binder-folder.dto';
 import { SavePostToFolderDto } from './dto/save-post-to-folder.dto';
+import { SavePostNoteDto } from './dto/save-post-note.dto';
 import { MAX_RING_BINDER_FOLDERS, RingBindersService } from './ring-binders.service';
 
 @Controller('ring-binders')
@@ -105,9 +107,31 @@ export class RingBindersController {
     if (!userId) {
       throw new UnauthorizedException();
     }
-    const saved = await this.ringBindersService.listSavedFolders(userId, postId);
-    return {
-      saved,
-    };
+    return this.ringBindersService.listSavedFolders(userId, postId);
+  }
+
+  @Put('posts/:postId/note')
+  async upsertNote(
+    @Req() request: { user?: { sub?: string } },
+    @Param('postId', new ParseUUIDPipe()) postId: string,
+    @Body() dto: SavePostNoteDto,
+  ) {
+    const userId = request.user?.sub;
+    if (!userId) {
+      throw new UnauthorizedException();
+    }
+    return this.ringBindersService.upsertPostNote(userId, postId, dto.content ?? '');
+  }
+
+  @Delete('posts/:postId/note')
+  async deleteNote(
+    @Req() request: { user?: { sub?: string } },
+    @Param('postId', new ParseUUIDPipe()) postId: string,
+  ) {
+    const userId = request.user?.sub;
+    if (!userId) {
+      throw new UnauthorizedException();
+    }
+    return this.ringBindersService.deletePostNote(userId, postId);
   }
 }

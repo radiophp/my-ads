@@ -177,6 +177,7 @@ export class DivarPostsAdminService {
       filters?: Record<string, unknown>;
       ringFolderId?: string;
       userId?: string | null;
+      noteFilter?: 'has' | 'none';
     } = {},
   ): Promise<PaginatedDivarPostsDto> {
     const take = Math.min(Math.max(options.limit ?? 20, 1), 50);
@@ -227,6 +228,28 @@ export class DivarPostsAdminService {
           },
         },
       });
+    }
+    if (options.noteFilter) {
+      if (!options.userId) {
+        throw new BadRequestException('Note filter requires authentication.');
+      }
+      const condition =
+        options.noteFilter === 'has'
+          ? {
+              notes: {
+                some: {
+                  userId: options.userId,
+                },
+              },
+            }
+          : {
+              notes: {
+                none: {
+                  userId: options.userId,
+                },
+              },
+            };
+      this.appendAndCondition(where, condition);
     }
     const queryArgs = {
       orderBy: [

@@ -351,6 +351,7 @@ export const apiSlice = createApi({
         categoryDepth?: number | null;
         filters?: Record<string, unknown>;
         ringFolderId?: string | null;
+        noteFilter?: 'has' | 'none';
       } | void
     >({
       query: (params) => {
@@ -381,6 +382,9 @@ export const apiSlice = createApi({
         }
         if (params?.ringFolderId) {
           searchParams.set('ringFolderId', params.ringFolderId);
+        }
+        if (params?.noteFilter === 'has' || params?.noteFilter === 'none') {
+          searchParams.set('noteFilter', params.noteFilter);
         }
         const qs = searchParams.toString();
         return `/divar-posts${qs ? `?${qs}` : ''}`;
@@ -455,6 +459,28 @@ export const apiSlice = createApi({
       query: (postId) => `/ring-binders/posts/${postId}`,
       providesTags: (result, error, postId) => [{ type: 'RingBinderFolders', id: `post-${postId}` }],
     }),
+    upsertPostNote: builder.mutation<
+      { content: string | null; updatedAt?: string },
+      { postId: string; content: string }
+    >({
+      query: ({ postId, content }) => ({
+        url: `/ring-binders/posts/${postId}/note`,
+        method: 'PUT',
+        body: { content },
+      }),
+      invalidatesTags: (result, error, arg) => [
+        { type: 'RingBinderFolders', id: `post-${arg.postId}` },
+      ],
+    }),
+    deletePostNote: builder.mutation<{ success: boolean }, { postId: string }>({
+      query: ({ postId }) => ({
+        url: `/ring-binders/posts/${postId}/note`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (result, error, arg) => [
+        { type: 'RingBinderFolders', id: `post-${arg.postId}` },
+      ],
+    }),
     deleteRingBinderFolder: builder.mutation<{ success: boolean }, string>({
       query: (id) => ({
         url: `/ring-binders/folders/${id}`,
@@ -506,6 +532,8 @@ export const {
   useSavePostToRingBinderFolderMutation,
   useRemovePostFromRingBinderFolderMutation,
   useGetPostSavedFoldersQuery,
+  useUpsertPostNoteMutation,
+  useDeletePostNoteMutation,
   useDeleteRingBinderFolderMutation,
 } = apiSlice;
 

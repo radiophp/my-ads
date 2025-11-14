@@ -168,11 +168,80 @@ export class RingBindersService {
       },
       orderBy: { createdAt: 'asc' },
     });
-    return entries.map((entry) => ({
-      id: entry.id,
-      folderId: entry.folderId,
-      createdAt: entry.createdAt.toISOString(),
-      folderName: entry.folder.name,
-    }));
+    const note = await this.prismaService.divarPostNote.findUnique({
+      where: {
+        userId_postId: {
+          userId,
+          postId,
+        },
+      },
+    });
+    return {
+      saved: entries.map((entry) => ({
+        id: entry.id,
+        folderId: entry.folderId,
+        createdAt: entry.createdAt.toISOString(),
+        folderName: entry.folder.name,
+      })),
+      note: note
+        ? {
+            content: note.content,
+            updatedAt: note.updatedAt.toISOString(),
+          }
+        : null,
+    };
+  }
+
+  async upsertPostNote(userId: string, postId: string, content: string) {
+    const trimmed = content.trim();
+    if (!trimmed) {
+      await this.deletePostNote(userId, postId);
+      return { content: null };
+    }
+    const post = await this.prismaService.divarPost.findUnique({
+      where: { id: postId },
+      select: { id: true },
+    });
+    if (!post) {
+      throw new NotFoundException('Post not found.');
+    }
+    const note = await this.prismaService.divarPostNote.upsert({
+      where: {
+        userId_postId: {
+          userId,
+          postId,
+        },
+      },
+      create: {
+        userId,
+        postId,
+        content: trimmed,
+      },
+      update: {
+        content: trimmed,
+      },
+    });
+    return {
+      content: note.content,
+      updatedAt: note.updatedAt.toISOString(),
+    };
+  }
+
+  async deletePostNote(userId: string, postId: string) {
+    const note = await this.prismaService.divarPostNote.findUnique({
+      where: {
+        userId_postId: {
+          userId,
+          postId,
+        },
+      },
+    });
+    if (!note) {
+      return { success: true };
+    }
+    await this.prismaService.divarPostNote.delete({
+      where: { id: note.id },
+    });
+    return { success: true };
   }
 }

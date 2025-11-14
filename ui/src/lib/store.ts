@@ -17,6 +17,7 @@ type StoredSearchFilterState = Partial<SearchFilterState> & {
   categorySelection?: Partial<SearchFilterState['categorySelection']>;
   districtSelection?: Partial<SearchFilterState['districtSelection']>;
   ringBinderFolderId?: string | null;
+  noteFilter?: SearchFilterState['noteFilter'];
 };
 
 const SEARCH_FILTER_STORAGE_KEY = 'search-filter-state';
@@ -85,6 +86,8 @@ const loadSearchFilterState = (): SearchFilterState => {
         typeof parsed.ringBinderFolderId === 'string' && parsed.ringBinderFolderId.length > 0
           ? parsed.ringBinderFolderId
           : null,
+      noteFilter:
+        parsed.noteFilter === 'has' || parsed.noteFilter === 'none' ? parsed.noteFilter : 'all',
     };
   } catch {
     return searchFilterInitialState;

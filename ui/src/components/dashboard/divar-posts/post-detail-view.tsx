@@ -9,10 +9,15 @@ import type { PostDetailData } from './post-detail-data';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FaTelegramPlane, FaWhatsapp, FaSms, FaRegCopy } from 'react-icons/fa';
-import { Bookmark, BookmarkCheck, Share2 } from 'lucide-react';
+import { Bookmark, BookmarkCheck, Pencil, Plus, Share2 } from 'lucide-react';
 import { SaveToFolderDialog } from '@/components/ring-binder/save-to-folder-dialog';
 import { SavedFoldersDialog } from '@/components/ring-binder/saved-folders-dialog';
-import { useGetPostSavedFoldersQuery, useRemovePostFromRingBinderFolderMutation } from '@/features/api/apiSlice';
+import {
+  useDeletePostNoteMutation,
+  useGetPostSavedFoldersQuery,
+  useRemovePostFromRingBinderFolderMutation,
+  useUpsertPostNoteMutation,
+} from '@/features/api/apiSlice';
 import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 
@@ -61,13 +66,24 @@ export function PostDetailView({
     useGetPostSavedFoldersQuery(post.id, { skip: !post.id });
   const [removePostFromFolder, { isLoading: isRemoving }] =
     useRemovePostFromRingBinderFolderMutation();
+  const [upsertPostNote, { isLoading: isSavingInlineNote }] = useUpsertPostNoteMutation();
+  const [deletePostNote, { isLoading: isDeletingInlineNote }] = useDeletePostNoteMutation();
   const savedFolders = savedData?.saved ?? [];
   const isSaved = savedFolders.length > 0;
+  const noteContent = savedData?.note?.content ?? null;
+  const [isEditingNote, setIsEditingNote] = useState(false);
+  const [noteDraft, setNoteDraft] = useState(noteContent ?? '');
+  const isMutatingNote = isSavingInlineNote || isDeletingInlineNote;
   useEffect(() => {
     if (!isSaved && savedDialogOpen) {
       setSavedDialogOpen(false);
     }
   }, [isSaved, savedDialogOpen]);
+  useEffect(() => {
+    if (!isEditingNote) {
+      setNoteDraft(noteContent ?? '');
+    }
+  }, [noteContent, isEditingNote]);
   const handleSaveButtonClick = () => {
     if (isSaved) {
       setSavedDialogOpen(true);
@@ -93,6 +109,49 @@ export function PostDetailView({
     }
   };
 
+  const handleStartNoteEdit = () => {
+    setNoteDraft(noteContent ?? '');
+    setIsEditingNote(true);
+  };
+
+  const handleCancelNoteEdit = () => {
+    setNoteDraft(noteContent ?? '');
+    setIsEditingNote(false);
+  };
+
+  const handleSaveNote = async () => {
+    const trimmed = noteDraft.trim();
+    const previous = (noteContent ?? '').trim();
+    if (trimmed === previous) {
+      setIsEditingNote(false);
+      return;
+    }
+    try {
+      if (trimmed.length > 0) {
+        await upsertPostNote({ postId: post.id, content: trimmed }).unwrap();
+        toast({
+          title: t('noteSection.updateSuccess'),
+          description: t('noteSection.updateSuccessDescription'),
+        });
+      } else {
+        await deletePostNote({ postId: post.id }).unwrap();
+        toast({
+          title: t('noteSection.deleteSuccess'),
+        });
+      }
+      await refetchSaved();
+      setIsEditingNote(false);
+      setNoteDraft(trimmed);
+    } catch (error) {
+      console.error('Failed to update note', error);
+      toast({
+        title: t('noteSection.updateError'),
+        variant: 'destructive',
+      });
+    }
+  };
+  const canSaveNote = noteDraft.trim() !== (noteContent ?? '').trim();
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-6 lg:flex-row">
@@ -102,13 +161,13 @@ export function PostDetailView({
               <>
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="secondary"
                   size="sm"
                   className="flex items-center gap-2 px-3 py-1 text-xs"
                   onClick={() => setShareDialogOpen(true)}
                 >
-                  <Share2 className="size-3.5" />
-                  <span>{t('sharePost')}</span>
+                  <Share2 className="size-3.5" aria-hidden="true" />
+                  <span className="sr-only">{t('sharePost')}</span>
                 </Button>
                 <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
                   <DialogContent className="max-w-sm" hideCloseButton={false}>
@@ -175,6 +234,18 @@ export function PostDetailView({
                 </Dialog>
               </>
             ) : null}
+            {!noteContent && !isEditingNote ? (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={handleStartNoteEdit}
+                className="flex items-center gap-2 px-3 py-1 text-xs"
+              >
+                <Plus className="size-3.5" aria-hidden="true" />
+                <span>{t('noteSection.buttonLabel')}</span>
+              </Button>
+            ) : null}
             <Button
               type="button"
               variant={isSaved ? 'outline' : 'secondary'}
@@ -197,6 +268,59 @@ export function PostDetailView({
                 </>
               )}
             </Button>
+          </div>
+          <div className="rounded-xl border border-border/70 bg-muted/30 px-3 py-3 text-sm min-h-[64px]">
+            {noteContent || isEditingNote ? (
+              <div className="flex items-center justify-between gap-3">
+                <p className="font-medium text-foreground">{t('noteSection.heading')}</p>
+                {isEditingNote ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleCancelNoteEdit}
+                    disabled={isMutatingNote}
+                  >
+                    {t('noteSection.cancel')}
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleStartNoteEdit}
+                    className="flex items-center gap-1"
+                  >
+                    <span className="sr-only">{t('noteSection.editButton')}</span>
+                    <Pencil className="size-4" aria-hidden="true" />
+                  </Button>
+                )}
+              </div>
+            ) : null}
+            {isEditingNote ? (
+              <>
+                <textarea
+                  className="mt-3 w-full rounded-xl border border-border/70 bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none"
+                  placeholder={t('noteSection.placeholder')}
+                  value={noteDraft}
+                  onChange={(event) => setNoteDraft(event.target.value)}
+                  maxLength={2000}
+                />
+                <div className={cn('mt-3 flex', isRTL ? 'justify-start' : 'justify-end')}>
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="w-full sm:w-auto"
+                    onClick={handleSaveNote}
+                    disabled={!canSaveNote || isMutatingNote}
+                  >
+                    {isMutatingNote ? t('noteSection.saving') : t('noteSection.save')}
+                  </Button>
+                </div>
+              </>
+            ) : noteContent ? (
+              <p className="mt-2 whitespace-pre-wrap text-muted-foreground">{noteContent}</p>
+            ) : null}
           </div>
           {combinedDetailEntries.length > 0 ? (
             <div className="grid grid-cols-3 gap-3">
@@ -254,6 +378,8 @@ export function PostDetailView({
         open={saveDialogOpen}
         onOpenChange={setSaveDialogOpen}
         onSaved={refetchSaved}
+        initialNote={noteContent}
+        isRTL={isRTL}
       />
       <SavedFoldersDialog
         open={savedDialogOpen}

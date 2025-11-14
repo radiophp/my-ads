@@ -203,6 +203,14 @@
         "loading": "در حال بارگذاری پوشه‌ها…",
         "empty": "برای استفاده از این فیلتر ابتدا در زونکن پوشه بسازید."
       },
+      "noteFilter": {
+        "label": "یادداشت‌ها",
+        "options": {
+          "all": "همه آگهی‌ها",
+          "has": "دارای یادداشت",
+          "none": "بدون یادداشت"
+        }
+      },
     "mobileBack": "بازگشت",
     "categories": {
       "title": "دسته‌بندی‌ها",
@@ -264,7 +272,7 @@
       "shareWhatsApp": "اشتراک‌گذاری در واتساپ",
       "shareTelegram": "اشتراک در تلگرام",
       "sharePost": "اشتراک‌گذاری",
-      "saveToFolder": "ذخیره در پوشه",
+      "saveToFolder": "ذخیره",
       "savedLabel": "ذخیره شده",
       "copyLink": "کپی لینک",
       "copySuccessTitle": "لینک کپی شد",
@@ -291,6 +299,8 @@
         "createError": "امکان افزودن این پوشه نبود. دوباره تلاش کنید.",
         "duplicateError": "قبلاً پوشه‌ای با این نام دارید.",
         "limitReached": "به حداکثر تعداد پوشه رسیدید.",
+        "noteLabel": "یادداشت (اختیاری)",
+        "notePlaceholder": "یادداشت یا توضیحی برای این آگهی بنویسید…",
         "cancel": "انصراف",
         "confirm": "ذخیره",
         "successTitle": "آگهی ذخیره شد",
@@ -311,6 +321,19 @@
         "removedTitle": "حذف شد",
         "removedDescription": "آگهی دیگر در آن پوشه نیست.",
         "removeError": "امکان حذف این آگهی نبود. دوباره تلاش کنید."
+      },
+      "noteSection": {
+        "heading": "یادداشت شما",
+        "editButton": "ویرایش یادداشت",
+        "buttonLabel": "یادداشت",
+        "placeholder": "یادداشت خود را اینجا بنویسید...",
+        "save": "ذخیره یادداشت",
+        "saving": "در حال ذخیره...",
+        "cancel": "انصراف",
+        "updateSuccess": "یادداشت ذخیره شد",
+        "updateSuccessDescription": "یادداشت این آگهی با موفقیت بروزرسانی شد.",
+        "deleteSuccess": "یادداشت حذف شد",
+        "updateError": "ذخیره یادداشت انجام نشد. دوباره تلاش کنید."
       },
       "labels": {
         "location": "موقعیت",

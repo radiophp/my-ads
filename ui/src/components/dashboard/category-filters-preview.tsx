@@ -8,6 +8,7 @@ import { useGetPublicDivarCategoryFilterQuery } from '@/features/api/apiSlice';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import {
   clearCategoryFilters,
@@ -390,19 +391,20 @@ export function CategoryFiltersPreview({ categorySlug, locale, isRTL }: Category
             case 'toggle': {
               const current = activeFilters[widget.key];
               const checked = current?.kind === 'boolean' && current.value === true;
+              const switchLabelId = `category-filter-toggle-${widget.key}`;
               return (
-                <label
+                <div
                   key={widget.id}
                   className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2 text-sm text-foreground"
                 >
-                  <span>{label}</span>
-                  <input
-                    type="checkbox"
-                    className="size-5 rounded border-input text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+                  <span id={switchLabelId}>{label}</span>
+                  <Switch
+                    dir={isRTL ? 'rtl' : 'ltr'}
+                    aria-labelledby={switchLabelId}
                     checked={checked}
-                    onChange={(event) => updateToggle(widget.key, event.target.checked)}
+                    onCheckedChange={(next) => updateToggle(widget.key, next)}
                   />
-                </label>
+                </div>
               );
             }
             case 'unsupported':

@@ -269,8 +269,8 @@ export function PostDetailView({
               )}
             </Button>
           </div>
-          <div className="rounded-xl border border-border/70 bg-muted/30 px-3 py-3 text-sm min-h-[64px]">
-            {noteContent || isEditingNote ? (
+          {noteContent || isEditingNote ? (
+            <div className="rounded-xl border border-border/70 bg-muted/30 px-3 py-3 text-sm">
               <div className="flex items-center justify-between gap-3">
                 <p className="font-medium text-foreground">{t('noteSection.heading')}</p>
                 {isEditingNote ? (
@@ -296,32 +296,32 @@ export function PostDetailView({
                   </Button>
                 )}
               </div>
-            ) : null}
-            {isEditingNote ? (
-              <>
-                <textarea
-                  className="mt-3 w-full rounded-xl border border-border/70 bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none"
-                  placeholder={t('noteSection.placeholder')}
-                  value={noteDraft}
-                  onChange={(event) => setNoteDraft(event.target.value)}
-                  maxLength={2000}
-                />
-                <div className={cn('mt-3 flex', isRTL ? 'justify-start' : 'justify-end')}>
-                  <Button
-                    type="button"
-                    size="sm"
-                    className="w-full sm:w-auto"
-                    onClick={handleSaveNote}
-                    disabled={!canSaveNote || isMutatingNote}
-                  >
-                    {isMutatingNote ? t('noteSection.saving') : t('noteSection.save')}
-                  </Button>
-                </div>
-              </>
-            ) : noteContent ? (
-              <p className="mt-2 whitespace-pre-wrap text-muted-foreground">{noteContent}</p>
-            ) : null}
-          </div>
+              {isEditingNote ? (
+                <>
+                  <textarea
+                    className="mt-3 w-full rounded-xl border border-border/70 bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none"
+                    placeholder={t('noteSection.placeholder')}
+                    value={noteDraft}
+                    onChange={(event) => setNoteDraft(event.target.value)}
+                    maxLength={2000}
+                  />
+                  <div className={cn('mt-3 flex', isRTL ? 'justify-start' : 'justify-end')}>
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="w-full sm:w-auto"
+                      onClick={handleSaveNote}
+                      disabled={!canSaveNote || isMutatingNote}
+                    >
+                      {isMutatingNote ? t('noteSection.saving') : t('noteSection.save')}
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <p className="mt-2 whitespace-pre-wrap text-muted-foreground">{noteContent}</p>
+              )}
+            </div>
+          ) : null}
           {combinedDetailEntries.length > 0 ? (
             <div className="grid grid-cols-3 gap-3">
               {combinedDetailEntries.map((entry) => (

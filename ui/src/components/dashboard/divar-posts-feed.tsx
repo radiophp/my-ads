@@ -484,7 +484,7 @@ export function DivarPostsFeed(): JSX.Element {
               </div>
               <div className="hidden p-0 sm:block">
                 <DialogHeader>
-                  <DialogTitle className="flex flex-wrap items-center gap-2 break-words">
+                  <DialogTitle className="mb-4 flex flex-wrap items-center gap-2 break-words">
                     {selectedPost.title ?? t('untitled', { externalId: selectedPost.externalId })}
                   </DialogTitle>
                 </DialogHeader>

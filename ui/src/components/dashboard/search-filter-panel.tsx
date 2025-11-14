@@ -35,6 +35,8 @@ import { Button } from '@/components/ui/button';
 import type { DivarCategory } from '@/types/divar-category';
 import { CategoryFiltersPreview } from './category-filters-preview';
 
+const BASE_CATEGORY_SLUG = 'real-estate';
+
 export function DashboardSearchFilterPanel() {
   const t = useTranslations('dashboard.filters');
   const locale = useLocale();
@@ -346,26 +348,56 @@ export function DashboardSearchFilterPanel() {
     [categories],
   );
 
+  const baseCategory = useMemo(
+    () => allowedCategories.find((category) => category.slug === BASE_CATEGORY_SLUG) ?? null,
+    [allowedCategories],
+  );
+
+  const visibleCategories = useMemo(() => {
+    if (!baseCategory) {
+      return allowedCategories;
+    }
+    const byParent = new Map<string | null, DivarCategory[]>();
+    allowedCategories.forEach((category) => {
+      const parentKey = category.parentId ?? null;
+      if (!byParent.has(parentKey)) {
+        byParent.set(parentKey, []);
+      }
+      byParent.get(parentKey)!.push(category);
+    });
+    byParent.forEach((list) =>
+      list.sort((a, b) => a.position - b.position || a.name.localeCompare(b.name)),
+    );
+    const result: DivarCategory[] = [];
+    const visit = (category: DivarCategory) => {
+      result.push(category);
+      const childList = byParent.get(category.id) ?? [];
+      childList.forEach(visit);
+    };
+    visit(baseCategory);
+    return result;
+  }, [allowedCategories, baseCategory]);
+
   useEffect(() => {
     if (!categorySlug || categoriesBusy) {
       return;
     }
-    const category = allowedCategories.find((item) => item.slug === categorySlug);
+    const category = visibleCategories.find((item) => item.slug === categorySlug);
     if (!category) {
       dispatch(setCategorySelection({ slug: null, depth: null }));
     } else if (categoryDepth !== category.depth) {
       dispatch(setCategorySelection({ slug: category.slug, depth: category.depth }));
     }
-  }, [allowedCategories, categoriesBusy, categorySlug, categoryDepth, dispatch]);
+  }, [visibleCategories, categoriesBusy, categorySlug, categoryDepth, dispatch]);
 
   const categoryStructures = useMemo(() => {
     const byId = new Map<string, DivarCategory>();
-    allowedCategories.forEach((category) => {
+    visibleCategories.forEach((category) => {
       byId.set(category.id, category);
     });
 
     const children = new Map<string | null, DivarCategory[]>();
-    allowedCategories.forEach((category) => {
+    visibleCategories.forEach((category) => {
       const parentKey =
         category.parentId && byId.has(category.parentId) ? category.parentId : null;
       if (!children.has(parentKey)) {
@@ -379,14 +411,47 @@ export function DashboardSearchFilterPanel() {
     );
 
     return { byId, children };
-  }, [allowedCategories]);
+  }, [visibleCategories]);
 
   const selectedCategory =
     categorySlug !== null
-      ? allowedCategories.find((category) => category.slug === categorySlug) ?? null
+      ? visibleCategories.find((category) => category.slug === categorySlug) ?? null
       : null;
 
   const breadcrumbItems = useMemo(() => {
+    if (baseCategory) {
+      const crumbs: Array<{ slug: string | null; label: string; depth: number | null }> = [
+        {
+          slug: baseCategory.slug,
+          label: baseCategory.name,
+          depth: baseCategory.depth,
+        },
+      ];
+      if (!selectedCategory || selectedCategory.id === baseCategory.id) {
+        return crumbs;
+      }
+      const chain: DivarCategory[] = [];
+      let current: DivarCategory | null | undefined = selectedCategory;
+      while (current && current.id !== baseCategory.id) {
+        chain.unshift(current);
+        current =
+          current.parentId && categoryStructures.byId.has(current.parentId)
+            ? categoryStructures.byId.get(current.parentId)
+            : null;
+      }
+      chain.forEach((category) => {
+        if (category.id === baseCategory.id) {
+          return;
+        }
+        crumbs.push({
+          slug: category.slug,
+          label: category.name,
+          depth: category.depth,
+        });
+      });
+      return crumbs;
+    }
+
     const crumbs: Array<{ slug: string | null; label: string; depth: number | null }> = [
       { slug: null, label: t('categories.all'), depth: null },
     ];
@@ -414,10 +479,10 @@ export function DashboardSearchFilterPanel() {
     });
 
     return crumbs;
-  }, [selectedCategory, categoryStructures, t]);
+  }, [baseCategory, selectedCategory, categoryStructures, t]);
 
   const categoryOptions = useMemo(() => {
-    if (allowedCategories.length === 0) {
+    if (visibleCategories.length === 0) {
       return [];
     }
 
@@ -431,11 +496,21 @@ export function DashboardSearchFilterPanel() {
         return children;
       }
 
-      return categoryStructures.children.get(parentKey) ?? categoryStructures.children.get(null) ?? [];
+      if (parentKey) {
+        return categoryStructures.children.get(parentKey) ?? [];
+      }
+      if (baseCategory) {
+        return categoryStructures.children.get(baseCategory.id) ?? [];
+      }
+      return categoryStructures.children.get(null) ?? [];
+    }
+
+    if (baseCategory) {
+      return categoryStructures.children.get(baseCategory.id) ?? [];
     }
 
     return categoryStructures.children.get(null) ?? [];
-  }, [allowedCategories, categoryStructures, selectedCategory]);
+  }, [visibleCategories, categoryStructures, selectedCategory, baseCategory]);
 
   const handleCategorySelect = (slug: string | null, depth: number | null = null) => {
     dispatch(setCategorySelection({ slug, depth }));
@@ -493,29 +568,32 @@ export function DashboardSearchFilterPanel() {
           <p className="text-sm font-medium text-muted-foreground">{t('categories.title')}</p>
           {categoriesBusy ? (
             <p className="mt-2 text-xs text-muted-foreground">{t('categories.loading')}</p>
-          ) : allowedCategories.length === 0 ? (
+          ) : visibleCategories.length === 0 ? (
             <p className="mt-2 text-xs text-muted-foreground">{t('categories.empty')}</p>
           ) : (
             <>
               <div className="mt-2 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
-                {breadcrumbItems.map((crumb, index) => (
-                  <div key={`${crumb.slug ?? 'root'}-${index}`} className="inline-flex items-center">
-                    <button
-                      type="button"
-                      className={`rounded px-1 py-0.5 ${
-                        crumb.slug === categorySlug
-                          ? 'font-semibold text-foreground'
-                          : 'hover:text-foreground'
-                      }`}
-                      onClick={() => handleCategorySelect(crumb.slug, crumb.depth)}
-                    >
-                      {crumb.label}
-                    </button>
-                    {index < breadcrumbItems.length - 1 ? (
-                      <span className="px-1 text-muted-foreground">{isRTL ? '«' : '»'}</span>
-                    ) : null}
-                  </div>
-                ))}
+                {breadcrumbItems.map((crumb, index) => {
+                  const isActive =
+                    crumb.slug === categorySlug ||
+                    (!categorySlug && baseCategory && crumb.slug === baseCategory.slug);
+                  return (
+                    <div key={`${crumb.slug ?? 'root'}-${index}`} className="inline-flex items-center">
+                      <button
+                        type="button"
+                        className={`rounded px-1 py-0.5 ${
+                          isActive ? 'font-semibold text-foreground' : 'hover:text-foreground'
+                        }`}
+                        onClick={() => handleCategorySelect(crumb.slug, crumb.depth)}
+                      >
+                        {crumb.label}
+                      </button>
+                      {index < breadcrumbItems.length - 1 ? (
+                        <span className="px-1 text-muted-foreground">{isRTL ? '«' : '»'}</span>
+                      ) : null}
+                    </div>
+                  );
+                })}
               </div>
               <ul className="mt-3 flex flex-col gap-2 px-3" dir="ltr">
                 {categoryOptions.map((category) => {

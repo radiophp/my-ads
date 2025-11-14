@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { skipToken } from '@reduxjs/toolkit/query';
-import { ArrowLeft, Circle } from 'lucide-react';
+import { ArrowLeft, Circle, ChevronLeft, ChevronRight, Filter, Folder, Eraser } from 'lucide-react';
 
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import {
@@ -16,6 +16,8 @@ import {
   setRingBinderFolder,
   setNoteFilter,
   type NoteFilterOption,
+  resetSearchFilter,
+  searchFilterInitialState,
 } from '@/features/search-filter/searchFilterSlice';
 import {
   useGetProvincesQuery,
@@ -34,6 +36,9 @@ import {
 import { Button } from '@/components/ui/button';
 import type { DivarCategory } from '@/types/divar-category';
 import { CategoryFiltersPreview } from './category-filters-preview';
+import { useBackButtonClose } from '@/hooks/use-back-button-close';
+import { CategorySelectionModal } from './category-selection-modal';
+import { cn } from '@/lib/utils';
 
 const BASE_CATEGORY_SLUG = 'real-estate';
 
@@ -47,6 +52,7 @@ export function DashboardSearchFilterPanel() {
     citySelection,
     districtSelection,
     categorySelection,
+    categoryFilters,
     ringBinderFolderId,
     noteFilter,
   } = useAppSelector((state) => state.searchFilter);
@@ -353,6 +359,7 @@ export function DashboardSearchFilterPanel() {
     [allowedCategories],
   );
 
+
   const visibleCategories = useMemo(() => {
     if (!baseCategory) {
       return allowedCategories;
@@ -417,6 +424,16 @@ export function DashboardSearchFilterPanel() {
     categorySlug !== null
       ? visibleCategories.find((category) => category.slug === categorySlug) ?? null
       : null;
+  const [filterModalOpen, setFilterModalOpen] = useState(false);
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  useBackButtonClose(filterModalOpen, () => setFilterModalOpen(false));
+  useBackButtonClose(categoryModalOpen, () => setCategoryModalOpen(false));
+
+  useEffect(() => {
+    if (!filterModalOpen && categoryModalOpen) {
+      setCategoryModalOpen(false);
+    }
+  }, [filterModalOpen, categoryModalOpen]);
 
   const breadcrumbItems = useMemo(() => {
     if (baseCategory) {
@@ -512,13 +529,175 @@ export function DashboardSearchFilterPanel() {
     return categoryStructures.children.get(null) ?? [];
   }, [visibleCategories, categoryStructures, selectedCategory, baseCategory]);
 
+  const categorySummaryLabel =
+    selectedCategory?.name ?? baseCategory?.name ?? t('categories.all');
+
+  const handleOpenCategoryModal = () => setCategoryModalOpen(true);
+
   const handleCategorySelect = (slug: string | null, depth: number | null = null) => {
     dispatch(setCategorySelection({ slug, depth }));
   };
 
+  const handleResetFilters = () => {
+    dispatch(resetSearchFilter());
+    setProvinceDialogOpen(false);
+    setCityDialogOpen(false);
+    setDistrictDialogOpen(false);
+  };
+
+  const filterSignature = useMemo(
+    () =>
+      JSON.stringify({
+        provinceId,
+        citySelection,
+        districtSelection,
+        categorySelection,
+        categoryFilters,
+        ringBinderFolderId,
+        noteFilter,
+      }),
+    [
+      provinceId,
+      citySelection,
+      districtSelection,
+      categorySelection,
+      categoryFilters,
+      ringBinderFolderId,
+      noteFilter,
+    ],
+  );
+
+  const [modalBaselineSignature, setModalBaselineSignature] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (filterModalOpen) {
+      setModalBaselineSignature((prev) => (prev === null ? filterSignature : prev));
+    } else if (modalBaselineSignature !== null) {
+      setModalBaselineSignature(null);
+    }
+  }, [filterModalOpen, filterSignature, modalBaselineSignature]);
+
+  const modalHasPendingChanges =
+    modalBaselineSignature !== null && filterSignature !== modalBaselineSignature;
+
+  const hasActiveFilters = useMemo(() => {
+    if (provinceId !== searchFilterInitialState.provinceId) {
+      return true;
+    }
+    if (
+      citySelection.mode !== searchFilterInitialState.citySelection.mode ||
+      citySelection.cityIds.length > 0
+    ) {
+      return true;
+    }
+    if (
+      districtSelection.mode !== searchFilterInitialState.districtSelection.mode ||
+      districtSelection.districtIds.length > 0
+    ) {
+      return true;
+    }
+    if (categorySelection.slug !== searchFilterInitialState.categorySelection.slug) {
+      return true;
+    }
+    if (Object.keys(categoryFilters).length > 0) {
+      return true;
+    }
+    if (ringBinderFolderId !== searchFilterInitialState.ringBinderFolderId) {
+      return true;
+    }
+    if (noteFilter !== searchFilterInitialState.noteFilter) {
+      return true;
+    }
+    return false;
+  }, [
+    provinceId,
+    citySelection,
+    districtSelection,
+    categorySelection,
+    categoryFilters,
+    ringBinderFolderId,
+    noteFilter,
+  ]);
+
   return (
-    <section className="bg-card w-full rounded-xl border p-4 shadow-sm">
-      <div className="flex flex-col gap-5">
+    <>
+      <div
+        className={cn(
+          'lg:hidden',
+          filterModalOpen
+            ? 'hidden'
+            : 'pointer-events-none fixed bottom-4 left-4 z-40 drop-shadow-lg md:bottom-20 md:left-1/2 md:-translate-x-1/2 md:drop-shadow-2xl',
+        )}
+      >
+        <Button
+          type="button"
+          variant={hasActiveFilters ? 'default' : 'secondary'}
+          className={cn(
+            'pointer-events-auto rounded-full px-4 py-2',
+            hasActiveFilters ? 'shadow-lg' : 'shadow',
+            'md:gap-4 md:px-14 md:py-7 md:text-xl',
+          )}
+          onClick={() => setFilterModalOpen(true)}
+        >
+          <span className="flex items-center justify-center gap-2">
+            {isRTL ? (
+              <>
+                <span>{hasActiveFilters ? t('editFilters') : t('title')}</span>
+                <Filter className="size-4" />
+              </>
+            ) : (
+              <>
+                <Filter className="size-4" />
+                <span>{hasActiveFilters ? t('editFilters') : t('title')}</span>
+              </>
+            )}
+          </span>
+        </Button>
+      </div>
+      {filterModalOpen ? (
+        <button
+          type="button"
+          aria-label={t('mobileBack')}
+          className="fixed inset-0 z-40 bg-black/60 lg:hidden"
+          onClick={() => setFilterModalOpen(false)}
+        />
+      ) : null}
+      <section
+        className={cn(
+          'bg-card w-full rounded-xl shadow-sm',
+          filterModalOpen
+            ? 'fixed inset-0 z-50 block h-dvh overflow-y-auto bg-background lg:relative lg:h-auto lg:p-4'
+            : 'hidden p-4 lg:block',
+        )}
+      >
+        <div
+          className={cn(
+            'flex flex-col gap-5',
+            filterModalOpen ? 'px-4 pb-20 lg:px-0' : undefined,
+          )}
+        >
+          {filterModalOpen ? (
+            <div className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-border bg-background pb-3 pt-2 lg:hidden">
+              <p
+                className={cn(
+                  'flex-1 text-base font-semibold text-foreground',
+                  isRTL ? 'text-right' : 'text-left',
+                )}
+              >
+                {t('title')}
+              </p>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="inline-flex items-center gap-1 text-destructive hover:bg-destructive/10"
+                onClick={handleResetFilters}
+              >
+                <Eraser className="size-4" />
+                {t('clear')}
+              </Button>
+            </div>
+          ) : null}
         <div className="space-y-2">
           <label className="block text-sm font-medium text-foreground">
             {t('ringBinder.label')}
@@ -564,7 +743,38 @@ export function DashboardSearchFilterPanel() {
             <option value="none">{t('noteFilter.options.none')}</option>
           </select>
         </div>
-        <div>
+        {filterModalOpen ? (
+          <div className="space-y-2 lg:hidden">
+            <label className="block text-sm font-medium text-foreground">{t('categories.title')}</label>
+            <button
+              type="button"
+              onClick={handleOpenCategoryModal}
+              className={cn(
+                'flex w-full items-center gap-3 rounded-xl border border-border/70 bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+                isRTL ? 'flex-row-reverse justify-between' : 'flex-row justify-between',
+              )}
+            >
+              {isRTL ? (
+                <>
+                  <span className="flex flex-1 items-center justify-end gap-2 text-right text-foreground">
+                    <span className="truncate">{categorySummaryLabel}</span>
+                    <Folder className="size-4 text-muted-foreground" />
+                  </span>
+                  <ChevronLeft className="size-4 text-muted-foreground" />
+                </>
+              ) : (
+                <>
+                  <span className="flex flex-1 items-center gap-2 text-left text-foreground">
+                    <Folder className="size-4 text-muted-foreground" />
+                    <span className="truncate">{categorySummaryLabel}</span>
+                  </span>
+                  <ChevronRight className="size-4 text-muted-foreground" />
+                </>
+              )}
+            </button>
+          </div>
+        ) : null}
+        <div className="hidden lg:block">
           <p className="text-sm font-medium text-muted-foreground">{t('categories.title')}</p>
           {categoriesBusy ? (
             <p className="mt-2 text-xs text-muted-foreground">{t('categories.loading')}</p>
@@ -595,7 +805,7 @@ export function DashboardSearchFilterPanel() {
                   );
                 })}
               </div>
-              <ul className="mt-3 flex flex-col gap-2 px-3" dir="ltr">
+              <ul className="mt-3 flex flex-col gap-2 px-3" dir={isRTL ? 'rtl' : 'ltr'}>
                 {categoryOptions.map((category) => {
                   const isActive = category.slug === categorySlug;
                   return (
@@ -608,7 +818,24 @@ export function DashboardSearchFilterPanel() {
                           isActive ? 'font-semibold text-primary' : 'text-muted-foreground hover:text-foreground'
                         } ${isRTL ? 'text-right' : 'text-left'}`}
                       >
-                        {category.name}
+                        <span
+                          className={cn(
+                            'inline-flex items-center gap-2',
+                            isRTL ? 'flex-row-reverse justify-end' : 'flex-row justify-start',
+                          )}
+                        >
+                          {isRTL ? (
+                            <>
+                              <span>{category.name}</span>
+                              <Folder className="size-3.5 text-muted-foreground" />
+                            </>
+                          ) : (
+                            <>
+                              <Folder className="size-3.5 text-muted-foreground" />
+                              <span>{category.name}</span>
+                            </>
+                          )}
+                        </span>
                       </button>
                       <Circle
                         aria-hidden="true"
@@ -626,210 +853,207 @@ export function DashboardSearchFilterPanel() {
           )}
         </div>
 
-        <div>
-          <p className="text-sm font-medium text-muted-foreground">{t('title')}</p>
-          <div className="mt-4 flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-foreground">{t('provinceLabel')}</label>
-              <Dialog open={provinceDialogOpen} onOpenChange={setProvinceDialogOpen}>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="justify-between"
-                  onClick={() => setProvinceDialogOpen(true)}
-                  disabled={provincesLoading && provinces.length === 0}
-                >
-                  {provinceButtonLabel}
-                </Button>
-                <DialogContent
-                  hideCloseButton
-                  className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] sm:left-1/2 sm:top-1/2 sm:flex sm:max-h-[90vh] sm:w-full sm:max-w-xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:flex-col sm:overflow-hidden sm:rounded-2xl sm:border sm:p-6"
-                >
-                  <div className="flex h-full flex-col overflow-hidden">
-                    <div className="border-b border-border px-6 py-4 sm:hidden">
-                      <div className="flex items-center gap-2" dir="ltr">
-                        <button
-                          type="button"
-                          className="flex items-center gap-2 text-sm font-medium text-primary"
-                          onClick={() => setProvinceDialogOpen(false)}
-                        >
-                          <ArrowLeft className="size-4" />
-                          {t('mobileBack')}
-                        </button>
-                        <p
-                          className={`flex-1 text-base font-semibold ${isRTL ? 'text-right' : 'text-center'}`}
-                          dir={isRTL ? 'rtl' : 'ltr'}
-                        >
-                          {t('provinceModalTitle')}
-                        </p>
-                      </div>
-                      <p className="mt-1 text-sm text-muted-foreground">{t('provinceModalDescription')}</p>
-                    </div>
-                    <div className="hidden p-0 sm:block">
-                      <DialogHeader>
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-medium text-foreground">{t('provinceLabel')}</label>
+          <Dialog open={provinceDialogOpen} onOpenChange={setProvinceDialogOpen}>
+            <Button
+              type="button"
+              variant="outline"
+              className="justify-between"
+              onClick={() => setProvinceDialogOpen(true)}
+              disabled={provincesLoading && provinces.length === 0}
+            >
+              {provinceButtonLabel}
+            </Button>
+            <DialogContent
+              hideCloseButton
+              className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] lg:left-1/2 lg:top-1/2 lg:flex lg:max-h-[90vh] lg:w-full lg:max-w-xl lg:-translate-x-1/2 lg:-translate-y-1/2 lg:flex-col lg:overflow-hidden lg:rounded-2xl lg:border lg:p-6"
+            >
+              <div className="flex h-full flex-col overflow-hidden">
+                <div className="border-b border-border px-6 py-4 lg:hidden">
+                  <div className="flex items-center gap-2" dir="ltr">
+                    <button
+                      type="button"
+                      className="flex items-center gap-2 text-sm font-medium text-primary"
+                      onClick={() => setProvinceDialogOpen(false)}
+                    >
+                      <ArrowLeft className="size-4" />
+                      {t('mobileBack')}
+                    </button>
+                    <p
+                      className={`flex-1 text-base font-semibold ${isRTL ? 'text-right' : 'text-center'}`}
+                      dir={isRTL ? 'rtl' : 'ltr'}
+                    >
+                      {t('provinceModalTitle')}
+                    </p>
+                  </div>
+                  <p className="mt-1 text-sm text-muted-foreground">{t('provinceModalDescription')}</p>
+                </div>
+                    <div className="hidden p-0 lg:block">
+                      <DialogHeader className={isRTL ? 'text-right' : 'text-left'}>
                         <DialogTitle>{t('provinceModalTitle')}</DialogTitle>
                         <DialogDescription>{t('provinceModalDescription')}</DialogDescription>
                       </DialogHeader>
                     </div>
 
-                    <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 py-4 sm:p-0">
-                      <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-input px-3 py-2 text-sm font-medium">
-                        <input
-                          type="radio"
-                          name="province-modal-option"
-                          className="size-4 border-input text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                          checked={draftProvinceAll}
-                          onChange={handleProvinceSelectAll}
-                        />
-                        {t('provinceModalSelectAll')}
-                      </label>
+                <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 py-4 lg:p-0">
+                  <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-input px-3 py-2 text-sm font-medium">
+                    <input
+                      type="radio"
+                      name="province-modal-option"
+                      className="size-4 border-input text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      checked={draftProvinceAll}
+                      onChange={handleProvinceSelectAll}
+                    />
+                    {t('provinceModalSelectAll')}
+                  </label>
 
-                      <div className="rounded-xl border border-input">
-                        {provinceOptions.length === 0 ? (
-                          <p className="p-4 text-sm text-muted-foreground">{t('provinceModalEmpty')}</p>
-                        ) : (
-                          <ul className="divide-y divide-border">
-                            {provinceOptions.map((province) => (
-                              <li key={province.value}>
-                                <label className="flex cursor-pointer items-center gap-3 px-3 py-2 text-sm">
-                                  <input
-                                    type="radio"
-                                    name="province-modal-option"
-                                    className="size-4 border-input text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                                    checked={!draftProvinceAll && draftProvinceId === province.value}
-                                    onChange={() => handleProvincePick(province.value)}
-                                  />
-                                  {province.label}
-                                </label>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="border-t border-border bg-background/95 px-6 py-4 sm:border-0 sm:bg-transparent sm:px-0">
-                      <div className="flex flex-row justify-end gap-3">
-                        <Button
-                          type="button"
-                          className="flex-1"
-                          onClick={applyProvinceSelection}
-                          disabled={!draftProvinceAll && draftProvinceId === null}
-                        >
-                          {t('provinceModalConfirm')}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="flex-1"
-                          onClick={() => setProvinceDialogOpen(false)}
-                        >
-                          {t('provinceModalCancel')}
-                        </Button>
-                      </div>
-                    </div>
+                  <div className="rounded-xl border border-input">
+                    {provinceOptions.length === 0 ? (
+                      <p className="p-4 text-sm text-muted-foreground">{t('provinceModalEmpty')}</p>
+                    ) : (
+                      <ul className="divide-y divide-border">
+                        {provinceOptions.map((province) => (
+                          <li key={province.value}>
+                            <label className="flex cursor-pointer items-center gap-3 px-3 py-2 text-sm">
+                              <input
+                                type="radio"
+                                name="province-modal-option"
+                                className="size-4 border-input text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                checked={!draftProvinceAll && draftProvinceId === province.value}
+                                onChange={() => handleProvincePick(province.value)}
+                              />
+                              {province.label}
+                            </label>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
-                </DialogContent>
-              </Dialog>
-            </div>
+                </div>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-foreground">{t('cityLabel')}</label>
-              <Dialog open={cityDialogOpen} onOpenChange={setCityDialogOpen}>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="justify-between"
-                  onClick={() => setCityDialogOpen(true)}
-                  disabled={isCityButtonDisabled}
-                >
-                  {cityButtonLabel}
-                </Button>
-                <DialogContent
-                  hideCloseButton
-                  className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] sm:left-1/2 sm:top-1/2 sm:flex sm:max-h-[90vh] sm:w-full sm:max-w-xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:flex-col sm:overflow-hidden sm:rounded-2xl sm:border sm:p-6"
-                >
-                  <div className="flex h-full flex-col overflow-hidden">
-                    <div className="border-b border-border px-6 py-4 sm:hidden">
-                      <div className="flex items-center gap-2" dir="ltr">
-                        <button
-                          type="button"
-                          className="flex items-center gap-2 text-sm font-medium text-primary"
-                          onClick={() => setCityDialogOpen(false)}
-                        >
-                          <ArrowLeft className="size-4" />
-                          {t('mobileBack')}
-                        </button>
-                        <p
-                          className={`flex-1 text-base font-semibold ${isRTL ? 'text-right' : 'text-center'}`}
-                          dir={isRTL ? 'rtl' : 'ltr'}
-                        >
-                          {t('cityModalTitle')}
-                        </p>
-                      </div>
-                      <p className="mt-1 text-sm text-muted-foreground">{t('cityModalDescription')}</p>
-                    </div>
-                    <div className="hidden p-0 sm:block">
-                      <DialogHeader>
+                <div className="border-t border-border bg-background/95 px-6 py-4 lg:border-0 lg:bg-transparent lg:px-0">
+                  <div className="flex flex-row justify-end gap-3">
+                    <Button
+                      type="button"
+                      className="flex-1"
+                      onClick={applyProvinceSelection}
+                      disabled={!draftProvinceAll && draftProvinceId === null}
+                    >
+                      {t('provinceModalConfirm')}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => setProvinceDialogOpen(false)}
+                    >
+                      {t('provinceModalCancel')}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <label className="text-sm font-medium text-foreground">{t('cityLabel')}</label>
+          <Dialog open={cityDialogOpen} onOpenChange={setCityDialogOpen}>
+            <Button
+              type="button"
+              variant="outline"
+              className="justify-between"
+              onClick={() => setCityDialogOpen(true)}
+              disabled={isCityButtonDisabled}
+            >
+              {cityButtonLabel}
+            </Button>
+            <DialogContent
+              hideCloseButton
+              className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] lg:left-1/2 lg:top-1/2 lg:flex lg:max-h-[90vh] lg:w-full lg:max-w-xl lg:-translate-x-1/2 lg:-translate-y-1/2 lg:flex-col lg:overflow-hidden lg:rounded-2xl lg:border lg:p-6"
+            >
+              <div className="flex h-full flex-col overflow-hidden">
+                <div className="border-b border-border px-6 py-4 lg:hidden">
+                  <div className="flex items-center gap-2" dir="ltr">
+                    <button
+                      type="button"
+                      className="flex items-center gap-2 text-sm font-medium text-primary"
+                      onClick={() => setCityDialogOpen(false)}
+                    >
+                      <ArrowLeft className="size-4" />
+                      {t('mobileBack')}
+                    </button>
+                    <p
+                      className={`flex-1 text-base font-semibold ${isRTL ? 'text-right' : 'text-center'}`}
+                      dir={isRTL ? 'rtl' : 'ltr'}
+                    >
+                      {t('cityModalTitle')}
+                    </p>
+                  </div>
+                  <p className="mt-1 text-sm text-muted-foreground">{t('cityModalDescription')}</p>
+                </div>
+                    <div className="hidden p-0 lg:block">
+                      <DialogHeader className={isRTL ? 'text-right' : 'text-left'}>
                         <DialogTitle>{t('cityModalTitle')}</DialogTitle>
                         <DialogDescription>{t('cityModalDescription')}</DialogDescription>
                       </DialogHeader>
                     </div>
 
-                    <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 py-4 sm:p-0">
-                      <label className="flex items-center gap-3 rounded-lg border border-dashed border-input px-3 py-2 text-sm font-medium">
-                        <input
-                          type="checkbox"
-                          className="size-4 rounded border-input text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                          checked={draftAllCities}
-                          onChange={handleSelectAllCities}
-                        />
-                        {t('cityModalSelectAll')}
-                      </label>
+                <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 py-4 lg:p-0">
+                  <label className="flex items-center gap-3 rounded-lg border border-dashed border-input px-3 py-2 text-sm font-medium">
+                    <input
+                      type="checkbox"
+                      className="size-4 rounded border-input text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      checked={draftAllCities}
+                      onChange={handleSelectAllCities}
+                    />
+                    {t('cityModalSelectAll')}
+                  </label>
 
-                      <div className="rounded-xl border border-input">
-                        {cityOptions.length === 0 ? (
-                          <p className="p-4 text-sm text-muted-foreground">{t('cityModalEmpty')}</p>
-                        ) : (
-                          <ul className="divide-y divide-border">
-                            {cityOptions.map((city) => (
-                              <li key={city.value}>
-                                <label className="flex cursor-pointer items-center gap-3 px-3 py-2 text-sm">
-                                  <input
-                                    type="checkbox"
-                                    className="size-4 rounded border-input text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                                    checked={!draftAllCities && draftCityIds.includes(city.value)}
-                                    onChange={() => toggleCitySelection(city.value)}
-                                  />
-                                  {city.label}
-                                </label>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="border-t border-border bg-background/95 px-6 py-4 sm:border-0 sm:bg-transparent sm:px-0">
-                      <div className="flex flex-row justify-end gap-3">
-                        <Button className="flex-1" type="button" onClick={applyCitySelection}>
-                          {t('cityModalConfirm')}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="flex-1"
-                          onClick={() => setCityDialogOpen(false)}
-                        >
-                          {t('cityModalCancel')}
-                        </Button>
-                      </div>
-                    </div>
+                  <div className="rounded-xl border border-input">
+                    {cityOptions.length === 0 ? (
+                      <p className="p-4 text-sm text-muted-foreground">{t('cityModalEmpty')}</p>
+                    ) : (
+                      <ul className="divide-y divide-border">
+                        {cityOptions.map((city) => (
+                          <li key={city.value}>
+                            <label className="flex cursor-pointer items-center gap-3 px-3 py-2 text-sm">
+                              <input
+                                type="checkbox"
+                                className="size-4 rounded border-input text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                checked={!draftAllCities && draftCityIds.includes(city.value)}
+                                onChange={() => toggleCitySelection(city.value)}
+                              />
+                              {city.label}
+                            </label>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
-                </DialogContent>
-              </Dialog>
-              <p className="text-xs text-muted-foreground">{cityHelperText}</p>
-            </div>
+                </div>
+
+                <div className="border-t border-border bg-background/95 px-6 py-4 lg:border-0 lg:bg-transparent lg:px-0">
+                  <div className="flex flex-row justify-end gap-3">
+                    <Button className="flex-1" type="button" onClick={applyCitySelection}>
+                      {t('cityModalConfirm')}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => setCityDialogOpen(false)}
+                    >
+                      {t('cityModalCancel')}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+          <p className="text-xs text-muted-foreground">{cityHelperText}</p>
+        </div>
 
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium text-foreground">{t('districtLabel')}</label>
@@ -845,10 +1069,10 @@ export function DashboardSearchFilterPanel() {
                 </Button>
                 <DialogContent
                   hideCloseButton
-                  className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] sm:left-1/2 sm:top-1/2 sm:flex sm:max-h-[90vh] sm:w-full sm:max-w-xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:flex-col sm:overflow-hidden sm:rounded-2xl sm:border sm:p-6"
+                  className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] lg:left-1/2 lg:top-1/2 lg:flex lg:max-h-[90vh] lg:w-full lg:max-w-xl lg:-translate-x-1/2 lg:-translate-y-1/2 lg:flex-col lg:overflow-hidden lg:rounded-2xl lg:border lg:p-6"
                 >
                   <div className="flex h-full flex-col overflow-hidden">
-                    <div className="border-b border-border px-6 py-4 sm:hidden">
+                    <div className="border-b border-border px-6 py-4 lg:hidden">
                       <div className="flex items-center gap-2" dir="ltr">
                         <button
                           type="button"
@@ -867,14 +1091,14 @@ export function DashboardSearchFilterPanel() {
                       </div>
                       <p className="mt-1 text-sm text-muted-foreground">{t('districtModalDescription')}</p>
                     </div>
-                    <div className="hidden p-0 sm:block">
-                      <DialogHeader>
+                    <div className="hidden p-0 lg:block">
+                      <DialogHeader className={isRTL ? 'text-right' : 'text-left'}>
                         <DialogTitle>{t('districtModalTitle')}</DialogTitle>
                         <DialogDescription>{t('districtModalDescription')}</DialogDescription>
                       </DialogHeader>
                     </div>
 
-                    <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 py-4 sm:p-0">
+                    <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 py-4 lg:p-0">
                       <label className="flex items-center gap-3 rounded-lg border border-dashed border-input px-3 py-2 text-sm font-medium">
                         <input
                           type="checkbox"
@@ -908,7 +1132,7 @@ export function DashboardSearchFilterPanel() {
                       </div>
                     </div>
 
-                    <div className="border-t border-border bg-background/95 px-6 py-4 sm:border-0 sm:bg-transparent sm:px-0">
+                    <div className="border-t border-border bg-background/95 px-6 py-4 lg:border-0 lg:bg-transparent lg:px-0">
                       <div className="flex flex-row justify-end gap-3">
                         <Button className="flex-1" type="button" onClick={applyDistrictSelection}>
                           {t('districtModalConfirm')}
@@ -928,10 +1152,51 @@ export function DashboardSearchFilterPanel() {
               </Dialog>
               <p className="text-xs text-muted-foreground">{districtHelperText}</p>
             </div>
-            <CategoryFiltersPreview categorySlug={categorySlug} locale={locale} isRTL={isRTL} />
-          </div>
+            <CategoryFiltersPreview
+              categorySlug={categorySlug ?? baseCategory?.slug ?? null}
+              locale={locale}
+              isRTL={isRTL}
+            />
         </div>
-      </div>
-    </section>
+        {filterModalOpen ? (
+          <div className="sticky bottom-0 z-10 flex justify-end gap-3 border-t border-border bg-background p-4 lg:hidden">
+            <Button
+              type="button"
+              className="flex-1"
+              onClick={() => setFilterModalOpen(false)}
+              disabled={!modalHasPendingChanges}
+            >
+              {t('applyFilters')}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1"
+              onClick={() => setFilterModalOpen(false)}
+            >
+              {t('mobileBack')}
+            </Button>
+          </div>
+        ) : null}
+      </section>
+      
+      <CategorySelectionModal
+        open={categoryModalOpen}
+        onOpenChange={setCategoryModalOpen}
+        baseCategory={baseCategory}
+        categoryStructures={categoryStructures}
+        selectedCategory={selectedCategory}
+        isRTL={isRTL}
+        onSelect={(category) =>
+          dispatch(
+            setCategorySelection({
+              slug: category.slug,
+              depth: category.depth,
+            }),
+          )
+        }
+        t={t}
+      />
+    </>
   );
 }

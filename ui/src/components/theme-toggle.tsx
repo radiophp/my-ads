@@ -7,21 +7,17 @@ import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-const STORAGE_KEY = 'ui-theme';
-
 type Theme = 'light' | 'dark';
 
 type StoredTheme = Theme | null;
+
+const STORAGE_KEY = 'ui-theme';
+const DEFAULT_THEME: Theme = 'dark';
 
 function getStoredTheme(): StoredTheme {
   if (typeof window === 'undefined') return null;
   const stored = window.localStorage.getItem(STORAGE_KEY);
   return stored === 'light' || stored === 'dark' ? stored : null;
-}
-
-function getSystemTheme(): Theme {
-  if (typeof window === 'undefined') return 'light';
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
 function applyTheme(theme: Theme) {
@@ -37,7 +33,7 @@ export const ThemeToggle = React.forwardRef<HTMLButtonElement, ThemeToggleProps>
   { className, ...props },
   ref,
 ) {
-  const [theme, setTheme] = React.useState<Theme>('light');
+  const [theme, setTheme] = React.useState<Theme>(DEFAULT_THEME);
   const [mounted, setMounted] = React.useState(false);
   const [userOverride, setUserOverride] = React.useState(false);
   const t = useTranslations('header');
@@ -50,9 +46,8 @@ export const ThemeToggle = React.forwardRef<HTMLButtonElement, ThemeToggleProps>
       setUserOverride(true);
       applyTheme(stored);
     } else {
-      const system = getSystemTheme();
-      setTheme(system);
-      applyTheme(system);
+      setTheme(DEFAULT_THEME);
+      applyTheme(DEFAULT_THEME);
     }
     setMounted(true);
   }, []);
@@ -77,7 +72,7 @@ export const ThemeToggle = React.forwardRef<HTMLButtonElement, ThemeToggleProps>
     return () => media.removeEventListener('change', listener);
   }, [userOverride]);
 
-  const renderedTheme = mounted ? theme : 'light';
+  const renderedTheme = mounted ? theme : DEFAULT_THEME;
   const isDark = renderedTheme === 'dark';
 
   const toggleTheme = () => {

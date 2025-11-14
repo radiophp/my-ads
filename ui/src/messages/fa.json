@@ -197,6 +197,9 @@
       "districtModalEmpty": "هنوز محله‌ای برای این شهر ثبت نشده است.",
       "districtModalCancel": "انصراف",
       "districtModalConfirm": "انتخاب",
+      "clear": "حذف فیلترها",
+      "editFilters": "ویرایش فیلترها",
+      "applyFilters": "اعمال فیلترها",
       "ringBinder": {
         "label": "زونکن",
         "all": "همه آگهی‌ها",

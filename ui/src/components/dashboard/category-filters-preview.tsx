@@ -214,7 +214,7 @@ export function CategoryFiltersPreview({ categorySlug, locale, isRTL }: Category
   let content: ReactNode = null;
 
   if (!categorySlug) {
-    content = <p className="text-xs text-muted-foreground">{t('categoryFilters.selectCategory')}</p>;
+    content = null;
   } else if (busy) {
     content = <p className="text-xs text-muted-foreground">{t('categoryFilters.loading')}</p>;
   } else if (isError) {

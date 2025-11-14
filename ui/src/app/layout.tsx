@@ -11,6 +11,21 @@ import './globals.css';
 
 const DEFAULT_APP_URL =
   process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_URL ?? 'http://localhost:6005';
+const THEME_STORAGE_KEY = 'ui-theme';
+const themeInitializer = `
+(() => {
+  try {
+    const storageKey = '${THEME_STORAGE_KEY}';
+    const stored = localStorage.getItem(storageKey);
+    const theme = stored === 'light' || stored === 'dark' ? stored : 'dark';
+    const root = document.documentElement;
+    root.dataset.theme = theme;
+    root.classList.toggle('dark', theme === 'dark');
+  } catch (error) {
+    // no-op
+  }
+})();
+`;
 
 const metadataBase = (() => {
   try {
@@ -48,8 +63,15 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const dir = locale === 'fa' ? 'rtl' : 'ltr';
 
   return (
-    <html lang={locale} dir={dir} suppressHydrationWarning className={inter.variable}>
+    <html
+      lang={locale}
+      dir={dir}
+      suppressHydrationWarning
+      className={`${inter.variable} dark`}
+      data-theme="dark"
+    >
       <body className={inter.className}>
+        <script dangerouslySetInnerHTML={{ __html: themeInitializer }} />
         <NextIntlClientProvider locale={locale} messages={messages} timeZone="UTC">
           <Providers>
             <div className="min-h-screen bg-background text-foreground">

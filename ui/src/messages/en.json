@@ -211,6 +211,9 @@
       "districtModalEmpty": "No districts are available for the selected city yet.",
       "districtModalCancel": "Cancel",
       "districtModalConfirm": "Select",
+      "clear": "Clear filters",
+      "editFilters": "Edit filters",
+      "applyFilters": "Apply filters",
       "mobileBack": "Back",
       "categories": {
         "title": "Categories",

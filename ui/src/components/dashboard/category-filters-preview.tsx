@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
+import { cn } from '@/lib/utils';
 import {
   clearCategoryFilters,
   setCategoryFilterValue,
@@ -248,72 +249,75 @@ export function CategoryFiltersPreview({ categorySlug, locale, isRTL }: Category
                   ? current.max
                   : undefined;
               return (
-                <div key={widget.id} className="rounded-lg border border-border px-3 py-2">
+                <div key={widget.id} className="rounded-lg p-4">
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-sm font-medium text-foreground">{label}</p>
                   </div>
-                  <div className="mt-3 flex flex-col gap-3">
-                    <div className="flex flex-col gap-1">
-                      <Label
-                        htmlFor={`${widget.id}-min`}
-                        className="text-xs font-medium text-muted-foreground"
-                      >
-                        {t('categoryFilters.numberRange.from')}
-                      </Label>
-                      <div className="relative">
+                  <div
+                    className={cn(
+                      'mt-4 flex items-stretch rounded-lg border-y-0',
+                      isRTL ? 'flex-row-reverse' : 'flex-row',
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        'flex flex-1 flex-col gap-2 border border-border px-3',
+                        'rounded-s-lg',
+                      )}
+                    >
+                      <div className={cn('relative pt-3', isRTL ? 'pl-3' : 'pr-3')}>
+                        <Label
+                          htmlFor={`${widget.id}-min`}
+                          className={cn(
+                            'absolute -top-1.5 rounded bg-background px-1.5 text-[10px] font-medium text-muted-foreground',
+                            isRTL ? 'right-3' : 'left-3',
+                          )}
+                        >
+                          {t('categoryFilters.numberRange.from')}
+                        </Label>
                         <Input
                           id={`${widget.id}-min`}
                           type="text"
                           inputMode="numeric"
-                          className={
-                            widget.unit ? (isRTL ? 'pl-16 text-right' : 'pr-16') : isRTL ? 'text-right' : undefined
-                          }
+                          className="ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 border-0 rounded-none !h-9 !px-2 !py-1"
+                          dir="ltr"
                           value={formatNumberInput(currentMin, locale)}
                           onChange={(event) => {
                             const nextMin = parseInputNumber(event.target.value);
                             updateNumberRange(widget.key, { min: nextMin, max: currentMax });
                           }}
                         />
-                        {widget.unit ? (
-                          <span
-                            className={`pointer-events-none absolute inset-y-0 flex items-center text-[11px] text-muted-foreground ${isRTL ? 'left-3 justify-start' : 'right-3 justify-end'}`}
-                          >
-                            {widget.unit}
-                          </span>
-                        ) : null}
-                      </div>
-                      {getSpelledNumberLabel(currentMin, locale)}
+                        </div>
                     </div>
-                    <div className="flex flex-col gap-1">
-                      <Label
-                        htmlFor={`${widget.id}-max`}
-                        className="text-xs font-medium text-muted-foreground"
-                      >
-                        {t('categoryFilters.numberRange.to')}
-                      </Label>
-                      <div className="relative">
+                    <div
+                      className={cn(
+                        'flex flex-1 flex-col gap-2 border border-border px-3',
+                        'rounded-e-lg',
+                      )}
+                    >
+                      <div className={cn('relative pt-3', isRTL ? 'pr-3' : 'pl-3')}>
+                        <Label
+                          htmlFor={`${widget.id}-max`}
+                          className={cn(
+                            'absolute -top-1.5 rounded bg-background px-1.5 text-[10px] font-medium text-muted-foreground',
+                            isRTL ? 'right-3' : 'left-3',
+                          )}
+                        >
+                          {t('categoryFilters.numberRange.to')}
+                        </Label>
                         <Input
                           id={`${widget.id}-max`}
                           type="text"
                           inputMode="numeric"
-                          className={
-                            widget.unit ? (isRTL ? 'pl-16 text-right' : 'pr-16') : isRTL ? 'text-right' : undefined
-                          }
+                          className="ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 border-0 rounded-none !h-9 !px-2 !py-1"
+                          dir="ltr"
                           value={formatNumberInput(currentMax, locale)}
                           onChange={(event) => {
                             const nextMax = parseInputNumber(event.target.value);
                             updateNumberRange(widget.key, { min: currentMin, max: nextMax });
                           }}
                         />
-                        {widget.unit ? (
-                          <span
-                            className={`pointer-events-none absolute inset-y-0 flex items-center text-[11px] text-muted-foreground ${isRTL ? 'left-3 justify-start' : 'right-3 justify-end'}`}
-                          >
-                            {widget.unit}
-                          </span>
-                        ) : null}
-                      </div>
-                      {getSpelledNumberLabel(currentMax, locale)}
+                        </div>
                     </div>
                   </div>
                 </div>
@@ -461,34 +465,6 @@ function parseInputNumber(rawInput: string): number | undefined {
   const normalized = normalizeLocalizedDigits(raw).replace(/[,٬\s]/g, '');
   const parsed = Number(normalized);
   return Number.isFinite(parsed) ? parsed : undefined;
-}
-
-function getSpelledNumberLabel(value: number | undefined, locale: string): ReactNode | null {
-  if (typeof value !== 'number' || Number.isNaN(value) || value === 0) {
-    return null;
-  }
-  const formatted = formatNumberSpell(value, locale);
-  return formatted ? (
-    <p className="mt-1 text-[11px] text-muted-foreground" aria-live="polite">
-      {formatted}
-    </p>
-  ) : null;
-}
-
-function formatNumberSpell(value: number, locale: string): string | null {
-  try {
-    return new Intl.NumberFormat(locale, {
-      notation: 'compact',
-      compactDisplay: 'long',
-      maximumFractionDigits: 1,
-    }).format(value);
-  } catch {
-    try {
-      return value.toLocaleString(locale);
-    } catch {
-      return value.toString();
-    }
-  }
 }
 
 function formatNumberInput(value: number | undefined, locale: string): string {

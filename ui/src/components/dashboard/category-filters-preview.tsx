@@ -107,6 +107,8 @@ export function CategoryFiltersPreview({ categorySlug, locale, isRTL }: Category
   const activeFilters = categorySlug ? categoryFilters[categorySlug] ?? {} : {};
   const activeFilterCount = Object.keys(activeFilters).length;
   const hasActiveFilters = activeFilterCount > 0;
+  const rangeInputClass =
+    'border-0 rounded-none ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 h-9 px-2 py-1';
 
   const queryArg = categorySlug ?? skipToken;
   const { data, isLoading, isFetching, isError } = useGetPublicDivarCategoryFilterQuery(queryArg);
@@ -253,23 +255,22 @@ export function CategoryFiltersPreview({ categorySlug, locale, isRTL }: Category
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-sm font-medium text-foreground">{label}</p>
                   </div>
-                  <div
-                    className={cn(
-                      'mt-4 flex items-stretch rounded-lg border-y-0',
-                      isRTL ? 'flex-row-reverse' : 'flex-row',
-                    )}
-                  >
+                  <div className="mt-4 flex items-stretch rounded-lg">
                     <div
-                      className={cn(
-                        'flex flex-1 flex-col gap-2 border border-border px-3',
-                        'rounded-s-lg',
-                      )}
+                      className={cn('flex flex-1 flex-col gap-2 px-3', 'border-x border-border', 'rounded-s-lg')}
                     >
-                      <div className={cn('relative pt-3', isRTL ? 'pl-3' : 'pr-3')}>
+                      <div className={cn('relative', 'pt-3', isRTL ? 'pl-3' : 'pr-3')}>
                         <Label
                           htmlFor={`${widget.id}-min`}
                           className={cn(
-                            'absolute -top-1.5 rounded bg-background px-1.5 text-[10px] font-medium text-muted-foreground',
+                            'absolute',
+                            '-top-1.5',
+                            'rounded',
+                            'bg-background',
+                            'px-1.5',
+                            'text-[10px]',
+                            'font-medium',
+                            'text-muted-foreground',
                             isRTL ? 'right-3' : 'left-3',
                           )}
                         >
@@ -279,7 +280,7 @@ export function CategoryFiltersPreview({ categorySlug, locale, isRTL }: Category
                           id={`${widget.id}-min`}
                           type="text"
                           inputMode="numeric"
-                          className="ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 border-0 rounded-none !h-9 !px-2 !py-1"
+                          className={rangeInputClass}
                           dir="ltr"
                           value={formatNumberInput(currentMin, locale)}
                           onChange={(event) => {
@@ -290,16 +291,20 @@ export function CategoryFiltersPreview({ categorySlug, locale, isRTL }: Category
                         </div>
                     </div>
                     <div
-                      className={cn(
-                        'flex flex-1 flex-col gap-2 border border-border px-3',
-                        'rounded-e-lg',
-                      )}
+                      className={cn('flex flex-1 flex-col gap-2 px-3', 'border-x border-border', 'rounded-e-lg', '-ml-px')}
                     >
-                      <div className={cn('relative pt-3', isRTL ? 'pr-3' : 'pl-3')}>
+                      <div className={cn('relative', 'pt-3', isRTL ? 'pr-3' : 'pl-3')}>
                         <Label
                           htmlFor={`${widget.id}-max`}
                           className={cn(
-                            'absolute -top-1.5 rounded bg-background px-1.5 text-[10px] font-medium text-muted-foreground',
+                            'absolute',
+                            '-top-1.5',
+                            'rounded',
+                            'bg-background',
+                            'px-1.5',
+                            'text-[10px]',
+                            'font-medium',
+                            'text-muted-foreground',
                             isRTL ? 'right-3' : 'left-3',
                           )}
                         >
@@ -309,7 +314,7 @@ export function CategoryFiltersPreview({ categorySlug, locale, isRTL }: Category
                           id={`${widget.id}-max`}
                           type="text"
                           inputMode="numeric"
-                          className="ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 border-0 rounded-none !h-9 !px-2 !py-1"
+                          className={rangeInputClass}
                           dir="ltr"
                           value={formatNumberInput(currentMax, locale)}
                           onChange={(event) => {

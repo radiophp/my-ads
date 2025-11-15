@@ -20,6 +20,22 @@ import { PostDetailView } from '@/components/dashboard/divar-posts/post-detail-v
 import { getBusinessTypeBadge } from '@/components/dashboard/divar-posts/business-badge';
 import { useToast } from '@/components/ui/use-toast';
 
+type ShareIconMap = {
+  title: string;
+  location: string;
+  detail: string;
+  description: string;
+  link: string;
+};
+
+const SHARE_EMOJI_ICONS: ShareIconMap = {
+  title: '🏷️',
+  location: '📍',
+  detail: '🔹',
+  description: '📝',
+  link: '🔗',
+};
+
 export function DivarPostsFeed(): JSX.Element {
   const t = useTranslations('dashboard.posts');
   const locale = useLocale();
@@ -314,45 +330,73 @@ export function DivarPostsFeed(): JSX.Element {
     ];
   }, [detailData]);
 
+  const plainShareIcons = useMemo<typeof SHARE_EMOJI_ICONS>(
+    () => ({
+      title: '',
+      location: '',
+      detail: '',
+      description: '',
+      link: '',
+    }),
+    [],
+  );
+
   const sharePayload = useMemo(() => {
     if (!selectedPost) {
       return null;
     }
     const title =
       selectedPost.title ?? t('untitled', { externalId: selectedPost.externalId });
-    const parts: string[] = [`🏷️ ${title}`];
-    if (selectedCityDistrict) {
-      parts.push(`📍 ${selectedCityDistrict}`);
-    }
-    shareableDetailEntries.forEach((entry) => {
-      parts.push(`🔹 ${entry.label}: ${entry.value}`);
-    });
-    if (selectedPost.description) {
-      parts.push(`📝 ${selectedPost.description}`);
-    }
     const origin =
       (typeof window !== 'undefined' && window.location.origin) ||
       process.env.NEXT_PUBLIC_APP_URL ||
       '';
     const normalizedOrigin = origin.endsWith('/') ? origin.slice(0, -1) : origin;
     const url = `${normalizedOrigin}/dashboard/posts/${selectedPost.id}`;
-    parts.push(`🔗 ${url}`);
-    const message = parts.join('\n');
-    const smsHref = `sms:?body=${encodeURIComponent(message)}`;
+
+    const buildMessage = (icons: typeof SHARE_EMOJI_ICONS) => {
+      const labelled = (icon: string, label: string, value: string) =>
+        icon ? `${icon} ${label}: ${value}` : `${label}: ${value}`;
+      const parts: string[] = [
+        labelled(icons.title, t('shareMessageTitleLabel'), title),
+      ];
+      const cityDistrict = selectedCityDistrict;
+      if (typeof cityDistrict === 'string' && cityDistrict.length > 0) {
+        parts.push(labelled(icons.location, t('shareMessageLocationLabel'), cityDistrict));
+      }
+      shareableDetailEntries.forEach((entry) => {
+        if (typeof entry.value === 'string' && entry.value.length > 0) {
+          parts.push(labelled(icons.detail, entry.label, entry.value));
+        }
+      });
+      const description = selectedPost.description;
+      if (typeof description === 'string' && description.length > 0) {
+        parts.push(
+          labelled(icons.description, t('shareMessageDescriptionLabel'), description),
+        );
+      }
+      parts.push(labelled(icons.link, t('shareMessageLinkLabel'), url));
+      return parts.join('\n');
+    };
+
+    const messageWithEmoji = buildMessage(SHARE_EMOJI_ICONS);
+    const plainMessage = buildMessage(plainShareIcons);
+    const smsHref = `sms:?body=${encodeURIComponent(plainMessage)}`;
     return {
       title,
       url,
-      summary: message,
-      message,
+      summary: messageWithEmoji,
+      message: messageWithEmoji,
+      whatsappMessage: plainMessage,
       smsHref,
     };
-  }, [selectedPost, selectedCityDistrict, shareableDetailEntries, t]);
+  }, [selectedPost, selectedCityDistrict, shareableDetailEntries, t, plainShareIcons]);
 
   const handleShareWhatsapp = useCallback(() => {
     if (!sharePayload) {
       return;
     }
-    const url = `https://wa.me/?text=${encodeURIComponent(sharePayload.message)}`;
+    const url = `https://wa.me/?text=${encodeURIComponent(sharePayload.whatsappMessage ?? sharePayload.message)}`;
     window.open(url, '_blank', 'noopener,noreferrer');
   }, [sharePayload]);
 

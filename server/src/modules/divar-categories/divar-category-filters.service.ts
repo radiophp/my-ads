@@ -1,7 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import { PrismaService } from '@app/platform/database/prisma.service';
-import { DivarCategoryFilterDto } from './dto/divar-category-filter.dto';
+import { DivarCategoryFilterDto, type FilterOptionDto } from './dto/divar-category-filter.dto';
 import { DivarCategoryFilterSummaryDto } from './dto/divar-category-filter-summary.dto';
 
 type DivarCategoryFiltersSyncFailure = {
@@ -16,6 +16,8 @@ export type DivarCategoryFiltersSyncResult = {
   failed: DivarCategoryFiltersSyncFailure[];
 };
 
+type NormalizedFilterOptions = Record<string, FilterOptionDto[]>;
+
 @Injectable()
 export class DivarCategoryFiltersService {
   private readonly logger = new Logger(DivarCategoryFiltersService.name);
@@ -25,6 +27,21 @@ export class DivarCategoryFiltersService {
    * We default to Tehran (1) purely to keep the districts widget populated.
    */
   private readonly filterRequestCityId = process.env['DIVAR_FILTERS_REQUEST_CITY_ID'] ?? '1';
+  private readonly filterPageLocationSlug = 'alborz-province';
+  private readonly normalizedFilterKeys = new Set([
+    'filter_building_direction',
+    'filter_cooling_system',
+    'filter_heating_system',
+    'filter_floor_type',
+    'filter_toilet',
+    'filter_warm_water_provider',
+  ]);
+  private readonly normalizedFetchDelayMs = Number(
+    process.env['DIVAR_FILTER_FETCH_DELAY_MS'] ?? 300,
+  );
+  private readonly normalizedFetchMaxRetries = Number(
+    process.env['DIVAR_FILTER_FETCH_MAX_RETRIES'] ?? 3,
+  );
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -53,12 +70,15 @@ export class DivarCategoryFiltersService {
     const targetCityId = cityId ?? this.filterRequestCityId;
 
     for (const category of categories) {
+      this.logger.log(`Syncing filters for "${category.slug}"...`);
       try {
         const payload = await this.fetchFiltersPayload(category.slug, targetCityId);
+        const normalizedOptions = await this.fetchNormalizedFilterOptionsFromPage(category.slug);
+        const normalizedOptionsJson = normalizedOptions as unknown as Prisma.JsonObject;
         await this.prisma.divarCategoryFilter.upsert({
           where: { categoryId: category.id },
-          create: { categoryId: category.id, payload },
-          update: { payload },
+          create: { categoryId: category.id, payload, normalizedOptions: normalizedOptionsJson },
+          update: { payload, normalizedOptions: normalizedOptionsJson },
         });
 
         if (existing.has(category.id)) {
@@ -71,6 +91,10 @@ export class DivarCategoryFiltersService {
         const reason = error instanceof Error ? error.message : 'Unknown error';
         this.logger.error(`Failed to sync filters for "${category.slug}": ${reason}`);
         summary.failed.push({ slug: category.slug, reason });
+      }
+
+      if (this.normalizedFetchDelayMs > 0) {
+        await this.delay(this.normalizedFetchDelayMs);
       }
     }
 
@@ -87,6 +111,7 @@ export class DivarCategoryFiltersService {
       },
       select: {
         payload: true,
+        normalizedOptions: true,
         updatedAt: true,
         category: {
           select: {
@@ -110,6 +135,7 @@ export class DivarCategoryFiltersService {
       displayPath: record.category.displayPath,
       payload: record.payload,
       updatedAt: record.updatedAt,
+      normalizedOptions: (record.normalizedOptions as NormalizedFilterOptions | null) ?? {},
     };
   }
 
@@ -174,12 +200,151 @@ export class DivarCategoryFiltersService {
       body,
     });
 
+    const responseBody = await response.text();
     if (!response.ok) {
       throw new Error(
-        `Divar filters request failed (${response.status} ${response.statusText}) for slug "${slug}".`,
+        `Divar filters request failed (${response.status} ${response.statusText}) for slug "${slug}". Body: ${responseBody.substring(
+          0,
+          500,
+        )}`,
       );
     }
 
-    return (await response.json()) as Prisma.InputJsonValue;
+    return JSON.parse(responseBody) as Prisma.InputJsonValue;
+  }
+
+  private async fetchNormalizedFilterOptionsFromPage(
+    slug: string,
+  ): Promise<NormalizedFilterOptions> {
+    if (this.normalizedFilterKeys.size === 0) {
+      return {};
+    }
+
+    const attempts = Math.max(1, this.normalizedFetchMaxRetries);
+    for (let attempt = 1; attempt <= attempts; attempt++) {
+      try {
+        const response = await fetch(`https://divar.ir/s/${this.filterPageLocationSlug}/${slug}`, {
+          headers: {
+            accept: 'text/html,application/xhtml+xml,application/xml',
+            'user-agent': 'my-ads-backend/1.0',
+          },
+        });
+        if (response.status === 429 && attempt < attempts) {
+          await this.delay(this.normalizedFetchDelayMs * attempt);
+          continue;
+        }
+        if (!response.ok) {
+          throw new Error(
+            `Failed to load category page (${response.status} ${response.statusText})`,
+          );
+        }
+        const html = await response.text();
+        const stateMatch = html.match(/__PRELOADED_STATE__\s*=\s*(\{.*?\});/s);
+        if (!stateMatch) {
+          throw new Error('Divar page did not include __PRELOADED_STATE__');
+        }
+        const state = JSON.parse(stateMatch[1]) as Record<string, unknown>;
+        const nbState = this.asRecord(state['nb']);
+        const filtersPage = this.asRecord(nbState?.['filtersPage']);
+        const widgetList = this.asArray(filtersPage?.['widgetList']);
+        if (!widgetList) {
+          return {};
+        }
+        const normalized: NormalizedFilterOptions = {};
+        widgetList.forEach((widget) => {
+          const record = this.asRecord(widget);
+          if (!record) {
+            return;
+          }
+          const uid = this.getString(record, 'uid');
+          if (!uid || !this.normalizedFilterKeys.has(uid)) {
+            return;
+          }
+          const options = this.normalizeOptions(record);
+          if (options.length > 0) {
+            normalized[uid] = options;
+          }
+        });
+        return normalized;
+      } catch (error) {
+        if (attempt === attempts) {
+          this.logger.warn(
+            `Failed to extract normalized options for "${slug}": ${
+              error instanceof Error ? error.message : error
+            }`,
+          );
+        } else if (this.normalizedFetchDelayMs > 0) {
+          await this.delay(this.normalizedFetchDelayMs * attempt);
+        }
+      }
+    }
+
+    return {};
+  }
+
+  private normalizeOptions(widgetRecord: Record<string, unknown>): FilterOptionDto[] {
+    const dataRecord =
+      this.asRecord(widgetRecord['data']) ??
+      this.asRecord(this.asRecord(widgetRecord['dto'])?.['data']);
+    const rawOptions = this.asArray(dataRecord?.['options']);
+    if (!rawOptions) {
+      return [];
+    }
+    return rawOptions
+      .map((option) => this.toFilterOption(option))
+      .filter((option): option is FilterOptionDto => Boolean(option));
+  }
+
+  private toFilterOption(option: unknown): FilterOptionDto | null {
+    const record = this.asRecord(option);
+    if (!record) {
+      return null;
+    }
+    const value =
+      this.getString(record, 'key') ??
+      this.getString(record, 'value') ??
+      this.getString(record, 'title');
+    const label =
+      this.getString(record, 'title') ??
+      this.getString(record, 'display') ??
+      this.getString(record, 'label') ??
+      this.getString(record, 'value');
+    if (!value || !label || value === 'ALL_POSSIBLE_OPTIONS') {
+      return null;
+    }
+    return { value, label };
+  }
+
+  private asRecord(value: unknown): Record<string, unknown> | null {
+    if (!value || typeof value !== 'object') {
+      return null;
+    }
+    return value as Record<string, unknown>;
+  }
+
+  private asArray(value: unknown): unknown[] | null {
+    return Array.isArray(value) ? value : null;
+  }
+
+  private getString(
+    record: Record<string, unknown> | null | undefined,
+    key: string,
+  ): string | null {
+    if (!record) {
+      return null;
+    }
+    const value = record[key];
+    if (typeof value !== 'string') {
+      return null;
+    }
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  }
+
+  private async delay(ms: number): Promise<void> {
+    if (ms <= 0) {
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, ms));
   }
 }

@@ -8,4 +8,14 @@ declare module 'jalaali-js' {
     gm: number;
     gd: number;
   };
+
+  export function toJalaali(
+    gy: number | Date,
+    gm?: number,
+    gd?: number,
+  ): {
+    jy: number;
+    jm: number;
+    jd: number;
+  };
 }

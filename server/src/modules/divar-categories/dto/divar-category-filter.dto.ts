@@ -1,5 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+export class FilterOptionDto {
+  @ApiProperty()
+  value!: string;
+
+  @ApiProperty()
+  label!: string;
+}
+
 export class DivarCategoryFilterDto {
   @ApiProperty()
   categoryId!: string;
@@ -18,6 +26,13 @@ export class DivarCategoryFilterDto {
     description: 'Raw filter payload mirrors what Divar returns for this category.',
   })
   payload!: unknown;
+
+  @ApiProperty({
+    type: Object,
+    required: false,
+    description: 'Normalized filter options extracted from the Divar category page.',
+  })
+  normalizedOptions?: Record<string, FilterOptionDto[]>;
 
   @ApiProperty()
   updatedAt!: Date;

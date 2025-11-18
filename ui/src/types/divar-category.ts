@@ -30,5 +30,6 @@ export type DivarCategoryFilterDetail = {
   categoryName: string;
   displayPath: string;
   payload: unknown;
+  normalizedOptions?: Record<string, { value: string; label: string }[]>;
   updatedAt: string;
 };

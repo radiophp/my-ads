@@ -84,13 +84,34 @@ const SUPPORTED_NUMBER_RANGE_KEYS = new Set([
   'floors_count',
   'unit_per_floor',
   'land_area',
+  'building-age',
+  'person_capacity',
+  'daily_rent',
 ]);
 
-const SUPPORTED_MULTI_SELECT_KEYS = new Set(['business-type', 'addon_service_tags']);
+const SUPPORTED_MULTI_SELECT_KEYS = new Set([
+  'business-type',
+  'addon_service_tags',
+  'building_direction',
+  'cooling_system',
+  'heating_system',
+  'floor_type',
+  'warm_water_provider',
+  'rooms',
+  'deed_type',
+]);
 
-const SUPPORTED_SINGLE_SELECT_KEYS = new Set(['recent_ads']);
+const SUPPORTED_SINGLE_SELECT_KEYS = new Set(['recent_ads', 'toilet']);
 
-const SUPPORTED_TOGGLE_KEYS = new Set(['parking', 'elevator', 'warehouse', 'balcony', 'rebuilt', 'has-photo']);
+const SUPPORTED_TOGGLE_KEYS = new Set([
+  'parking',
+  'elevator',
+  'warehouse',
+  'balcony',
+  'rebuilt',
+  'has-photo',
+  'bizzDeed',
+]);
 
 const IGNORED_FILTER_KEYS = new Set(['districts']);
 
@@ -117,7 +138,11 @@ export function CategoryFiltersPreview({ categorySlug, locale, isRTL }: Category
   const widgets = useMemo(
     () =>
       categorySlug && data
-        ? parseFilterWidgets(data.payload, (key) => key === 'districts')
+        ? parseFilterWidgets(
+            data.payload,
+            (key) => key === 'districts',
+            data.normalizedOptions ?? {},
+          )
         : [],
     [categorySlug, data],
   );
@@ -528,6 +553,7 @@ function isTranslatedWidgetKey(value: string): value is TranslatedWidgetLabelKey
 function parseFilterWidgets(
   payload: unknown,
   isIgnoredKey: (key: string) => boolean,
+  normalizedOptions: Record<string, FilterOption[]> = {},
 ): ParsedWidget[] {
   if (!isRecord(payload)) {
     return [];
@@ -598,7 +624,7 @@ function parseFilterWidgets(
           });
           return;
         }
-        const options = getOptions(data);
+        const options = getOptions(data, fieldKey ? normalizedOptions[fieldKey] : undefined);
         widgets.push({
           ...baseWidget,
           kind: 'multiSelect',
@@ -618,7 +644,7 @@ function parseFilterWidgets(
           });
           return;
         }
-        const options = getOptions(data);
+        const options = getOptions(data, fieldKey ? normalizedOptions[fieldKey] : undefined);
         widgets.push({
           ...baseWidget,
           kind: 'singleSelect',
@@ -657,9 +683,12 @@ function parseFilterWidgets(
   return widgets;
 }
 
-function getOptions(data?: Record<string, unknown>): FilterOption[] {
+function getOptions(
+  data?: Record<string, unknown>,
+  fallbackOptions?: FilterOption[],
+): FilterOption[] {
   const options = Array.isArray(data?.['options']) ? data?.['options'] : [];
-  return options
+  const normalized = options
     .map((option) => {
       if (!isRecord(option)) {
         return null;
@@ -684,6 +713,11 @@ function getOptions(data?: Record<string, unknown>): FilterOption[] {
       return { value, label };
     })
     .filter((option): option is FilterOption => Boolean(option));
+
+  if (normalized.length > 0) {
+    return normalized;
+  }
+  return fallbackOptions ?? [];
 }
 
 function resolveWidgetLabel(entry: Record<string, unknown>, data?: Record<string, unknown>) {

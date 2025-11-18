@@ -3,6 +3,7 @@ import { PrismaService } from '@app/platform/database/prisma.service';
 import { PostAnalysisStatus, Prisma } from '@prisma/client';
 import type { PaginatedPostsToAnalyzeDto, PostToAnalyzeItemDto } from './dto/post-to-analyze.dto';
 import type { PaginatedDivarPostsDto, DivarPostListItemDto } from './dto/divar-post.dto';
+import { toJalaali } from 'jalaali-js';
 
 const PAGE_SIZE_LIMIT = 100;
 
@@ -77,7 +78,13 @@ const DIVAR_POST_SUMMARY_SELECT = {
   },
 } satisfies Prisma.DivarPostSelect;
 
-const NUMBER_RANGE_FIELD_MAP = {
+type NumberRangeFieldConfig = {
+  column: keyof Prisma.DivarPostWhereInput;
+  type: 'decimal' | 'int';
+  transform?: 'ageToYearBuilt';
+};
+
+const NUMBER_RANGE_FIELD_MAP: Record<string, NumberRangeFieldConfig> = {
   price: { column: 'priceTotal', type: 'decimal' },
   price_per_square: { column: 'pricePerSquare', type: 'decimal' },
   rent: { column: 'rentAmount', type: 'decimal' },
@@ -87,7 +94,97 @@ const NUMBER_RANGE_FIELD_MAP = {
   floors_count: { column: 'floorsCount', type: 'int' },
   unit_per_floor: { column: 'unitPerFloor', type: 'int' },
   land_area: { column: 'landArea', type: 'int' },
-} as const;
+  person_capacity: { column: 'capacity', type: 'int' },
+  daily_rent: { column: 'dailyRateNormal', type: 'decimal' },
+  'building-age': { column: 'yearBuilt', type: 'int', transform: 'ageToYearBuilt' },
+};
+
+const buildValueMap = (entries: Record<string, string>): Record<string, string> => {
+  const map: Record<string, string> = {};
+  Object.entries(entries).forEach(([key, label]) => {
+    map[key] = label;
+    map[label] = label;
+  });
+  return map;
+};
+
+const BUILDING_DIRECTION_VALUE_MAP = buildValueMap({
+  north: 'شمالی',
+  south: 'جنوبی',
+  east: 'شرقی',
+  west: 'غربی',
+});
+
+const COOLING_SYSTEM_VALUE_MAP = buildValueMap({
+  water_cooler: 'سرمایش کولر آبی',
+  air_conditioner: 'سرمایش کولر گازی',
+  duct_split: 'سرمایش داکت اسپلیت',
+  split: 'سرمایش اسپلیت',
+  fan_coil: 'سرمایش فن کوئل',
+});
+
+const HEATING_SYSTEM_VALUE_MAP = buildValueMap({
+  heater: 'گرمایش بخاری',
+  shoofaj: 'گرمایش شوفاژ',
+  fan_coil: 'گرمایش فن کوئل',
+  floor_heating: 'گرمایش از کف',
+  duct_split: 'گرمایش داکت اسپلیت',
+  split: 'گرمایش اسپلیت',
+  fireplace: 'گرمایش شومینه',
+});
+
+const FLOOR_TYPE_VALUE_MAP = buildValueMap({
+  ceramic: 'جنس کف سرامیک',
+  wood_parquet: 'جنس کف پارکت چوب',
+  laminate_parquet: 'جنس کف پارکت لمینت',
+  stone: 'جنس کف سنگ',
+  floor_covering: 'جنس کف کفپوش PVC',
+  carpet: 'جنس کف موکت',
+  mosaic: 'جنس کف موزائیک',
+});
+
+const WARM_WATER_PROVIDER_VALUE_MAP = buildValueMap({
+  water_heater: 'تأمین‌کننده آب گرم آبگرم‌کن',
+  powerhouse: 'تأمین‌کننده آب گرم موتورخانه',
+  package: 'تأمین‌کننده آب گرم پکیج',
+});
+
+const TOILET_VALUE_MAP = buildValueMap({
+  squat: 'سرویس بهداشتی ایرانی',
+  seat: 'سرویس بهداشتی فرنگی',
+  squat_seat: 'سرویس بهداشتی ایرانی و فرنگی',
+});
+
+const DEED_TYPE_VALUE_MAP = buildValueMap({
+  single_page: 'تک‌برگ',
+  multi_page: 'منگوله‌دار',
+  written_agreement: 'قول‌نامه‌ای',
+  other: 'سایر',
+});
+
+const ROOM_FILTER_VALUE_MAP: Record<string, number | 'PLUS' | undefined> = {
+  'بدون اتاق': 0,
+  بدون: 0,
+  یک: 1,
+  دو: 2,
+  سه: 3,
+  چهار: 4,
+  '۴': 4,
+  'چهار+': 'PLUS',
+  بیشتر: 'PLUS',
+};
+
+const ATTRIBUTE_STRING_FILTER_VALUE_MAP: Record<string, Record<string, string>> = {
+  building_direction: BUILDING_DIRECTION_VALUE_MAP,
+  cooling_system: COOLING_SYSTEM_VALUE_MAP,
+  heating_system: HEATING_SYSTEM_VALUE_MAP,
+  floor_type: FLOOR_TYPE_VALUE_MAP,
+  warm_water_provider: WARM_WATER_PROVIDER_VALUE_MAP,
+  toilet: TOILET_VALUE_MAP,
+  deed_type: DEED_TYPE_VALUE_MAP,
+};
+
+const PERSIAN_DIGITS = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
 
 const BUSINESS_TYPE_MAP: Record<string, string[]> = {
   personal: ['personal'],
@@ -333,6 +430,24 @@ export class DivarPostsAdminService {
       }
 
       switch (key) {
+        case 'building_direction':
+        case 'cooling_system':
+        case 'heating_system':
+        case 'floor_type':
+        case 'warm_water_provider':
+        case 'toilet':
+        case 'deed_type':
+          handledKeys.add(key);
+          this.applyAttributeStringFilter(where, key, value);
+          break;
+        case 'rooms':
+          handledKeys.add(key);
+          this.applyRoomsFilter(where, value);
+          break;
+        case 'bizzDeed':
+          handledKeys.add(key);
+          this.applyBizzDeedFilter(where, value);
+          break;
         case 'business-type':
           handledKeys.add(key);
           this.applyBusinessTypeFilter(where, value);
@@ -392,10 +507,17 @@ export class DivarPostsAdminService {
     if (!config) {
       return false;
     }
-    const normalized = this.normalizeClientRange(value);
+    let normalized = this.normalizeClientRange(value);
     if (!normalized) {
       this.logger.debug(`DivarPosts filters: invalid range payload for "${key}"`);
       return true;
+    }
+    if (config.transform === 'ageToYearBuilt') {
+      normalized = this.convertAgeRangeToYearBuiltRange(normalized);
+      if (!normalized) {
+        this.logger.debug(`DivarPosts filters: invalid age range for "${key}"`);
+        return true;
+      }
     }
     if (config.type === 'decimal') {
       const filter = this.buildDecimalRange(normalized);
@@ -470,6 +592,107 @@ export class DivarPostsAdminService {
     Object.assign(where, { [column]: true });
   }
 
+  private applyAttributeStringFilter(
+    where: Prisma.DivarPostWhereInput,
+    filterKey: string,
+    rawValue: unknown,
+  ): void {
+    const selections = this.normalizeStringArray(rawValue);
+    if (selections.length === 0) {
+      return;
+    }
+    const map = ATTRIBUTE_STRING_FILTER_VALUE_MAP[filterKey];
+    const resolved = Array.from(
+      new Set(
+        selections
+          .map((entry) => map?.[entry] ?? entry)
+          .filter((entry): entry is string => entry.length > 0),
+      ),
+    );
+    if (resolved.length === 0) {
+      return;
+    }
+    this.appendAndCondition(where, {
+      attributes: {
+        some: {
+          stringValue: { in: resolved },
+        },
+      },
+    });
+  }
+
+  private applyRoomsFilter(where: Prisma.DivarPostWhereInput, rawValue: unknown): void {
+    const selections = this.normalizeStringArray(rawValue);
+    if (selections.length === 0) {
+      return;
+    }
+    const orConditions: Prisma.DivarPostWhereInput[] = [];
+    selections.forEach((selection) => {
+      if (!selection) {
+        return;
+      }
+      const normalized = selection.trim();
+      if (normalized === 'بیشتر' || normalized === '+۴' || normalized === '۴+') {
+        orConditions.push({
+          OR: [{ rooms: { gte: 4 } }, { roomsLabel: { in: ['+۴', '۴+'] } }],
+        });
+        return;
+      }
+      if (normalized === 'بدون اتاق') {
+        orConditions.push({
+          OR: [
+            { rooms: { equals: 0 } },
+            { rooms: null, roomsLabel: 'بدون اتاق' },
+            { roomsLabel: 'بدون اتاق' },
+          ],
+        });
+        return;
+      }
+      const mapped = ROOM_FILTER_VALUE_MAP[normalized];
+      if (mapped === 'PLUS') {
+        orConditions.push({
+          OR: [{ rooms: { gte: 4 } }, { roomsLabel: { in: ['+۴', '۴+'] } }],
+        });
+        return;
+      }
+      const numeric =
+        typeof mapped === 'number'
+          ? mapped
+          : this.parseFiniteNumber(normalized.replace(/[^\d.-]/g, ''));
+      if (numeric === null || numeric === undefined) {
+        return;
+      }
+      const intVal = Math.trunc(numeric);
+      const persian = this.toPersianDigits(intVal);
+      const labelVariants = new Set<string>([persian, intVal.toString()]);
+      if (intVal >= 4) {
+        labelVariants.add(`+${persian}`);
+        labelVariants.add(`${persian}+`);
+      }
+      orConditions.push({
+        OR: [{ rooms: { equals: intVal } }, { roomsLabel: { in: Array.from(labelVariants) } }],
+      });
+    });
+    if (orConditions.length === 0) {
+      return;
+    }
+    this.appendAndCondition(where, { OR: orConditions });
+  }
+
+  private applyBizzDeedFilter(where: Prisma.DivarPostWhereInput, value: unknown): void {
+    if (value !== true) {
+      return;
+    }
+    const label = 'سند اداری';
+    this.appendAndCondition(where, {
+      attributes: {
+        some: {
+          OR: [{ key: 'bizzDeed', boolValue: true }, { label }, { stringValue: label }],
+        },
+      },
+    });
+  }
+
   private normalizeClientRange(input: unknown): NumericRangeInput | null {
     if (!input || typeof input !== 'object') {
       return null;
@@ -510,6 +733,36 @@ export class DivarPostsAdminService {
       filter.lte = Math.trunc(range.max);
     }
     return Object.keys(filter).length > 0 ? filter : undefined;
+  }
+
+  private convertAgeRangeToYearBuiltRange(range: NumericRangeInput): NumericRangeInput | null {
+    const currentYear = toJalaali(new Date()).jy;
+    const result: NumericRangeInput = {};
+    if (range.max !== undefined) {
+      const maxAge = Math.max(0, Math.trunc(range.max));
+      result.min = Math.max(0, currentYear - maxAge);
+    }
+    if (range.min !== undefined) {
+      const minAge = Math.max(0, Math.trunc(range.min));
+      result.max = Math.max(0, currentYear - minAge);
+    }
+    if (result.min !== undefined && result.max !== undefined && result.min > result.max) {
+      const temp = result.min;
+      result.min = result.max;
+      result.max = temp;
+    }
+    if (result.min === undefined && result.max === undefined) {
+      return null;
+    }
+    return result;
+  }
+
+  private toPersianDigits(value: number): string {
+    return value
+      .toString()
+      .split('')
+      .map((char) => PERSIAN_DIGITS[Number(char)] ?? char)
+      .join('');
   }
 
   private normalizeStringArray(value: unknown): string[] {

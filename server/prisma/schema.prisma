@@ -126,6 +126,7 @@ model DivarCategoryFilter {
   categoryId String        @unique
   category   DivarCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   payload    Json
+  normalizedOptions Json?  @default("{}")
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @default(now()) @updatedAt
 }

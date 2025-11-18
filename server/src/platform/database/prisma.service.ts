@@ -1,10 +1,21 @@
-import { INestApplication, Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import {
+  INestApplication,
+  Injectable,
+  Logger,
+  OnModuleDestroy,
+  OnModuleInit,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 import type { DatabaseConfig } from '@app/platform/config/db.config';
 
 @Injectable()
-export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
+export class PrismaService
+  extends PrismaClient<Prisma.PrismaClientOptions, 'query'>
+  implements OnModuleInit, OnModuleDestroy
+{
+  private readonly logger = new Logger(PrismaService.name);
+
   constructor(private readonly configService: ConfigService) {
     const databaseConfig = configService.get<DatabaseConfig>('database', { infer: true });
     if (!databaseConfig) {
@@ -17,7 +28,30 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
           url: databaseConfig.url,
         },
       },
+      ...(databaseConfig.logQueries
+        ? {
+            log: [
+              {
+                level: 'query',
+                emit: 'event',
+              },
+            ],
+          }
+        : {}),
     });
+
+    if (databaseConfig.logQueries) {
+      this.$on('query', (event: Prisma.QueryEvent) => {
+        this.logger.debug(
+          [
+            'Prisma Query:',
+            event.query,
+            event.params && event.params.length > 2 ? `\nParams: ${event.params}` : '',
+            `\nDuration: ${event.duration}ms`,
+          ].join(' '),
+        );
+      });
+    }
   }
 
   async onModuleInit(): Promise<void> {

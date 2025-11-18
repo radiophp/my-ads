@@ -664,7 +664,7 @@ export function DashboardSearchFilterPanel() {
       ) : null}
       <section
         className={cn(
-          'bg-card w-full rounded-xl shadow-sm',
+          'bg-card w-full rounded-xl shadow-sm lg:max-h-[calc(100vh-140px)] lg:overflow-hidden',
           filterModalOpen
             ? 'fixed inset-0 z-50 block h-dvh overflow-y-auto bg-background lg:relative lg:h-auto lg:p-4'
             : 'hidden p-4 lg:block',
@@ -672,7 +672,7 @@ export function DashboardSearchFilterPanel() {
       >
         <div
           className={cn(
-            'flex flex-col gap-5',
+            'flex flex-col gap-5 lg:max-h-[calc(100vh-140px)] lg:overflow-y-auto lg:pr-2',
             filterModalOpen ? 'px-4 pb-20 lg:px-0' : undefined,
           )}
         >

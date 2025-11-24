@@ -1,11 +1,11 @@
 {
   "meta": {
-    "title": "پرو UI بیس",
+    "title": "ماهان فایل",
     "description": "استارتر آماده‌ی تولید Next.js 15 برای پلتفرم ماهان فایل.",
     "canonical": "https://example.com/fa"
   },
   "header": {
-    "brand": "پرو UI بیس",
+    "brand": "ماهان فایل",
     "nav": {
       "dashboard": "داشبورد",
       "ringBinder": "زونکن",
@@ -232,7 +232,13 @@
       "widgetLabels": {
         "filter_price": "قیمت",
         "filter_size": "متراژ",
-        "filter_price_per_square": "قیمت بر مساحت"
+        "filter_price_per_square": "قیمت بر مساحت",
+        "filter_rooms": "تعداد اتاق",
+        "filter_building-age": "سن بنا",
+        "filter_floor": "طبقه",
+        "filter_floors_count": "تعداد طبقات",
+        "filter_unit_per_floor": "واحد در هر طبقه",
+        "filter_rent": "اجاره"
       },
       "fieldLabel": "شناسه فیلتر: {key}",
       "clear": "حذف فیلترها",
@@ -779,7 +785,7 @@
     }
   },
   "pwa": {
-    "installTitle": "نصب پرو UI بیس",
+    "installTitle": "نصب ماهان فایل",
     "installDescription": "دسترسی آفلاین و تجربه‌ای شبیه اپلیکیشن دریافت کنید.",
     "installButton": "نصب",
     "installedTitle": "موفقیت‌آمیز",
@@ -812,6 +818,6 @@
   "footer": {
     "privacy": "حریم خصوصی",
     "terms": "شرایط استفاده",
-    "copyright": "© {year} پرو UI بیس"
+    "copyright": "© {year} ماهان فایل"
   }
 }

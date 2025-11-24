@@ -664,16 +664,18 @@ export function DashboardSearchFilterPanel() {
       ) : null}
       <section
         className={cn(
-          'bg-card w-full rounded-xl shadow-sm lg:max-h-[calc(100vh-140px)] lg:overflow-hidden',
+          'bg-card w-full rounded-xl shadow-sm',
           filterModalOpen
-            ? 'fixed inset-0 z-50 block h-dvh overflow-y-auto bg-background lg:relative lg:h-auto lg:p-4'
-            : 'hidden p-4 lg:block',
+            ? 'fixed inset-0 z-50 block h-dvh overflow-y-auto bg-background lg:relative lg:h-auto'
+            : 'hidden p-4 lg:flex lg:h-full lg:min-h-0 lg:flex-col lg:overflow-hidden lg:p-4',
         )}
       >
         <div
           className={cn(
-            'flex flex-col gap-5 lg:max-h-[calc(100vh-140px)] lg:overflow-y-auto lg:pr-2',
-            filterModalOpen ? 'px-4 pb-20 lg:px-0' : undefined,
+            'flex flex-col gap-5',
+            filterModalOpen
+              ? 'px-4 pb-20'
+              : 'lg:flex-1 lg:min-h-0 lg:overflow-y-auto lg:px-4 lg:pb-6',
           )}
         >
           {filterModalOpen ? (

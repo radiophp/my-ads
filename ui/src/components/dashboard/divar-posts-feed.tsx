@@ -454,8 +454,8 @@ export function DivarPostsFeed(): JSX.Element {
   );
 
   return (
-    <Card className="border-0 shadow-none">
-      <CardContent className="space-y-4">
+    <Card className="flex h-full flex-col overflow-hidden border-0 shadow-sm">
+      <CardContent className="flex-1 space-y-4 overflow-y-auto p-4">
         {initializing ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 min-[1400px]:grid-cols-4">
             {Array.from({ length: 4 }).map((_, index) => (

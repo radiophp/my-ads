@@ -5,7 +5,6 @@ import { getLocale, getMessages, unstable_setRequestLocale } from 'next-intl/ser
 
 import { inter } from '@/app/fonts';
 import { Providers } from '@/app/providers';
-import { Footer } from '@/components/layout/site-footer';
 import { SiteHeader } from '@/components/layout/site-header';
 import './globals.css';
 
@@ -38,12 +37,12 @@ const metadataBase = (() => {
 export const metadata: Metadata = {
   metadataBase,
   title: {
-    default: 'ماهان داشبورد',
-    template: '%s | ماهان داشبورد',
+    default: 'ماهان فایل | فروش اجاره آپارتمان زمین و ویلا',
+    template: '%s | ماهان فایل | فروش اجاره آپارتمان زمین و ویلا',
   },
   description: 'مرور و مدیریت آگهی‌های دیوار در پنل ماهان.',
   openGraph: {
-    title: 'ماهان داشبورد',
+    title: 'ماهان فایل | فروش اجاره آپارتمان زمین و ویلا',
     description: 'مرور و مدیریت آگهی‌های دیوار در پنل ماهان.',
     url: DEFAULT_APP_URL,
     siteName: 'ماهان',
@@ -51,7 +50,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'ماهان داشبورد',
+    title: 'ماهان فایل | فروش اجاره آپارتمان زمین و ویلا',
     description: 'مرور و مدیریت آگهی‌های دیوار در پنل ماهان.',
   },
 };
@@ -70,14 +69,13 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       className={`${inter.variable} dark`}
       data-theme="dark"
     >
-      <body className={inter.className}>
+      <body className={`${inter.className} h-screen overflow-hidden`}>
         <script dangerouslySetInnerHTML={{ __html: themeInitializer }} />
         <NextIntlClientProvider locale={locale} messages={messages} timeZone="UTC">
           <Providers>
-            <div className="min-h-screen bg-background text-foreground">
+            <div className="flex h-screen flex-col bg-background text-foreground">
               <SiteHeader />
-              <main className="w-full px-0 py-12">{children}</main>
-              <Footer />
+              <main className="flex-1 min-h-0 overflow-hidden">{children}</main>
             </div>
           </Providers>
         </NextIntlClientProvider>

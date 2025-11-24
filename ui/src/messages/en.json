@@ -232,7 +232,13 @@
         "widgetLabels": {
           "filter_price": "Price",
           "filter_size": "Size",
-          "filter_price_per_square": "Price per area"
+          "filter_price_per_square": "Price per area",
+          "filter_rooms": "Rooms",
+          "filter_building-age": "Building age",
+          "filter_floor": "Floor",
+          "filter_floors_count": "Number of floors",
+          "filter_unit_per_floor": "Units per floor",
+          "filter_rent": "Rent"
         },
         "fieldLabel": "Field: {key}",
         "clear": "Clear filters",

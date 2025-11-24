@@ -1,7 +1,7 @@
 'use client';
 
 import { skipToken } from '@reduxjs/toolkit/query';
-import { useMemo, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useTranslations, type TranslationValues } from 'next-intl';
 
 import { useGetPublicDivarCategoryFilterQuery } from '@/features/api/apiSlice';
@@ -9,6 +9,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import { cn } from '@/lib/utils';
 import {
@@ -68,6 +75,23 @@ type ParsedWidget =
   | ToggleWidget
   | UnsupportedWidget;
 
+type FilterOptionsModalState =
+  | {
+      type: 'multi';
+      key: string;
+      title: string;
+      description?: string;
+      options: FilterOption[];
+    }
+  | {
+      type: 'single';
+      key: string;
+      title: string;
+      description?: string;
+      options: FilterOption[];
+      clearable: boolean;
+    };
+
 type CategoryFiltersPreviewProps = {
   categorySlug: string | null;
   locale: string;
@@ -115,7 +139,17 @@ const SUPPORTED_TOGGLE_KEYS = new Set([
 
 const IGNORED_FILTER_KEYS = new Set(['districts']);
 
-const TRANSLATED_WIDGET_LABEL_KEYS = ['filter_price', 'filter_size', 'filter_price_per_square'] as const;
+const TRANSLATED_WIDGET_LABEL_KEYS = [
+  'filter_price',
+  'filter_size',
+  'filter_price_per_square',
+  'filter_rooms',
+  'filter_building-age',
+  'filter_floor',
+  'filter_floors_count',
+  'filter_unit_per_floor',
+  'filter_rent',
+] as const;
 type TranslatedWidgetLabelKey = (typeof TRANSLATED_WIDGET_LABEL_KEYS)[number];
 const TRANSLATED_WIDGET_LABEL_KEY_SET = new Set<TranslatedWidgetLabelKey>(TRANSLATED_WIDGET_LABEL_KEYS);
 
@@ -128,8 +162,9 @@ export function CategoryFiltersPreview({ categorySlug, locale, isRTL }: Category
   const activeFilters = categorySlug ? categoryFilters[categorySlug] ?? {} : {};
   const activeFilterCount = Object.keys(activeFilters).length;
   const hasActiveFilters = activeFilterCount > 0;
+  const [filterOptionsModal, setFilterOptionsModal] = useState<FilterOptionsModalState | null>(null);
   const rangeInputClass =
-    'border-0 rounded-none ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 h-9 px-2 py-1';
+    'h-9 rounded-none border-0 px-2 py-1 ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0';
 
   const queryArg = categorySlug ?? skipToken;
   const { data, isLoading, isFetching, isError } = useGetPublicDivarCategoryFilterQuery(queryArg);
@@ -149,6 +184,88 @@ export function CategoryFiltersPreview({ categorySlug, locale, isRTL }: Category
 
   const actionableWidgets = widgets.filter((widget) => widget.kind !== 'title');
   const hasWidgets = actionableWidgets.length > 0;
+  const filterPlaceholderText = t('categoryFilters.singleSelectPlaceholder');
+
+  const getActiveMultiValues = (key: string): string[] => {
+    const entry = activeFilters[key];
+    return entry?.kind === 'multiSelect' ? entry.values : [];
+  };
+
+  const getActiveSingleValue = (key: string): string | null => {
+    const entry = activeFilters[key];
+    if (entry?.kind === 'singleSelect') {
+      return entry.value ?? null;
+    }
+    return null;
+  };
+
+  const openFilterOptionsModal = (widget: MultiSelectWidget | SingleSelectWidget) => {
+    if (!categorySlug) {
+      return;
+    }
+    if (widget.options.length === 0) {
+      return;
+    }
+    if (widget.kind === 'multiSelect') {
+      setFilterOptionsModal({
+        type: 'multi',
+        key: widget.key,
+        title: widget.label,
+        description: widget.description,
+        options: widget.options,
+      });
+    } else {
+      setFilterOptionsModal({
+        type: 'single',
+        key: widget.key,
+        title: widget.label,
+        description: widget.description,
+        options: widget.options,
+        clearable: widget.clearable,
+      });
+    }
+  };
+
+  const handleModalClose = () => {
+    setFilterOptionsModal(null);
+  };
+
+  const handleModalConfirmMulti = (key: string, values: string[]) => {
+    if (!categorySlug) {
+      return;
+    }
+    dispatch(
+      setCategoryFilterValue({
+        slug: categorySlug,
+        key,
+        value: values.length > 0 ? { kind: 'multiSelect', values } : null,
+      }),
+    );
+    setFilterOptionsModal(null);
+  };
+
+  const handleModalConfirmSingle = (key: string, value: string | null) => {
+    if (!categorySlug) {
+      return;
+    }
+    dispatch(
+      setCategoryFilterValue({
+        slug: categorySlug,
+        key,
+        value: value ? { kind: 'singleSelect', value } : null,
+      }),
+    );
+    setFilterOptionsModal(null);
+  };
+
+  const modalSelectedMultiValues =
+    filterOptionsModal && filterOptionsModal.type === 'multi'
+      ? getActiveMultiValues(filterOptionsModal.key)
+      : [];
+  const modalSelectedSingleValue =
+    filterOptionsModal && filterOptionsModal.type === 'single'
+      ? getActiveSingleValue(filterOptionsModal.key)
+      : null;
 
   const lastSynced = useMemo(() => {
     if (!data?.updatedAt) {
@@ -183,46 +300,6 @@ export function CategoryFiltersPreview({ categorySlug, locale, isRTL }: Category
           kind: 'numberRange',
           ...next,
         },
-      }),
-    );
-  };
-
-  const updateMultiSelect = (key: string, value: string) => {
-    if (!categorySlug) {
-      return;
-    }
-    const current = activeFilters[key];
-    const nextValues =
-      current?.kind === 'multiSelect' ? [...current.values] : [];
-    if (nextValues.includes(value)) {
-      const filtered = nextValues.filter((item) => item !== value);
-      dispatch(
-        setCategoryFilterValue({
-          slug: categorySlug,
-          key,
-          value: filtered.length > 0 ? { kind: 'multiSelect', values: filtered } : null,
-        }),
-      );
-    } else {
-      dispatch(
-        setCategoryFilterValue({
-          slug: categorySlug,
-          key,
-          value: { kind: 'multiSelect', values: [...nextValues, value] },
-        }),
-      );
-    }
-  };
-
-  const updateSingleSelect = (key: string, value: string | null) => {
-    if (!categorySlug) {
-      return;
-    }
-    dispatch(
-      setCategoryFilterValue({
-        slug: categorySlug,
-        key,
-        value: value ? { kind: 'singleSelect', value } : null,
       }),
     );
   };
@@ -354,71 +431,57 @@ export function CategoryFiltersPreview({ categorySlug, locale, isRTL }: Category
               );
             }
             case 'multiSelect': {
-              const current = activeFilters[widget.key];
-              const values = current?.kind === 'multiSelect' ? current.values : [];
+              const selectedValues = getActiveMultiValues(widget.key);
+              const optionLabelMap = new Map(widget.options.map((option) => [option.value, option.label]));
+              const summary =
+                selectedValues.length > 0
+                  ? selectedValues
+                      .map((value) => optionLabelMap.get(value) ?? value)
+                      .join('، ')
+                  : filterPlaceholderText;
               return (
                 <div key={widget.id} className="rounded-lg border border-border px-3 py-2">
                   <p className="text-sm font-medium text-foreground">{label}</p>
-                  <div className="mt-2 flex flex-wrap gap-2" dir={isRTL ? 'rtl' : 'ltr'}>
-                    {widget.options.map((option) => {
-                      const selected = values.includes(option.value);
-                      if (widget.layout === 'list') {
-                        return (
-                          <label
-                            key={option.value}
-                            className="flex items-center gap-2 rounded border border-dashed border-border px-2 py-1 text-xs text-foreground"
-                          >
-                            <input
-                              type="checkbox"
-                              className="size-4 rounded border-input text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
-                              checked={selected}
-                              onChange={() => updateMultiSelect(widget.key, option.value)}
-                            />
-                            {option.label}
-                          </label>
-                        );
-                      }
-                      return (
-                        <button
-                          key={option.value}
-                          type="button"
-                          className={`rounded-full border px-3 py-1 text-xs transition ${
-                            selected
-                              ? 'border-primary bg-primary text-primary-foreground'
-                              : 'border-border bg-muted text-muted-foreground hover:text-foreground'
-                          }`}
-                          onClick={() => updateMultiSelect(widget.key, option.value)}
-                        >
-                          {option.label}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="mt-2 flex w-full items-center justify-between gap-2 border border-transparent px-0 text-sm font-medium text-foreground"
+                    onClick={() => openFilterOptionsModal(widget)}
+                    disabled={widget.options.length === 0}
+                  >
+                    <span
+                      className={cn(
+                        'flex-1 truncate',
+                        isRTL ? 'order-last text-right' : 'order-first text-left',
+                      )}
+                    >
+                      {widget.options.length === 0 ? filterPlaceholderText : summary}
+                    </span>
+                    <span className="order-last text-muted-foreground">‹</span>
+                  </Button>
                 </div>
               );
             }
             case 'singleSelect': {
-              const current = activeFilters[widget.key];
-              const value = current?.kind === 'singleSelect' ? current.value ?? '' : '';
+              const selectedValue = getActiveSingleValue(widget.key);
+              const optionLabelMap = new Map(widget.options.map((option) => [option.value, option.label]));
+              const summary = selectedValue
+                ? optionLabelMap.get(selectedValue) ?? selectedValue
+                : filterPlaceholderText;
               return (
                 <div key={widget.id} className="rounded-lg border border-border px-3 py-2">
                   <p className="text-sm font-medium text-foreground">{label}</p>
-                  <select
-                    className="mt-2 w-full rounded border border-input bg-background px-2 py-1 text-sm text-foreground"
-                    value={value}
-                    onChange={(event) =>
-                      updateSingleSelect(widget.key, event.target.value || null)
-                    }
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="mt-2 justify-between text-sm"
+                    onClick={() => openFilterOptionsModal(widget)}
+                    disabled={widget.options.length === 0}
                   >
-                    <option value="">
-                      {t('categoryFilters.singleSelectPlaceholder')}
-                    </option>
-                    {widget.options.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
+                    <span className={cn('truncate', isRTL ? 'text-right' : 'text-left')}>
+                      {widget.options.length === 0 ? filterPlaceholderText : summary}
+                    </span>
+                  </Button>
                 </div>
               );
             }
@@ -483,7 +546,189 @@ export function CategoryFiltersPreview({ categorySlug, locale, isRTL }: Category
         <p className="text-[11px] text-muted-foreground">{t('categoryFilters.lastSynced', { value: lastSynced })}</p>
       ) : null}
       {content}
+      <FilterOptionsDialog
+        modal={filterOptionsModal}
+        open={Boolean(filterOptionsModal)}
+        onClose={handleModalClose}
+        selectedMultiValues={modalSelectedMultiValues}
+        selectedSingleValue={modalSelectedSingleValue}
+        onConfirmMulti={handleModalConfirmMulti}
+        onConfirmSingle={handleModalConfirmSingle}
+        isRTL={isRTL}
+        placeholder={filterPlaceholderText}
+        translation={t}
+      />
     </div>
+  );
+}
+
+type FilterOptionsDialogProps = {
+  modal: FilterOptionsModalState | null;
+  open: boolean;
+  onClose: () => void;
+  selectedMultiValues: string[];
+  selectedSingleValue: string | null;
+  onConfirmMulti: (key: string, values: string[]) => void;
+  onConfirmSingle: (key: string, value: string | null) => void;
+  isRTL: boolean;
+  placeholder: string;
+  translation: ReturnType<typeof useTranslations>;
+};
+
+function FilterOptionsDialog({
+  modal,
+  open,
+  onClose,
+  selectedMultiValues,
+  selectedSingleValue,
+  onConfirmMulti,
+  onConfirmSingle,
+  isRTL,
+  placeholder,
+  translation,
+}: FilterOptionsDialogProps) {
+  const t = translation;
+  const [draftMulti, setDraftMulti] = useState<string[]>(selectedMultiValues);
+  const [draftSingle, setDraftSingle] = useState<string | null>(selectedSingleValue);
+
+  useEffect(() => {
+    if (modal?.type === 'multi') {
+      setDraftMulti(selectedMultiValues);
+    }
+  }, [selectedMultiValues, modal?.key, modal?.type]);
+
+  useEffect(() => {
+    if (modal?.type === 'single') {
+      setDraftSingle(selectedSingleValue);
+    }
+  }, [selectedSingleValue, modal?.key, modal?.type]);
+
+  if (!modal) {
+    return null;
+  }
+
+  const confirm = () => {
+    if (modal.type === 'multi') {
+      onConfirmMulti(modal.key, draftMulti);
+    } else {
+      onConfirmSingle(modal.key, draftSingle ?? null);
+    }
+  };
+
+  const clear = () => {
+    if (modal.type === 'multi') {
+      setDraftMulti([]);
+    } else {
+      setDraftSingle(null);
+    }
+  };
+
+  const isMulti = modal.type === 'multi';
+  const options = modal.options;
+
+  return (
+    <Dialog open={open} onOpenChange={(next) => (!next ? onClose() : null)}>
+      <DialogContent className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] lg:left-1/2 lg:top-1/2 lg:flex lg:max-h-[90vh] lg:w-full lg:max-w-xl lg:-translate-x-1/2 lg:-translate-y-1/2 lg:flex-col lg:overflow-hidden lg:rounded-2xl lg:border lg:p-6">
+        <div className="flex h-full flex-col overflow-hidden">
+          <div className="border-b border-border px-6 py-4 lg:hidden">
+            <button
+              type="button"
+              className="text-sm font-medium text-primary"
+              onClick={onClose}
+            >
+              {t('cityModalCancel')}
+            </button>
+            <p className="mt-2 text-base font-semibold">{modal.title}</p>
+            {modal.description ? (
+              <p className="mt-1 text-sm text-muted-foreground">{modal.description}</p>
+            ) : null}
+          </div>
+
+          <div className="hidden px-0 py-4 lg:block">
+            <DialogHeader className={isRTL ? 'text-right' : 'text-left'}>
+              <DialogTitle>{modal.title}</DialogTitle>
+              {modal.description ? <DialogDescription>{modal.description}</DialogDescription> : null}
+            </DialogHeader>
+          </div>
+
+          <div className="flex flex-1 flex-col gap-2 overflow-y-auto px-6 py-4 lg:px-4">
+            {options.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t('categoryFilters.empty')}</p>
+            ) : (
+              <ul className="space-y-2" dir={isRTL ? 'rtl' : 'ltr'}>
+                {options.map((option) => (
+                  <li key={option.value}>
+                    <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-border px-3 py-2 text-sm">
+                      {isMulti ? (
+                        <input
+                          type="checkbox"
+                          className="size-4 rounded border-input text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          checked={draftMulti.includes(option.value)}
+                          onChange={() => {
+                            setDraftMulti((prev) =>
+                              prev.includes(option.value)
+                                ? prev.filter((value) => value !== option.value)
+                                : [...prev, option.value],
+                            );
+                          }}
+                        />
+                      ) : (
+                        <input
+                          type="radio"
+                          name={`filter-option-${modal.key}`}
+                          className="size-4 rounded-full border-input text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          checked={draftSingle === option.value}
+                          onChange={() => setDraftSingle(option.value)}
+                        />
+                      )}
+                      <span>{option.label}</span>
+                    </label>
+                  </li>
+                ))}
+                {!isMulti && modal.clearable ? (
+                  <li>
+                    <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-border px-3 py-2 text-sm text-muted-foreground">
+                      <input
+                        type="radio"
+                        name={`filter-option-${modal.key}`}
+                        className="size-4 rounded-full border-input text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        checked={!draftSingle}
+                        onChange={() => setDraftSingle(null)}
+                      />
+                      {placeholder}
+                    </label>
+                  </li>
+                ) : null}
+              </ul>
+            )}
+          </div>
+
+          <div className="border-t border-border bg-background/95 px-6 py-4 lg:border-0 lg:bg-transparent lg:px-4">
+            <div
+              className={cn(
+                'flex flex-row flex-wrap gap-3',
+                isRTL ? 'lg:flex-row-reverse' : 'lg:flex-row',
+              )}
+            >
+              <Button type="button" variant="ghost" className="min-w-[120px] flex-1" onClick={clear}>
+                {t('categoryFilters.clear')}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="min-w-[120px] flex-1"
+                onClick={onClose}
+              >
+                {t('cityModalCancel')}
+              </Button>
+              <Button type="button" className="min-w-[120px] flex-1" onClick={confirm}>
+                {t('cityModalConfirm')}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

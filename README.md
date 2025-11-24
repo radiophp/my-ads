@@ -339,6 +339,67 @@ Environment variables not listed above are either optional feature toggles or in
 
 ---
 
+## Production deployment (Docker Swarm)
+
+`docker-compose-prod.yml` defines the production stack expected to run on a Docker Swarm cluster. The stack consumes container images that are already built in CI (for example, the GitHub Actions workflow can push `ghcr.io/<org>/my-ads-api` and `ghcr.io/<org>/my-ads-ui`). A typical deployment job performs the following steps:
+
+1. Log in to the container registry that hosts the pre-built images.
+2. Export the required environment variables (usually sourced from GitHub Actions variables and secrets).
+3. Run `docker stack deploy -c docker-compose-prod.yml my-ads --with-registry-auth` on the Swarm manager node.
+
+### GitHub Actions variables (safe to expose)
+
+| Name | Description |
+| --- | --- |
+| `API_IMAGE` | Fully qualified reference to the API image (e.g., `ghcr.io/toncloud/my-ads-api`). |
+| `API_IMAGE_TAG` | Tag that should be deployed (`latest`, `main`, `${{ github.sha }}` …). |
+| `UI_IMAGE` | UI image reference (e.g., `ghcr.io/toncloud/my-ads-ui`). |
+| `UI_IMAGE_TAG` | Tag for the UI image. |
+| `APP_PORT` | Published Fastify/Nest port (defaults to `6200`). |
+| `APP_GLOBAL_PREFIX` | API prefix (`api`). |
+| `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PORT` | Database connection metadata (non-secret). |
+| `REDIS_PORT` | Redis port exposed inside the overlay network. |
+| `RABBITMQ_USERNAME` | Username for the broker (paired with the secret password). |
+| `MINIO_PORT` / `MINIO_CONSOLE_PORT` | MinIO API + console ports. |
+| `MINIO_BUCKET` / `MINIO_REGION` | Default bucket + region. |
+| `CORS_ORIGIN` | Allowed origin(s) for the API (e.g., dashboard URL). |
+| `NEXT_UI_PORT` | Published Next.js port (defaults to `6005`). |
+| `NEXT_PUBLIC_APP_URL` | Public URL that the UI should advertise (e.g., `https://mahan.toncloud.observer`). |
+| `NEXT_PUBLIC_API_BASE_URL` | Public API base URL (usually `${NEXT_PUBLIC_APP_URL}/api`). |
+| `API_REPLICAS` / `UI_REPLICAS` | Desired replica counts for each service (Swarm will scale them). |
+| `RATE_LIMIT_TTL` / `RATE_LIMIT_MAX` | Optional overrides for the API rate limiter. |
+| `OTP_TTL_SECONDS` / `OTP_DIGITS` / `OTP_SENDER_BASE_URL` | OTP delivery configuration (non-secret pieces). |
+| `OTEL_ENABLED` / `OTEL_EXPORTER_OTLP_ENDPOINT` / `LOG_LEVEL` / `LOG_PRETTY` / `PRISMA_LOG_QUERIES` | Observability/logging toggles. |
+| `NEXT_PUBLIC_ANALYTICS_WRITE_KEY` | Public analytics write key (if you have a client-side analytics vendor). |
+
+### GitHub Actions secrets (never expose)
+
+| Name | Description |
+| --- | --- |
+| `POSTGRES_PASSWORD` | PostgreSQL superuser password used by the stack and Prisma migrations. |
+| `DATABASE_URL` / `DATABASE_DIRECT_URL` | Optional explicit URLs (only needed if you override the defaults; both include credentials so keep them secret). |
+| `RABBITMQ_PASSWORD` | RabbitMQ user password. |
+| `RABBITMQ_URL` | AMQP connection string (if overriding the default that derives from host/user/password). |
+| `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` | Object storage credentials required by the API and bootstrap step. |
+| `JWT_ACCESS_TOKEN_SECRET` / `JWT_REFRESH_TOKEN_SECRET` | Secrets that sign and verify JWTs. |
+| `OTP_SENDER_API_KEY` | API key for the external OTP provider (leave blank if you do not dispatch OTPs externally). |
+| `NEXT_PUBLIC_ANALYTICS_WRITE_KEY` | Treat as secret if your analytics vendor forbids public exposure. |
+| Any other third-party tokens (e.g., `OTEL_EXPORTER_OTLP_HEADERS`, extra webhook URLs, etc.). |
+
+All of these values are read by `docker-compose-prod.yml` at deploy time. The deploy workflow should export them with something like:
+
+```yaml
+env:
+  API_IMAGE: ${{ vars.API_IMAGE }}
+  API_IMAGE_TAG: ${{ vars.API_IMAGE_TAG }}
+  POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+
+run: |
+  docker stack deploy -c docker-compose-prod.yml my-ads --with-registry-auth
+```
+
+---
+
 ## Interacting with the API
 
 - **Health:** `GET /public/health` (no prefix) — returns status + dependency map.

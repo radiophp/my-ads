@@ -158,6 +158,75 @@ services:
         constraints:
           - node.role == worker
 
+  api-cron:
+    image: "${API_IMAGE:-ghcr.io/toncloud/my-ads-api}:${API_IMAGE_TAG:-latest}"
+    command:
+      [
+        "node",
+        "dist/scripts/run-cron-scheduler.js"
+      ]
+    environment:
+      NODE_ENV: production
+      ENABLE_CRON_JOBS: 'true'
+      APP_HOST: 0.0.0.0
+      APP_PORT: ${APP_PORT:-6300}
+      APP_GLOBAL_PREFIX: ${APP_GLOBAL_PREFIX:-api}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-my_ads}?schema=public}
+      DATABASE_DIRECT_URL: ${DATABASE_DIRECT_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-my_ads}?schema=public}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_DB: ${REDIS_DB:-0}
+      REDIS_TLS: ${REDIS_TLS:-false}
+      REDIS_KEY_PREFIX: ${REDIS_KEY_PREFIX:-my-ads:}
+      JWT_ACCESS_TOKEN_SECRET: ${JWT_ACCESS_TOKEN_SECRET:?JWT_ACCESS_TOKEN_SECRET not set}
+      JWT_REFRESH_TOKEN_SECRET: ${JWT_REFRESH_TOKEN_SECRET:?JWT_REFRESH_TOKEN_SECRET not set}
+      JWT_ACCESS_TOKEN_TTL: ${JWT_ACCESS_TOKEN_TTL:-900s}
+      JWT_REFRESH_TOKEN_TTL: ${JWT_REFRESH_TOKEN_TTL:-7d}
+      CORS_ORIGIN: ${CORS_ORIGIN:-https://mahan.toncloud.observer}
+      RATE_LIMIT_TTL: ${RATE_LIMIT_TTL:-60}
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-100}
+      OTP_TTL_SECONDS: ${OTP_TTL_SECONDS:-300}
+      OTP_DIGITS: ${OTP_DIGITS:-6}
+      OTP_SENDER_BASE_URL: ${OTP_SENDER_BASE_URL:-}
+      OTP_SENDER_API_KEY: ${OTP_SENDER_API_KEY:-}
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://${RABBITMQ_USERNAME:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672}
+      RABBITMQ_QUEUE_PREFIX: ${RABBITMQ_QUEUE_PREFIX:-my-ads}
+      RABBITMQ_PREFETCH: ${RABBITMQ_PREFETCH:-10}
+      RABBITMQ_HEARTBEAT: ${RABBITMQ_HEARTBEAT:-60}
+      RABBITMQ_RECONNECT_SECONDS: ${RABBITMQ_RECONNECT_SECONDS:-5}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT:-minio}
+      MINIO_PORT: ${MINIO_PORT:-9000}
+      MINIO_CONSOLE_PORT: ${MINIO_CONSOLE_PORT:-9001}
+      MINIO_USE_SSL: ${MINIO_USE_SSL:-false}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:?MINIO_ACCESS_KEY not set}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:?MINIO_SECRET_KEY not set}
+      MINIO_BUCKET: ${MINIO_BUCKET:-upload}
+      MINIO_REGION: ${MINIO_REGION:-us-east-1}
+      OTEL_ENABLED: ${OTEL_ENABLED:-false}
+      OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-my-ads-api}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otel-collector:4318}
+      OTEL_EXPORTER_OTLP_HEADERS: ${OTEL_EXPORTER_OTLP_HEADERS:-}
+      OTEL_LOG_LEVEL: ${OTEL_LOG_LEVEL:-error}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      LOG_PRETTY: ${LOG_PRETTY:-false}
+      PRISMA_LOG_QUERIES: ${PRISMA_LOG_QUERIES:-false}
+      NEXT_UI_PORT: ${NEXT_UI_PORT:-6005}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://mahan.toncloud.observer}
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-https://mahan.toncloud.observer/api}
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+      - minio
+    networks:
+      - app_net
+    deploy:
+      <<: *deploy_defaults
+      replicas: ${API_CRON_REPLICAS:-1}
+      placement:
+        constraints:
+          - node.role == worker
+
   ui:
     image: "${UI_IMAGE:-ghcr.io/toncloud/my-ads-ui}:${UI_IMAGE_TAG:-latest}"
     environment:

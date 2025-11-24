@@ -347,6 +347,11 @@ Environment variables not listed above are either optional feature toggles or in
 2. Export the required environment variables (usually sourced from GitHub Actions variables and secrets).
 3. Run `docker stack deploy -c docker-compose-prod.yml my-ads --with-registry-auth` on the Swarm manager node.
 
+The stack runs **two API-related services**:
+
+- `api` – the primary NestJS HTTP service that serves requests.
+- `api-cron` – a lightweight replica of the same container that executes `node dist/scripts/run-cron-scheduler.js` with `ENABLE_CRON_JOBS=true`. This process is isolated from the HTTP pods so scheduled jobs keep running even when you scale the API instances or deploy rolling updates.
+
 ### GitHub Actions variables (safe to expose)
 
 | Name | Description |
@@ -366,7 +371,7 @@ Environment variables not listed above are either optional feature toggles or in
 | `NEXT_UI_PORT` | Published Next.js port (defaults to `6005`). |
 | `NEXT_PUBLIC_APP_URL` | Public URL that the UI should advertise (e.g., `https://mahan.toncloud.observer`). |
 | `NEXT_PUBLIC_API_BASE_URL` | Public API base URL (usually `${NEXT_PUBLIC_APP_URL}/api`). |
-| `API_REPLICAS` / `UI_REPLICAS` | Desired replica counts for each service (Swarm will scale them). |
+| `API_REPLICAS` / `UI_REPLICAS` / `API_CRON_REPLICAS` | Desired replica counts for each service (Swarm will scale them). |
 | `RATE_LIMIT_TTL` / `RATE_LIMIT_MAX` | Optional overrides for the API rate limiter. |
 | `OTP_TTL_SECONDS` / `OTP_DIGITS` / `OTP_SENDER_BASE_URL` | OTP delivery configuration (non-secret pieces). |
 | `OTEL_ENABLED` / `OTEL_EXPORTER_OTLP_ENDPOINT` / `LOG_LEVEL` / `LOG_PRETTY` / `PRISMA_LOG_QUERIES` | Observability/logging toggles. |

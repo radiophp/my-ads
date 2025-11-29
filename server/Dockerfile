@@ -19,10 +19,9 @@ FROM base AS production
 WORKDIR /app
 ENV NODE_ENV=production
 COPY package.json package-lock.json* ./
-# Disable Husky hooks inside the container; only required for local dev environments.
-RUN HUSKY=0 npm install --omit=dev
+COPY --from=builder /app/node_modules ./node_modules
+RUN npm prune --omit=dev
 COPY prisma ./prisma
-RUN npm run prisma:generate
 COPY --from=builder /app/dist ./dist
 EXPOSE 6200
 CMD ["node", "dist/main.js"]

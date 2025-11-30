@@ -277,3 +277,130 @@ jobs:
           tags: |
             ghcr.io/${{ steps.vars.outputs.owner }}/my-ads-ui:${{ github.sha }}
             ghcr.io/${{ steps.vars.outputs.owner }}/my-ads-ui:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: publish-images
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+    env:
+      DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+      DEPLOY_PORT: ${{ vars.DEPLOY_PORT || '22' }}
+      DEPLOY_USER: ${{ vars.DEPLOY_USER }}
+      STACK_NAME: ${{ vars.DEPLOY_STACK_NAME || 'my-ads' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Validate deployment configuration
+        env:
+          DEPLOY_HOST: ${{ env.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ env.DEPLOY_PORT }}
+          DEPLOY_USER: ${{ env.DEPLOY_USER }}
+          STACK_NAME: ${{ env.STACK_NAME }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          MINIO_ACCESS_KEY: ${{ secrets.MINIO_ACCESS_KEY }}
+          MINIO_SECRET_KEY: ${{ secrets.MINIO_SECRET_KEY }}
+          JWT_ACCESS_TOKEN_SECRET: ${{ secrets.JWT_ACCESS_TOKEN_SECRET }}
+          JWT_REFRESH_TOKEN_SECRET: ${{ secrets.JWT_REFRESH_TOKEN_SECRET }}
+          RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
+        run: |
+          required_vars=(DEPLOY_HOST DEPLOY_PORT DEPLOY_USER STACK_NAME DEPLOY_SSH_KEY DEPLOY_KNOWN_HOSTS GHCR_TOKEN POSTGRES_PASSWORD MINIO_ACCESS_KEY MINIO_SECRET_KEY JWT_ACCESS_TOKEN_SECRET JWT_REFRESH_TOKEN_SECRET RABBITMQ_PASSWORD)
+          missing=0
+          for name in "${required_vars[@]}"; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing required deployment setting: ${name}"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Configure SSH key
+        run: |
+          install -m 600 -D /dev/null ~/.ssh/id_rsa
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_rsa
+          printf '%s\n' "${{ secrets.DEPLOY_KNOWN_HOSTS }}" >> ~/.ssh/known_hosts
+
+      - name: Configure remote Docker host
+        run: echo "DOCKER_HOST=ssh://${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PORT}" >> "$GITHUB_ENV"
+
+      - name: Verify Docker connectivity
+        run: docker info
+
+      - name: Log in to GitHub Container Registry (remote)
+        env:
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME || github.repository_owner }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+        run: |
+          if [ -z "$GHCR_TOKEN" ]; then
+            echo "GHCR_TOKEN secret is required for deployment" >&2
+            exit 1
+          fi
+          echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
+
+      - name: Pull latest images on the swarm manager
+        run: |
+          docker pull ghcr.io/radiophp/my-ads-api:latest
+          docker pull ghcr.io/radiophp/my-ads-ui:latest
+
+      - name: Deploy stack
+        env:
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          MINIO_ACCESS_KEY: ${{ secrets.MINIO_ACCESS_KEY }}
+          MINIO_SECRET_KEY: ${{ secrets.MINIO_SECRET_KEY }}
+          JWT_ACCESS_TOKEN_SECRET: ${{ secrets.JWT_ACCESS_TOKEN_SECRET }}
+          JWT_REFRESH_TOKEN_SECRET: ${{ secrets.JWT_REFRESH_TOKEN_SECRET }}
+          RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_DIRECT_URL: ${{ secrets.DATABASE_DIRECT_URL }}
+          OTP_SENDER_API_KEY: ${{ secrets.OTP_SENDER_API_KEY }}
+          NEXT_PUBLIC_ANALYTICS_WRITE_KEY: ${{ secrets.NEXT_PUBLIC_ANALYTICS_WRITE_KEY }}
+          OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
+          APP_PORT: ${{ vars.APP_PORT }}
+          APP_GLOBAL_PREFIX: ${{ vars.APP_GLOBAL_PREFIX }}
+          POSTGRES_DB: ${{ vars.POSTGRES_DB }}
+          POSTGRES_USER: ${{ vars.POSTGRES_USER }}
+          POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}
+          REDIS_HOST: ${{ vars.REDIS_HOST }}
+          REDIS_PORT: ${{ vars.REDIS_PORT }}
+          REDIS_DB: ${{ vars.REDIS_DB }}
+          REDIS_TLS: ${{ vars.REDIS_TLS }}
+          REDIS_KEY_PREFIX: ${{ vars.REDIS_KEY_PREFIX }}
+          RABBITMQ_USERNAME: ${{ vars.RABBITMQ_USERNAME }}
+          RABBITMQ_QUEUE_PREFIX: ${{ vars.RABBITMQ_QUEUE_PREFIX }}
+          RABBITMQ_PREFETCH: ${{ vars.RABBITMQ_PREFETCH }}
+          RABBITMQ_HEARTBEAT: ${{ vars.RABBITMQ_HEARTBEAT }}
+          RABBITMQ_RECONNECT_SECONDS: ${{ vars.RABBITMQ_RECONNECT_SECONDS }}
+          MINIO_ENDPOINT: ${{ vars.MINIO_ENDPOINT }}
+          MINIO_PORT: ${{ vars.MINIO_PORT }}
+          MINIO_CONSOLE_PORT: ${{ vars.MINIO_CONSOLE_PORT }}
+          MINIO_USE_SSL: ${{ vars.MINIO_USE_SSL }}
+          MINIO_BUCKET: ${{ vars.MINIO_BUCKET }}
+          MINIO_REGION: ${{ vars.MINIO_REGION }}
+          CORS_ORIGIN: ${{ vars.CORS_ORIGIN }}
+          RATE_LIMIT_TTL: ${{ vars.RATE_LIMIT_TTL }}
+          RATE_LIMIT_MAX: ${{ vars.RATE_LIMIT_MAX }}
+          OTP_TTL_SECONDS: ${{ vars.OTP_TTL_SECONDS }}
+          OTP_DIGITS: ${{ vars.OTP_DIGITS }}
+          OTP_SENDER_BASE_URL: ${{ vars.OTP_SENDER_BASE_URL }}
+          RABBITMQ_URL: ${{ vars.RABBITMQ_URL }}
+          OTEL_ENABLED: ${{ vars.OTEL_ENABLED }}
+          OTEL_SERVICE_NAME: ${{ vars.OTEL_SERVICE_NAME }}
+          OTEL_EXPORTER_OTLP_ENDPOINT: ${{ vars.OTEL_EXPORTER_OTLP_ENDPOINT }}
+          OTEL_LOG_LEVEL: ${{ vars.OTEL_LOG_LEVEL }}
+          LOG_LEVEL: ${{ vars.LOG_LEVEL }}
+          LOG_PRETTY: ${{ vars.LOG_PRETTY }}
+          PRISMA_LOG_QUERIES: ${{ vars.PRISMA_LOG_QUERIES }}
+          NEXT_UI_PORT: ${{ vars.NEXT_UI_PORT }}
+          NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
+          NEXT_PUBLIC_API_BASE_URL: ${{ vars.NEXT_PUBLIC_API_BASE_URL }}
+          API_REPLICAS: ${{ vars.API_REPLICAS }}
+          API_CRON_REPLICAS: ${{ vars.API_CRON_REPLICAS }}
+          UI_REPLICAS: ${{ vars.UI_REPLICAS }}
+        run: docker stack deploy -c docker-compose-prod.yml "$STACK_NAME" --with-registry-auth

@@ -91,7 +91,7 @@ services:
       replicas: 1
 
   api:
-    image: "${API_IMAGE:-ghcr.io/radiophp/my-ads-api}:${API_IMAGE_TAG:-latest}"
+    image: ghcr.io/radiophp/my-ads-api:latest
     environment:
       NODE_ENV: production
       APP_HOST: 0.0.0.0
@@ -159,7 +159,7 @@ services:
           - node.role == worker
 
   api-cron:
-    image: "${API_IMAGE:-ghcr.io/radiophp/my-ads-api}:${API_IMAGE_TAG:-latest}"
+    image: ghcr.io/radiophp/my-ads-api:latest
     command:
       [
         "node",
@@ -228,7 +228,7 @@ services:
           - node.role == worker
 
   ui:
-    image: "${UI_IMAGE:-ghcr.io/radiophp/my-ads-ui}:${UI_IMAGE_TAG:-latest}"
+    image: ghcr.io/radiophp/my-ads-ui:latest
     environment:
       NODE_ENV: production
       NEXT_UI_PORT: ${NEXT_UI_PORT:-6005}

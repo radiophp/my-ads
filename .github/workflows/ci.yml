@@ -300,7 +300,6 @@ jobs:
           DEPLOY_USER: ${{ env.DEPLOY_USER }}
           STACK_NAME: ${{ env.STACK_NAME }}
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
           GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           MINIO_ACCESS_KEY: ${{ secrets.MINIO_ACCESS_KEY }}
@@ -309,7 +308,7 @@ jobs:
           JWT_REFRESH_TOKEN_SECRET: ${{ secrets.JWT_REFRESH_TOKEN_SECRET }}
           RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
         run: |
-          required_vars=(DEPLOY_HOST DEPLOY_PORT DEPLOY_USER STACK_NAME DEPLOY_SSH_KEY DEPLOY_KNOWN_HOSTS GHCR_TOKEN POSTGRES_PASSWORD MINIO_ACCESS_KEY MINIO_SECRET_KEY JWT_ACCESS_TOKEN_SECRET JWT_REFRESH_TOKEN_SECRET RABBITMQ_PASSWORD)
+          required_vars=(DEPLOY_HOST DEPLOY_PORT DEPLOY_USER STACK_NAME DEPLOY_SSH_KEY GHCR_TOKEN POSTGRES_PASSWORD MINIO_ACCESS_KEY MINIO_SECRET_KEY JWT_ACCESS_TOKEN_SECRET JWT_REFRESH_TOKEN_SECRET RABBITMQ_PASSWORD)
           missing=0
           for name in "${required_vars[@]}"; do
             if [ -z "${!name}" ]; then
@@ -325,7 +324,13 @@ jobs:
         run: |
           install -m 600 -D /dev/null ~/.ssh/id_rsa
           printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_rsa
-          printf '%s\n' "${{ secrets.DEPLOY_KNOWN_HOSTS }}" >> ~/.ssh/known_hosts
+
+      - name: Add deployment host fingerprint
+        run: |
+          ssh-keyscan -T 10 -p "${DEPLOY_PORT}" "${DEPLOY_HOST}" >> ~/.ssh/known_hosts || {
+            echo "::error::Unable to fetch SSH host key for ${DEPLOY_HOST}:${DEPLOY_PORT}"
+            exit 1
+          }
 
       - name: Configure remote Docker host
         run: echo "DOCKER_HOST=ssh://${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PORT}" >> "$GITHUB_ENV"

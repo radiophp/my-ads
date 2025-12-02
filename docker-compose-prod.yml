@@ -156,7 +156,7 @@ services:
       replicas: ${API_REPLICAS:-2}
       placement:
         constraints:
-          - node.role == worker
+          - node.role == manager
 
   api-cron:
     image: ghcr.io/radiophp/my-ads-api:latest
@@ -225,7 +225,7 @@ services:
       replicas: ${API_CRON_REPLICAS:-1}
       placement:
         constraints:
-          - node.role == worker
+          - node.role == manager
 
   ui:
     image: ghcr.io/radiophp/my-ads-ui:latest
@@ -250,7 +250,7 @@ services:
       replicas: ${UI_REPLICAS:-2}
       placement:
         constraints:
-          - node.role == worker
+          - node.role == manager
 
 networks:
   app_net:

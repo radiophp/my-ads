@@ -70,6 +70,7 @@ export function AdminPackageEditor({ mode, packageId }: AdminPackageEditorProps)
         durationDays: existingPackage.durationDays,
         freeDays: existingPackage.freeDays,
         includedUsers: existingPackage.includedUsers,
+        savedFiltersLimit: existingPackage.savedFiltersLimit,
         actualPrice: Number.parseFloat(existingPackage.actualPrice),
         discountedPrice: Number.parseFloat(existingPackage.discountedPrice),
       });
@@ -83,6 +84,7 @@ export function AdminPackageEditor({ mode, packageId }: AdminPackageEditorProps)
       durationDays: t('form.fields.durationDays'),
       freeDays: t('form.fields.freeDays'),
       includedUsers: t('form.fields.includedUsers'),
+      savedFiltersLimit: t('form.fields.savedFiltersLimit'),
       actualPrice: t('form.fields.actualPrice'),
       discountedPrice: t('form.fields.discountedPrice'),
       submit: isEditing ? t('form.updateSubmit') : t('form.createSubmit'),
@@ -130,6 +132,7 @@ export function AdminPackageEditor({ mode, packageId }: AdminPackageEditorProps)
       durationDays: values.durationDays,
       freeDays: values.freeDays,
       includedUsers: values.includedUsers,
+      savedFiltersLimit: values.savedFiltersLimit,
       actualPrice: values.actualPrice,
       discountedPrice: values.discountedPrice,
     };

@@ -1,9 +1,21 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { skipToken } from '@reduxjs/toolkit/query';
-import { ArrowLeft, Circle, ChevronLeft, ChevronRight, Filter, Folder, Eraser } from 'lucide-react';
+import {
+  ArrowLeft,
+  BookmarkPlus,
+  Circle,
+  ChevronLeft,
+  ChevronRight,
+  Eraser,
+  Filter,
+  Folder,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+} from 'lucide-react';
 
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import {
@@ -18,6 +30,8 @@ import {
   type NoteFilterOption,
   resetSearchFilter,
   searchFilterInitialState,
+  hydrateFromSaved,
+  type SearchFilterState,
 } from '@/features/search-filter/searchFilterSlice';
 import {
   useGetProvincesQuery,
@@ -34,16 +48,43 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import type { DivarCategory } from '@/types/divar-category';
 import { CategoryFiltersPreview } from './category-filters-preview';
 import { useBackButtonClose } from '@/hooks/use-back-button-close';
 import { CategorySelectionModal } from './category-selection-modal';
 import { cn } from '@/lib/utils';
-
+import {
+  useGetSavedFiltersQuery,
+  useCreateSavedFilterMutation,
+  useUpdateSavedFilterMutation,
+  useDeleteSavedFilterMutation,
+} from '@/features/api/apiSlice';
+import type { SavedFilter } from '@/types/saved-filters';
+import { SaveFilterDialog } from '@/components/dashboard/save-filter-dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { useToast } from '@/components/ui/use-toast';
+import { cloneSearchFilterState, mergeSavedFilterState } from '@/features/search-filter/utils';
 const BASE_CATEGORY_SLUG = 'real-estate';
+const DEFAULT_SAVED_FILTER_LIMIT = 5;
 
 export function DashboardSearchFilterPanel() {
   const t = useTranslations('dashboard.filters');
+  const savedFiltersT = useTranslations('dashboard.filters.saved');
   const locale = useLocale();
   const isRTL = ['fa', 'ar', 'he'].includes(locale);
   const dispatch = useAppDispatch();
@@ -98,6 +139,19 @@ export function DashboardSearchFilterPanel() {
     isFetching: ringBinderFetching,
   } = useGetRingBinderFoldersQuery();
   const ringBinderFolders = ringBinderData?.folders ?? [];
+
+  const { toast } = useToast();
+  const {
+    data: savedFiltersData,
+    isLoading: savedFiltersLoading,
+    isFetching: savedFiltersFetching,
+  } = useGetSavedFiltersQuery();
+  const [createSavedFilter, { isLoading: isCreatingSavedFilter }] = useCreateSavedFilterMutation();
+  const [updateSavedFilter, { isLoading: isUpdatingSavedFilter }] = useUpdateSavedFilterMutation();
+  const [deleteSavedFilter, { isLoading: isDeletingSavedFilter }] = useDeleteSavedFilterMutation();
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [renameTarget, setRenameTarget] = useState<SavedFilter | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<SavedFilter | null>(null);
 
   const [provinceDialogOpen, setProvinceDialogOpen] = useState(false);
   const [cityDialogOpen, setCityDialogOpen] = useState(false);
@@ -619,6 +673,117 @@ export function DashboardSearchFilterPanel() {
     noteFilter,
   ]);
 
+  const currentFilterState = useMemo<SearchFilterState>(
+    () => ({
+      provinceId,
+      citySelection,
+      districtSelection,
+      categorySelection,
+      categoryFilters,
+      ringBinderFolderId,
+      noteFilter,
+    }),
+    [
+      provinceId,
+      citySelection,
+      districtSelection,
+      categorySelection,
+      categoryFilters,
+      ringBinderFolderId,
+      noteFilter,
+    ],
+  );
+
+  const savedFilters = savedFiltersData?.filters ?? [];
+  const savedFiltersLimit = savedFiltersData?.limit ?? DEFAULT_SAVED_FILTER_LIMIT;
+  const savedFiltersRemaining =
+    savedFiltersData?.remaining ?? Math.max(savedFiltersLimit - savedFilters.length, 0);
+  const savedFiltersBusy = savedFiltersLoading || savedFiltersFetching;
+  const saveLimitReached = savedFiltersRemaining <= 0;
+  const totalSavedFilters = savedFilters.length;
+
+  const handleApplySavedFilter = useCallback(
+    (filter: SavedFilter) => {
+      const normalized = mergeSavedFilterState(filter.payload);
+      dispatch(hydrateFromSaved(normalized));
+      toast({
+        title: savedFiltersT('toast.appliedTitle'),
+        description: savedFiltersT('toast.appliedDescription', { name: filter.name }),
+      });
+      if (filterModalOpen) {
+        setFilterModalOpen(false);
+      }
+    },
+    [dispatch, filterModalOpen, savedFiltersT, toast],
+  );
+
+  const handleSaveFilter = useCallback(
+    async (name: string) => {
+      try {
+        const payload = cloneSearchFilterState(currentFilterState);
+        await createSavedFilter({ name, payload }).unwrap();
+        toast({
+          title: savedFiltersT('toast.savedTitle'),
+          description: savedFiltersT('toast.savedDescription'),
+        });
+        setSaveDialogOpen(false);
+      } catch (error) {
+        console.error('Failed to save filter', error);
+        toast({
+          title: savedFiltersT('toast.errorTitle'),
+          description: savedFiltersT('toast.errorDescription'),
+          variant: 'destructive',
+        });
+      }
+    },
+    [createSavedFilter, currentFilterState, savedFiltersT, toast],
+  );
+
+  const handleRenameFilter = useCallback(
+    async (name: string) => {
+      if (!renameTarget) {
+        return;
+      }
+      try {
+        await updateSavedFilter({ id: renameTarget.id, body: { name } }).unwrap();
+        toast({
+          title: savedFiltersT('toast.renamedTitle'),
+          description: savedFiltersT('toast.renamedDescription', { name }),
+        });
+        setRenameTarget(null);
+      } catch (error) {
+        console.error('Failed to rename filter', error);
+        toast({
+          title: savedFiltersT('toast.errorTitle'),
+          description: savedFiltersT('toast.errorDescription'),
+          variant: 'destructive',
+        });
+      }
+    },
+    [renameTarget, updateSavedFilter, savedFiltersT, toast],
+  );
+
+  const handleDeleteFilter = useCallback(async () => {
+    if (!deleteTarget) {
+      return;
+    }
+    try {
+      await deleteSavedFilter(deleteTarget.id).unwrap();
+      toast({
+        title: savedFiltersT('toast.deletedTitle'),
+        description: savedFiltersT('toast.deletedDescription', { name: deleteTarget.name }),
+      });
+      setDeleteTarget(null);
+    } catch (error) {
+      console.error('Failed to delete saved filter', error);
+      toast({
+        title: savedFiltersT('toast.errorTitle'),
+        description: savedFiltersT('toast.errorDescription'),
+        variant: 'destructive',
+      });
+    }
+  }, [deleteSavedFilter, deleteTarget, savedFiltersT, toast]);
+
   return (
     <>
       <div
@@ -629,30 +794,51 @@ export function DashboardSearchFilterPanel() {
             : 'pointer-events-none fixed bottom-4 left-4 z-40 drop-shadow-lg md:bottom-20 md:left-1/2 md:-translate-x-1/2 md:drop-shadow-2xl',
         )}
       >
-        <Button
-          type="button"
-          variant={hasActiveFilters ? 'default' : 'secondary'}
-          className={cn(
-            'pointer-events-auto rounded-full px-4 py-2',
-            hasActiveFilters ? 'shadow-lg' : 'shadow',
-            'md:gap-4 md:px-14 md:py-7 md:text-xl',
-          )}
-          onClick={() => setFilterModalOpen(true)}
-        >
-          <span className="flex items-center justify-center gap-2">
-            {isRTL ? (
-              <>
-                <span>{hasActiveFilters ? t('editFilters') : t('title')}</span>
-                <Filter className="size-4" />
-              </>
-            ) : (
-              <>
-                <Filter className="size-4" />
-                <span>{hasActiveFilters ? t('editFilters') : t('title')}</span>
-              </>
+        <div className="pointer-events-auto flex flex-col gap-3 md:flex-row">
+          <Button
+            type="button"
+            variant={hasActiveFilters ? 'default' : 'secondary'}
+            className={cn(
+              'rounded-full px-4 py-2',
+              hasActiveFilters ? 'shadow-lg' : 'shadow',
+              'md:gap-4 md:px-14 md:py-7 md:text-xl',
             )}
-          </span>
-        </Button>
+            onClick={() => setFilterModalOpen(true)}
+          >
+            <span className="flex items-center justify-center gap-2">
+              {isRTL ? (
+                <>
+                  <span>{hasActiveFilters ? t('editFilters') : t('title')}</span>
+                  <Filter className="size-4" />
+                </>
+              ) : (
+                <>
+                  <Filter className="size-4" />
+                  <span>{hasActiveFilters ? t('editFilters') : t('title')}</span>
+                </>
+              )}
+            </span>
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            className="rounded-full px-4 py-2 shadow"
+            disabled={!hasActiveFilters || saveLimitReached || isCreatingSavedFilter}
+            onClick={() => setSaveDialogOpen(true)}
+            title={
+              !hasActiveFilters
+                ? savedFiltersT('disabled.noFilters')
+                : saveLimitReached
+                  ? savedFiltersT('disabled.limitReached')
+                  : undefined
+            }
+          >
+            <span className="flex items-center justify-center gap-2">
+              <BookmarkPlus className="size-4" />
+              <span>{savedFiltersT('saveButton')}</span>
+            </span>
+          </Button>
+        </div>
       </div>
       {filterModalOpen ? (
         <button
@@ -700,6 +886,117 @@ export function DashboardSearchFilterPanel() {
               </Button>
             </div>
           ) : null}
+          <div className="rounded-2xl border border-dashed border-border/60 bg-muted/40 px-4 py-5">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-foreground">{savedFiltersT('title')}</p>
+                <p className="text-xs text-muted-foreground">
+                  {savedFiltersT('usage', { count: totalSavedFilters, limit: savedFiltersLimit })}
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="justify-center border-border/70 text-foreground transition-colors hover:border-border hover:bg-background"
+                onClick={() => setSaveDialogOpen(true)}
+                disabled={!hasActiveFilters || saveLimitReached || isCreatingSavedFilter}
+                title={
+                  !hasActiveFilters
+                    ? savedFiltersT('disabled.noFilters')
+                    : saveLimitReached
+                      ? savedFiltersT('disabled.limitReached')
+                      : undefined
+                }
+              >
+                <BookmarkPlus className="mr-2 size-4" />
+                {savedFiltersT('saveButton')}
+              </Button>
+            </div>
+            <div className="mt-4">
+              {savedFiltersBusy ? (
+                <ul className="space-y-3">
+                  {Array.from({ length: 2 }).map((_, index) => (
+                    <li
+                      // eslint-disable-next-line react/no-array-index-key
+                      key={index}
+                      className="animate-pulse rounded-xl border border-border/50 bg-background/80 px-4 py-3"
+                    >
+                      <div className="h-4 w-1/2 rounded bg-muted" />
+                      <div className="mt-2 h-3 w-1/3 rounded bg-muted" />
+                    </li>
+                  ))}
+                </ul>
+              ) : savedFilters.length === 0 ? (
+                <p className="text-sm text-muted-foreground">{savedFiltersT('empty')}</p>
+              ) : (
+                <ul className="space-y-3">
+                  {savedFilters.map((filter) => (
+                    <li
+                      key={filter.id}
+                      className="flex items-center justify-between gap-3 rounded-2xl border border-border/70 bg-background px-4 py-3"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-foreground">{filter.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {savedFiltersT('lastUpdated', {
+                            value: new Date(filter.updatedAt).toLocaleString(locale, {
+                              dateStyle: 'medium',
+                              timeStyle: 'short',
+                            }),
+                          })}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => handleApplySavedFilter(filter)}
+                        >
+                          {savedFiltersT('apply')}
+                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              aria-label={savedFiltersT('menuLabel')}
+                            >
+                              <MoreHorizontal className="size-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onSelect={(event) => {
+                                event.preventDefault();
+                                setRenameTarget(filter);
+                              }}
+                            >
+                              <Pencil className="mr-2 size-4" />
+                              {savedFiltersT('rename')}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-destructive focus:text-destructive"
+                              onSelect={(event) => {
+                                event.preventDefault();
+                                setDeleteTarget(filter);
+                              }}
+                            >
+                              <Trash2 className="mr-2 size-4" />
+                              {savedFiltersT('delete')}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
         <div className="space-y-2">
           <label className="block text-sm font-medium text-foreground">
             {t('ringBinder.label')}
@@ -1199,6 +1496,59 @@ export function DashboardSearchFilterPanel() {
         }
         t={t}
       />
+      <SaveFilterDialog
+        open={saveDialogOpen}
+        onOpenChange={setSaveDialogOpen}
+        title={savedFiltersT('dialog.saveTitle')}
+        description={savedFiltersT('dialog.saveDescription')}
+        placeholder={savedFiltersT('dialog.namePlaceholder')}
+        submitLabel={savedFiltersT('dialog.saveAction')}
+        cancelLabel={savedFiltersT('dialog.cancel')}
+        loading={isCreatingSavedFilter}
+        defaultName=""
+        onSubmit={handleSaveFilter}
+      />
+      <SaveFilterDialog
+        open={Boolean(renameTarget)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setRenameTarget(null);
+          }
+        }}
+        title={savedFiltersT('dialog.renameTitle')}
+        description={savedFiltersT('dialog.renameDescription')}
+        placeholder={savedFiltersT('dialog.namePlaceholder')}
+        submitLabel={savedFiltersT('dialog.renameAction')}
+        cancelLabel={savedFiltersT('dialog.cancel')}
+        loading={isUpdatingSavedFilter}
+        defaultName={renameTarget?.name ?? ''}
+        onSubmit={handleRenameFilter}
+      />
+      <AlertDialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteTarget(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{savedFiltersT('dialog.deleteTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {savedFiltersT('dialog.deleteDescription', { name: deleteTarget?.name ?? '' })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeletingSavedFilter}>
+              {savedFiltersT('dialog.cancel')}
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={() => void handleDeleteFilter()} disabled={isDeletingSavedFilter}>
+              {savedFiltersT('dialog.deleteAction')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

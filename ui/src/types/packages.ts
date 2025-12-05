@@ -6,6 +6,7 @@ export type SubscriptionPackage = {
   durationDays: number;
   freeDays: number;
   includedUsers: number;
+  savedFiltersLimit: number;
   actualPrice: string;
   discountedPrice: string;
   isActive: boolean;
@@ -20,6 +21,7 @@ export type CreatePackagePayload = {
   durationDays: number;
   freeDays: number;
   includedUsers: number;
+  savedFiltersLimit?: number;
   actualPrice: number;
   discountedPrice: number;
   isActive?: boolean;

@@ -47,6 +47,12 @@ export class CreatePackageDto {
   includedUsers!: number;
 
   @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  savedFiltersLimit?: number;
+
+  @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   actualPrice!: number;

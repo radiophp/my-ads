@@ -129,6 +129,9 @@ const searchFilterSlice = createSlice({
       delete state.categoryFilters[slug];
     },
     resetSearchFilter: () => initialState,
+    hydrateFromSaved: (_state, action: PayloadAction<SearchFilterState>) => ({
+      ...action.payload,
+    }),
   },
 });
 
@@ -144,6 +147,7 @@ export const {
   setRingBinderFolder,
   setNoteFilter,
   resetSearchFilter,
+  hydrateFromSaved,
 } = searchFilterSlice.actions;
 
 export default searchFilterSlice.reducer;

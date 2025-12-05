@@ -9,6 +9,7 @@
     "nav": {
       "dashboard": "Dashboard",
       "ringBinder": "Ring binder",
+      "savedFilters": "Saved filters",
       "admin": "Admin",
       "guides": "Guides"
     },
@@ -163,21 +164,61 @@
     "title": "Dashboard",
     "subtitle": "Your personalized workspace will land here soon.",
     "filters": {
-    "title": "Search filters",
-    "ringBinder": {
-      "label": "Ring binder",
-      "all": "All posts",
-      "loading": "Loading folders…",
-      "empty": "Create a folder in your ring binder to filter saved posts."
-    },
-    "noteFilter": {
-      "label": "Notes",
-      "options": {
+      "title": "Search filters",
+      "ringBinder": {
+        "label": "Ring binder",
         "all": "All posts",
-        "has": "Has note",
-        "none": "No note"
-      }
-    },
+        "loading": "Loading folders…",
+        "empty": "Create a folder in your ring binder to filter saved posts."
+      },
+      "noteFilter": {
+        "label": "Notes",
+        "options": {
+          "all": "All posts",
+          "has": "Has note",
+          "none": "No note"
+        }
+      },
+      "saved": {
+        "title": "Saved filter sets",
+        "usage": "{count} / {limit} sets used",
+        "saveButton": "Save filter set",
+        "empty": "No saved filter sets yet.",
+        "apply": "Apply",
+        "rename": "Rename",
+        "delete": "Delete",
+        "menuLabel": "Open actions",
+        "lastUpdated": "Updated {value}",
+        "disabled": {
+          "noFilters": "Adjust filters before saving.",
+          "limitReached": "You reached the saved filter-set limit."
+        },
+        "dialog": {
+          "saveTitle": "Save current filters",
+          "saveDescription": "Name this filter set so you can reuse it later.",
+          "renameTitle": "Rename saved filter set",
+          "renameDescription": "Update the label shown in your saved filter list.",
+          "deleteTitle": "Delete saved filter set",
+          "deleteDescription": "Are you sure you want to remove “{name}”? This action can’t be undone.",
+          "namePlaceholder": "e.g., Tehran > Apartments",
+          "saveAction": "Save filter set",
+          "renameAction": "Save changes",
+          "deleteAction": "Delete",
+          "cancel": "Cancel"
+        },
+        "toast": {
+          "savedTitle": "Filter set saved",
+          "savedDescription": "We’ll keep this configuration ready for next time.",
+          "appliedTitle": "Filter set applied",
+          "appliedDescription": "Loaded “{name}”.",
+          "renamedTitle": "Filter set renamed",
+          "renamedDescription": "“{name}” was updated.",
+          "deletedTitle": "Filter set removed",
+          "deletedDescription": "“{name}” was deleted.",
+          "errorTitle": "Something went wrong",
+          "errorDescription": "Please try again."
+        }
+      },
       "provinceLabel": "Province",
       "provinceAll": "All provinces",
       "provinceButtonSelect": "Select province",
@@ -249,6 +290,32 @@
           "from": "Min",
           "to": "Max"
         }
+      }
+    },
+    "savedFiltersPage": {
+      "badge": "Saved filter sets",
+      "title": "Your saved filter sets",
+      "description": "Reuse your favourite searches by saving their filters. Delete sets you no longer need.",
+      "summary": "{count, plural, one {# saved filter set} other {# saved filter sets}} • limit {limit}, {remaining} remaining",
+      "refresh": "Refresh list",
+      "refreshing": "Refreshing…",
+      "emptyTitle": "No saved filter sets yet",
+      "emptyDescription": "Apply filters from the dashboard and tap “Save filter set” to keep them here.",
+      "item": {
+        "updated": "Updated {value}",
+        "delete": "Delete"
+      },
+      "dialog": {
+        "title": "Delete saved filter set",
+        "description": "This will remove “{name}”. You’ll need to save it again to restore it.",
+        "confirm": "Delete",
+        "cancel": "Cancel"
+      },
+      "toast": {
+        "deletedTitle": "Filter set removed",
+        "deletedDescription": "“{name}” was deleted.",
+        "errorTitle": "Something went wrong",
+        "errorDescription": "Please try again."
       }
     },
     "posts": {
@@ -611,12 +678,13 @@
         "fields": {
           "title": "Package title",
           "description": "Description",
-          "durationDays": "Duration (days)",
-          "freeDays": "Bonus days",
-          "includedUsers": "Included users",
-          "actualPrice": "List price",
-          "discountedPrice": "Discounted price"
-        },
+        "durationDays": "Duration (days)",
+        "freeDays": "Bonus days",
+        "includedUsers": "Included users",
+        "savedFiltersLimit": "Saved filters limit",
+        "actualPrice": "List price",
+        "discountedPrice": "Discounted price"
+      },
         "createSubmit": "Save package",
         "updateSubmit": "Update package",
         "cancel": "Cancel",
@@ -638,12 +706,13 @@
         "searchEmpty": "No packages match your search.",
         "columns": {
           "package": "Package",
-          "duration": "Duration",
-          "users": "Users",
-          "pricing": "Pricing",
-          "status": "Status",
-          "actions": "Actions"
-        },
+        "duration": "Duration",
+        "users": "Users",
+        "pricing": "Pricing",
+        "savedFilters": "Saved filters",
+        "status": "Status",
+        "actions": "Actions"
+      },
         "add": "Add package",
         "loading": "Loading packages…",
         "empty": "No packages defined yet. Create the first package above.",
@@ -679,6 +748,8 @@
         "freeDaysMin": "Bonus days cannot be negative.",
         "includedUsersInteger": "Included users must be a whole number.",
         "includedUsersMin": "Include at least 1 user.",
+        "savedFiltersInteger": "Saved filters limit must be a whole number.",
+        "savedFiltersMin": "Allow at least 1 saved filter.",
         "actualPriceMin": "List price cannot be negative.",
         "discountedPriceMin": "Discounted price cannot be negative.",
         "discountedPriceLteActual": "Discounted price cannot be higher than the list price."
@@ -812,8 +883,11 @@
     "openAppButton": "Open app"
   },
   "offline": {
+    "label": "Connection lost",
     "title": "You are offline",
-    "description": "No worries—continue exploring cached content or reconnect to refresh the latest data."
+    "description": "We couldn’t reach the internet. Your workspace needs a live connection to load the latest data.",
+    "hint": "Check Wi-Fi or mobile data and make sure airplane mode is turned off.",
+    "action": "Once you’re online again, refresh this page to continue using the app."
   },
   "footer": {
     "privacy": "Privacy",

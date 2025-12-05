@@ -26,6 +26,14 @@ import type {
   RingBinderFolderListResponse,
   PostSavedFoldersResponse,
 } from '@/types/ring-binder';
+import type {
+  SavedFilter,
+  SavedFilterCreateResponse,
+  SavedFilterDeleteResponse,
+  SavedFiltersResponse,
+  CreateSavedFilterPayload,
+  UpdateSavedFilterPayload,
+} from '@/types/saved-filters';
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:6200/api';
 
@@ -123,6 +131,7 @@ export const apiSlice = createApi({
     'PostsToAnalyze',
     'DivarPosts',
     'RingBinderFolders',
+    'SavedFilters',
   ],
   endpoints: (builder) => ({
     getHealth: builder.query<{ status: string }, void>({
@@ -492,6 +501,45 @@ export const apiSlice = createApi({
         { type: 'RingBinderFolders', id: 'LIST' },
       ],
     }),
+    getSavedFilters: builder.query<SavedFiltersResponse, void>({
+      query: () => '/saved-filters',
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.filters.map((filter) => ({ type: 'SavedFilters' as const, id: filter.id })),
+              { type: 'SavedFilters' as const, id: 'LIST' },
+            ]
+          : [{ type: 'SavedFilters' as const, id: 'LIST' }],
+    }),
+    createSavedFilter: builder.mutation<SavedFilterCreateResponse, CreateSavedFilterPayload>({
+      query: (body) => ({
+        url: '/saved-filters',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [{ type: 'SavedFilters', id: 'LIST' }],
+    }),
+    updateSavedFilter: builder.mutation<SavedFilter, { id: string; body: UpdateSavedFilterPayload }>({
+      query: ({ id, body }) => ({
+        url: `/saved-filters/${id}`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: (result, error, arg) => [
+        { type: 'SavedFilters', id: arg.id },
+        { type: 'SavedFilters', id: 'LIST' },
+      ],
+    }),
+    deleteSavedFilter: builder.mutation<SavedFilterDeleteResponse, string>({
+      query: (id) => ({
+        url: `/saved-filters/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (result, error, id) => [
+        { type: 'SavedFilters', id },
+        { type: 'SavedFilters', id: 'LIST' },
+      ],
+    }),
   }),
 });
 
@@ -535,6 +583,10 @@ export const {
   useUpsertPostNoteMutation,
   useDeletePostNoteMutation,
   useDeleteRingBinderFolderMutation,
+  useGetSavedFiltersQuery,
+  useCreateSavedFilterMutation,
+  useUpdateSavedFilterMutation,
+  useDeleteSavedFilterMutation,
 } = apiSlice;
 
 type UpdateCurrentUserPayload = Partial<{

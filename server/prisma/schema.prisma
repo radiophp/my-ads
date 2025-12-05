@@ -49,6 +49,7 @@ model User {
   updatedAt          DateTime @updatedAt
   ringBinderFolders  RingBinderFolder[]
   postNotes          DivarPostNote[]
+  savedFilters       SavedFilter[]
 
   @@index([cityId])
 }
@@ -307,11 +308,25 @@ model SubscriptionPackage {
   includedUsers   Int      @default(1)
   actualPrice     Decimal  @db.Decimal(12, 2)
   discountedPrice Decimal  @db.Decimal(12, 2)
+  savedFiltersLimit Int    @default(5)
   isActive        Boolean  @default(true)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   @@index([isActive])
+}
+
+model SavedFilter {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  payload   Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, name])
+  @@index([userId, createdAt])
 }
 
 model RingBinderFolder {

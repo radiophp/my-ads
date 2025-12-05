@@ -23,6 +23,7 @@ export type PackageFormTexts = {
   durationDays: string;
   freeDays: string;
   includedUsers: string;
+  savedFiltersLimit: string;
   actualPrice: string;
   discountedPrice: string;
   submit: string;
@@ -125,6 +126,20 @@ export function PackageForm({
             )}
           />
         </div>
+
+        <FormField
+          control={form.control}
+          name="savedFiltersLimit"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{texts.savedFiltersLimit}</FormLabel>
+              <FormControl>
+                <Input {...field} type="number" min={1} inputMode="numeric" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <div className="grid gap-5 md:grid-cols-2">
           <FormField

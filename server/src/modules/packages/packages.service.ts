@@ -43,6 +43,7 @@ export class PackagesService {
         durationDays: dto.durationDays,
         freeDays: dto.freeDays,
         includedUsers: dto.includedUsers,
+        savedFiltersLimit: dto.savedFiltersLimit ?? undefined,
         actualPrice: new Prisma.Decimal(dto.actualPrice),
         discountedPrice: new Prisma.Decimal(dto.discountedPrice),
         isActive: dto.isActive ?? true,
@@ -81,6 +82,9 @@ export class PackagesService {
         ...(typeof dto.durationDays === 'number' ? { durationDays: dto.durationDays } : {}),
         ...(typeof dto.freeDays === 'number' ? { freeDays: dto.freeDays } : {}),
         ...(typeof dto.includedUsers === 'number' ? { includedUsers: dto.includedUsers } : {}),
+        ...(typeof dto.savedFiltersLimit === 'number'
+          ? { savedFiltersLimit: dto.savedFiltersLimit }
+          : {}),
         ...(typeof dto.actualPrice === 'number'
           ? { actualPrice: new Prisma.Decimal(dto.actualPrice) }
           : {}),

@@ -22,7 +22,7 @@ import { clearAuth } from '@/features/auth/authSlice';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import { Menu, X, DownloadCloud, LogOut } from 'lucide-react';
 
-type NavIconKey = 'dashboard' | 'ringBinder' | 'admin';
+type NavIconKey = 'dashboard' | 'ringBinder' | 'savedFilters' | 'admin';
 
 type NavItemConfig = {
   key: string;
@@ -103,6 +103,13 @@ export function SiteHeader() {
       icon: 'ringBinder' as const,
     },
     {
+      key: 'saved-filters',
+      label: t('header.nav.savedFilters'),
+      href: '/dashboard/saved-filters',
+      visible: isAuthenticated,
+      icon: 'savedFilters' as const,
+    },
+    {
       key: 'admin',
       label: t('header.nav.admin'),
       href: '/admin',
@@ -160,6 +167,14 @@ export function SiteHeader() {
               className="hidden rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
             >
               {t('header.nav.ringBinder')}
+            </Link>
+          )}
+          {isAuthenticated && (
+            <Link
+              href="/dashboard/saved-filters"
+              className="hidden rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
+            >
+              {t('header.nav.savedFilters')}
             </Link>
           )}
           {isAuthenticated && auth.user?.role === 'ADMIN' && (
@@ -355,6 +370,21 @@ function MobileNavigationDrawer({
               fill="none"
             />
             <path d="M7 11h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        );
+      case 'savedFilters':
+        return (
+          <svg viewBox="0 0 24 24" className="size-4" aria-hidden>
+            <path
+              d="M5 5h14v14l-7-4-7 4z"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+            <path d="M9 9h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            <path d="M9 12h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>
         );
       default:

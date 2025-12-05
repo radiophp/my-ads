@@ -37,6 +37,7 @@ import { DistrictsModule } from './modules/districts/districts.module';
 import { DivarPostsModule } from './modules/divar-posts/divar-posts.module';
 import schedulerConfig from './platform/config/scheduler.config';
 import { RingBindersModule } from './modules/ring-binders/ring-binders.module';
+import { SavedFiltersModule } from './modules/saved-filters/saved-filters.module';
 
 @Module({
   imports: [
@@ -90,6 +91,7 @@ import { RingBindersModule } from './modules/ring-binders/ring-binders.module';
     DivarCategoriesModule,
     DivarPostsModule,
     RingBindersModule,
+    SavedFiltersModule,
   ],
 })
 export class AppModule {}

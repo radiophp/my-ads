@@ -8,6 +8,7 @@ export class PackageDto {
   durationDays!: number;
   freeDays!: number;
   includedUsers!: number;
+  savedFiltersLimit!: number;
   actualPrice!: string;
   discountedPrice!: string;
   isActive!: boolean;
@@ -23,6 +24,7 @@ export class PackageDto {
       durationDays: entity.durationDays,
       freeDays: entity.freeDays,
       includedUsers: entity.includedUsers,
+      savedFiltersLimit: entity.savedFiltersLimit,
       actualPrice: entity.actualPrice.toString(),
       discountedPrice: entity.discountedPrice.toString(),
       isActive: entity.isActive,

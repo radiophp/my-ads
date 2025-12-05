@@ -129,6 +129,9 @@ export function AdminPackagesManager() {
                   {t('table.columns.pricing')}
                 </th>
                 <th className="py-3 pr-4 font-medium text-muted-foreground">
+                  {t('table.columns.savedFilters')}
+                </th>
+                <th className="py-3 pr-4 font-medium text-muted-foreground">
                   {t('table.columns.status')}
                 </th>
                 <th className="py-3 text-right font-medium text-muted-foreground">
@@ -139,7 +142,7 @@ export function AdminPackagesManager() {
             <tbody>
               {isLoadingPackages ? (
                 <tr>
-                  <td colSpan={6} className="py-10 text-center text-muted-foreground">
+                  <td colSpan={7} className="py-10 text-center text-muted-foreground">
                     <div className="flex items-center justify-center gap-2">
                       <Loader2 className="size-4 animate-spin" aria-hidden />
                       <span>{t('table.loading')}</span>
@@ -148,7 +151,7 @@ export function AdminPackagesManager() {
                 </tr>
               ) : filteredPackages.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-10 text-center text-muted-foreground">
+                  <td colSpan={7} className="py-10 text-center text-muted-foreground">
                     {hasSearch ? t('table.searchEmpty') : t('table.empty')}
                   </td>
                 </tr>
@@ -204,6 +207,9 @@ export function AdminPackagesManager() {
                           {formatPrice(pkg.actualPrice, locale)}
                         </span>
                       </div>
+                    </td>
+                    <td className="py-3 pr-4">
+                      <span className="font-medium text-foreground">{pkg.savedFiltersLimit}</span>
                     </td>
                     <td className="py-3 pr-4">
                       <span

@@ -1,2 +1,23 @@
 ## this file is for test build and deploy process
-1
+1h30m
+i want to  add a page to list saved filter set add this page navigation in navigation menu and make sure it is only accessible to logged in users
+the page should display all saved filter sets with options to  delete each set
+
+now i want to implement next step we need a websocket connection to notify users in real-time when a new incoming ads from divar matching their saved filter sets of users . so we need to
+1. set up a websocket server
+2. create a client-side websocket connection that listens for notifications
+3. implement logic to send notifications to users when new ads match their saved filter sets it must be separated cronjob that will run for new incoming ads from 10 minutes ago and now - there must be  aflag to check only unchecked new ads - it must check the ads against all users saved filter sets and create notification for each user in rabbit mq queue
+4. there must be a worker that listens to rabbit mq queue and sends websocket notification to connected clients it must try to send notification only to connected clients and retry 3 times if fails wiht 3 minute interval
+5. ensure proper authentication and authorization for websocket connections to prevent unauthorized access to notifications
+6. test the entire flow to ensure notifications are sent and received correctly when new ads match saved filter sets
+7. document the implementation details and usage instructions for future reference
+8. notifications must save in database with user id ad id timestamp and status (sent, failed, pending)
+9. so when user refresh the page he can see the list of notifications with their status
+10.  there must be cronjob that will clean up notifications older than 3 days
+11.  implement error handling and logging throughout the websocket notification system to facilitate debugging and maintenance
+12.  optimize the performance of the websocket notification system to handle a large number of concurrent users and notifications efficiently
+13.  ensure scalability of the websocket notification system to accommodate future growth in users and notifications
+14.  implement a user interface for users to manage their notification preferences, such as enabling or disabling notifications for specific filter sets
+15.  conduct load testing to evaluate the performance of the websocket notification system under high traffic conditions and identify potential bottlenecks
+
+

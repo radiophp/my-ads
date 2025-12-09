@@ -2,12 +2,11 @@ import { Module, OnModuleDestroy } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { QueueService } from './queue.service';
 import { EmailProcessor } from './processors/email.processor';
-import { NotificationProcessor } from './processors/notification.processor';
 
 @Module({
   imports: [ConfigModule],
-  providers: [QueueService, EmailProcessor, NotificationProcessor],
-  exports: [QueueService, NotificationProcessor, EmailProcessor],
+  providers: [QueueService, EmailProcessor],
+  exports: [QueueService, EmailProcessor],
 })
 export class QueueModule implements OnModuleDestroy {
   constructor(private readonly queueService: QueueService) {}

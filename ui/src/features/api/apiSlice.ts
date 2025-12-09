@@ -34,6 +34,7 @@ import type {
   CreateSavedFilterPayload,
   UpdateSavedFilterPayload,
 } from '@/types/saved-filters';
+import type { NotificationsResponse } from '@/types/notifications';
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:6200/api';
 
@@ -132,6 +133,7 @@ export const apiSlice = createApi({
     'DivarPosts',
     'RingBinderFolders',
     'SavedFilters',
+    'Notifications',
   ],
   endpoints: (builder) => ({
     getHealth: builder.query<{ status: string }, void>({
@@ -540,6 +542,31 @@ export const apiSlice = createApi({
         { type: 'SavedFilters', id: 'LIST' },
       ],
     }),
+    getNotifications: builder.query<NotificationsResponse, { cursor?: string; limit?: number } | void>({
+      query: (params) => {
+        const query: Record<string, string> = {};
+        if (params?.cursor) {
+          query.cursor = params.cursor;
+        }
+        if (params?.limit) {
+          query.limit = String(params.limit);
+        }
+        return {
+          url: '/notifications',
+          params: query,
+        };
+      },
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.items.map((item) => ({
+                type: 'Notifications' as const,
+                id: item.id,
+              })),
+              { type: 'Notifications' as const, id: 'LIST' },
+            ]
+          : [{ type: 'Notifications' as const, id: 'LIST' }],
+    }),
   }),
 });
 
@@ -587,6 +614,8 @@ export const {
   useCreateSavedFilterMutation,
   useUpdateSavedFilterMutation,
   useDeleteSavedFilterMutation,
+  useGetNotificationsQuery,
+  useLazyGetNotificationsQuery,
 } = apiSlice;
 
 type UpdateCurrentUserPayload = Partial<{

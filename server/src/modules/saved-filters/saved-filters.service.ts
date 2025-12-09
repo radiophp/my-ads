@@ -67,11 +67,14 @@ export class SavedFiltersService {
 
     const payload = normalizeSavedFilterPayload(dto.payload);
 
+    const notificationsEnabled = dto.notificationsEnabled !== false;
+
     const entity = await this.prisma.savedFilter.create({
       data: {
         userId,
         name,
         payload: payload as Prisma.InputJsonValue,
+        notificationsEnabled,
       },
     });
 
@@ -113,12 +116,18 @@ export class SavedFiltersService {
         ? normalizeSavedFilterPayload(existing.payload)
         : normalizeSavedFilterPayload(dto.payload);
 
+    const updateData: Prisma.SavedFilterUpdateInput = {
+      name: nextName,
+      payload: nextPayload as Prisma.InputJsonValue,
+    };
+
+    if (typeof dto.notificationsEnabled === 'boolean') {
+      updateData.notificationsEnabled = dto.notificationsEnabled;
+    }
+
     const entity = await this.prisma.savedFilter.update({
       where: { id },
-      data: {
-        name: nextName,
-        payload: nextPayload as Prisma.InputJsonValue,
-      },
+      data: updateData,
     });
 
     return SavedFilterDto.fromEntity(entity, nextPayload);

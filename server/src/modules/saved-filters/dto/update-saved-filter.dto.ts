@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer';
-import { IsNotEmpty, IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class UpdateSavedFilterDto {
   @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
@@ -12,4 +12,8 @@ export class UpdateSavedFilterDto {
   @IsObject()
   @IsOptional()
   payload?: Record<string, unknown>;
+
+  @IsBoolean()
+  @IsOptional()
+  notificationsEnabled?: boolean;
 }

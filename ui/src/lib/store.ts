@@ -10,6 +10,7 @@ import searchFilterReducer, {
   type CategoryFilterValue,
   searchFilterInitialState,
 } from '@/features/search-filter/searchFilterSlice';
+import notificationsReducer from '@/features/notifications/notificationsSlice';
 
 type StoredSearchFilterState = Partial<SearchFilterState> & {
   categorySlug?: string | null;
@@ -113,6 +114,7 @@ export const store = configureStore({
     auth: authReducer,
     counter: counterReducer,
     searchFilter: searchFilterReducer,
+    notifications: notificationsReducer,
     [apiSlice.reducerPath]: apiSlice.reducer,
   },
   preloadedState: preloadedSearchFilterState

@@ -36,8 +36,10 @@ import { DivarCategoriesModule } from './modules/divar-categories/divar-categori
 import { DistrictsModule } from './modules/districts/districts.module';
 import { DivarPostsModule } from './modules/divar-posts/divar-posts.module';
 import schedulerConfig from './platform/config/scheduler.config';
+import notificationsConfig from './platform/config/notifications.config';
 import { RingBindersModule } from './modules/ring-binders/ring-binders.module';
 import { SavedFiltersModule } from './modules/saved-filters/saved-filters.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -65,6 +67,7 @@ import { SavedFiltersModule } from './modules/saved-filters/saved-filters.module
         healthConfig,
         otpConfig,
         schedulerConfig,
+        notificationsConfig,
       ],
     }),
     LoggingModule,
@@ -92,6 +95,7 @@ import { SavedFiltersModule } from './modules/saved-filters/saved-filters.module
     DivarPostsModule,
     RingBindersModule,
     SavedFiltersModule,
+    NotificationsModule,
   ],
 })
 export class AppModule {}

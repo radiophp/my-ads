@@ -627,7 +627,7 @@ function FilterOptionsDialog({
   const options = modal.options;
 
   return (
-    <Dialog open={open} onOpenChange={(next) => (!next ? onClose() : null)}>
+    <Dialog open={open} onOpenChange={(next) => (!next ? onClose() : null)} disableBackClose>
       <DialogContent className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] lg:left-1/2 lg:top-1/2 lg:flex lg:max-h-[90vh] lg:w-full lg:max-w-xl lg:-translate-x-1/2 lg:-translate-y-1/2 lg:flex-col lg:overflow-hidden lg:rounded-2xl lg:border lg:p-6">
         <div className="flex h-full flex-col overflow-hidden">
           <div className="border-b border-border px-6 py-4 lg:hidden">

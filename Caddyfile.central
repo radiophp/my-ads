@@ -1,0 +1,341 @@
+pinki.toncloud.observer {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		protocols tls1.2 tls1.3
+	}
+	log {
+		output stdout
+		format json
+	}
+	reverse_proxy /backend* http://host.docker.internal:8010
+	reverse_proxy http://host.docker.internal:8002
+}
+
+pinki-storage.toncloud.observer {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		protocols tls1.2 tls1.3
+	}
+	log {
+		output stdout
+		format json
+	}
+	reverse_proxy http://host.docker.internal:8000
+}
+
+pinki-storage-admin.toncloud.observer {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		protocols tls1.2 tls1.3
+	}
+	log {
+		output stdout
+		format json
+	}
+	reverse_proxy http://host.docker.internal:8001
+}
+
+pinki-pgadmin.toncloud.observer {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		protocols tls1.2 tls1.3
+	}
+	log {
+		output stdout
+		format json
+	}
+	reverse_proxy http://host.docker.internal:3030 {
+		header_up X-Forwarded-Proto {scheme}
+		header_up Host {host}
+		header_down -X-Content-Type-Options
+	}
+}
+
+####################################################
+pinki.app {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		protocols tls1.2 tls1.3
+	}
+	log {
+		output stdout
+		format json
+	}
+	reverse_proxy /backend* http://host.docker.internal:7010
+	reverse_proxy http://host.docker.internal:7002
+}
+
+storage.pinki.app {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		protocols tls1.2 tls1.3
+	}
+	log {
+		output stdout
+		format json
+	}
+	reverse_proxy http://host.docker.internal:7000
+}
+
+storage-admin.pinki.app {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		protocols tls1.2 tls1.3
+	}
+	log {
+		output stdout
+		format json
+	}
+	reverse_proxy http://host.docker.internal:7001
+}
+
+pgadmin.pinki.app {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		protocols tls1.2 tls1.3
+	}
+	log {
+		output stdout
+		format json
+	}
+	reverse_proxy http://host.docker.internal:3030 {
+		header_up X-Forwarded-Proto {scheme}
+		header_up Host {host}
+		header_down -X-Content-Type-Options
+	}
+}
+####################### PixShade ##########################
+pixshade.com {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		protocols tls1.2 tls1.3
+	}
+	log {
+		output stdout
+		format json
+	}
+	reverse_proxy /backend* http://host.docker.internal:7510
+	reverse_proxy http://host.docker.internal:7502
+}
+
+storage.pixshade.com {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		protocols tls1.2 tls1.3
+	}
+	log {
+		output stdout
+		format json
+	}
+	reverse_proxy http://host.docker.internal:7500
+}
+
+storage-admin.pixshade.com {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		protocols tls1.2 tls1.3
+	}
+	log {
+		output stdout
+		format json
+	}
+	reverse_proxy http://host.docker.internal:7501
+}
+
+####################### ONTON #############################
+
+mohammad-app.toncloud.observer {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		protocols tls1.2 tls1.3
+	}
+	log {
+		output stdout
+		format json
+	}
+	reverse_proxy /ptma* http://host.docker.internal:3001
+	reverse_proxy /swagger* http://host.docker.internal:3017
+	reverse_proxy http://host.docker.internal:3000
+}
+
+mohammad-socket.toncloud.observer {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		protocols tls1.2 tls1.3
+	}
+	log {
+		output stdout
+		format json
+	}
+	reverse_proxy /socket.io/* http://host.docker.internal:3022 {
+		header_up Host {http.reverse_proxy.upstream.hostport}
+		transport http {
+			read_buffer 65535
+			write_buffer 65535
+		}
+	}
+}
+
+mohammad-swagger-ui.toncloud.observer {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		protocols tls1.2 tls1.3
+	}
+	log {
+		output stdout
+		format json
+	}
+	reverse_proxy http://host.docker.internal:3017
+}
+
+mohammad-metabase.toncloud.observer {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		protocols tls1.2 tls1.3
+	}
+	log {
+		output stdout
+		format json
+	}
+	reverse_proxy host.docker.internal:3554
+}
+
+mohammad-storage.toncloud.observer {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		protocols tls1.2 tls1.3
+	}
+	log {
+		output stdout
+		format json
+	}
+	reverse_proxy http://host.docker.internal:9003
+}
+
+mohammad-rabbitmq.toncloud.observer {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		protocols tls1.2 tls1.3
+	}
+	log {
+		output stdout
+		format json
+	}
+	reverse_proxy http://host.docker.internal:3015
+}
+
+mohammad-storage-admin.toncloud.observer {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		protocols tls1.2 tls1.3
+	}
+	log {
+		output stdout
+		format json
+	}
+	reverse_proxy http://host.docker.internal:3014
+}
+
+mohammad-pgadmin.toncloud.observer {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		protocols tls1.2 tls1.3
+	}
+	log {
+		output stdout
+		format json
+	}
+	reverse_proxy http://host.docker.internal:5050 {
+		header_up X-Forwarded-Proto {scheme}
+		header_up Host {host}
+		header_down -X-Content-Type-Options
+	}
+}
+
+mohammad-client-web.toncloud.observer {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		protocols tls1.2 tls1.3
+	}
+	log {
+		output stdout
+		format json
+	}
+
+	reverse_proxy host.docker.internal:3002
+}
+
+mohammad.toncloud.observer {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		protocols tls1.2 tls1.3
+	}
+	log {
+		output stdout
+		format json
+	}
+	reverse_proxy host.docker.internal:3003
+}
+
+############ price pooria ########
+price.toncloud.observer {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		protocols tls1.2 tls1.3
+	}
+	log {
+		output stdout
+		format json
+	}
+	reverse_proxy host.docker.internal:4020
+}
+
+###############  MAHAN #####
+
+mahan.toncloud.observer {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		protocols tls1.2 tls1.3
+	}
+	log {
+		output stdout
+		format json
+	}
+	# Websocket notifications (socket.io) -> API
+	reverse_proxy /socket.io/* http://host.docker.internal:6200
+	reverse_proxy /api/* http://host.docker.internal:6200
+	reverse_proxy http://host.docker.internal:6005
+}
+
+mahan-storage.toncloud.observer {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		protocols tls1.2 tls1.3
+	}
+	log {
+		output stdout
+		format json
+	}
+	reverse_proxy http://host.docker.internal:6204
+}
+
+############ ng v2ray #########
+ls.pinki.app {
+	encode gzip
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+	}
+	handle /vlessws* {
+		reverse_proxy host.docker.internal:24443
+	}
+	respond 404
+}
+
+# x-ui panel
+v2.pinki.app {
+	encode gzip
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+	}
+	reverse_proxy host.docker.internal:15555
+}

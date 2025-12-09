@@ -33,6 +33,12 @@ enum PostAnalysisStatus {
   FAILED
 }
 
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
 model User {
   id                 String   @id @default(uuid())
   phone              String   @unique
@@ -50,6 +56,7 @@ model User {
   ringBinderFolders  RingBinderFolder[]
   postNotes          DivarPostNote[]
   savedFilters       SavedFilter[]
+  notifications      Notification[]
 
   @@index([cityId])
 }
@@ -254,6 +261,9 @@ model DivarPost {
   attributes      DivarPostAttribute[]
   savedInFolders  RingBinderFolderPost[]
   notes           DivarPostNote[]
+  notifications   Notification[]
+  notificationsChecked Boolean  @default(false)
+  notificationsCheckedAt DateTime?
 
   @@index([categoryId])
   @@index([categorySlug])
@@ -261,6 +271,7 @@ model DivarPost {
   @@index([districtId])
   @@index([status])
   @@index([createdAt])
+  @@index([notificationsChecked, createdAt])
 }
 
 model DivarPostMedia {
@@ -322,8 +333,10 @@ model SavedFilter {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   name      String
   payload   Json
+  notificationsEnabled Boolean @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  notifications Notification[]
 
   @@unique([userId, name])
   @@index([userId, createdAt])
@@ -367,5 +380,29 @@ model DivarPostNote {
   post      DivarPost @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@unique([userId, postId])
+  @@index([postId])
+}
+
+model Notification {
+  id            String             @id @default(uuid())
+  userId        String
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  savedFilterId String
+  savedFilter   SavedFilter        @relation(fields: [savedFilterId], references: [id], onDelete: Cascade)
+  postId        String
+  post          DivarPost          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  status        NotificationStatus @default(PENDING)
+  message       String?
+  payload       Json?
+  attemptCount  Int                @default(0)
+  nextAttemptAt DateTime           @default(now())
+  sentAt        DateTime?
+  failedAt      DateTime?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  @@unique([userId, savedFilterId, postId])
+  @@index([userId, status, nextAttemptAt])
+  @@index([nextAttemptAt])
   @@index([postId])
 }

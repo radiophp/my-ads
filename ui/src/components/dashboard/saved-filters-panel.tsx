@@ -4,7 +4,11 @@ import { useMemo, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Bookmark, RefreshCw, Trash2 } from 'lucide-react';
 
-import { useGetSavedFiltersQuery, useDeleteSavedFilterMutation } from '@/features/api/apiSlice';
+import {
+  useGetSavedFiltersQuery,
+  useDeleteSavedFilterMutation,
+  useUpdateSavedFilterMutation,
+} from '@/features/api/apiSlice';
 import type { SavedFilter } from '@/types/saved-filters';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,6 +23,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
+import { Switch } from '@/components/ui/switch';
 
 export function SavedFiltersPanel() {
   const t = useTranslations('dashboard.savedFiltersPage');
@@ -33,7 +38,9 @@ export function SavedFiltersPanel() {
     refetchOnMountOrArgChange: true,
   });
   const [deleteSavedFilter, { isLoading: isDeleting }] = useDeleteSavedFilterMutation();
+  const [updateSavedFilter, { isLoading: isUpdating }] = useUpdateSavedFilterMutation();
   const [pendingDelete, setPendingDelete] = useState<SavedFilter | null>(null);
+  const [pendingToggleId, setPendingToggleId] = useState<string | null>(null);
 
   const filters = data?.filters ?? [];
   const limit = data?.limit ?? 0;
@@ -49,6 +56,26 @@ export function SavedFiltersPanel() {
 
   const handleRefresh = () => {
     refetch();
+  };
+
+  const handleToggleNotifications = async (filter: SavedFilter, enabled: boolean) => {
+    setPendingToggleId(filter.id);
+    try {
+      await updateSavedFilter({ id: filter.id, body: { notificationsEnabled: enabled } }).unwrap();
+      toast({
+        title: enabled ? t('toast.notificationsEnabledTitle') : t('toast.notificationsDisabledTitle'),
+        description: t('toast.notificationsUpdatedDescription', { name: filter.name }),
+      });
+    } catch (error) {
+      console.error('Failed to toggle notifications', error);
+      toast({
+        title: t('toast.errorTitle'),
+        description: t('toast.notificationsToggleError'),
+        variant: 'destructive',
+      });
+    } finally {
+      setPendingToggleId(null);
+    }
   };
 
   const handleDelete = async () => {
@@ -116,7 +143,7 @@ export function SavedFiltersPanel() {
             {filters.map((filter) => (
               <li
                 key={filter.id}
-                className="flex flex-col gap-4 rounded-2xl border border-border/70 bg-card/50 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between"
+                className="bg-card/50 flex flex-col gap-4 rounded-2xl border border-border/70 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="min-w-0">
                   <p className="truncate text-base font-semibold text-foreground">{filter.name}</p>
@@ -125,6 +152,15 @@ export function SavedFiltersPanel() {
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex items-center gap-2 rounded-full border border-border/60 px-3 py-1 text-xs">
+                    <span>{t('item.notificationsLabel')}</span>
+                    <Switch
+                      checked={filter.notificationsEnabled}
+                      disabled={isUpdating || pendingToggleId === filter.id}
+                      aria-label={t('item.notificationsAria', { name: filter.name })}
+                      onCheckedChange={(checked) => void handleToggleNotifications(filter, checked)}
+                    />
+                  </div>
                   <Button
                     type="button"
                     variant="ghost"
@@ -170,7 +206,7 @@ function SavedFiltersSkeleton() {
     <div className="space-y-4">
       {Array.from({ length: 3 }).map((_, index) => (
         // eslint-disable-next-line react/no-array-index-key
-        <div key={index} className="animate-pulse rounded-2xl border border-border/70 bg-card/50 p-4">
+        <div key={index} className="bg-card/50 animate-pulse rounded-2xl border border-border/70 p-4">
           <div className="h-5 w-1/3 rounded bg-muted" />
           <div className="mt-2 h-4 w-1/4 rounded bg-muted" />
         </div>

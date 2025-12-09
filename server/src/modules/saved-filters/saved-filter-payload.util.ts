@@ -28,6 +28,55 @@ export type SavedFilterPayload = {
   noteFilter: NoteFilterOption;
 };
 
+export function serializeCategoryFilterValues(
+  bucket: Record<string, CategoryFilterValue> | undefined,
+): Record<string, unknown> | undefined {
+  if (!bucket) {
+    return undefined;
+  }
+
+  const payload: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(bucket)) {
+    if (!value) {
+      continue;
+    }
+    switch (value.kind) {
+      case 'numberRange': {
+        const range: Record<string, number> = {};
+        if (isFiniteNumber(value['min'])) {
+          range['min'] = Number(value['min']);
+        }
+        if (isFiniteNumber(value['max'])) {
+          range['max'] = Number(value['max']);
+        }
+        if (Object.keys(range).length > 0) {
+          payload[key] = range;
+        }
+        break;
+      }
+      case 'multiSelect':
+        if (value.values.length > 0) {
+          payload[key] = value.values;
+        }
+        break;
+      case 'singleSelect':
+        if (typeof value.value === 'string' && value.value.length > 0) {
+          payload[key] = value.value;
+        }
+        break;
+      case 'boolean':
+        if (value.value === true) {
+          payload[key] = true;
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
+  return Object.keys(payload).length > 0 ? payload : undefined;
+}
+
 const EMPTY_PAYLOAD: SavedFilterPayload = {
   provinceId: null,
   citySelection: { mode: 'all', cityIds: [] },
@@ -252,6 +301,10 @@ function parseNumberArray(values: unknown[]): number[] {
     }
   }
   return Array.from(new Set(result));
+}
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { QueueModule } from '../queue/queue.module';
+import { AuthModule } from '@app/modules/auth/auth.module';
 import { WebsocketGateway } from './websocket.gateway';
 
 @Module({
-  imports: [QueueModule],
+  imports: [AuthModule],
   providers: [WebsocketGateway],
   exports: [WebsocketGateway],
 })

@@ -4,6 +4,7 @@ export type SavedFilter = {
   id: string;
   name: string;
   payload: SearchFilterState;
+  notificationsEnabled: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -29,6 +30,7 @@ export type SavedFilterDeleteResponse = {
 export type CreateSavedFilterPayload = {
   name: string;
   payload: SearchFilterState;
+  notificationsEnabled?: boolean;
 };
 
 export type UpdateSavedFilterPayload = Partial<CreateSavedFilterPayload>;

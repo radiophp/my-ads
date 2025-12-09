@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages, unstable_setRequestLocale } from 'next-intl/server';
@@ -55,6 +55,13 @@ export const metadata: Metadata = {
   },
 };
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const locale = await getLocale();
   unstable_setRequestLocale(locale);
@@ -69,13 +76,13 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       className={`${inter.variable} dark`}
       data-theme="dark"
     >
-      <body className={`${inter.className} h-screen overflow-hidden`}>
+      <body className={`${inter.className} min-h-screen overflow-x-hidden bg-background text-foreground`}>
         <script dangerouslySetInnerHTML={{ __html: themeInitializer }} />
         <NextIntlClientProvider locale={locale} messages={messages} timeZone="UTC">
           <Providers>
-            <div className="flex h-screen flex-col bg-background text-foreground">
+            <div className="flex min-h-screen flex-col">
               <SiteHeader />
-              <main className="flex-1 min-h-0 overflow-hidden">{children}</main>
+              <main className="flex-1 min-h-0">{children}</main>
             </div>
           </Providers>
         </NextIntlClientProvider>

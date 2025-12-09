@@ -155,4 +155,16 @@ export class AuthService {
     const user = await this.usersService.updateProfile(userId, dto);
     return this.getCurrentUser(user.id);
   }
+
+  async verifyAccessToken(token: string): Promise<JwtPayload> {
+    if (!token || typeof token !== 'string' || token.trim().length === 0) {
+      throw new UnauthorizedException('Access token is required.');
+    }
+
+    try {
+      return await this.jwtService.verifyAsync<JwtPayload>(token);
+    } catch {
+      throw new UnauthorizedException('Invalid or expired access token.');
+    }
+  }
 }

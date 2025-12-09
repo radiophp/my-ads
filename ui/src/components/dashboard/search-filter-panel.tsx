@@ -481,7 +481,6 @@ export function DashboardSearchFilterPanel() {
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   useBackButtonClose(filterModalOpen, () => setFilterModalOpen(false));
-  useBackButtonClose(categoryModalOpen, () => setCategoryModalOpen(false));
 
   useEffect(() => {
     if (!filterModalOpen && categoryModalOpen) {
@@ -1154,7 +1153,7 @@ export function DashboardSearchFilterPanel() {
 
         <div className="flex flex-col gap-2">
           <label className="text-sm font-medium text-foreground">{t('provinceLabel')}</label>
-          <Dialog open={provinceDialogOpen} onOpenChange={setProvinceDialogOpen}>
+          <Dialog open={provinceDialogOpen} onOpenChange={setProvinceDialogOpen} disableBackClose>
             <Button
               type="button"
               variant="outline"
@@ -1258,7 +1257,7 @@ export function DashboardSearchFilterPanel() {
 
         <div className="flex flex-col gap-2">
           <label className="text-sm font-medium text-foreground">{t('cityLabel')}</label>
-          <Dialog open={cityDialogOpen} onOpenChange={setCityDialogOpen}>
+          <Dialog open={cityDialogOpen} onOpenChange={setCityDialogOpen} disableBackClose>
             <Button
               type="button"
               variant="outline"
@@ -1356,7 +1355,11 @@ export function DashboardSearchFilterPanel() {
 
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium text-foreground">{t('districtLabel')}</label>
-              <Dialog open={districtDialogOpen} onOpenChange={setDistrictDialogOpen}>
+              <Dialog
+                open={districtDialogOpen}
+                onOpenChange={setDistrictDialogOpen}
+                disableBackClose
+              >
                 <Button
                   type="button"
                   variant="outline"

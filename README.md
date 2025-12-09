@@ -334,6 +334,11 @@ All configuration is validated at startup (`platform/config/environment.validati
 | `DIVAR_HARVEST_MAX_PAGES_NIGHT` | `2` | Maximum number of pages between the configured night hours (omit to reuse the normal limit). |
 | `DIVAR_HARVEST_NIGHT_START_HOUR` | `0` | Local hour (0-23) when the reduced harvest window starts. |
 | `DIVAR_HARVEST_NIGHT_END_HOUR` | `5` | Local hour (0-23) when the reduced harvest window ends (exclusive). |
+| `NOTIFICATION_WINDOW_MINUTES` | `10` | Sliding window (minutes) the matcher scans for unseen Divar posts when building notifications. |
+| `NOTIFICATION_SCAN_BATCH_SIZE` | `50` | Number of posts processed per matcher batch before yielding to the event loop. |
+| `NOTIFICATION_RETRY_INTERVAL_MS` | `180000` | Delay (ms) between websocket delivery attempts when the user is offline. |
+| `NOTIFICATION_MAX_ATTEMPTS` | `3` | Maximum websocket delivery attempts before a notification is marked as failed. |
+| `NOTIFICATION_RETENTION_DAYS` | `3` | Retention policy for persisted notifications (older entries are purged hourly). |
 
 Environment variables not listed above are either optional feature toggles or inherit defaults inside module configuration files.
 
@@ -413,6 +418,12 @@ run: |
 - **Authentication:** `POST /api/auth/login`, `/api/auth/register` (JWT response).
 - **Swagger/OpenAPI:** Auto-generated with `@nestjs/swagger`; browse at `/docs` (JSON at `/docs-json`).
 - **WebSockets:** Socket.IO server accessible on the same port (`/socket.io`, adapter uses Redis).
+
+### Saved filter notifications
+
+- Realtime alerts are tied to saved filter sets. Enable or disable them per filter from **Dashboard → Saved filters**; view the live feed under **Dashboard → Notifications**.
+- The scheduler scans posts from the last `NOTIFICATION_WINDOW_MINUTES`, persists matches, and publishes jobs to the `notification` RabbitMQ queue. Delivery respects the user's websocket session and retries every `NOTIFICATION_RETRY_INTERVAL_MS` up to `NOTIFICATION_MAX_ATTEMPTS`.
+- Notifications are stored with status metadata (`PENDING`, `SENT`, `FAILED`) so users can review history even after reconnecting. Entries older than `NOTIFICATION_RETENTION_DAYS` are purged hourly.
 
 ---
 

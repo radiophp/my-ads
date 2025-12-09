@@ -275,6 +275,8 @@ export class DivarPostsAdminService {
       ringFolderId?: string;
       userId?: string | null;
       noteFilter?: 'has' | 'none';
+      postIds?: string[];
+      createdAfter?: Date;
     } = {},
   ): Promise<PaginatedDivarPostsDto> {
     const take = Math.min(Math.max(options.limit ?? 20, 1), 50);
@@ -348,6 +350,13 @@ export class DivarPostsAdminService {
             };
       this.appendAndCondition(where, condition);
     }
+    if (options.postIds && options.postIds.length > 0) {
+      where.id = { in: options.postIds };
+    }
+    if (options.createdAfter) {
+      this.appendAndCondition(where, { createdAt: { gte: options.createdAfter } });
+    }
+
     const queryArgs = {
       orderBy: [
         { publishedAt: { sort: 'desc', nulls: 'last' } },

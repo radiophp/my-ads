@@ -21,8 +21,9 @@ import { useLogoutMutation } from '@/features/api/apiSlice';
 import { clearAuth } from '@/features/auth/authSlice';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import { Menu, X, DownloadCloud, LogOut } from 'lucide-react';
+import { useNotificationsSocket } from '@/features/notifications/useNotificationsSocket';
 
-type NavIconKey = 'dashboard' | 'ringBinder' | 'savedFilters' | 'admin';
+type NavIconKey = 'dashboard' | 'ringBinder' | 'savedFilters' | 'notifications' | 'admin';
 
 type NavItemConfig = {
   key: string;
@@ -44,6 +45,8 @@ export function SiteHeader() {
   const [showManualInstall, setShowManualInstall] = useState(false);
   const [showInstalledNotice, setShowInstalledNotice] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useNotificationsSocket();
 
   const isAuthenticated = Boolean(auth.accessToken);
   const hasExistingInstall = isStandalone || hasRelatedInstall;
@@ -110,6 +113,13 @@ export function SiteHeader() {
       icon: 'savedFilters' as const,
     },
     {
+      key: 'notifications',
+      label: t('header.nav.notifications'),
+      href: '/dashboard/notifications',
+      visible: isAuthenticated,
+      icon: 'notifications' as const,
+    },
+    {
       key: 'admin',
       label: t('header.nav.admin'),
       href: '/admin',
@@ -143,8 +153,7 @@ export function SiteHeader() {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            // eslint-disable-next-line tailwindcss/classnames-order
-            className="inline-flex items-center justify-center rounded-md border border-border/80 bg-card px-2.5 py-2 text-sm font-medium text-foreground transition hover:bg-secondary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-ring sm:hidden"
+            className="inline-flex items-center justify-center rounded-md border border-border/80 bg-card px-2.5 py-2 text-sm font-medium text-foreground transition hover:bg-secondary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:hidden"
             onClick={() => setMobileMenuOpen(true)}
             aria-label={t('header.mobileMenuOpen')}
           >
@@ -175,6 +184,14 @@ export function SiteHeader() {
               className="hidden rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
             >
               {t('header.nav.savedFilters')}
+            </Link>
+          )}
+          {isAuthenticated && (
+            <Link
+              href="/dashboard/notifications"
+              className="hidden rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
+            >
+              {t('header.nav.notifications')}
             </Link>
           )}
           {isAuthenticated && auth.user?.role === 'ADMIN' && (
@@ -387,6 +404,20 @@ function MobileNavigationDrawer({
             <path d="M9 12h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
           </svg>
         );
+      case 'notifications':
+        return (
+          <svg viewBox="0 0 24 24" className="size-4" aria-hidden>
+            <path
+              d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" strokeWidth="2" />
+          </svg>
+        );
       default:
         return (
           <svg viewBox="0 0 24 24" className="size-4" aria-hidden>
@@ -401,7 +432,7 @@ function MobileNavigationDrawer({
     }
   };
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange} disableBackClose>
       {/* eslint-disable tailwindcss/classnames-order */}
       <DialogContent
         hideCloseButton

@@ -17,7 +17,12 @@ import { DivarPostMediaSyncService } from './divar-post-media-sync.service';
     DivarPostsAdminService,
     DivarPostMediaSyncService,
   ],
-  exports: [DivarPostHarvestService, DivarPostFetchService, DivarPostAnalyzeService],
+  exports: [
+    DivarPostHarvestService,
+    DivarPostFetchService,
+    DivarPostAnalyzeService,
+    DivarPostsAdminService,
+  ],
   controllers: [DivarPostsAdminController, DivarPostsController],
 })
 export class DivarPostsModule {}

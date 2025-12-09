@@ -294,6 +294,31 @@ export class EnvironmentVariables {
   @IsInt()
   @IsPositive()
   DIVAR_POST_FETCH_TIMEOUT_MS?: number;
+
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  @IsPositive()
+  NOTIFICATION_WINDOW_MINUTES: number = 10;
+
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  @IsPositive()
+  NOTIFICATION_SCAN_BATCH_SIZE: number = 50;
+
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  @IsPositive()
+  NOTIFICATION_RETRY_INTERVAL_MS: number = 180000;
+
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  @IsPositive()
+  NOTIFICATION_MAX_ATTEMPTS: number = 3;
+
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  @IsPositive()
+  NOTIFICATION_RETENTION_DAYS: number = 3;
 }
 
 export const validateEnvironment = (config: Record<string, unknown>): EnvironmentVariables => {

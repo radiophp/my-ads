@@ -121,7 +121,7 @@ Hit `GET /metrics` for a Prometheus-compatible exposition format. The default se
 
 ## Queues & WebSockets
 
-- `EmailProcessor` and `NotificationProcessor` demonstrate BullMQ queues with retry/backoff policies.
+- `EmailProcessor` handles transactional emails, while the notifications module uses RabbitMQ + Socket.IO to push saved-filter matches to online users with automatic retries.
 - The Socket.IO gateway lives on `/ws` and publishes Redis-backed events, making it safe for multi-instance deployments.
 
 ## Roadmap

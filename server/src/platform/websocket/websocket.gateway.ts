@@ -1,15 +1,14 @@
 import {
   ConnectedSocket,
-  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { Logger } from '@nestjs/common';
+import { Logger, UnauthorizedException } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
-import { NotificationProcessor } from '@app/platform/queue/processors/notification.processor';
+import { AuthService } from '@app/modules/auth/auth.service';
 import type { JsonValue } from '@app/common/types/json.type';
 
 @WebSocketGateway({ namespace: '/ws', cors: { origin: true, credentials: true } })
@@ -18,14 +17,27 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
   server!: Server;
 
   private readonly logger = new Logger(WebsocketGateway.name);
+  private readonly socketsByUser = new Map<string, Set<string>>();
+  private readonly socketStore = new Map<string, Socket>();
 
-  constructor(private readonly notificationProcessor: NotificationProcessor) {}
+  constructor(private readonly authService: AuthService) {}
 
-  handleConnection(client: Socket): void {
-    this.logger.log(`Client connected ${client.id}`);
+  async handleConnection(client: Socket): Promise<void> {
+    try {
+      const userId = await this.authenticateClient(client);
+      this.registerClient(userId, client);
+      this.logger.log(`Client ${client.id} connected as user ${userId}`);
+      client.emit('notifications:connected', { userId });
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : 'unauthorized';
+      this.logger.warn(`Rejecting websocket client ${client.id}: ${reason}`);
+      client.emit('notifications:error', { message: 'unauthorized' });
+      client.disconnect(true);
+    }
   }
 
   handleDisconnect(client: Socket): void {
+    this.unregisterClient(client);
     this.logger.log(`Client disconnected ${client.id}`);
   }
 
@@ -34,16 +46,82 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
     client.emit('pong', { timestamp: Date.now() });
   }
 
-  @SubscribeMessage('notify')
-  async handleNotification(
-    @MessageBody() payload: { userId: string; message: string },
-    @ConnectedSocket() client: Socket,
-  ): Promise<void> {
-    await this.notificationProcessor.enqueue(payload);
-    client.emit('notification:queued', payload);
-  }
-
   broadcast(event: string, data: JsonValue): void {
     this.server.emit(event, data);
+  }
+
+  emitToUser(userId: string, event: string, payload: JsonValue): boolean {
+    const socketIds = this.socketsByUser.get(userId);
+    if (!socketIds || socketIds.size === 0) {
+      return false;
+    }
+
+    let delivered = false;
+    for (const socketId of socketIds) {
+      const socket = this.socketStore.get(socketId);
+      if (!socket) {
+        continue;
+      }
+      socket.emit(event, payload);
+      delivered = true;
+    }
+    return delivered;
+  }
+
+  hasActiveConnection(userId: string): boolean {
+    const socketIds = this.socketsByUser.get(userId);
+    return !!socketIds && socketIds.size > 0;
+  }
+
+  private async authenticateClient(client: Socket): Promise<string> {
+    const token = this.extractToken(client);
+    if (!token) {
+      throw new UnauthorizedException('Missing access token.');
+    }
+    const payload = await this.authService.verifyAccessToken(token);
+    if (!payload.sub) {
+      throw new UnauthorizedException('Invalid access token.');
+    }
+    client.data.userId = payload.sub;
+    return payload.sub;
+  }
+
+  private extractToken(client: Socket): string | null {
+    const auth = client.handshake.auth ?? {};
+    if (typeof auth['token'] === 'string' && auth['token'].length > 0) {
+      return auth['token'];
+    }
+    const header = client.handshake.headers['authorization'];
+    if (typeof header === 'string' && header.startsWith('Bearer ')) {
+      return header.slice('Bearer '.length);
+    }
+    const query = client.handshake.query['token'];
+    if (typeof query === 'string' && query.length > 0) {
+      return query;
+    }
+    return null;
+  }
+
+  private registerClient(userId: string, client: Socket): void {
+    this.socketStore.set(client.id, client);
+    const socketIds = this.socketsByUser.get(userId) ?? new Set<string>();
+    socketIds.add(client.id);
+    this.socketsByUser.set(userId, socketIds);
+  }
+
+  private unregisterClient(client: Socket): void {
+    this.socketStore.delete(client.id);
+    const userId = client.data.userId;
+    if (!userId) {
+      return;
+    }
+    const socketIds = this.socketsByUser.get(userId);
+    if (!socketIds) {
+      return;
+    }
+    socketIds.delete(client.id);
+    if (socketIds.size === 0) {
+      this.socketsByUser.delete(userId);
+    }
   }
 }

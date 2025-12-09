@@ -10,6 +10,7 @@
       "dashboard": "Dashboard",
       "ringBinder": "Ring binder",
       "savedFilters": "Saved filters",
+      "notifications": "Notifications",
       "admin": "Admin",
       "guides": "Guides"
     },
@@ -303,7 +304,9 @@
       "emptyDescription": "Apply filters from the dashboard and tap “Save filter set” to keep them here.",
       "item": {
         "updated": "Updated {value}",
-        "delete": "Delete"
+        "delete": "Delete",
+        "notificationsLabel": "Realtime alerts",
+        "notificationsAria": "Toggle realtime notifications for \"{name}\""
       },
       "dialog": {
         "title": "Delete saved filter set",
@@ -314,8 +317,40 @@
       "toast": {
         "deletedTitle": "Filter set removed",
         "deletedDescription": "“{name}” was deleted.",
+        "notificationsEnabledTitle": "Notifications enabled",
+        "notificationsDisabledTitle": "Notifications disabled",
+        "notificationsUpdatedDescription": "Realtime alerts updated for “{name}”.",
+        "notificationsToggleError": "Unable to update notification preference.",
         "errorTitle": "Something went wrong",
         "errorDescription": "Please try again."
+      }
+    },
+    "notificationsPage": {
+      "badge": "Realtime alerts",
+      "title": "Saved filter alerts",
+      "description": "Stay on top of new Divar posts that match your saved filter sets.",
+      "refresh": "Refresh list",
+      "refreshing": "Refreshing…",
+      "loadMore": "Load more",
+      "loadingMore": "Loading…",
+      "enableDeviceNotifications": "Enable device notifications",
+      "emptyTitle": "No notifications yet",
+      "emptyDescription": "Enable notifications for a saved filter set and you’ll see new matches here.",
+      "realtime": {
+        "online": "Realtime updates active",
+        "offline": "Realtime connection paused",
+        "error": "Realtime error: {message}"
+      },
+      "status": {
+        "pending": "Waiting to deliver",
+        "sent": "Delivered",
+        "failed": "Delivery failed"
+      },
+      "item": {
+        "savedFilter": "Filter: {name}",
+        "untitled": "Untitled post",
+        "receivedAt": "Received {value}",
+        "viewPost": "View post"
       }
     },
     "posts": {

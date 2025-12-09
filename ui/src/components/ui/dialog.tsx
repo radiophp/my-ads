@@ -5,12 +5,15 @@ import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useBackButtonClose } from '@/hooks/use-back-button-close';
 
-type DialogRootProps = DialogPrimitive.DialogProps;
+type DialogRootProps = DialogPrimitive.DialogProps & {
+  disableBackClose?: boolean;
+};
 
 const Dialog = ({
   open: openProp,
   defaultOpen = false,
   onOpenChange,
+  disableBackClose = false,
   ...rest
 }: DialogRootProps) => {
   const isControlled = openProp !== undefined;
@@ -27,7 +30,7 @@ const Dialog = ({
     [isControlled, onOpenChange],
   );
 
-  useBackButtonClose(Boolean(open), () => {
+  useBackButtonClose(Boolean(open) && !disableBackClose, () => {
     handleOpenChange(false);
   });
 

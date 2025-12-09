@@ -10,6 +10,7 @@
       "dashboard": "داشبورد",
       "ringBinder": "زونکن",
       "savedFilters": "مجموعه فیلترهای ذخیره‌شده",
+      "notifications": "اعلان‌ها",
       "admin": "مدیریت",
       "guides": "راهنماها"
     },
@@ -303,7 +304,9 @@
       "emptyDescription": "در داشبورد فیلترها را اعمال و روی «ذخیره مجموعه فیلتر» بزنید تا اینجا نمایش داده شوند.",
       "item": {
         "updated": "به‌روزرسانی {value}",
-        "delete": "حذف"
+        "delete": "حذف",
+        "notificationsLabel": "اعلان لحظه‌ای",
+        "notificationsAria": "تغییر وضعیت اعلان برای «{name}»"
       },
       "dialog": {
         "title": "حذف مجموعه فیلتر",
@@ -314,8 +317,40 @@
       "toast": {
         "deletedTitle": "مجموعه حذف شد",
         "deletedDescription": "«{name}» حذف شد.",
+        "notificationsEnabledTitle": "اعلان فعال شد",
+        "notificationsDisabledTitle": "اعلان غیرفعال شد",
+        "notificationsUpdatedDescription": "وضعیت اعلان‌های «{name}» به‌روزرسانی شد.",
+        "notificationsToggleError": "امکان تغییر وضعیت اعلان وجود ندارد.",
         "errorTitle": "خطایی رخ داد",
         "errorDescription": "دوباره تلاش کنید."
+      }
+    },
+    "notificationsPage": {
+      "badge": "اعلان‌های لحظه‌ای",
+      "title": "اعلان‌های مجموعه فیلتر",
+      "description": "هر زمان آگهی جدیدی با مجموعه فیلترهای ذخیره‌شده شما تطابق داشته باشد اینجا اطلاع داده می‌شود.",
+      "refresh": "به‌روزرسانی فهرست",
+      "refreshing": "در حال به‌روزرسانی…",
+      "loadMore": "بارگذاری موارد بیشتر",
+      "loadingMore": "در حال بارگذاری…",
+      "enableDeviceNotifications": "فعال‌سازی اعلان روی دستگاه",
+      "emptyTitle": "هنوز اعلان جدیدی ندارید",
+      "emptyDescription": "برای دریافت اعلان، مجموعه فیلترها را ذخیره و اعلان آن‌ها را فعال کنید.",
+      "realtime": {
+        "online": "اتصال لحظه‌ای فعال است",
+        "offline": "اتصال لحظه‌ای متوقف شده",
+        "error": "خطای اتصال لحظه‌ای: {message}"
+      },
+      "status": {
+        "pending": "در انتظار ارسال",
+        "sent": "ارسال شد",
+        "failed": "ارسال ناموفق"
+      },
+      "item": {
+        "savedFilter": "مجموعه: {name}",
+        "untitled": "آگهی بدون عنوان",
+        "receivedAt": "دریافت در {value}",
+        "viewPost": "مشاهده آگهی"
       }
     },
     "posts": {

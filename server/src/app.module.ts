@@ -40,6 +40,7 @@ import notificationsConfig from './platform/config/notifications.config';
 import { RingBindersModule } from './modules/ring-binders/ring-binders.module';
 import { SavedFiltersModule } from './modules/saved-filters/saved-filters.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import pushConfig from './platform/config/push.config';
 
 @Module({
   imports: [
@@ -68,6 +69,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
         otpConfig,
         schedulerConfig,
         notificationsConfig,
+        pushConfig,
       ],
     }),
     LoggingModule,

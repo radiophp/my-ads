@@ -6,4 +6,5 @@ export type AdminDashboardStats = {
   divarCategories: number;
   divarCategoryFilters: number;
   postsToAnalyzePending: number;
+  notifications: number;
 };

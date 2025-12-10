@@ -6,6 +6,7 @@ import { registerConsumerWithRetry } from '@app/platform/queue/utils/register-co
 import { WebsocketGateway } from '@app/platform/websocket/websocket.gateway';
 import type { NotificationsConfig } from '@app/platform/config/notifications.config';
 import { NotificationsService } from './notifications.service';
+import { PushNotificationService } from './push-notification.service';
 
 export type NotificationJob = {
   notificationId: string;
@@ -21,6 +22,7 @@ export class NotificationQueueProcessor implements OnModuleInit {
     private readonly queueService: QueueService,
     private readonly notificationsService: NotificationsService,
     private readonly websocketGateway: WebsocketGateway,
+    private readonly pushNotifications: PushNotificationService,
     configService: ConfigService,
   ) {
     const config = configService.get<NotificationsConfig>('notifications', { infer: true }) ?? {
@@ -90,6 +92,15 @@ export class NotificationQueueProcessor implements OnModuleInit {
       await this.notificationsService.markAsSent(notification.id);
       this.logger.debug(
         `Dispatched notification ${notification.id} to user ${notification.userId}.`,
+      );
+      return;
+    }
+
+    const pushDelivered = await this.pushNotifications.sendToUser(notification.userId, payload);
+    if (pushDelivered) {
+      await this.notificationsService.markAsSent(notification.id);
+      this.logger.debug(
+        `Delivered notification ${notification.id} via push to user ${notification.userId}.`,
       );
       return;
     }

@@ -205,6 +205,18 @@ export class EnvironmentVariables {
 
   @IsOptional()
   @IsString()
+  VAPID_PUBLIC_KEY?: string;
+
+  @IsOptional()
+  @IsString()
+  VAPID_PRIVATE_KEY?: string;
+
+  @IsOptional()
+  @IsString()
+  VAPID_SUBJECT?: string;
+
+  @IsOptional()
+  @IsString()
   @IsIn(['none', 'error', 'warn', 'info', 'debug', 'verbose', 'all'])
   OTEL_LOG_LEVEL?: string;
 

@@ -10,6 +10,7 @@ export type AdminEntityCounts = {
   divarCategories: number;
   divarCategoryFilters: number;
   postsToAnalyzePending: number;
+  notifications: number;
 };
 
 @Injectable()
@@ -25,6 +26,7 @@ export class AdminPanelService {
       divarCategories,
       divarCategoryFilters,
       postsToAnalyzePending,
+      notifications,
     ] = await Promise.all([
       this.prisma.subscriptionPackage.count(),
       this.prisma.province.count(),
@@ -35,6 +37,7 @@ export class AdminPanelService {
       this.prisma.postToAnalyzeQueue.count({
         where: { status: PostAnalysisStatus.PENDING },
       }),
+      this.prisma.notification.count(),
     ]);
 
     return {
@@ -45,6 +48,7 @@ export class AdminPanelService {
       divarCategories,
       divarCategoryFilters,
       postsToAnalyzePending,
+      notifications,
     };
   }
 }

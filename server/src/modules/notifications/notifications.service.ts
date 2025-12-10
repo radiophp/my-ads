@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
 import { Prisma, NotificationStatus, type Notification } from '@prisma/client';
 import { PrismaService } from '@app/platform/database/prisma.service';
 import type { DivarPostListItemDto } from '@app/modules/divar-posts/dto/divar-post.dto';
@@ -38,6 +38,129 @@ export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
 
   constructor(private readonly prisma: PrismaService) {}
+
+  async createTestNotification(params: {
+    userId: string;
+    savedFilterId: string;
+    postId: string;
+    message?: string | null;
+  }): Promise<Notification> {
+    const savedFilter = await this.prisma.savedFilter.findUnique({
+      where: { id: params.savedFilterId },
+      select: { id: true, name: true, userId: true },
+    });
+    if (!savedFilter) {
+      throw new NotFoundException('Saved filter not found');
+    }
+    if (savedFilter.userId !== params.userId) {
+      throw new BadRequestException('Saved filter does not belong to the specified user');
+    }
+
+    const post = await this.prisma.divarPost.findUnique({
+      where: { id: params.postId },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        priceTotal: true,
+        rentAmount: true,
+        depositAmount: true,
+        cityName: true,
+        districtName: true,
+        provinceName: true,
+        permalink: true,
+        publishedAt: true,
+        medias: {
+          orderBy: { position: 'asc' },
+          take: 1,
+          select: {
+            id: true,
+            url: true,
+            thumbnailUrl: true,
+            localUrl: true,
+            localThumbnailUrl: true,
+          },
+        },
+      },
+    });
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    const payload = this.buildPayloadSnapshot(
+      {
+        id: post.id,
+        externalId: '',
+        title: post.title ?? null,
+        description: post.description ?? null,
+        priceTotal: this.castDecimal(post.priceTotal),
+        rentAmount: this.castDecimal(post.rentAmount),
+        depositAmount: this.castDecimal(post.depositAmount),
+        dailyRateNormal: null,
+        dailyRateWeekend: null,
+        dailyRateHoliday: null,
+        extraPersonFee: null,
+        pricePerSquare: null,
+        area: null,
+        areaLabel: null,
+        landArea: null,
+        landAreaLabel: null,
+        rooms: null,
+        roomsLabel: null,
+        floor: null,
+        floorLabel: null,
+        floorsCount: null,
+        unitPerFloor: null,
+        yearBuilt: null,
+        yearBuiltLabel: null,
+        capacity: null,
+        capacityLabel: null,
+        hasParking: null,
+        hasElevator: null,
+        hasWarehouse: null,
+        hasBalcony: null,
+        isRebuilt: null,
+        photosVerified: null,
+        cityName: post.cityName ?? null,
+        districtName: post.districtName ?? null,
+        provinceName: post.provinceName ?? null,
+        categorySlug: '',
+        businessType: null,
+        publishedAt: post.publishedAt ?? null,
+        publishedAtJalali: null,
+        createdAt: post.publishedAt ?? new Date(),
+        permalink: post.permalink ?? null,
+        imageUrl: null,
+        mediaCount: post.medias.length,
+        medias: post.medias.map((media) => ({
+          id: media.id,
+          url: media.url ?? '',
+          thumbnailUrl: media.thumbnailUrl ?? null,
+          alt: null,
+        })),
+      } as DivarPostListItemDto,
+      { id: savedFilter.id, name: savedFilter.name ?? '' },
+    );
+
+    try {
+      return await this.prisma.notification.create({
+        data: {
+          userId: params.userId,
+          savedFilterId: savedFilter.id,
+          postId: post.id,
+          message: params.message ?? post.title ?? post.description ?? null,
+          payload: payload as Prisma.InputJsonValue,
+          nextAttemptAt: new Date(),
+        },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new BadRequestException('A notification for this post and filter already exists');
+      }
+      throw error;
+    }
+  }
 
   async listUserNotifications(
     userId: string,

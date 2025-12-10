@@ -140,6 +140,13 @@ export const apiSlice = createApi({
       query: () => '/health',
       providesTags: ['Health'],
     }),
+    registerPushSubscription: builder.mutation<{ ok: true }, { endpoint: string; p256dh: string; auth: string }>({
+      query: (body) => ({
+        url: '/notifications/push/subscribe',
+        method: 'POST',
+        body,
+      }),
+    }),
     requestOtp: builder.mutation<SuccessResponse, { phone: string }>({
       query: (body) => ({
         url: '/auth/request-otp',
@@ -166,6 +173,16 @@ export const apiSlice = createApi({
         body: {},
       }),
       invalidatesTags: ['User'],
+    }),
+    sendTestNotification: builder.mutation<
+      { notificationId: string; status: string },
+      { userId: string; savedFilterId: string; postId: string; message?: string }
+    >({
+      query: (body) => ({
+        url: '/notifications/admin/test',
+        method: 'POST',
+        body,
+      }),
     }),
     updateCurrentUser: builder.mutation<CurrentUser, UpdateCurrentUserPayload>({
       query: (body) => ({
@@ -616,6 +633,8 @@ export const {
   useDeleteSavedFilterMutation,
   useGetNotificationsQuery,
   useLazyGetNotificationsQuery,
+  useSendTestNotificationMutation,
+  useRegisterPushSubscriptionMutation,
 } = apiSlice;
 
 type UpdateCurrentUserPayload = Partial<{

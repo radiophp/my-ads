@@ -22,6 +22,8 @@ import {
   getNotificationPermission,
   requestNotificationPermission,
 } from '@/features/notifications/nativeNotifications';
+import { usePushSubscription } from '@/features/notifications/usePushSubscription';
+import { useToast } from '@/components/ui/use-toast';
 
 const PAGE_SIZE = 20;
 type NotificationsTranslator = ReturnType<typeof useTranslations<'dashboard.notificationsPage'>>;
@@ -36,6 +38,8 @@ export function NotificationsPanel() {
   const [permission, setPermission] = useState<NotificationPermission>(
     canUseNativeNotifications() ? getNotificationPermission() : 'denied',
   );
+  const { subscribe: subscribePush, supported: pushSupported, isLoading: pushLoading } = usePushSubscription();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!data) {
@@ -57,6 +61,21 @@ export function NotificationsPanel() {
   const handleEnableDeviceNotifications = async () => {
     const result = await requestNotificationPermission();
     setPermission(result);
+  };
+
+  const handleEnablePush = async () => {
+    try {
+      await subscribePush();
+      toast({ title: t('push.enabledTitle'), description: t('push.enabledDescription') });
+    } catch (error) {
+      toast({
+        title: t('push.errorTitle'),
+        description: t('push.errorDescription'),
+        variant: 'destructive',
+      });
+      // eslint-disable-next-line no-console
+      console.error(error);
+    }
   };
 
   const handleLoadMore = async () => {
@@ -141,6 +160,18 @@ export function NotificationsPanel() {
                 className="inline-flex items-center gap-2"
               >
                 {t('enableDeviceNotifications', { default: 'Enable device notifications' })}
+              </Button>
+            ) : null}
+            {pushSupported ? (
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => void handleEnablePush()}
+                disabled={pushLoading}
+                variant="secondary"
+                className="inline-flex items-center gap-2"
+              >
+                {pushLoading ? t('push.enabling') : t('push.enable')}
               </Button>
             ) : null}
           </div>

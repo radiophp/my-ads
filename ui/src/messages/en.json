@@ -280,7 +280,25 @@
           "filter_floor": "Floor",
           "filter_floors_count": "Number of floors",
           "filter_unit_per_floor": "Units per floor",
-          "filter_rent": "Rent"
+          "filter_rent": "Rent",
+          "business-type": "Seller type",
+          "addon_service_tags": "Add-ons",
+          "building_direction": "Building direction",
+          "cooling_system": "Cooling system",
+          "heating_system": "Heating system",
+          "floor_type": "Floor type",
+          "warm_water_provider": "Warm water",
+          "deed_type": "Deed type",
+          "rooms": "Rooms",
+          "recent_ads": "Time posted",
+          "toilet": "Toilet type",
+          "parking": "Parking",
+          "elevator": "Elevator",
+          "warehouse": "Storage",
+          "balcony": "Balcony",
+          "rebuilt": "Renovated",
+          "has-photo": "Has photos",
+          "bizzDeed": "Commercial deed"
         },
         "fieldLabel": "Field: {key}",
         "clear": "Clear filters",
@@ -304,9 +322,33 @@
       "emptyDescription": "Apply filters from the dashboard and tap “Save filter set” to keep them here.",
       "item": {
         "updated": "Updated {value}",
+        "view": "View filters",
         "delete": "Delete",
         "notificationsLabel": "Realtime alerts",
         "notificationsAria": "Toggle realtime notifications for \"{name}\""
+      },
+      "details": {
+        "title": "Details for “{name}”",
+        "province": "Province",
+        "cities": "Cities",
+        "districts": "Districts",
+        "category": "Category",
+        "categoryFilters": "Category filters",
+        "noCategoryFilters": "No category filters set",
+        "noteFilter": "Notes filter",
+        "folder": "Saved folder",
+        "notifications": "Realtime alerts",
+        "enabled": "Enabled",
+        "disabled": "Disabled",
+        "range": "{min} – {max}",
+        "none": "None",
+        "all": "All",
+        "filterKey": "Filter: {key}",
+        "note": {
+          "all": "All posts",
+          "has": "Only posts with notes",
+          "none": "Only posts without notes"
+        }
       },
       "dialog": {
         "title": "Delete saved filter set",
@@ -340,6 +382,14 @@
         "online": "Realtime updates active",
         "offline": "Realtime connection paused",
         "error": "Realtime error: {message}"
+      },
+      "push": {
+        "enable": "Enable push notifications",
+        "enabling": "Enabling…",
+        "enabledTitle": "Push enabled",
+        "enabledDescription": "We’ll deliver alerts even when the app is closed.",
+        "errorTitle": "Push failed",
+        "errorDescription": "Could not enable push. Check permissions and try again."
       },
       "status": {
         "pending": "Waiting to deliver",
@@ -529,7 +579,43 @@
         "postsToAnalyze": {
           "title": "Posts to analyze",
           "description": "Review Divar posts queued for normalization."
+        },
+        "notifications": {
+          "title": "Test notifications",
+          "description": "Send a manual test notification to a user."
         }
+      }
+    },
+    "notifications": {
+      "badge": "Test delivery",
+      "title": "Send test notification",
+      "description": "Create a one-off notification for a specific user, saved filter, and post. Useful for validating websocket delivery and payloads.",
+      "fields": {
+        "userId": "User ID",
+        "savedFilterId": "Saved filter ID",
+        "postId": "Post ID",
+        "message": "Message (optional)",
+        "messagePlaceholder": "Fallback to post title/description if empty"
+      },
+      "actions": {
+        "send": "Send notification",
+        "sending": "Sending…"
+      },
+      "toast": {
+        "successTitle": "Notification enqueued",
+        "successDescription": "Notification ID: {id}",
+        "errorTitle": "Failed to send notification",
+        "errorDescription": "Please check the IDs and try again."
+      },
+      "errors": {
+        "missing": "Missing required fields",
+        "required": "Enter user ID, saved filter ID, and post ID."
+      },
+      "tips": {
+        "title": "Tips",
+        "item1": "Use a user/saved filter combination that actually belongs together.",
+        "item2": "Pick a post that exists in the database so the payload has content.",
+        "item3": "Keep the browser or PWA open so websocket delivery can be tested live."
       }
     },
     "divarFilters": {

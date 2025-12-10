@@ -271,17 +271,35 @@
       "empty": "برای این دسته فیلتری ثبت نشده است.",
       "lastSynced": "آخرین به‌روزرسانی {value}",
       "widgetFallback": "",
-      "widgetLabels": {
-        "filter_price": "قیمت",
-        "filter_size": "متراژ",
-        "filter_price_per_square": "قیمت بر مساحت",
-        "filter_rooms": "تعداد اتاق",
-        "filter_building-age": "سن بنا",
-        "filter_floor": "طبقه",
-        "filter_floors_count": "تعداد طبقات",
-        "filter_unit_per_floor": "واحد در هر طبقه",
-        "filter_rent": "اجاره"
-      },
+        "widgetLabels": {
+          "filter_price": "قیمت",
+          "filter_size": "متراژ",
+          "filter_price_per_square": "قیمت بر مساحت",
+          "filter_rooms": "تعداد اتاق",
+          "filter_building-age": "سن بنا",
+          "filter_floor": "طبقه",
+          "filter_floors_count": "تعداد طبقات",
+          "filter_unit_per_floor": "واحد در هر طبقه",
+          "filter_rent": "اجاره",
+          "business-type": "آگهی‌دهنده",
+          "addon_service_tags": "افزونه‌ها",
+          "building_direction": "جهت ساختمان",
+          "cooling_system": "سیستم سرمایش",
+          "heating_system": "سیستم گرمایش",
+          "floor_type": "جنس کف",
+          "warm_water_provider": "آب گرم",
+          "deed_type": "نوع سند",
+          "rooms": "تعداد اتاق",
+          "recent_ads": "زمان انتشار",
+          "toilet": "نوع سرویس",
+          "parking": "پارکینگ",
+          "elevator": "آسانسور",
+          "warehouse": "انباری",
+          "balcony": "بالکن",
+          "rebuilt": "بازسازی شده",
+          "has-photo": "دارای عکس",
+          "bizzDeed": "سند اداری"
+        },
       "fieldLabel": "شناسه فیلتر: {key}",
       "clear": "حذف فیلترها",
       "activeCount": "{count} فیلتر فعال",
@@ -304,9 +322,33 @@
       "emptyDescription": "در داشبورد فیلترها را اعمال و روی «ذخیره مجموعه فیلتر» بزنید تا اینجا نمایش داده شوند.",
       "item": {
         "updated": "به‌روزرسانی {value}",
+        "view": "مشاهده فیلترها",
         "delete": "حذف",
         "notificationsLabel": "اعلان لحظه‌ای",
         "notificationsAria": "تغییر وضعیت اعلان برای «{name}»"
+      },
+      "details": {
+        "title": "جزئیات «{name}»",
+        "province": "استان",
+        "cities": "شهرها",
+        "districts": "مناطق",
+        "category": "دسته‌بندی",
+        "categoryFilters": "فیلترهای دسته‌بندی",
+        "noCategoryFilters": "فیلتر فعالی برای دسته‌بندی ثبت نشده است",
+        "noteFilter": "فیلتر یادداشت",
+        "folder": "پوشه ذخیره",
+        "notifications": "اعلان لحظه‌ای",
+        "enabled": "فعال",
+        "disabled": "غیرفعال",
+        "range": "{min} – {max}",
+        "none": "هیچ‌کدام",
+        "all": "همه",
+        "filterKey": "فیلتر: {key}",
+        "note": {
+          "all": "همه آگهی‌ها",
+          "has": "فقط آگهی‌های دارای یادداشت",
+          "none": "فقط آگهی‌های بدون یادداشت"
+        }
       },
       "dialog": {
         "title": "حذف مجموعه فیلتر",
@@ -340,6 +382,14 @@
         "online": "اتصال لحظه‌ای فعال است",
         "offline": "اتصال لحظه‌ای متوقف شده",
         "error": "خطای اتصال لحظه‌ای: {message}"
+      },
+      "push": {
+        "enable": "فعال‌سازی پوش نوتیفیکیشن",
+        "enabling": "در حال فعال‌سازی…",
+        "enabledTitle": "پوش فعال شد",
+        "enabledDescription": "حتی وقتی اپ بسته است اعلان دریافت می‌کنید.",
+        "errorTitle": "فعال‌سازی پوش ناموفق بود",
+        "errorDescription": "مجوزها را بررسی و دوباره تلاش کنید."
       },
       "status": {
         "pending": "در انتظار ارسال",
@@ -529,7 +579,43 @@
         "postsToAnalyze": {
           "title": "آگهی‌های در صف تحلیل",
           "description": "آگهی‌های دریافت‌شده از دیوار که منتظر نرمال‌سازی هستند را بررسی کنید."
+        },
+        "notifications": {
+          "title": "اعلان آزمایشی",
+          "description": "برای یک کاربر اعلان دستی ارسال کنید."
         }
+      }
+    },
+    "notifications": {
+      "badge": "آزمایش ارسال",
+      "title": "ارسال اعلان تست",
+      "description": "یک اعلان تک‌بار برای کاربر، مجموعه فیلتر و آگهی مشخص ایجاد کنید تا اتصال وب‌سوکت و محتوا را بررسی کنید.",
+      "fields": {
+        "userId": "شناسه کاربر",
+        "savedFilterId": "شناسه مجموعه فیلتر",
+        "postId": "شناسه آگهی",
+        "message": "پیام (اختیاری)",
+        "messagePlaceholder": "اگر خالی بماند از عنوان/توضیح آگهی استفاده می‌شود"
+      },
+      "actions": {
+        "send": "ارسال اعلان",
+        "sending": "در حال ارسال…"
+      },
+      "toast": {
+        "successTitle": "اعلان در صف قرار گرفت",
+        "successDescription": "شناسه اعلان: {id}",
+        "errorTitle": "ارسال اعلان ناموفق بود",
+        "errorDescription": "شناسه‌ها را بررسی و دوباره تلاش کنید."
+      },
+      "errors": {
+        "missing": "فیلدهای لازم وارد نشده‌اند",
+        "required": "شناسه کاربر، مجموعه فیلتر و آگهی را وارد کنید."
+      },
+      "tips": {
+        "title": "نکات",
+        "item1": "مطمئن شوید مجموعه فیلتر متعلق به همان کاربر است.",
+        "item2": "آگهی موجود در پایگاه داده انتخاب شود تا محتوا داشته باشد.",
+        "item3": "برای تست لحظه‌ای وب‌سوکت، مرورگر یا PWA را باز نگه دارید."
       }
     },
     "divarFilters": {

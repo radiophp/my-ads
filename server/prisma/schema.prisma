@@ -57,6 +57,7 @@ model User {
   postNotes          DivarPostNote[]
   savedFilters       SavedFilter[]
   notifications      Notification[]
+  pushSubscriptions  PushSubscription[]
 
   @@index([cityId])
 }
@@ -405,4 +406,17 @@ model Notification {
   @@index([userId, status, nextAttemptAt])
   @@index([nextAttemptAt])
   @@index([postId])
+}
+
+model PushSubscription {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint   String   @unique
+  p256dh     String
+  auth       String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId])
 }

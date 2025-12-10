@@ -9,6 +9,7 @@ import { NotificationsService } from './notifications.service';
 import { NotificationQueueProcessor } from './notification-queue.processor';
 import { NotificationMatcherService } from './notification-matcher.service';
 import { NotificationMaintenanceService } from './notification-maintenance.service';
+import { PushNotificationService } from './push-notification.service';
 
 @Module({
   imports: [ConfigModule, PrismaModule, QueueModule, WebsocketModule, DivarPostsModule],
@@ -18,6 +19,7 @@ import { NotificationMaintenanceService } from './notification-maintenance.servi
     NotificationQueueProcessor,
     NotificationMatcherService,
     NotificationMaintenanceService,
+    PushNotificationService,
   ],
   exports: [NotificationsService],
 })

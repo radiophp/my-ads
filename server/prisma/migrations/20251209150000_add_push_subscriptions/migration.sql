@@ -1,0 +1,16 @@
+-- Create push subscriptions table
+-- Use TEXT ids to match existing User.id type (String in Prisma => TEXT in DB)
+CREATE TABLE "PushSubscription" (
+    "id" TEXT NOT NULL DEFAULT gen_random_uuid(),
+    "userId" TEXT NOT NULL,
+    "endpoint" TEXT NOT NULL,
+    "p256dh" TEXT NOT NULL,
+    "auth" TEXT NOT NULL,
+    "createdAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
+    "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT "PushSubscription_pkey" PRIMARY KEY ("id"),
+    CONSTRAINT "PushSubscription_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE UNIQUE INDEX "PushSubscription_endpoint_key" ON "PushSubscription" ("endpoint");
+CREATE INDEX "PushSubscription_userId_idx" ON "PushSubscription" ("userId");

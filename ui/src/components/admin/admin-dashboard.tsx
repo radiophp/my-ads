@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { Boxes, GitBranch, Map, MapPin, Route, SlidersHorizontal, Newspaper } from 'lucide-react';
+import { Boxes, GitBranch, Map, MapPin, Route, SlidersHorizontal, Newspaper, Bell } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Link } from '@/i18n/routing';
@@ -61,6 +61,12 @@ export function AdminDashboard() {
       icon: <Newspaper className="size-8 text-primary" aria-hidden />,
       title: t('cards.postsToAnalyze.title'),
       countKey: 'postsToAnalyzePending',
+    },
+    {
+      href: '/admin/notifications',
+      icon: <Bell className="size-8 text-primary" aria-hidden />,
+      title: t('cards.notifications.title'),
+      countKey: 'notifications',
     },
   ];
 

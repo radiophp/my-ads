@@ -2,14 +2,21 @@
 
 import { useMemo, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { Bookmark, RefreshCw, Trash2 } from 'lucide-react';
+import { Bookmark, Eye, RefreshCw, Trash2 } from 'lucide-react';
+import { skipToken } from '@reduxjs/toolkit/query';
 
 import {
   useGetSavedFiltersQuery,
   useDeleteSavedFilterMutation,
   useUpdateSavedFilterMutation,
+  useGetProvincesQuery,
+  useGetCitiesQuery,
+  useGetDistrictsQuery,
+  useGetRingBinderFoldersQuery,
+  useGetPublicDivarCategoryFilterQuery,
 } from '@/features/api/apiSlice';
 import type { SavedFilter } from '@/types/saved-filters';
+import type { CategoryFilterValue } from '@/features/search-filter/searchFilterSlice';
 import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
@@ -21,12 +28,20 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
 
 export function SavedFiltersPanel() {
   const t = useTranslations('dashboard.savedFiltersPage');
+  const tFilterLabels = useTranslations('dashboard.filters.categoryFilters.widgetLabels');
   const locale = useLocale();
   const { toast } = useToast();
   const {
@@ -41,6 +56,25 @@ export function SavedFiltersPanel() {
   const [updateSavedFilter, { isLoading: isUpdating }] = useUpdateSavedFilterMutation();
   const [pendingDelete, setPendingDelete] = useState<SavedFilter | null>(null);
   const [pendingToggleId, setPendingToggleId] = useState<string | null>(null);
+  const [viewingFilter, setViewingFilter] = useState<SavedFilter | null>(null);
+
+  const { data: provinces = [] } = useGetProvincesQuery();
+  const { data: cities = [] } = useGetCitiesQuery();
+  const { data: districts = [] } = useGetDistrictsQuery();
+  const { data: ringBinderData } = useGetRingBinderFoldersQuery();
+
+  const activeCategorySlug = useMemo(() => {
+    if (!viewingFilter) return null;
+    return (
+      viewingFilter.payload.categorySelection.slug ??
+      Object.keys(viewingFilter.payload.categoryFilters ?? {})[0] ??
+      null
+    );
+  }, [viewingFilter]);
+
+  const {
+    data: categoryFilterDetail,
+  } = useGetPublicDivarCategoryFilterQuery(activeCategorySlug ?? skipToken);
 
   const filters = data?.filters ?? [];
   const limit = data?.limit ?? 0;
@@ -163,6 +197,16 @@ export function SavedFiltersPanel() {
                   </div>
                   <Button
                     type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setViewingFilter(filter)}
+                    className="inline-flex items-center gap-2"
+                  >
+                    <Eye className="size-4" aria-hidden />
+                    {t('item.view')}
+                  </Button>
+                  <Button
+                    type="button"
                     variant="ghost"
                     className="text-destructive hover:bg-destructive/10"
                     onClick={() => setPendingDelete(filter)}
@@ -197,6 +241,37 @@ export function SavedFiltersPanel() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <Dialog open={Boolean(viewingFilter)} onOpenChange={(open) => !open && setViewingFilter(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>{t('details.title', { name: viewingFilter?.name ?? '' })}</DialogTitle>
+            <DialogDescription>
+              {viewingFilter
+                ? t('item.updated', { value: formatTimestamp(viewingFilter.updatedAt) })
+                : null}
+            </DialogDescription>
+          </DialogHeader>
+          {viewingFilter ? (
+            <FilterDetails
+              filter={viewingFilter}
+              provinces={provinces}
+              cities={cities}
+              districts={districts}
+              ringBinderFolders={ringBinderData?.folders ?? []}
+              categoryName={categoryFilterDetail?.categoryName ?? activeCategorySlug ?? ''}
+              normalizedOptions={categoryFilterDetail?.normalizedOptions ?? {}}
+              filterLabel={(key) => {
+                try {
+                  return tFilterLabels(key as never);
+                } catch {
+                  return key;
+                }
+              }}
+              onClose={() => setViewingFilter(null)}
+            />
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -228,4 +303,155 @@ function EmptyState({ title, description }: EmptyStateProps) {
       <p className="mt-2 text-sm text-muted-foreground">{description}</p>
     </div>
   );
+}
+
+type FilterDetailsProps = {
+  filter: SavedFilter;
+  provinces: { id: number; name: string }[];
+  cities: { id: number; name: string }[];
+  districts: { id: number; name: string; cityId: number }[];
+  ringBinderFolders: { id: string; name: string }[];
+  categoryName: string;
+  normalizedOptions: Record<string, { value: string; label: string }[]>;
+  filterLabel: (key: string) => string;
+  onClose: () => void;
+};
+
+function FilterDetails({
+  filter,
+  provinces,
+  cities,
+  districts,
+  ringBinderFolders,
+  categoryName,
+  normalizedOptions,
+  filterLabel,
+}: FilterDetailsProps) {
+  const t = useTranslations('dashboard.savedFiltersPage');
+  const provinceName =
+    filter.payload.provinceId === null
+      ? t('details.all')
+      : provinces.find((p) => p.id === filter.payload.provinceId)?.name ??
+        String(filter.payload.provinceId);
+
+  const citiesById = useMemo(() => new Map(cities.map((c) => [c.id, c.name])), [cities]);
+  const districtsById = useMemo(() => new Map(districts.map((d) => [d.id, d.name])), [districts]);
+  const folderById = useMemo(
+    () => new Map(ringBinderFolders.map((folder) => [folder.id, folder.name])),
+    [ringBinderFolders],
+  );
+
+  const cityLabel =
+    filter.payload.citySelection.mode === 'all'
+      ? t('details.all')
+      : filter.payload.citySelection.cityIds.length > 0
+        ? filter.payload.citySelection.cityIds
+            .map((id) => citiesById.get(id) ?? String(id))
+            .join(', ')
+        : t('details.none');
+
+  const districtLabel =
+    filter.payload.districtSelection.mode === 'all'
+      ? t('details.all')
+      : filter.payload.districtSelection.districtIds.length > 0
+        ? filter.payload.districtSelection.districtIds
+            .map((id) => districtsById.get(id) ?? String(id))
+            .join(', ')
+        : t('details.none');
+
+  const noteLabel = t(`details.note.${filter.payload.noteFilter}`);
+  const folderLabel = filter.payload.ringBinderFolderId
+    ? folderById.get(filter.payload.ringBinderFolderId) ?? filter.payload.ringBinderFolderId
+    : t('details.none');
+
+  const activeCategorySlug =
+    filter.payload.categorySelection.slug ??
+    Object.keys(filter.payload.categoryFilters ?? {})[0] ??
+    null;
+  const categoryFilters =
+    activeCategorySlug && filter.payload.categoryFilters
+      ? filter.payload.categoryFilters[activeCategorySlug] ?? {}
+      : {};
+
+  const formattedCategoryFilters = Object.entries(categoryFilters).map(([key, value]) => ({
+    key,
+    label: t('details.filterKey', { key: filterLabel(key) }),
+    value: formatCategoryFilterValue(value, normalizedOptions[key] ?? [], t),
+  }));
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <DetailRow label={t('details.province')} value={provinceName} />
+        <DetailRow label={t('details.cities')} value={cityLabel} />
+        <DetailRow label={t('details.districts')} value={districtLabel} />
+        <DetailRow label={t('details.category')} value={categoryName || t('details.none')} />
+        <DetailRow label={t('details.noteFilter')} value={noteLabel} />
+        <DetailRow label={t('details.folder')} value={folderLabel} />
+        <DetailRow
+          label={t('details.notifications')}
+          value={filter.notificationsEnabled ? t('details.enabled') : t('details.disabled')}
+        />
+      </div>
+
+      <div className="rounded-xl border border-border/70 bg-muted/30 p-4">
+        <p className="text-sm font-semibold text-foreground">{t('details.categoryFilters')}</p>
+        {formattedCategoryFilters.length === 0 ? (
+          <p className="mt-2 text-sm text-muted-foreground">{t('details.noCategoryFilters')}</p>
+        ) : (
+          <ul className="mt-2 space-y-2 text-sm text-muted-foreground">
+            {formattedCategoryFilters.map((entry) => (
+              <li key={entry.key}>
+                <span className="font-medium text-foreground">{entry.label}:</span>{' '}
+                <span>{entry.value}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+type DetailRowProps = {
+  label: string;
+  value: string;
+};
+
+function DetailRow({ label, value }: DetailRowProps) {
+  return (
+    <div className="rounded-lg border border-border/60 bg-card/60 px-3 py-2">
+      <p className="text-xs font-medium text-muted-foreground">{label}</p>
+      <p className="text-sm font-semibold text-foreground">{value}</p>
+    </div>
+  );
+}
+
+function formatCategoryFilterValue(
+  value: CategoryFilterValue,
+  options: { value: string; label: string }[],
+  t: ReturnType<typeof useTranslations<'dashboard.savedFiltersPage'>>,
+): string {
+  switch (value.kind) {
+    case 'numberRange': {
+      const min = value.min ?? '–';
+      const max = value.max ?? '–';
+      return t('details.range', { min, max });
+    }
+    case 'multiSelect': {
+      if (!value.values || value.values.length === 0) return t('details.none');
+      const labels = value.values.map(
+        (val) => options.find((opt) => opt.value === val)?.label ?? val,
+      );
+      return labels.join(', ');
+    }
+    case 'singleSelect': {
+      const label = options.find((opt) => opt.value === value.value)?.label ?? value.value;
+      return label ? String(label) : t('details.none');
+    }
+    case 'boolean':
+      return value.value ? t('details.enabled') : t('details.disabled');
+    default:
+      return t('details.none');
+  }
 }

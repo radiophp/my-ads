@@ -57,6 +57,10 @@ const withPWA = withPWAInit({
   fallbacks: {
     document: '/offline',
   },
+  workboxOptions: {
+    // Keep push handlers even when the generated service worker overwrites the file
+    importScripts: ['push-sw.js'],
+  },
 } as any);
 
 const i18nRequestRelativePath = './src/i18n/request.ts';

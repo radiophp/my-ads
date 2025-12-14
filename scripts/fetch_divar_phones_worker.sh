@@ -25,6 +25,7 @@ if [[ ! -f "$HEADERS_FILE" ]]; then
 fi
 
 declare -a CURL_HEADERS=()
+TMP_POST_FILE="$(mktemp)"
 while IFS= read -r line; do
   [[ -z "$line" ]] && continue
   if [[ "$line" =~ ^[A-Za-z0-9_-]+: ]]; then
@@ -66,6 +67,11 @@ while true; do
   fi
 
   echo "[$WORKER_ID] Fetching phone for $externalId (lease $leaseId) -> https://divar.ir/v/$externalId"
+
+  # Pre-flight: fetch the post to mimic Divar’s flow (helps avoid rate limits)
+  echo "[$WORKER_ID] Preflight GET https://api.divar.ir/v8/posts/$externalId"
+  curl -sS -X GET "${CURL_HEADERS[@]}" --compressed \
+    "https://api.divar.ir/v8/posts/$externalId" >/dev/null || true
 
   response_file="$(mktemp)"
   http_code="$(curl -sS -o "$response_file" -w "%{http_code}" \

@@ -36,7 +36,7 @@ export class PhoneFetchService {
             },
           ],
         },
-        orderBy: { updatedAt: 'asc' },
+        orderBy: { createdAt: 'desc' },
         select: { id: true, externalId: true, contactUuid: true },
       });
 

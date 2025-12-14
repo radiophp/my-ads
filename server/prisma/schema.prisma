@@ -214,6 +214,7 @@ model DivarPost {
   description     String?
   contactUuid     String?
   phoneNumber     String?
+  businessRef     String?
   businessType    String?
   conversionType  String?
   listedAt        DateTime?
@@ -286,6 +287,7 @@ model DivarPost {
   @@index([districtId])
   @@index([status])
   @@index([createdAt])
+  @@index([businessRef])
   @@index([phoneNumber])
   @@index([contactUuid, phoneNumber])
   @@index([notificationsChecked, createdAt])
@@ -445,4 +447,15 @@ model AdminDivarSession {
   locked    Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model BusinessPhoneCache {
+  id           String   @id @default(uuid())
+  businessRef  String   @unique
+  phoneNumber  String?
+  fetchedAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  lockedUntil  DateTime?
+  title        String?
+  titleFetchedAt DateTime?
 }

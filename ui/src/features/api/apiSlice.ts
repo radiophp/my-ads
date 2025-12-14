@@ -35,6 +35,7 @@ import type {
   UpdateSavedFilterPayload,
 } from '@/types/saved-filters';
 import type { NotificationsResponse } from '@/types/notifications';
+import type { AdminDivarSession } from '@/types/admin-divar-session';
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:6200/api';
 
@@ -128,12 +129,13 @@ export const apiSlice = createApi({
     'Packages',
     'DivarCategories',
     'AdminStats',
-    'DivarCategoryFilters',
-    'PostsToAnalyze',
-    'DivarPosts',
-    'RingBinderFolders',
-    'SavedFilters',
-    'Notifications',
+  'DivarCategoryFilters',
+  'PostsToAnalyze',
+  'DivarPosts',
+  'RingBinderFolders',
+  'SavedFilters',
+  'Notifications',
+  'AdminDivarSessions',
   ],
   endpoints: (builder) => ({
     getHealth: builder.query<{ status: string }, void>({
@@ -182,6 +184,13 @@ export const apiSlice = createApi({
         url: '/notifications/admin/test',
         method: 'POST',
         body,
+      }),
+    }),
+    fetchPostPhone: builder.mutation<{ phoneNumber: string | null }, { postId: string }>({
+      query: ({ postId }) => ({
+        url: `/divar-posts/${postId}/share-phone`,
+        method: 'POST',
+        body: {},
       }),
     }),
     updateCurrentUser: builder.mutation<CurrentUser, UpdateCurrentUserPayload>({
@@ -338,6 +347,45 @@ export const apiSlice = createApi({
     getAdminDashboardStats: builder.query<AdminDashboardStats, void>({
       query: () => '/admin-panel/stats',
       providesTags: ['AdminStats'],
+    }),
+    getAdminDivarSessions: builder.query<AdminDivarSession[], void>({
+      query: () => '/admin/divar-sessions',
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map((session) => ({
+                type: 'AdminDivarSessions' as const,
+                id: session.id,
+              })),
+              { type: 'AdminDivarSessions' as const, id: 'LIST' },
+            ]
+          : [{ type: 'AdminDivarSessions' as const, id: 'LIST' }],
+    }),
+    createAdminDivarSession: builder.mutation<
+      AdminDivarSession,
+      { phone: string; jwt: string; active?: boolean; locked?: boolean }
+    >({
+      query: (body) => ({
+        url: '/admin/divar-sessions',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [{ type: 'AdminDivarSessions', id: 'LIST' }, 'AdminStats'],
+    }),
+    updateAdminDivarSession: builder.mutation<
+      AdminDivarSession,
+      { id: string; body: Partial<Pick<AdminDivarSession, 'phone' | 'jwt' | 'active' | 'locked'>> }
+    >({
+      query: ({ id, body }) => ({
+        url: `/admin/divar-sessions/${id}`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: (result, error, arg) => [
+        { type: 'AdminDivarSessions', id: 'LIST' },
+        { type: 'AdminDivarSessions', id: arg.id },
+        'AdminStats',
+      ],
     }),
     getDivarCategoryFilters: builder.query<DivarCategoryFilterSummary[], void>({
       query: () => '/admin/divar-category-filters',
@@ -614,10 +662,14 @@ export const {
   useGetDivarCategoryFilterQuery,
   useGetPublicDivarCategoryFilterQuery,
   useGetAdminDashboardStatsQuery,
+  useGetAdminDivarSessionsQuery,
+  useCreateAdminDivarSessionMutation,
+  useUpdateAdminDivarSessionMutation,
   useGetPostsToAnalyzeQuery,
   useGetDivarPostsQuery,
   useLazyGetDivarPostsQuery,
   useGetDivarPostQuery,
+  useFetchPostPhoneMutation,
   useGetRingBinderFoldersQuery,
   useCreateRingBinderFolderMutation,
   useUpdateRingBinderFolderMutation,

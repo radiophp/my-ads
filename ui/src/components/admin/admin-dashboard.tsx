@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { Boxes, GitBranch, Map, MapPin, Route, SlidersHorizontal, Newspaper, Bell } from 'lucide-react';
+import { Boxes, GitBranch, Map, MapPin, Route, SlidersHorizontal, Newspaper, Bell, KeyRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Link } from '@/i18n/routing';
@@ -67,6 +67,12 @@ export function AdminDashboard() {
       icon: <Bell className="size-8 text-primary" aria-hidden />,
       title: t('cards.notifications.title'),
       countKey: 'notifications',
+    },
+    {
+      href: '/admin/divar-sessions',
+      icon: <KeyRound className="size-8 text-primary" aria-hidden />,
+      title: t('cards.divarSessions.title'),
+      countKey: 'adminDivarSessions',
     },
   ];
 

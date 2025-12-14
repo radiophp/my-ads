@@ -9,7 +9,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
-import { useLazyGetDivarPostsQuery } from '@/features/api/apiSlice';
+import { useLazyGetDivarPostsQuery, useFetchPostPhoneMutation } from '@/features/api/apiSlice';
 import type { DivarPostSummary } from '@/types/divar-posts';
 import { useAppSelector } from '@/lib/hooks';
 import { DownloadPhotosDialog } from '@/components/dashboard/divar-posts/download-photos-dialog';
@@ -50,6 +50,7 @@ export function DivarPostsFeed(): JSX.Element {
   const [loadingMore, setLoadingMore] = useState(false);
   const [downloadDialogOpen, setDownloadDialogOpen] = useState(false);
   const [fetchPosts] = useLazyGetDivarPostsQuery();
+  const [fetchPhone] = useFetchPostPhoneMutation();
   const {
     provinceId,
     citySelection,
@@ -392,42 +393,72 @@ export function DivarPostsFeed(): JSX.Element {
     };
   }, [selectedPost, selectedCityDistrict, shareableDetailEntries, t, plainShareIcons]);
 
+  const appendPhoneAndShare = useCallback(
+    async (variant: 'telegram' | 'whatsapp' | 'copy') => {
+      if (!sharePayload || !selectedPost) {
+        return;
+      }
+
+      let phone: string | null = null;
+      let fetchFailed = false;
+      try {
+        const result = await fetchPhone({ postId: selectedPost.id }).unwrap();
+        phone = result.phoneNumber;
+      } catch (error) {
+        fetchFailed = true;
+        // eslint-disable-next-line no-console
+        console.warn('Failed to fetch phone for share', error);
+      }
+
+      if (fetchFailed) {
+        const proceed = window.confirm(t('sharePhoneFallbackPrompt'));
+        if (!proceed) {
+          return;
+        }
+      }
+
+      const phoneLine = phone ? `\n${t('sharePhoneLabel')}: ${phone}` : '';
+      const message = `${sharePayload.message}${phoneLine}`;
+      const plainMessage = `${sharePayload.whatsappMessage ?? sharePayload.message}${phoneLine}`;
+
+      if (variant === 'telegram') {
+        const url = `https://t.me/share/url?url=${encodeURIComponent(sharePayload.url)}&text=${encodeURIComponent(message)}`;
+        window.open(url, '_blank', 'noopener,noreferrer');
+      } else if (variant === 'whatsapp') {
+        const url = `https://wa.me/?text=${encodeURIComponent(plainMessage)}`;
+        window.open(url, '_blank', 'noopener,noreferrer');
+      } else {
+        navigator.clipboard
+          .writeText(message)
+          .then(() => {
+            toast({
+              title: t('copySuccessTitle'),
+              description: t('copySuccessDescription'),
+            });
+          })
+          .catch(() => {
+            toast({
+              title: t('copyErrorTitle'),
+              description: t('copyErrorDescription'),
+              variant: 'destructive',
+            });
+          });
+      }
+    },
+    [fetchPhone, selectedPost, sharePayload, t, toast],
+  );
+
   const handleShareWhatsapp = useCallback(() => {
-    if (!sharePayload) {
-      return;
-    }
-    const url = `https://wa.me/?text=${encodeURIComponent(sharePayload.whatsappMessage ?? sharePayload.message)}`;
-    window.open(url, '_blank', 'noopener,noreferrer');
-  }, [sharePayload]);
+    void appendPhoneAndShare('whatsapp');
+  }, [appendPhoneAndShare]);
 
   const handleShareTelegram = useCallback(() => {
-    if (!sharePayload) {
-      return;
-    }
-    const url = `https://t.me/share/url?url=${encodeURIComponent(sharePayload.url)}&text=${encodeURIComponent(sharePayload.message)}`;
-    window.open(url, '_blank', 'noopener,noreferrer');
-  }, [sharePayload]);
+    void appendPhoneAndShare('telegram');
+  }, [appendPhoneAndShare]);
 
   const handleCopyLink = useCallback(() => {
-    if (!sharePayload) {
-      return;
-    }
-    navigator.clipboard
-      .writeText(sharePayload.message)
-      .then(() => {
-        toast({
-          title: t('copySuccessTitle'),
-          description: t('copySuccessDescription'),
-        });
-      })
-      .catch(() => {
-        toast({
-          title: t('copyErrorTitle'),
-          description: t('copyErrorDescription'),
-          variant: 'destructive',
-        });
-      });
-  }, [sharePayload, t, toast]);
+    void appendPhoneAndShare('copy');
+  }, [appendPhoneAndShare]);
 
   const openPostModal = (post: DivarPostSummary) => {
     setSelectedPost(post);

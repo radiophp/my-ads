@@ -41,6 +41,7 @@ import { RingBindersModule } from './modules/ring-binders/ring-binders.module';
 import { SavedFiltersModule } from './modules/saved-filters/saved-filters.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import pushConfig from './platform/config/push.config';
+import { AdminDivarSessionsModule } from './modules/admin-divar-sessions/admin-divar-sessions.module';
 
 @Module({
   imports: [
@@ -98,6 +99,7 @@ import pushConfig from './platform/config/push.config';
     RingBindersModule,
     SavedFiltersModule,
     NotificationsModule,
+    AdminDivarSessionsModule,
   ],
 })
 export class AppModule {}

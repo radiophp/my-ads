@@ -206,6 +206,7 @@ model DivarPost {
   permalink       String?
   description     String?
   contactUuid     String?
+  phoneNumber     String?
   businessType    String?
   conversionType  String?
   listedAt        DateTime?
@@ -419,4 +420,14 @@ model PushSubscription {
   updatedAt  DateTime @updatedAt
 
   @@index([userId])
+}
+
+model AdminDivarSession {
+  id        String   @id @default(uuid())
+  phone     String   @unique
+  jwt       String
+  active    Boolean  @default(true)
+  locked    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

@@ -10,6 +10,7 @@ import {
   Res,
   UseGuards,
   Logger,
+  Post,
 } from '@nestjs/common';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -22,6 +23,7 @@ import { Public } from '@app/common/decorators/public.decorator';
 import { StorageService } from '@app/platform/storage/storage.service';
 import { DivarPostsAdminService } from './divar-posts-admin.service';
 import { DivarPostListItemDto, type PaginatedDivarPostsDto } from './dto/divar-post.dto';
+import { DivarContactFetchService } from './divar-contact-fetch.service';
 
 type PostWithMedias = NonNullable<Awaited<ReturnType<DivarPostsAdminService['getPostWithMedias']>>>;
 
@@ -36,6 +38,7 @@ export class DivarPostsController {
   constructor(
     private readonly divarPostsService: DivarPostsAdminService,
     private readonly storageService: StorageService,
+    private readonly contactFetchService: DivarContactFetchService,
   ) {}
 
   @Get()
@@ -109,6 +112,13 @@ export class DivarPostsController {
   @ApiOkResponse({ type: DivarPostListItemDto })
   async getPostById(@Param('id') id: string): Promise<DivarPostListItemDto> {
     return this.fetchPostOrThrow(id);
+  }
+
+  @Post(':id/share-phone')
+  @ApiOperation({ summary: 'Fetch Divar contact phone for a post (on-demand share)' })
+  async fetchSharePhone(@Param('id') id: string): Promise<{ phoneNumber: string | null }> {
+    const phone = await this.contactFetchService.fetchForPost(id);
+    return { phoneNumber: phone };
   }
 
   @Get('detail/:id')

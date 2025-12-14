@@ -445,6 +445,9 @@
       "copySuccessDescription": "Share text is now in your clipboard.",
       "copyErrorTitle": "Copy failed",
       "copyErrorDescription": "Please copy the link manually.",
+      "sharePhoneLabel": "Phone",
+      "sharePhoneFallbackPrompt": "There was a problem fetching the phone number. Do you want to continue sharing without it?",
+      "sharePhoneLabel": "Phone",
       "shareSms": "SMS",
       "saveDialog": {
         "title": "Save to folder",
@@ -583,7 +586,66 @@
         "notifications": {
           "title": "Test notifications",
           "description": "Send a manual test notification to a user."
+        },
+        "divarSessions": {
+          "title": "Divar sessions",
+          "description": "Manage admin phone sessions and JWTs for Divar API access."
         }
+      }
+    },
+    "divarSessions": {
+      "title": "Divar admin sessions",
+      "description": "Store authenticated Divar JWTs per admin phone number. Keep one active session per phone, lock sessions when they should not be used automatically.",
+      "actions": {
+        "add": "Add session",
+        "edit": "Edit",
+        "refresh": "Refresh",
+        "save": "Save",
+        "cancel": "Cancel",
+        "enable": "Enable",
+        "disable": "Disable",
+        "lock": "Lock",
+        "unlock": "Unlock"
+      },
+      "fields": {
+        "phone": "Phone number",
+        "jwt": "Divar JWT",
+        "jwtPlaceholder": "Paste the full JWT string",
+        "active": "Active",
+        "locked": "Locked"
+      },
+      "columns": {
+        "phone": "Phone",
+        "active": "Active",
+        "locked": "Locked",
+        "updated": "Updated at",
+        "actions": "Actions"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive",
+        "locked": "Locked",
+        "unlocked": "Unlocked"
+      },
+      "addDialog": {
+        "title": "Add Divar session",
+        "description": "Paste the JWT for the logged-in Divar phone session."
+      },
+      "editDialog": {
+        "title": "Edit Divar session",
+        "description": "Update the JWT or status for this phone."
+      },
+      "loading": "Loading sessions…",
+      "empty": "No admin Divar sessions yet.",
+      "toast": {
+        "createdTitle": "Session added",
+        "createdDescription": "Phone and JWT saved.",
+        "updatedTitle": "Session updated",
+        "updatedDescription": "Changes saved.",
+        "missingTitle": "Phone and JWT required",
+        "missingDescription": "Enter both phone number and JWT.",
+        "errorTitle": "Save failed",
+        "errorDescription": "Could not save the session. Try again."
       }
     },
     "notifications": {

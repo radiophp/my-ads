@@ -27,6 +27,7 @@
     "divar:fetch-posts": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-divar-post-fetch.ts",
     "divar:analyze-posts": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-divar-post-analyze.ts",
     "divar:sync-media": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-divar-post-media-sync.ts",
+    "divar:fetch-contacts": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-divar-contact-fetch.ts",
     "prepare": "husky install",
     "lint-staged": "lint-staged"
   },
@@ -69,6 +70,7 @@
     "amqp-connection-manager": "^5.0.0",
     "amqplib": "^0.10.9",
     "archiver": "^7.0.1",
+    "axios": "^1.13.2",
     "bcrypt": "^6.0.0",
     "cache-manager": "^7.2.4",
     "class-transformer": "^0.5.1",

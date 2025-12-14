@@ -445,6 +445,9 @@
       "copySuccessDescription": "متن اشتراک‌گذاری در کلیپ‌بورد قرار گرفت.",
       "copyErrorTitle": "کپی انجام نشد",
       "copyErrorDescription": "لطفاً لینک را دستی کپی کنید.",
+      "sharePhoneLabel": "شماره",
+      "sharePhoneFallbackPrompt": "در دریافت شماره تلفن مشکلی پیش آمد. می‌خواهید بدون شماره اشتراک‌گذاری کنید؟",
+      "sharePhoneLabel": "شماره",
       "shareSms": "پیامک",
       "saveDialog": {
         "title": "ذخیره در پوشه",
@@ -583,7 +586,66 @@
         "notifications": {
           "title": "اعلان آزمایشی",
           "description": "برای یک کاربر اعلان دستی ارسال کنید."
+        },
+        "divarSessions": {
+          "title": "جلسات دیوار",
+          "description": "مدیریت شماره‌ها و JWTهای دیوار برای دسترسی به API."
         }
+      }
+    },
+    "divarSessions": {
+      "title": "جلسات ادمین دیوار",
+      "description": "برای هر شماره ادمین، JWT دیوار را ذخیره کنید. یک جلسه فعال نگه دارید و در صورت نیاز آن را قفل کنید تا خودکار استفاده نشود.",
+      "actions": {
+        "add": "افزودن جلسه",
+        "edit": "ویرایش",
+        "refresh": "به‌روزرسانی",
+        "save": "ذخیره",
+        "cancel": "انصراف",
+        "enable": "فعال‌سازی",
+        "disable": "غیرفعال‌سازی",
+        "lock": "قفل",
+        "unlock": "باز کردن قفل"
+      },
+      "fields": {
+        "phone": "شماره تلفن",
+        "jwt": "توکن JWT دیوار",
+        "jwtPlaceholder": "رشته کامل JWT را جای‌گذاری کنید",
+        "active": "فعال",
+        "locked": "قفل شده"
+      },
+      "columns": {
+        "phone": "شماره",
+        "active": "فعال",
+        "locked": "قفل",
+        "updated": "آخرین به‌روزرسانی",
+        "actions": "اقدام‌ها"
+      },
+      "status": {
+        "active": "فعال",
+        "inactive": "غیرفعال",
+        "locked": "قفل",
+        "unlocked": "باز"
+      },
+      "addDialog": {
+        "title": "افزودن جلسه دیوار",
+        "description": "JWT مربوط به نشست لاگین‌شده را وارد کنید."
+      },
+      "editDialog": {
+        "title": "ویرایش جلسه دیوار",
+        "description": "JWT یا وضعیت این شماره را به‌روز کنید."
+      },
+      "loading": "در حال بارگذاری جلسات…",
+      "empty": "هنوز جلسه‌ای ثبت نشده است.",
+      "toast": {
+        "createdTitle": "جلسه ثبت شد",
+        "createdDescription": "شماره و JWT ذخیره شد.",
+        "updatedTitle": "جلسه به‌روزرسانی شد",
+        "updatedDescription": "تغییرات ذخیره شد.",
+        "missingTitle": "شماره و JWT الزامی است",
+        "missingDescription": "هر دو فیلد شماره و JWT را وارد کنید.",
+        "errorTitle": "ذخیره ناموفق بود",
+        "errorDescription": "امکان ذخیره جلسه نبود. دوباره تلاش کنید."
       }
     },
     "notifications": {

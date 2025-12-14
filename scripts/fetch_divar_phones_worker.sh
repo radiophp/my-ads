@@ -65,6 +65,7 @@ while true; do
   businessType=$(echo "$lease_body" | jq -r '.businessType // ""')
   businessCacheState=$(echo "$lease_body" | jq -r '.businessCacheState // ""')
   postTitle=$(echo "$lease_body" | jq -r '.postTitle // ""')
+  needsBusinessTitle=$(echo "$lease_body" | jq -r '.needsBusinessTitle // false')
 
   if [[ -z "$leaseId" || -z "$externalId" || -z "$contactUuid" ]]; then
     echo "Lease response missing fields: $lease_body" >&2
@@ -75,7 +76,7 @@ while true; do
     cache_label="$businessCacheState"
     [[ -z "$cache_label" ]] && cache_label="new"
     human_cache_label="$([[ "$cache_label" == "update" ]] && echo "updated business" || echo "new business")"
-    echo "[$WORKER_ID] Fetching phone for $externalId (lease $leaseId) -> https://divar.ir/v/$externalId [business=$businessRef type=$businessType $human_cache_label] \"${postTitle}\""
+    echo "[$WORKER_ID] Fetching phone for $externalId (lease $leaseId) -> https://divar.ir/v/$externalId [business=$businessRef type=$businessType $human_cache_label needsTitle=$needsBusinessTitle] \"${postTitle}\""
   else
     echo "[$WORKER_ID] Fetching phone for $externalId (lease $leaseId) -> https://divar.ir/v/$externalId [personal] \"${postTitle}\""
   fi
@@ -94,6 +95,23 @@ while true; do
 
   phone_raw="$(jq -r '(.widget_list[]?.data?.action?.payload?.phone_number // empty) | select(length>0)' < "$response_file" 2>/dev/null | head -n1)"
   rm -f "$response_file"
+  business_title=""
+
+  if [[ "$needsBusinessTitle" == "true" && -n "$businessRef" ]]; then
+    title_resp_file="$(mktemp)"
+    title_code="$(curl -sS -o "$title_resp_file" -w "%{http_code}" \
+      -X GET "${CURL_HEADERS[@]}" --compressed \
+      "https://api.divar.ir/v8/premium-user/web/business/brand-landing/${businessRef#*_}" || true)"
+    business_title="$(jq -r '
+      .header_widget_list[]? | select(.widget_type=="LEGEND_TITLE_ROW") | .data?.title // empty
+    ' < "$title_resp_file" 2>/dev/null | head -n1)"
+    rm -f "$title_resp_file"
+    if [[ -n "$business_title" ]]; then
+      echo "[$WORKER_ID] Business title fetched for $businessRef -> \"$business_title\""
+    else
+      echo "[$WORKER_ID] Business title not found (http $title_code) for $businessRef" >&2
+    fi
+  fi
 
   status="ok"
   err_msg=""
@@ -110,7 +128,11 @@ while true; do
 
   report_payload="{\"leaseId\":\"$leaseId\",\"status\":\"$status\""
   if [[ "$status" == "ok" ]]; then
-    report_payload+=",\"phoneNumber\":\"$phone_norm\"}"
+    report_payload+=",\"phoneNumber\":\"$phone_norm\""
+    if [[ -n "$business_title" ]]; then
+      report_payload+=",\"businessTitle\":\"$business_title\""
+    fi
+    report_payload+="}"
   else
     report_payload+=",\"error\":\"$err_msg\"}"
   fi

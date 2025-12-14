@@ -19,4 +19,9 @@ export class ReportPhoneFetchDto {
   @IsOptional()
   @IsString()
   error?: string;
+
+  @ApiProperty({ required: false, description: 'Business title if fetched by worker' })
+  @IsOptional()
+  @IsString()
+  businessTitle?: string;
 }

@@ -37,7 +37,7 @@ export class PhoneFetchController {
   @ApiOperation({ summary: 'Report phone fetch result' })
   async report(@Body() dto: ReportPhoneFetchDto): Promise<void> {
     if (dto.status === 'ok' && dto.phoneNumber) {
-      await this.phoneFetchService.reportOk(dto.leaseId, dto.phoneNumber);
+      await this.phoneFetchService.reportOk(dto.leaseId, dto.phoneNumber, dto.businessTitle);
     } else {
       await this.phoneFetchService.reportError(dto.leaseId, dto.error ?? 'unknown');
     }

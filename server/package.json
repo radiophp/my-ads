@@ -28,6 +28,7 @@
     "divar:analyze-posts": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-divar-post-analyze.ts",
     "divar:sync-media": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-divar-post-media-sync.ts",
     "divar:fetch-contacts": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-divar-contact-fetch.ts",
+    "business:title-refresh": "ENABLE_CRON_JOBS=true dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-business-title-refresh.ts",
     "prepare": "husky install",
     "lint-staged": "lint-staged"
   },

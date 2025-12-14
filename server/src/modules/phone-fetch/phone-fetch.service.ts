@@ -7,6 +7,7 @@ import axios from 'axios';
 const LOCK_SECONDS = 60;
 const MAX_ATTEMPTS = 5;
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const TITLE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 @Injectable()
 export class PhoneFetchService {
@@ -23,6 +24,7 @@ export class PhoneFetchService {
     businessRef?: string | null;
     businessType?: string | null;
     businessCacheState?: 'new' | 'update';
+    needsBusinessTitle?: boolean;
   } | null> {
     const now = new Date();
     const lockUntil = new Date(now.getTime() + LOCK_SECONDS * 1000);
@@ -61,14 +63,25 @@ export class PhoneFetchService {
       const businessRef =
         candidate.businessRef ?? (candidate.rawPayload as any)?.webengage?.business_ref ?? null;
       let businessCacheState: 'new' | 'update' | undefined;
+      let needsBusinessTitle = false;
 
       // If businessRef already cached and fresh, set phone immediately and skip leasing
       if (businessRef) {
         const cache = await tx.businessPhoneCache.findUnique({
           where: { businessRef },
-          select: { phoneNumber: true, fetchedAt: true, lockedUntil: true },
+          select: {
+            phoneNumber: true,
+            fetchedAt: true,
+            lockedUntil: true,
+            title: true,
+            titleFetchedAt: true,
+          },
         });
         businessCacheState = cache ? 'update' : 'new';
+        needsBusinessTitle =
+          !cache?.title ||
+          !cache.titleFetchedAt ||
+          cache.titleFetchedAt.getTime() < now.getTime() - TITLE_TTL_MS;
         if (cache?.phoneNumber && cache.fetchedAt.getTime() > now.getTime() - CACHE_TTL_MS) {
           await tx.divarPost.update({
             where: { id: candidate.id },
@@ -120,6 +133,7 @@ export class PhoneFetchService {
         businessRef,
         businessType: candidate.businessType,
         businessCacheState,
+        needsBusinessTitle,
       };
     });
 
@@ -136,10 +150,11 @@ export class PhoneFetchService {
       businessType: (post as any).businessType ?? null,
       businessCacheState: (post as any).businessCacheState,
       postTitle: (post as any).title ?? null,
+      needsBusinessTitle: (post as any).needsBusinessTitle ?? false,
     };
   }
 
-  async reportOk(leaseId: string, phoneNumber: string): Promise<void> {
+  async reportOk(leaseId: string, phoneNumber: string, businessTitle?: string): Promise<void> {
     const now = new Date();
     const post = await this.prisma.divarPost.findFirst({
       where: { phoneFetchLeaseId: leaseId },
@@ -148,11 +163,13 @@ export class PhoneFetchService {
     if (!post) return;
     const businessRef =
       post.businessRef ?? (post.rawPayload as any)?.webengage?.business_ref ?? null;
-    let businessTitle: string | undefined;
+    let resolvedBusinessTitle = businessTitle;
 
     await this.prisma.$transaction(async (tx) => {
       if (businessRef) {
-        businessTitle = await this.fetchBusinessTitle(businessRef).catch(() => undefined);
+        if (!resolvedBusinessTitle) {
+          resolvedBusinessTitle = await this.fetchBusinessTitle(businessRef).catch(() => undefined);
+        }
       }
 
       await tx.divarPost.updateMany({
@@ -175,16 +192,16 @@ export class PhoneFetchService {
             phoneNumber,
             fetchedAt: now,
             lockedUntil: null,
-            title: businessTitle ?? undefined,
-            titleFetchedAt: businessTitle ? now : undefined,
+            title: resolvedBusinessTitle ?? undefined,
+            titleFetchedAt: resolvedBusinessTitle ? now : undefined,
           },
           create: {
             businessRef,
             phoneNumber,
             fetchedAt: now,
             lockedUntil: null,
-            title: businessTitle ?? undefined,
-            titleFetchedAt: businessTitle ? now : undefined,
+            title: resolvedBusinessTitle ?? undefined,
+            titleFetchedAt: resolvedBusinessTitle ? now : undefined,
           },
         });
       }
@@ -220,15 +237,38 @@ export class PhoneFetchService {
     });
   }
 
-  private async fetchBusinessTitle(businessRef: string): Promise<string | undefined> {
+  public async fetchBusinessTitle(businessRef: string): Promise<string | undefined> {
     const brandToken = businessRef?.includes('_')
       ? (businessRef.split('_')[1] ?? businessRef)
       : businessRef;
     const url = `https://api.divar.ir/v8/premium-user/web/business/brand-landing/${brandToken}`;
+
+    const session = await this.prisma.adminDivarSession.findFirst({
+      where: { active: true, locked: false },
+      orderBy: { updatedAt: 'desc' },
+    });
+    const authHeader =
+      session && session.jwt
+        ? session.jwt.startsWith('Basic ')
+          ? session.jwt
+          : `Basic ${session.jwt}`
+        : undefined;
+    const rawJwt = session?.jwt?.replace(/^Basic\s+/i, '');
+
     const res = await axios.get(url, {
       timeout: 8000,
       validateStatus: () => true,
+      headers: {
+        'User-Agent':
+          'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:146.0) Gecko/20100101 Firefox/146.0',
+        Accept: 'application/json, text/plain, */*',
+        Referer: 'https://divar.ir/',
+        Origin: 'https://divar.ir',
+        ...(authHeader ? { Authorization: authHeader } : {}),
+        ...(rawJwt ? { Cookie: `token=${rawJwt}` } : {}),
+      },
     });
+
     if (res.status >= 200 && res.status < 300) {
       const data = res.data ?? {};
       const headerList: any[] = Array.isArray(data.header_widget_list)
@@ -241,6 +281,9 @@ export class PhoneFetchService {
         return headerTitle.trim();
       }
     }
+    this.logger.warn(
+      `Business title fetch failed for ${businessRef}: status=${res.status} body=${typeof res.data === 'string' ? res.data.slice(0, 150) : JSON.stringify(res.data ?? {}).slice(0, 150)}`,
+    );
     return undefined;
   }
 }

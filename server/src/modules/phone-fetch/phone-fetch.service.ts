@@ -221,7 +221,10 @@ export class PhoneFetchService {
   }
 
   private async fetchBusinessTitle(businessRef: string): Promise<string | undefined> {
-    const url = `https://api.divar.ir/v8/premium-user/web/business/brand-landing/${businessRef}`;
+    const brandToken = businessRef?.includes('_')
+      ? (businessRef.split('_')[1] ?? businessRef)
+      : businessRef;
+    const url = `https://api.divar.ir/v8/premium-user/web/business/brand-landing/${brandToken}`;
     const res = await axios.get(url, {
       timeout: 8000,
       validateStatus: () => true,

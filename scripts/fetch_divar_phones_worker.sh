@@ -65,7 +65,7 @@ while true; do
     sleep "$SLEEP"; continue
   fi
 
-  echo "[$WORKER_ID] Fetching phone for $externalId (lease $leaseId)..."
+  echo "[$WORKER_ID] Fetching phone for $externalId (lease $leaseId) -> https://divar.ir/v/$externalId"
 
   response_file="$(mktemp)"
   http_code="$(curl -sS -o "$response_file" -w "%{http_code}" \

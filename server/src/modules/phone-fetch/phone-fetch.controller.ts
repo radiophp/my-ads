@@ -10,6 +10,7 @@ export class PhoneFetchController {
   constructor(private readonly phoneFetchService: PhoneFetchService) {}
 
   @Post('lease')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Lease a post for phone fetch' })
   async lease(@Body() dto: LeasePhoneFetchDto): Promise<
     | {

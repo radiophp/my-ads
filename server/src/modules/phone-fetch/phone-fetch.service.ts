@@ -19,7 +19,10 @@ export class PhoneFetchService {
     postId: string;
     externalId: string;
     contactUuid: string;
+    postTitle?: string | null;
     businessRef?: string | null;
+    businessType?: string | null;
+    businessCacheState?: 'new' | 'update';
   } | null> {
     const now = new Date();
     const lockUntil = new Date(now.getTime() + LOCK_SECONDS * 1000);
@@ -46,6 +49,8 @@ export class PhoneFetchService {
           contactUuid: true,
           rawPayload: true,
           businessRef: true,
+          businessType: true,
+          title: true,
         },
       });
 
@@ -55,6 +60,7 @@ export class PhoneFetchService {
 
       const businessRef =
         candidate.businessRef ?? (candidate.rawPayload as any)?.webengage?.business_ref ?? null;
+      let businessCacheState: 'new' | 'update' | undefined;
 
       // If businessRef already cached and fresh, set phone immediately and skip leasing
       if (businessRef) {
@@ -62,6 +68,7 @@ export class PhoneFetchService {
           where: { businessRef },
           select: { phoneNumber: true, fetchedAt: true, lockedUntil: true },
         });
+        businessCacheState = cache ? 'update' : 'new';
         if (cache?.phoneNumber && cache.fetchedAt.getTime() > now.getTime() - CACHE_TTL_MS) {
           await tx.divarPost.update({
             where: { id: candidate.id },
@@ -108,7 +115,12 @@ export class PhoneFetchService {
         },
       });
 
-      return { ...candidate, businessRef };
+      return {
+        ...candidate,
+        businessRef,
+        businessType: candidate.businessType,
+        businessCacheState,
+      };
     });
 
     if (!post) {
@@ -121,6 +133,9 @@ export class PhoneFetchService {
       externalId: post.externalId,
       contactUuid: post.contactUuid!,
       businessRef: (post as any).businessRef ?? null,
+      businessType: (post as any).businessType ?? null,
+      businessCacheState: (post as any).businessCacheState,
+      postTitle: (post as any).title ?? null,
     };
   }
 

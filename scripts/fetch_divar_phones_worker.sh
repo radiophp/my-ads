@@ -49,24 +49,36 @@ while true; do
   lease_body="${lease_resp%$'\n'*}"
   lease_code="${lease_resp##*$'\n'}"
 
-  if [[ "$lease_code" == "204" ]]; then
-    sleep "$SLEEP"; continue
-  fi
   if [[ "$lease_code" -lt 200 || "$lease_code" -ge 300 ]]; then
     echo "Lease failed (HTTP $lease_code): $lease_body" >&2
+    sleep "$SLEEP"; continue
+  fi
+
+  if [[ "$(echo "$lease_body" | jq -r '.status // empty')" == "empty" ]]; then
     sleep "$SLEEP"; continue
   fi
 
   leaseId=$(echo "$lease_body" | jq -r '.leaseId')
   externalId=$(echo "$lease_body" | jq -r '.externalId')
   contactUuid=$(echo "$lease_body" | jq -r '.contactUuid')
+  businessRef=$(echo "$lease_body" | jq -r '.businessRef // ""')
+  businessType=$(echo "$lease_body" | jq -r '.businessType // ""')
+  businessCacheState=$(echo "$lease_body" | jq -r '.businessCacheState // ""')
+  postTitle=$(echo "$lease_body" | jq -r '.postTitle // ""')
 
   if [[ -z "$leaseId" || -z "$externalId" || -z "$contactUuid" ]]; then
     echo "Lease response missing fields: $lease_body" >&2
     sleep "$SLEEP"; continue
   fi
 
-  echo "[$WORKER_ID] Fetching phone for $externalId (lease $leaseId) -> https://divar.ir/v/$externalId"
+  if [[ -n "$businessRef" ]]; then
+    cache_label="$businessCacheState"
+    [[ -z "$cache_label" ]] && cache_label="new"
+    human_cache_label="$([[ "$cache_label" == "update" ]] && echo "updated business" || echo "new business")"
+    echo "[$WORKER_ID] Fetching phone for $externalId (lease $leaseId) -> https://divar.ir/v/$externalId [business=$businessRef type=$businessType $human_cache_label] \"${postTitle}\""
+  else
+    echo "[$WORKER_ID] Fetching phone for $externalId (lease $leaseId) -> https://divar.ir/v/$externalId [personal] \"${postTitle}\""
+  fi
 
   # Pre-flight: fetch the post to mimic Divar’s flow (helps avoid rate limits)
   echo "[$WORKER_ID] Preflight GET https://api.divar.ir/v8/posts/$externalId"

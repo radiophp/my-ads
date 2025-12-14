@@ -18,6 +18,10 @@ export class PhoneFetchController {
         postId: string;
         externalId: string;
         contactUuid: string;
+        postTitle?: string | null;
+        businessRef?: string | null;
+        businessType?: string | null;
+        businessCacheState?: 'new' | 'update';
       }
     | { status: 'empty' }
   > {

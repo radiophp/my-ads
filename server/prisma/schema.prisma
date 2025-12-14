@@ -39,6 +39,13 @@ enum NotificationStatus {
   FAILED
 }
 
+enum PhoneFetchStatus {
+  PENDING
+  IN_PROGRESS
+  DONE
+  FAILED
+}
+
 model User {
   id                 String   @id @default(uuid())
   phone              String   @unique
@@ -259,6 +266,12 @@ model DivarPost {
   rawPayload      Json
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @default(now()) @updatedAt
+  phoneFetchStatus     PhoneFetchStatus @default(PENDING)
+  phoneFetchLockedUntil DateTime?
+  phoneFetchLeaseId     String?
+  phoneFetchWorker      String?
+  phoneFetchAttemptCount Int            @default(0)
+  phoneFetchLastError    String?
   medias          DivarPostMedia[]
   attributes      DivarPostAttribute[]
   savedInFolders  RingBinderFolderPost[]
@@ -273,6 +286,8 @@ model DivarPost {
   @@index([districtId])
   @@index([status])
   @@index([createdAt])
+  @@index([phoneNumber])
+  @@index([contactUuid, phoneNumber])
   @@index([notificationsChecked, createdAt])
 }
 

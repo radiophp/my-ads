@@ -51,7 +51,7 @@ while true; do
   if [[ "$lease_code" == "204" ]]; then
     sleep "$SLEEP"; continue
   fi
-  if [[ "$lease_code" != "200" ]]; then
+  if [[ "$lease_code" -lt 200 || "$lease_code" -ge 300 ]]; then
     echo "Lease failed (HTTP $lease_code): $lease_body" >&2
     sleep "$SLEEP"; continue
   fi

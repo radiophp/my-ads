@@ -72,6 +72,7 @@ while true; do
   echo "[$WORKER_ID] Preflight GET https://api.divar.ir/v8/posts/$externalId"
   curl -sS -X GET "${CURL_HEADERS[@]}" --compressed \
     "https://api.divar.ir/v8/posts/$externalId" >/dev/null || true
+  sleep 2
 
   response_file="$(mktemp)"
   http_code="$(curl -sS -o "$response_file" -w "%{http_code}" \

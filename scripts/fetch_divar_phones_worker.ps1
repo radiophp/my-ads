@@ -5,32 +5,30 @@ $ErrorActionPreference = 'Stop'
 $EnvFile = if ($env:ENV_FILE) { $env:ENV_FILE } else { Join-Path $PSScriptRoot 'fetch_divar_phones_worker.env' }
 if (Test-Path $EnvFile) {
   Get-Content $EnvFile | ForEach-Object {
-    if ($_ -match '^\s*#' -or $_ -match '^\s*$') { return }
-    if ($_ -match '^\s*([^=]+)=(.*)$') {
-      $k = $Matches[1].Trim()
-      $v = $Matches[2]
-      Set-Item -Path Env:$k -Value $v -Force
+    if ($_ -match '^[#\s]' -or $_ -match '^\s*$') { return }
+    if ($_ -match '^(?<k>[^=]+)=(?<v>.*)$') {
+      Set-Item -Path Env:$($Matches['k'].Trim()) -Value $Matches['v'] -Force
     }
   }
 }
 
 # Config (can be overridden via env)
-$BaseUrl = if ($env:BASE_URL) { $env:BASE_URL } else { 'https://mahan.toncloud.observer/api' }
-$HeadersFile = if ($env:HEADERS_FILE) { $env:HEADERS_FILE } else { Join-Path $PSScriptRoot 'jwt.txt' }
-$SleepSec = if ($env:SLEEP) { [int]$env:SLEEP } else { 10 }
-$WorkerId = if ($env:WORKER_ID) { $env:WORKER_ID } else { "psworker-$PID" }
-$Token = $env:TOKEN
-$FetchMethod = $env:FETCH_METHOD
+$BaseUrl    = if ($env:BASE_URL)    { $env:BASE_URL }    else { 'https://mahan.toncloud.observer/api' }
+$HeadersFile= if ($env:HEADERS_FILE) { $env:HEADERS_FILE } else { Join-Path $PSScriptRoot 'jwt.txt' }
+$SleepSec   = if ($env:SLEEP)       { [int]$env:SLEEP }  else { 10 }
+$WorkerId   = if ($env:WORKER_ID)   { $env:WORKER_ID }   else { "psworker-$PID" }
+$Token      = $env:TOKEN
+$FetchMethod= $env:FETCH_METHOD
 
 Write-Host "[$WorkerId] Using BASE_URL=$BaseUrl"
 
 if (-not (Test-Path $HeadersFile)) { throw "Headers file not found: $HeadersFile" }
 
-# Load headers from jwt.txt, skip Content-Length
+# Load headers from jwt.txt, skip Content-Length/Connection
 $headerLines = Get-Content $HeadersFile | Where-Object { $_ -match '^[A-Za-z0-9_-]+:' }
 $headers = @{}
 foreach ($line in $headerLines) {
-  $name, $val = $line -split ":\s*", 2
+  $name, $val = $line -split "\s*:\s*", 2
   if ($name -ieq 'Content-Length' -or $name -ieq 'Connection') { continue }
   $headers[$name] = $val
 }
@@ -65,11 +63,9 @@ function Normalize-Phone($p) {
 
 Ensure-Playwright
 
-$methodPrompt = $null
 if (-not $FetchMethod) {
-  $methodPrompt = Read-Host "Fetch method [playwright/curl] (default playwright)"
-  if (-not $methodPrompt) { $methodPrompt = 'playwright' }
-  $FetchMethod = $methodPrompt
+  $FetchMethod = Read-Host "Fetch method [playwright/curl] (default playwright)"
+  if (-not $FetchMethod) { $FetchMethod = 'playwright' }
 }
 $FetchMethod = $FetchMethod.ToLower()
 Write-Host "[$WorkerId] Using method=$FetchMethod"
@@ -102,7 +98,7 @@ while ($true) {
   $needsTitle  = [bool]$leaseResp.needsBusinessTitle
   $postTitle   = $leaseResp.postTitle
 
-  Write-Host "[$WorkerId] Fetching phone for $externalId (lease $leaseId) -> https://divar.ir/v/$externalId $(if($businessRef){"[business=$businessRef needsTitle=$needsTitle]"} else {'[personal]'}) `"$postTitle`""
+  Write-Host "[$WorkerId] Fetching phone for $externalId (lease $leaseId) -> https://divar.ir/v/$externalId $(if($businessRef){"[business=$businessRef needsTitle=$needsTitle]"} else {'[personal]'}) \"$postTitle\""
 
   # Preflight
   try {
@@ -116,10 +112,12 @@ while ($true) {
   $contactCode = 0
   $contactBodySnip = ""
   $phoneRaw = $null
+  $status = $null
+  $err = $null
 
   if ($FetchMethod -eq 'playwright') {
     $env:EXTERNAL_ID = $externalId
-    $pwOutput = node -e "
+    $pwOutput = node -e @"
 const { chromium } = require('playwright');
 const id = process.env.EXTERNAL_ID;
 (async () => {
@@ -129,7 +127,7 @@ const id = process.env.EXTERNAL_ID;
   const btn = page.getByText('اطلاعات تماس');
   await btn.click({ timeout: 10000 });
   const number = await page.waitForFunction(() => {
-    const m = document.body.innerText.match(/09\\d{9}/);
+    const m = document.body.innerText.match(/09\d{9}/);
     return m ? m[0] : null;
   }, { timeout: 10000 });
   console.log(number);
@@ -138,11 +136,11 @@ const id = process.env.EXTERNAL_ID;
   console.error(err.message || String(err));
   process.exit(1);
 });
-" 2>&1
+"@ 2>&1
     $rc = $LASTEXITCODE
     $pwOutput = $pwOutput.Trim()
     if ($rc -ne 0 -or -not $pwOutput) {
-      Write-Warning "[$WorkerId] Playwright failed for $externalId (rc=$rc) output=""$pwOutput"""
+      Write-Warning "[$WorkerId] Playwright failed for $externalId (rc=$rc) output=\"$pwOutput\""
       $status = 'error'
       $err = "playwright_failed"
     } else {
@@ -169,10 +167,6 @@ const id = process.env.EXTERNAL_ID;
     } catch {}
   }
 
-  $status = 'ok'
-  $err = $null
-  $phoneNorm = $null
-
   if ($contactCode -ne 200 -or -not $phoneRaw) {
     if (-not $status) { $status = 'error' }
     if (-not $err) {
@@ -181,7 +175,7 @@ const id = process.env.EXTERNAL_ID;
         $err = "http=$contactCode phone_missing"
       }
     }
-    Write-Warning "[$WorkerId] Failed for $externalId ($err) body=""$contactBodySnip"""
+    Write-Warning "[$WorkerId] Failed for $externalId ($err) body=\"$contactBodySnip\""
   } else {
     $phoneNorm = Normalize-Phone $phoneRaw
     Write-Host "[$WorkerId] Saved $externalId -> $phoneNorm"
@@ -214,29 +208,30 @@ const id = process.env.EXTERNAL_ID;
         Select-Object -ExpandProperty title -ErrorAction SilentlyContinue
     } catch {}
     if ($businessTitle) {
-      Write-Host "[$WorkerId] Business title fetched for $businessRef -> ""$businessTitle"""
+      Write-Host "[$WorkerId] Business title fetched for $businessRef -> \"$businessTitle\""
     } else {
       $snip = if ($titleContent) { $titleContent.Substring(0, [Math]::Min(300, $titleContent.Length)) } else { "" }
-      Write-Warning "[$WorkerId] Business title not found (http $titleCode) for $businessRef body=""$snip"""
+      Write-Warning "[$WorkerId] Business title not found (http $titleCode) for $businessRef body=\"$snip\""
     }
   }
 
   # Report
   $report = @{
     leaseId = $leaseId
-    status  = $status
+    status  = if ($status) { $status } else { 'ok' }
   }
-if ($status -eq 'ok') {
-  $report.phoneNumber = $phoneNorm
-  if ($businessTitle) { $report.businessTitle = $businessTitle }
-} else {
-  $report.error = $err
+  if ($report.status -eq 'ok') {
+    $report.phoneNumber = $phoneNorm
+    if ($businessTitle) { $report.businessTitle = $businessTitle }
+  } else {
+    $report.error = $err
+  }
+
+  Invoke-RestMethod -Method Post -Uri "$BaseUrl/phone-fetch/report" `
+    -Headers @{ 'Content-Type'='application/json' } `
+    -Body ($report | ConvertTo-Json -Compress) `
+    -ErrorAction SilentlyContinue | Out-Null
+
+  Start-Sleep -Seconds $SleepSec
 }
 
-Invoke-RestMethod -Method Post -Uri "$BaseUrl/phone-fetch/report" `
-  -Headers @{ 'Content-Type'='application/json' } `
-  -Body ($report | ConvertTo-Json -Compress) `
-  -ErrorAction SilentlyContinue | Out-Null
-
-Start-Sleep -Seconds $SleepSec
-}

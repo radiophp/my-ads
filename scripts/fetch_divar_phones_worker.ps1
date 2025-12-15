@@ -9,7 +9,7 @@ if (Test-Path $EnvFile) {
     if ($_ -match '^\s*([^=]+)=(.*)$') {
       $k = $Matches[1].Trim()
       $v = $Matches[2]
-      $env:$k = $v
+      Set-Item -Path Env:$k -Value $v -Force
     }
   }
 }

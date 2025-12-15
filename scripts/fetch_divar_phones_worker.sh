@@ -19,10 +19,22 @@ HEADERS_FILE="${HEADERS_FILE:-jwt.txt}"
 SLEEP="${SLEEP:-10}"
 WORKER_ID="${WORKER_ID:-worker-$$}"
 
+ensure_playwright() {
+  if npx -y playwright@latest --version >/dev/null 2>&1; then
+    return
+  fi
+  echo "[${WORKER_ID}] Playwright not found; installing..."
+  if ! npx -y playwright@latest install >/dev/null 2>&1; then
+    echo "[${WORKER_ID}] Playwright install failed; continuing without it" >&2
+  fi
+}
+
 if [[ ! -f "$HEADERS_FILE" ]]; then
   echo "Headers file not found: $HEADERS_FILE" >&2
   exit 1
 fi
+
+ensure_playwright
 
 declare -a CURL_HEADERS=()
 TMP_POST_FILE="$(mktemp)"

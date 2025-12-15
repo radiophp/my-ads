@@ -29,6 +29,11 @@ TMP_POST_FILE="$(mktemp)"
 while IFS= read -r line; do
   [[ -z "$line" ]] && continue
   if [[ "$line" =~ ^[A-Za-z0-9_-]+: ]]; then
+    # Skip Content-Length from captured requests; curl will set correct length per call.
+    header_name="${line%%:*}"
+    if [[ "${header_name,,}" == "content-length" ]]; then
+      continue
+    fi
     CURL_HEADERS+=(-H "$line")
   fi
 done < "$HEADERS_FILE"
@@ -93,6 +98,7 @@ while true; do
     --data-raw "{\"contact_uuid\":\"$contactUuid\"}" \
     "https://api.divar.ir/v8/postcontact/web/contact_info_v2/$externalId" || true)"
 
+  contact_body_snip="$(head -c 300 "$response_file" | tr '\n' ' ' | tr -d '\r')"
   set +o pipefail
   phone_raw="$(jq -r '(.widget_list[]?.data?.action?.payload?.phone_number // empty) | select(length>0)' < "$response_file" 2>/dev/null | head -n1 || true)"
   set -o pipefail
@@ -135,7 +141,10 @@ while true; do
   if [[ "$http_code" != "200" || -z "$phone_raw" ]]; then
     status="error"
     err_msg="http=$http_code"
-    echo "[$WORKER_ID] Failed for $externalId ($err_msg)" >&2
+    echo "[$WORKER_ID] Failed for $externalId ($err_msg) body=\"$contact_body_snip\"" >&2
+    if [[ -z "$phone_raw" && "$http_code" == "200" ]]; then
+      err_msg="http=$http_code phone_missing"
+    fi
   else
     phone_norm="$(normalize_phone "$phone_raw")"
     echo "[$WORKER_ID] Saved $externalId -> $phone_norm" >&2

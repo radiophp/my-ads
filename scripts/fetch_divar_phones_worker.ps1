@@ -226,17 +226,17 @@ const id = process.env.EXTERNAL_ID;
     leaseId = $leaseId
     status  = $status
   }
-  if ($status -eq 'ok') {
-    $report.phoneNumber = $phoneNorm
-    if ($businessTitle) { $report.businessTitle = $businessTitle }
-  } else {
-    $report.error = $err
-  }
+if ($status -eq 'ok') {
+  $report.phoneNumber = $phoneNorm
+  if ($businessTitle) { $report.businessTitle = $businessTitle }
+} else {
+  $report.error = $err
+}
 
-  Invoke-RestMethod -Method Post -Uri "$BaseUrl/phone-fetch/report" `
-    -Headers @{ 'Content-Type'='application/json' } `
-    -Body ($report | ConvertTo-Json -Compress) `
-    -ErrorAction SilentlyContinue | Out-Null
+Invoke-RestMethod -Method Post -Uri "$BaseUrl/phone-fetch/report" `
+  -Headers @{ 'Content-Type'='application/json' } `
+  -Body ($report | ConvertTo-Json -Compress) `
+  -ErrorAction SilentlyContinue | Out-Null
 
-  Start-Sleep -Seconds $SleepSec
+Start-Sleep -Seconds $SleepSec
 }

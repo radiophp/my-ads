@@ -2,11 +2,11 @@
 $ErrorActionPreference = 'Stop'
 
 # Config (can be overridden via env)
-$BaseUrl    = $env:BASE_URL    ? $env:BASE_URL    : 'https://mahan.toncloud.observer/api'
-$HeadersFile= $env:HEADERS_FILE? $env:HEADERS_FILE: (Join-Path $PSScriptRoot 'jwt.txt')
-$SleepSec   = [int]($env:SLEEP ? $env:SLEEP : 10)
-$WorkerId   = $env:WORKER_ID   ? $env:WORKER_ID   : "psworker-$PID"
-$Token      = $env:TOKEN
+$BaseUrl = if ($env:BASE_URL) { $env:BASE_URL } else { 'https://mahan.toncloud.observer/api' }
+$HeadersFile = if ($env:HEADERS_FILE) { $env:HEADERS_FILE } else { Join-Path $PSScriptRoot 'jwt.txt' }
+$SleepSec = if ($env:SLEEP) { [int]$env:SLEEP } else { 10 }
+$WorkerId = if ($env:WORKER_ID) { $env:WORKER_ID } else { "psworker-$PID" }
+$Token = $env:TOKEN
 
 if (-not (Test-Path $HeadersFile)) { throw "Headers file not found: $HeadersFile" }
 

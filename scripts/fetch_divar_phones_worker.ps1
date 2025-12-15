@@ -22,12 +22,16 @@ if ($Token) { $headers['Authorization'] = "Bearer $Token" }
 
 function Ensure-Playwright {
   try {
-    & npx -y playwright@latest --version *> $null
+    Write-Host "[Playwright] Checking Playwright..."
+    & npx -y playwright@latest --version | Out-Null
+    Write-Host "[Playwright] Playwright OK."
     return
-  } catch {}
-  Write-Host "[Playwright] Installing Playwright (one-time)..."
+  } catch {
+    Write-Host "[Playwright] Playwright missing; installing..."
+  }
   try {
     & npx -y playwright@latest install | Out-Null
+    Write-Host "[Playwright] Playwright installed."
   } catch {
     Write-Warning "[Playwright] Install failed: $($_.Exception.Message)"
   }

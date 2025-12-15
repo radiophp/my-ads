@@ -20,7 +20,9 @@ SLEEP="${SLEEP:-10}"
 WORKER_ID="${WORKER_ID:-worker-$$}"
 
 ensure_playwright() {
+  echo "[${WORKER_ID}] Checking Playwright..."
   if npx -y playwright@latest --version >/dev/null 2>&1; then
+    echo "[${WORKER_ID}] Playwright OK."
     return
   fi
   echo "[${WORKER_ID}] Playwright not found; installing..."

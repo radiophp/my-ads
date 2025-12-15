@@ -103,8 +103,15 @@ while true; do
     title_resp_file="$(mktemp)"
     title_url="https://api.divar.ir/v8/premium-user/web/business/brand-landing/${businessRef#*_}"
     echo "[$WORKER_ID] Fetching business title via POST $title_url payload={brand_token:${businessRef#*_}}"
+    title_headers=("${CURL_HEADERS[@]}" \
+      -H "Content-Type: application/json" \
+      -H "Accept: application/json, text/plain, */*" \
+      -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:146.0) Gecko/20100101 Firefox/146.0" \
+      -H "Referer: https://divar.ir/" \
+      -H "Origin: https://divar.ir" \
+      -H "X-Screen-Size: 1920x504")
     title_code="$(curl -sS -o "$title_resp_file" -w "%{http_code}" \
-      -X POST "${CURL_HEADERS[@]}" --compressed \
+      -X POST "${title_headers[@]}" --compressed \
       --data-raw "{\"specification\":{\"last_item_identifier\":\"\"},\"request_data\":{\"brand_token\":\"${businessRef#*_}\",\"tracker_session_id\":\"\"}}" \
       "$title_url" || true)"
     set +o pipefail

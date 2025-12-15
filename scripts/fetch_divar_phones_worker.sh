@@ -102,7 +102,8 @@ while true; do
   if [[ "$needsBusinessTitle" == "true" && -n "$businessRef" ]]; then
     title_resp_file="$(mktemp)"
     title_code="$(curl -sS -o "$title_resp_file" -w "%{http_code}" \
-      -X GET "${CURL_HEADERS[@]}" --compressed \
+      -X POST "${CURL_HEADERS[@]}" --compressed \
+      --data-raw '{}' \
       "https://api.divar.ir/v8/premium-user/web/business/brand-landing/${businessRef#*_}" || true)"
     set +o pipefail
     business_title="$(jq -r '

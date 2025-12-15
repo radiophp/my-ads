@@ -255,19 +255,24 @@ export class PhoneFetchService {
         : undefined;
     const rawJwt = session?.jwt?.replace(/^Basic\s+/i, '');
 
-    const res = await axios.get(url, {
-      timeout: 8000,
-      validateStatus: () => true,
-      headers: {
-        'User-Agent':
-          'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:146.0) Gecko/20100101 Firefox/146.0',
-        Accept: 'application/json, text/plain, */*',
-        Referer: 'https://divar.ir/',
-        Origin: 'https://divar.ir',
-        ...(authHeader ? { Authorization: authHeader } : {}),
-        ...(rawJwt ? { Cookie: `token=${rawJwt}` } : {}),
+    const res = await axios.post(
+      url,
+      {},
+      {
+        timeout: 8000,
+        validateStatus: () => true,
+        headers: {
+          'User-Agent':
+            'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:146.0) Gecko/20100101 Firefox/146.0',
+          Accept: 'application/json, text/plain, */*',
+          Referer: 'https://divar.ir/',
+          Origin: 'https://divar.ir',
+          'Content-Type': 'application/json',
+          ...(authHeader ? { Authorization: authHeader } : {}),
+          ...(rawJwt ? { Cookie: `token=${rawJwt}` } : {}),
+        },
       },
-    });
+    );
 
     if (res.status >= 200 && res.status < 300) {
       const data = res.data ?? {};

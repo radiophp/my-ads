@@ -22,18 +22,18 @@ if ($Token) { $headers['Authorization'] = "Bearer $Token" }
 
 function Ensure-Playwright {
   try {
-    Write-Host "[Playwright] Checking Playwright..."
+    Write-Host "[$WorkerId] [Playwright] Checking Playwright..."
     & npx -y playwright@latest --version | Out-Null
-    Write-Host "[Playwright] Playwright OK."
+    Write-Host "[$WorkerId] [Playwright] Playwright OK."
     return
   } catch {
-    Write-Host "[Playwright] Playwright missing; installing..."
+    Write-Host "[$WorkerId] [Playwright] Playwright missing; installing..."
   }
   try {
     & npx -y playwright@latest install | Out-Null
-    Write-Host "[Playwright] Playwright installed."
+    Write-Host "[$WorkerId] [Playwright] Playwright installed."
   } catch {
-    Write-Warning "[Playwright] Install failed: $($_.Exception.Message)"
+    Write-Warning "[$WorkerId] [Playwright] Install failed: $($_.Exception.Message)"
   }
 }
 
@@ -55,7 +55,7 @@ while ($true) {
     $leaseResp = Invoke-RestMethod -Method Post -Uri "$BaseUrl/phone-fetch/lease" `
       -Headers @{ 'Content-Type'='application/json' } `
       -Body (@{ workerId = $WorkerId } | ConvertTo-Json -Compress) `
-      -SkipHttpErrorCheck -ErrorAction Stop
+      -ErrorAction Stop
   } catch {
     Write-Warning "[$WorkerId] Lease request failed: $($_.Exception.Message)"
     Start-Sleep -Seconds $SleepSec
@@ -80,14 +80,14 @@ while ($true) {
 
   # Preflight
   Invoke-RestMethod -Method Get -Uri "https://api.divar.ir/v8/posts/$externalId" `
-    -Headers $headers -SkipHttpErrorCheck -ErrorAction SilentlyContinue | Out-Null
+    -Headers $headers -ErrorAction SilentlyContinue | Out-Null
   Start-Sleep -Seconds 2
 
   # Contact fetch
   $contactResp = Invoke-WebRequest -Method Post -Uri "https://api.divar.ir/v8/postcontact/web/contact_info_v2/$externalId" `
     -Headers $headers `
     -Body (@{ contact_uuid = $contactUuid } | ConvertTo-Json -Compress) `
-    -SkipHttpErrorCheck -ErrorAction SilentlyContinue
+    -ErrorAction SilentlyContinue
 
   $contactCode = [int]$contactResp.StatusCode
   $contactBody = $contactResp.Content
@@ -129,7 +129,7 @@ while ($true) {
     $titleResp = Invoke-WebRequest -Method Post -Uri $titleUrl `
       -Headers $titleHeaders `
       -Body ($titleBodyObj | ConvertTo-Json -Compress) `
-      -SkipHttpErrorCheck -ErrorAction SilentlyContinue
+      -ErrorAction SilentlyContinue
     $titleCode = [int]$titleResp.StatusCode
     $titleContent = $titleResp.Content
     try {
@@ -162,8 +162,7 @@ while ($true) {
   Invoke-RestMethod -Method Post -Uri "$BaseUrl/phone-fetch/report" `
     -Headers @{ 'Content-Type'='application/json' } `
     -Body ($report | ConvertTo-Json -Compress) `
-    -SkipHttpErrorCheck -ErrorAction SilentlyContinue | Out-Null
+    -ErrorAction SilentlyContinue | Out-Null
 
   Start-Sleep -Seconds $SleepSec
 }
-

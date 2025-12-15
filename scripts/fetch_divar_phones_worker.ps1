@@ -95,8 +95,10 @@ while ($true) {
   Write-Host "[$WorkerId] Fetching phone for $externalId (lease $leaseId) -> https://divar.ir/v/$externalId $(if($businessRef){"[business=$businessRef needsTitle=$needsTitle]"} else {'[personal]'}) `"$postTitle`""
 
   # Preflight
-  Invoke-RestMethod -Method Get -Uri "https://api.divar.ir/v8/posts/$externalId" `
-    -Headers $headers -ErrorAction SilentlyContinue | Out-Null
+  try {
+    Invoke-WebRequest -Method Get -Uri "https://api.divar.ir/v8/posts/$externalId" `
+      -Headers $headers -ErrorAction SilentlyContinue | Out-Null
+  } catch {}
   Start-Sleep -Seconds 2
 
   # Contact fetch

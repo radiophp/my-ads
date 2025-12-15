@@ -93,7 +93,9 @@ while true; do
     --data-raw "{\"contact_uuid\":\"$contactUuid\"}" \
     "https://api.divar.ir/v8/postcontact/web/contact_info_v2/$externalId" || true)"
 
-  phone_raw="$(jq -r '(.widget_list[]?.data?.action?.payload?.phone_number // empty) | select(length>0)' < "$response_file" 2>/dev/null | head -n1)"
+  set +o pipefail
+  phone_raw="$(jq -r '(.widget_list[]?.data?.action?.payload?.phone_number // empty) | select(length>0)' < "$response_file" 2>/dev/null | head -n1 || true)"
+  set -o pipefail
   rm -f "$response_file"
   business_title=""
 
@@ -102,9 +104,11 @@ while true; do
     title_code="$(curl -sS -o "$title_resp_file" -w "%{http_code}" \
       -X GET "${CURL_HEADERS[@]}" --compressed \
       "https://api.divar.ir/v8/premium-user/web/business/brand-landing/${businessRef#*_}" || true)"
+    set +o pipefail
     business_title="$(jq -r '
       .header_widget_list[]? | select(.widget_type=="LEGEND_TITLE_ROW") | .data?.title // empty
-    ' < "$title_resp_file" 2>/dev/null | head -n1)"
+    ' < "$title_resp_file" 2>/dev/null | head -n1 || true)"
+    set -o pipefail
     rm -f "$title_resp_file"
     if [[ -n "$business_title" ]]; then
       echo "[$WORKER_ID] Business title fetched for $businessRef -> \"$business_title\""

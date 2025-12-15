@@ -30,7 +30,7 @@ $headerLines = Get-Content $HeadersFile | Where-Object { $_ -match '^[A-Za-z0-9_
 $headers = @{}
 foreach ($line in $headerLines) {
   $name, $val = $line -split ":\s*", 2
-  if ($name -ieq 'Content-Length') { continue }
+  if ($name -ieq 'Content-Length' -or $name -ieq 'Connection') { continue }
   $headers[$name] = $val
 }
 if ($Token) { $headers['Authorization'] = "Bearer $Token" }

@@ -20,6 +20,7 @@ $HeadersFile = if ($env:HEADERS_FILE) { $env:HEADERS_FILE } else { Join-Path $PS
 $SleepSec = if ($env:SLEEP) { [int]$env:SLEEP } else { 10 }
 $WorkerId = if ($env:WORKER_ID) { $env:WORKER_ID } else { "psworker-$PID" }
 $Token = $env:TOKEN
+$FetchMethod = $env:FETCH_METHOD
 
 Write-Host "[$WorkerId] Using BASE_URL=$BaseUrl"
 
@@ -64,6 +65,15 @@ function Normalize-Phone($p) {
 
 Ensure-Playwright
 
+$methodPrompt = $null
+if (-not $FetchMethod) {
+  $methodPrompt = Read-Host "Fetch method [playwright/curl] (default playwright)"
+  if (-not $methodPrompt) { $methodPrompt = 'playwright' }
+  $FetchMethod = $methodPrompt
+}
+$FetchMethod = $FetchMethod.ToLower()
+Write-Host "[$WorkerId] Using method=$FetchMethod"
+
 while ($true) {
   # Lease
   try {
@@ -103,33 +113,74 @@ while ($true) {
   } catch {}
   Start-Sleep -Seconds 2
 
-  # Contact fetch
-  $contactHeaders = $headers.Clone()
-  $contactHeaders['Accept-Encoding'] = 'identity'
-  $contactResp = Invoke-WebRequest -Method Post -Uri "https://api.divar.ir/v8/postcontact/web/contact_info_v2/$externalId" `
-    -Headers $contactHeaders `
-    -Body (@{ contact_uuid = $contactUuid } | ConvertTo-Json -Compress) `
-    -ErrorAction SilentlyContinue
-
-  $contactCode = [int]$contactResp.StatusCode
-  $contactBody = $contactResp.Content
-  $contactBodySnip = if ($contactBody) { $contactBody.Substring(0, [Math]::Min(300, $contactBody.Length)) } else { "" }
+  $contactCode = 0
+  $contactBodySnip = ""
   $phoneRaw = $null
-  try {
-    $json = $contactBody | ConvertFrom-Json -ErrorAction Stop
-    $phoneRaw = $json.widget_list |
-      ForEach-Object { $_.data.action.payload.phone_number } |
-      Where-Object { $_ } | Select-Object -First 1
-  } catch {}
+
+  if ($FetchMethod -eq 'playwright') {
+    $env:EXTERNAL_ID = $externalId
+    $pwOutput = node -e "
+const { chromium } = require('playwright');
+const id = process.env.EXTERNAL_ID;
+(async () => {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+  await page.goto('https://divar.ir/v/' + id, { waitUntil: 'domcontentloaded', timeout: 20000 });
+  const btn = page.getByText('اطلاعات تماس');
+  await btn.click({ timeout: 10000 });
+  const number = await page.waitForFunction(() => {
+    const m = document.body.innerText.match(/09\\d{9}/);
+    return m ? m[0] : null;
+  }, { timeout: 10000 });
+  console.log(number);
+  await browser.close();
+})().catch(err => {
+  console.error(err.message || String(err));
+  process.exit(1);
+});
+" 2>&1
+    $rc = $LASTEXITCODE
+    $pwOutput = $pwOutput.Trim()
+    if ($rc -ne 0 -or -not $pwOutput) {
+      Write-Warning "[$WorkerId] Playwright failed for $externalId (rc=$rc) output=""$pwOutput"""
+      $status = 'error'
+      $err = "playwright_failed"
+    } else {
+      $phoneRaw = $pwOutput
+      $contactCode = 200
+    }
+  } else {
+    # Contact fetch via API
+    $contactHeaders = $headers.Clone()
+    $contactHeaders['Accept-Encoding'] = 'identity'
+    $contactResp = Invoke-WebRequest -Method Post -Uri "https://api.divar.ir/v8/postcontact/web/contact_info_v2/$externalId" `
+      -Headers $contactHeaders `
+      -Body (@{ contact_uuid = $contactUuid } | ConvertTo-Json -Compress) `
+      -ErrorAction SilentlyContinue
+
+    $contactCode = [int]$contactResp.StatusCode
+    $contactBody = $contactResp.Content
+    $contactBodySnip = if ($contactBody) { $contactBody.Substring(0, [Math]::Min(300, $contactBody.Length)) } else { "" }
+    try {
+      $json = $contactBody | ConvertFrom-Json -ErrorAction Stop
+      $phoneRaw = $json.widget_list |
+        ForEach-Object { $_.data.action.payload.phone_number } |
+        Where-Object { $_ } | Select-Object -First 1
+    } catch {}
+  }
 
   $status = 'ok'
   $err = $null
   $phoneNorm = $null
 
   if ($contactCode -ne 200 -or -not $phoneRaw) {
-    $status = 'error'
-    $err = "http=$contactCode"
-    if (-not $phoneRaw -and $contactCode -eq 200) { $err = "http=$contactCode phone_missing" }
+    if (-not $status) { $status = 'error' }
+    if (-not $err) {
+      $err = "http=$contactCode"
+      if (-not $phoneRaw -and $contactCode -eq 200 -and $FetchMethod -ne 'playwright') {
+        $err = "http=$contactCode phone_missing"
+      }
+    }
     Write-Warning "[$WorkerId] Failed for $externalId ($err) body=""$contactBodySnip"""
   } else {
     $phoneNorm = Normalize-Phone $phoneRaw

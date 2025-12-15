@@ -18,6 +18,7 @@ TOKEN="${TOKEN:-}"
 HEADERS_FILE="${HEADERS_FILE:-jwt.txt}"
 SLEEP="${SLEEP:-10}"
 WORKER_ID="${WORKER_ID:-worker-$$}"
+FETCH_METHOD="${FETCH_METHOD:-}"
 
 ensure_playwright() {
   echo "[${WORKER_ID}] Checking Playwright..."
@@ -58,6 +59,48 @@ AUTH_HEADER=()
 normalize_phone() {
   perl -CS -Mutf8 -pe 'tr/۰۱۲۳۴۵۶۷۸۹/0123456789/' <<<"$1" | tr -d '[:space:]'
 }
+
+choose_method() {
+  if [[ -n "$FETCH_METHOD" ]]; then
+    METHOD="${FETCH_METHOD,,}"
+    return
+  fi
+  read -r -p "Fetch method [playwright/curl] (default playwright): " METHOD
+  METHOD="${METHOD,,}"
+  if [[ -z "$METHOD" ]]; then
+    METHOD="playwright"
+  fi
+}
+
+fetch_phone_playwright() {
+  local externalId="$1"
+  EXTERNAL_ID="$externalId" node - <<'NODE'
+const { chromium } = require('playwright');
+const id = process.env.EXTERNAL_ID;
+(async () => {
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+  await page.goto(`https://divar.ir/v/${id}`, { waitUntil: 'domcontentloaded', timeout: 20000 });
+  const btn = page.getByText('اطلاعات تماس');
+  await btn.click({ timeout: 10000 });
+  const number = await page.waitForFunction(
+    () => {
+      const m = document.body.innerText.match(/09\d{9}/);
+      return m ? m[0] : null;
+    },
+    { timeout: 10000 },
+  );
+  console.log(number);
+  await browser.close();
+})().catch((err) => {
+  console.error(err.message || String(err));
+  process.exit(1);
+});
+NODE
+}
+
+choose_method
+echo "[${WORKER_ID}] Using method=$METHOD BASE_URL=$BASE_URL"
 
 while true; do
   lease_resp="$(curl -sS -w "\n%{http_code}" -X POST \
@@ -106,18 +149,36 @@ while true; do
     "https://api.divar.ir/v8/posts/$externalId" >/dev/null || true
   sleep 2
 
-  response_file="$(mktemp)"
-  http_code="$(curl -sS -o "$response_file" -w "%{http_code}" \
-    -X POST "${CURL_HEADERS[@]}" --compressed \
-    --data-raw "{\"contact_uuid\":\"$contactUuid\"}" \
-    "https://api.divar.ir/v8/postcontact/web/contact_info_v2/$externalId" || true)"
-
-  contact_body_snip="$(head -c 300 "$response_file" | tr '\n' ' ' | tr -d '\r')"
-  set +o pipefail
-  phone_raw="$(jq -r '(.widget_list[]?.data?.action?.payload?.phone_number // empty) | select(length>0)' < "$response_file" 2>/dev/null | head -n1 || true)"
-  set -o pipefail
-  rm -f "$response_file"
+  phone_raw=""
+  contact_body_snip=""
   business_title=""
+
+  if [[ "$METHOD" == "playwright" ]]; then
+    set +e
+    phone_raw="$(fetch_phone_playwright "$externalId" 2>&1)"
+    rc=$?
+    set -e
+    if [[ $rc -ne 0 || -z "$phone_raw" ]]; then
+      status="error"
+      err_msg="playwright_failed"
+      echo "[$WORKER_ID] Playwright failed for $externalId (rc=$rc) output=\"$phone_raw\"" >&2
+      phone_raw=""
+    else
+      http_code="200"
+    fi
+  else
+    response_file="$(mktemp)"
+    http_code="$(curl -sS -o "$response_file" -w "%{http_code}" \
+      -X POST "${CURL_HEADERS[@]}" --compressed \
+      --data-raw "{\"contact_uuid\":\"$contactUuid\"}" \
+      "https://api.divar.ir/v8/postcontact/web/contact_info_v2/$externalId" || true)"
+
+    contact_body_snip="$(head -c 300 "$response_file" | tr '\n' ' ' | tr -d '\r')"
+    set +o pipefail
+    phone_raw="$(jq -r '(.widget_list[]?.data?.action?.payload?.phone_number // empty) | select(length>0)' < "$response_file" 2>/dev/null | head -n1 || true)"
+    set -o pipefail
+    rm -f "$response_file"
+  fi
 
   if [[ "$needsBusinessTitle" == "true" && -n "$businessRef" ]]; then
     title_resp_file="$(mktemp)"

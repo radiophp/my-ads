@@ -101,10 +101,12 @@ while true; do
 
   if [[ "$needsBusinessTitle" == "true" && -n "$businessRef" ]]; then
     title_resp_file="$(mktemp)"
+    title_url="https://api.divar.ir/v8/premium-user/web/business/brand-landing/${businessRef#*_}"
+    echo "[$WORKER_ID] Fetching business title via POST $title_url payload={brand_token:${businessRef#*_}}"
     title_code="$(curl -sS -o "$title_resp_file" -w "%{http_code}" \
       -X POST "${CURL_HEADERS[@]}" --compressed \
       --data-raw "{\"specification\":{\"last_item_identifier\":\"\"},\"request_data\":{\"brand_token\":\"${businessRef#*_}\",\"tracker_session_id\":\"\"}}" \
-      "https://api.divar.ir/v8/premium-user/web/business/brand-landing/${businessRef#*_}" || true)"
+      "$title_url" || true)"
     set +o pipefail
     business_title="$(jq -r '
       .header_widget_list[]? | select(.widget_type=="LEGEND_TITLE_ROW") | .data?.title // empty

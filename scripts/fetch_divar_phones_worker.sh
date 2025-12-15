@@ -111,12 +111,13 @@ while true; do
     business_title="$(jq -r '
       .header_widget_list[]? | select(.widget_type=="LEGEND_TITLE_ROW") | .data?.title // empty
     ' < "$title_resp_file" 2>/dev/null | head -n1 || true)"
+    title_body_snippet="$(head -c 300 "$title_resp_file" | tr '\n' ' ' | tr -d '\r')"
     set -o pipefail
     rm -f "$title_resp_file"
     if [[ -n "$business_title" ]]; then
       echo "[$WORKER_ID] Business title fetched for $businessRef -> \"$business_title\""
     else
-      echo "[$WORKER_ID] Business title not found (http $title_code) for $businessRef" >&2
+      echo "[$WORKER_ID] Business title not found (http $title_code) for $businessRef body=\"$title_body_snippet\"" >&2
     fi
   fi
 

@@ -52,6 +52,7 @@ Ensure-Playwright
 while ($true) {
   # Lease
   try {
+    Write-Host "[$WorkerId] Lease -> $BaseUrl/phone-fetch/lease"
     $leaseResp = Invoke-RestMethod -Method Post -Uri "$BaseUrl/phone-fetch/lease" `
       -Headers @{ 'Content-Type'='application/json' } `
       -Body (@{ workerId = $WorkerId } | ConvertTo-Json -Compress) `

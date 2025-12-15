@@ -104,7 +104,7 @@ while true; do
     title_code="$(curl -sS -o "$title_resp_file" -w "%{http_code}" \
       -X POST "${CURL_HEADERS[@]}" --compressed \
       --data-raw "{\"specification\":{\"last_item_identifier\":\"\"},\"request_data\":{\"brand_token\":\"${businessRef#*_}\",\"tracker_session_id\":\"\"}}" \
-      \"https://api.divar.ir/v8/premium-user/web/business/brand-landing/${businessRef#*_}\" || true)"
+      "https://api.divar.ir/v8/premium-user/web/business/brand-landing/${businessRef#*_}" || true)"
     set +o pipefail
     business_title="$(jq -r '
       .header_widget_list[]? | select(.widget_type=="LEGEND_TITLE_ROW") | .data?.title // empty

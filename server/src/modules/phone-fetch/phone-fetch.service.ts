@@ -243,33 +243,28 @@ export class PhoneFetchService {
       : businessRef;
     const url = `https://api.divar.ir/v8/premium-user/web/business/brand-landing/${brandToken}`;
 
-    const session = await this.prisma.adminDivarSession.findFirst({
-      where: { active: true, locked: false },
-      orderBy: { updatedAt: 'desc' },
-    });
-    const authHeader =
-      session && session.jwt
-        ? session.jwt.startsWith('Basic ')
-          ? session.jwt
-          : `Basic ${session.jwt}`
-        : undefined;
-    const rawJwt = session?.jwt?.replace(/^Basic\s+/i, '');
-
     const res = await axios.post(
       url,
-      {},
+      {
+        specification: { last_item_identifier: '' },
+        request_data: { brand_token: brandToken, tracker_session_id: '' },
+      },
       {
         timeout: 8000,
         validateStatus: () => true,
         headers: {
           'User-Agent':
-            'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:146.0) Gecko/20100101 Firefox/146.0',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:146.0) Gecko/20100101 Firefox/146.0',
           Accept: 'application/json, text/plain, */*',
+          'Accept-Language': 'en-US,en;q=0.5',
+          'Accept-Encoding': 'gzip, deflate, br, zstd',
+          'Content-Type': 'application/json',
           Referer: 'https://divar.ir/',
           Origin: 'https://divar.ir',
-          'Content-Type': 'application/json',
-          ...(authHeader ? { Authorization: authHeader } : {}),
-          ...(rawJwt ? { Cookie: `token=${rawJwt}` } : {}),
+          'X-Screen-Size': '1920x504',
+          'Sec-Fetch-Dest': 'empty',
+          'Sec-Fetch-Mode': 'cors',
+          'Sec-Fetch-Site': 'same-site',
         },
       },
     );

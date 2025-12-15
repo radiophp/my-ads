@@ -96,14 +96,18 @@ while ($true) {
 
   # Preflight
   try {
+    $preHeaders = $headers.Clone()
+    $preHeaders['Accept-Encoding'] = 'identity'
     Invoke-WebRequest -Method Get -Uri "https://api.divar.ir/v8/posts/$externalId" `
-      -Headers $headers -ErrorAction SilentlyContinue | Out-Null
+      -Headers $preHeaders -ErrorAction SilentlyContinue | Out-Null
   } catch {}
   Start-Sleep -Seconds 2
 
   # Contact fetch
+  $contactHeaders = $headers.Clone()
+  $contactHeaders['Accept-Encoding'] = 'identity'
   $contactResp = Invoke-WebRequest -Method Post -Uri "https://api.divar.ir/v8/postcontact/web/contact_info_v2/$externalId" `
-    -Headers $headers `
+    -Headers $contactHeaders `
     -Body (@{ contact_uuid = $contactUuid } | ConvertTo-Json -Compress) `
     -ErrorAction SilentlyContinue
 
@@ -144,6 +148,7 @@ while ($true) {
     }
     $titleHeaders = $headers.Clone()
     $titleHeaders['Content-Type'] = 'application/json'
+    $titleHeaders['Accept-Encoding'] = 'identity'
     $titleResp = Invoke-WebRequest -Method Post -Uri $titleUrl `
       -Headers $titleHeaders `
       -Body ($titleBodyObj | ConvertTo-Json -Compress) `

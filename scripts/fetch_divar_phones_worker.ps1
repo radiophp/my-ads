@@ -1,12 +1,27 @@
 #!/usr/bin/env pwsh
 $ErrorActionPreference = 'Stop'
 
+# Optional .env-style config file (same as bash worker)
+$EnvFile = if ($env:ENV_FILE) { $env:ENV_FILE } else { Join-Path $PSScriptRoot 'fetch_divar_phones_worker.env' }
+if (Test-Path $EnvFile) {
+  Get-Content $EnvFile | ForEach-Object {
+    if ($_ -match '^\s*#' -or $_ -match '^\s*$') { return }
+    if ($_ -match '^\s*([^=]+)=(.*)$') {
+      $k = $Matches[1].Trim()
+      $v = $Matches[2]
+      $env:$k = $v
+    }
+  }
+}
+
 # Config (can be overridden via env)
 $BaseUrl = if ($env:BASE_URL) { $env:BASE_URL } else { 'https://mahan.toncloud.observer/api' }
 $HeadersFile = if ($env:HEADERS_FILE) { $env:HEADERS_FILE } else { Join-Path $PSScriptRoot 'jwt.txt' }
 $SleepSec = if ($env:SLEEP) { [int]$env:SLEEP } else { 10 }
 $WorkerId = if ($env:WORKER_ID) { $env:WORKER_ID } else { "psworker-$PID" }
 $Token = $env:TOKEN
+
+Write-Host "[$WorkerId] Using BASE_URL=$BaseUrl"
 
 if (-not (Test-Path $HeadersFile)) { throw "Headers file not found: $HeadersFile" }
 

@@ -11,6 +11,8 @@ import {
   UseGuards,
   Logger,
   Post,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -24,6 +26,7 @@ import { StorageService } from '@app/platform/storage/storage.service';
 import { DivarPostsAdminService } from './divar-posts-admin.service';
 import { DivarPostListItemDto, type PaginatedDivarPostsDto } from './dto/divar-post.dto';
 import { DivarContactFetchService } from './divar-contact-fetch.service';
+import { RateLimitService } from '@app/common/guards/rate-limit/rate-limit.service';
 
 type PostWithMedias = NonNullable<Awaited<ReturnType<DivarPostsAdminService['getPostWithMedias']>>>;
 
@@ -39,6 +42,7 @@ export class DivarPostsController {
     private readonly divarPostsService: DivarPostsAdminService,
     private readonly storageService: StorageService,
     private readonly contactFetchService: DivarContactFetchService,
+    private readonly rateLimitService: RateLimitService,
   ) {}
 
   @Get()
@@ -119,6 +123,48 @@ export class DivarPostsController {
   async fetchSharePhone(@Param('id') id: string): Promise<{ phoneNumber: string | null }> {
     const phone = await this.contactFetchService.fetchForPost(id);
     return { phoneNumber: phone };
+  }
+
+  @Post(':id/contact-info')
+  @ApiOperation({ summary: 'Fetch Divar contact info with per-user rate limiting' })
+  async fetchContactInfo(
+    @Param('id') id: string,
+    @Req() request: { user?: { sub?: string } },
+  ): Promise<{ phoneNumber: string | null; ownerName: string | null }> {
+    const userId = request.user?.sub;
+    if (!userId) {
+      throw new BadRequestException('User is required.');
+    }
+
+    const rate = await this.rateLimitService.checkRateLimit(`contact-info:${userId}`, {
+      limit: 10,
+      ttlSeconds: 300,
+    });
+    if (rate.remaining <= 0) {
+      throw new HttpException(
+        {
+          message: 'Contact info rate limit exceeded',
+          retryAfterSeconds: Math.max(rate.ttl, 1),
+        },
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+
+    const post = await this.divarPostsService.getPostContactInfo(id);
+    if (!post) {
+      throw new NotFoundException('Post not found.');
+    }
+
+    let phoneNumber = post.phoneNumber;
+    if (!phoneNumber && post.externalId && post.contactUuid) {
+      phoneNumber = await this.contactFetchService.fetchForPost(id);
+    }
+
+    const refreshed = phoneNumber ? null : await this.divarPostsService.getPostContactInfo(id);
+    return {
+      phoneNumber: phoneNumber ?? refreshed?.phoneNumber ?? null,
+      ownerName: post.ownerName ?? refreshed?.ownerName ?? null,
+    };
   }
 
   @Get('detail/:id')

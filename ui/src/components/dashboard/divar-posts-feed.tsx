@@ -9,8 +9,12 @@ import { useLocale, useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
-import { useLazyGetDivarPostsQuery, useFetchPostPhoneMutation } from '@/features/api/apiSlice';
-import type { DivarPostSummary } from '@/types/divar-posts';
+import {
+  useLazyGetDivarPostsQuery,
+  useFetchPostPhoneMutation,
+  useFetchPostContactInfoMutation,
+} from '@/features/api/apiSlice';
+import type { DivarPostContactInfo, DivarPostSummary } from '@/types/divar-posts';
 import { useAppSelector } from '@/lib/hooks';
 import { DownloadPhotosDialog } from '@/components/dashboard/divar-posts/download-photos-dialog';
 import { serializeCategoryFilterValues } from '@/components/dashboard/divar-posts/helpers';
@@ -51,6 +55,9 @@ export function DivarPostsFeed(): JSX.Element {
   const [downloadDialogOpen, setDownloadDialogOpen] = useState(false);
   const [fetchPosts] = useLazyGetDivarPostsQuery();
   const [fetchPhone] = useFetchPostPhoneMutation();
+  const [fetchContactInfo] = useFetchPostContactInfoMutation();
+  const [contactInfo, setContactInfo] = useState<DivarPostContactInfo | null>(null);
+  const [contactLoading, setContactLoading] = useState(false);
   const {
     provinceId,
     citySelection,
@@ -206,6 +213,11 @@ export function DivarPostsFeed(): JSX.Element {
       observer.disconnect();
     };
   }, [loadMore, hasMore]);
+
+  useEffect(() => {
+    setContactInfo(null);
+    setContactLoading(false);
+  }, [selectedPost?.id]);
 
   const currencyFormatter = useMemo(
     () =>
@@ -460,6 +472,51 @@ export function DivarPostsFeed(): JSX.Element {
     void appendPhoneAndShare('copy');
   }, [appendPhoneAndShare]);
 
+  const handleFetchContactInfo = useCallback(async () => {
+    if (!selectedPost) {
+      return;
+    }
+    setContactLoading(true);
+    try {
+      const result = await fetchContactInfo({ postId: selectedPost.id }).unwrap();
+      setContactInfo(result);
+      if (!result.phoneNumber) {
+        toast({
+          title: t('contactInfo.missingTitle'),
+          description: t('contactInfo.missingDescription'),
+        });
+      }
+    } catch (error: unknown) {
+      const fetchError = error as {
+        status?: number;
+        originalStatus?: number;
+        data?: { retryAfterSeconds?: number };
+      };
+      const status = fetchError?.status ?? fetchError?.originalStatus;
+      if (status === 429) {
+        const retrySeconds = Number(fetchError?.data?.retryAfterSeconds ?? 0);
+        const minutes = Math.floor(retrySeconds / 60);
+        const seconds = Math.max(retrySeconds % 60, 0);
+        const timeLabel =
+          minutes > 0 ? `${minutes}m ${seconds.toString().padStart(2, '0')}s` : `${seconds}s`;
+        toast({
+          title: t('contactInfo.rateLimitedTitle'),
+          description: t('contactInfo.rateLimitedDescription', { time: timeLabel }),
+          variant: 'destructive',
+        });
+      } else {
+        console.error('Failed to fetch contact info', error);
+        toast({
+          title: t('contactInfo.errorTitle'),
+          description: t('contactInfo.errorDescription'),
+          variant: 'destructive',
+        });
+      }
+    } finally {
+      setContactLoading(false);
+    }
+  }, [fetchContactInfo, selectedPost, t, toast]);
+
   const openPostModal = (post: DivarPostSummary) => {
     setSelectedPost(post);
     setDialogOpen(true);
@@ -582,6 +639,9 @@ export function DivarPostsFeed(): JSX.Element {
                     smsHref={sharePayload?.smsHref ?? null}
                     onCopyLink={sharePayload ? handleCopyLink : undefined}
                     copyLinkLabel={t('copyLink')}
+                    onRequestContactInfo={handleFetchContactInfo}
+                    contactInfo={contactInfo}
+                    contactLoading={contactLoading}
                   />
                 ) : null}
               </div>

@@ -43,6 +43,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import pushConfig from './platform/config/push.config';
 import { AdminDivarSessionsModule } from './modules/admin-divar-sessions/admin-divar-sessions.module';
 import { PhoneFetchModule } from './modules/phone-fetch/phone-fetch.module';
+import { ArkaModule } from './modules/arka/arka.module';
 
 @Module({
   imports: [
@@ -102,6 +103,7 @@ import { PhoneFetchModule } from './modules/phone-fetch/phone-fetch.module';
     NotificationsModule,
     AdminDivarSessionsModule,
     PhoneFetchModule,
+    ArkaModule,
   ],
 })
 export class AppModule {}

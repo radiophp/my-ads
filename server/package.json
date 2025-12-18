@@ -30,6 +30,8 @@
     "divar:fetch-contacts": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-divar-contact-fetch.ts",
     "phone-fetch:worker": "node ../scripts/phone-fetch-worker.js",
     "business:title-refresh": "ENABLE_CRON_JOBS=true dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-business-title-refresh.ts",
+    "arka:fetch": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-arka-phone-fetch.ts",
+    "arka:transfer": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-arka-phone-transfer.ts",
     "prepare": "husky install",
     "lint-staged": "lint-staged"
   },

@@ -20,6 +20,7 @@ import type {
   PaginatedPostsToAnalyze,
   DivarPostListResponse,
   DivarPostSummary,
+  DivarPostContactInfo,
 } from '@/types/divar-posts';
 import type {
   RingBinderFolder,
@@ -36,6 +37,7 @@ import type {
 } from '@/types/saved-filters';
 import type { NotificationsResponse } from '@/types/notifications';
 import type { AdminDivarSession } from '@/types/admin-divar-session';
+import type { AdminArkaSession } from '@/types/admin-arka-session';
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:6200/api';
 
@@ -129,13 +131,14 @@ export const apiSlice = createApi({
     'Packages',
     'DivarCategories',
     'AdminStats',
-  'DivarCategoryFilters',
-  'PostsToAnalyze',
-  'DivarPosts',
-  'RingBinderFolders',
-  'SavedFilters',
-  'Notifications',
-  'AdminDivarSessions',
+    'DivarCategoryFilters',
+    'PostsToAnalyze',
+    'DivarPosts',
+    'RingBinderFolders',
+    'SavedFilters',
+    'Notifications',
+    'AdminDivarSessions',
+    'AdminArkaSessions',
   ],
   endpoints: (builder) => ({
     getHealth: builder.query<{ status: string }, void>({
@@ -189,6 +192,13 @@ export const apiSlice = createApi({
     fetchPostPhone: builder.mutation<{ phoneNumber: string | null }, { postId: string }>({
       query: ({ postId }) => ({
         url: `/divar-posts/${postId}/share-phone`,
+        method: 'POST',
+        body: {},
+      }),
+    }),
+    fetchPostContactInfo: builder.mutation<DivarPostContactInfo, { postId: string }>({
+      query: ({ postId }) => ({
+        url: `/divar-posts/${postId}/contact-info`,
         method: 'POST',
         body: {},
       }),
@@ -347,6 +357,45 @@ export const apiSlice = createApi({
     getAdminDashboardStats: builder.query<AdminDashboardStats, void>({
       query: () => '/admin-panel/stats',
       providesTags: ['AdminStats'],
+    }),
+    getAdminArkaSessions: builder.query<AdminArkaSession[], void>({
+      query: () => '/admin/arka-sessions',
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map((session) => ({
+                type: 'AdminArkaSessions' as const,
+                id: session.id,
+              })),
+              { type: 'AdminArkaSessions' as const, id: 'LIST' },
+            ]
+          : [{ type: 'AdminArkaSessions' as const, id: 'LIST' }],
+    }),
+    createAdminArkaSession: builder.mutation<
+      AdminArkaSession,
+      { label?: string; headersRaw: string; active?: boolean; locked?: boolean }
+    >({
+      query: (body) => ({
+        url: '/admin/arka-sessions',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [{ type: 'AdminArkaSessions', id: 'LIST' }, 'AdminStats'],
+    }),
+    updateAdminArkaSession: builder.mutation<
+      AdminArkaSession,
+      { id: string; body: Partial<Pick<AdminArkaSession, 'label' | 'headersRaw' | 'active' | 'locked'>> }
+    >({
+      query: ({ id, body }) => ({
+        url: `/admin/arka-sessions/${id}`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: (result, error, arg) => [
+        { type: 'AdminArkaSessions', id: 'LIST' },
+        { type: 'AdminArkaSessions', id: arg.id },
+        'AdminStats',
+      ],
     }),
     getAdminDivarSessions: builder.query<AdminDivarSession[], void>({
       query: () => '/admin/divar-sessions',
@@ -662,6 +711,9 @@ export const {
   useGetDivarCategoryFilterQuery,
   useGetPublicDivarCategoryFilterQuery,
   useGetAdminDashboardStatsQuery,
+  useGetAdminArkaSessionsQuery,
+  useCreateAdminArkaSessionMutation,
+  useUpdateAdminArkaSessionMutation,
   useGetAdminDivarSessionsQuery,
   useCreateAdminDivarSessionMutation,
   useUpdateAdminDivarSessionMutation,
@@ -670,6 +722,7 @@ export const {
   useLazyGetDivarPostsQuery,
   useGetDivarPostQuery,
   useFetchPostPhoneMutation,
+  useFetchPostContactInfoMutation,
   useGetRingBinderFoldersQuery,
   useCreateRingBinderFolderMutation,
   useUpdateRingBinderFolderMutation,

@@ -14,6 +14,7 @@ const DIVAR_POST_SUMMARY_SELECT = {
   displayTitle: true,
   seoTitle: true,
   description: true,
+  ownerName: true,
   priceTotal: true,
   rentAmount: true,
   depositAmount: true,
@@ -426,6 +427,25 @@ export class DivarPostsAdminService {
     return this.mapRecordToListItem(record);
   }
 
+  async getPostContactInfo(id: string): Promise<{
+    id: string;
+    externalId: string | null;
+    contactUuid: string | null;
+    phoneNumber: string | null;
+    ownerName: string | null;
+  } | null> {
+    return this.prisma.divarPost.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        externalId: true,
+        contactUuid: true,
+        phoneNumber: true,
+        ownerName: true,
+      },
+    });
+  }
+
   private applyCategoryFilters(
     where: Prisma.DivarPostWhereInput,
     filters: Record<string, unknown>,
@@ -810,6 +830,7 @@ export class DivarPostsAdminService {
       externalId: record.externalId ?? '',
       title: record.title ?? record.displayTitle ?? record.seoTitle ?? null,
       description: record.description ?? null,
+      ownerName: record.ownerName ?? null,
       priceTotal:
         record.priceTotal !== null && record.priceTotal !== undefined
           ? Number(record.priceTotal)

@@ -41,6 +41,7 @@ export type DivarPostSummary = {
   externalId: string;
   title: string | null;
   description: string | null;
+  ownerName: string | null;
   priceTotal: number | null;
   rentAmount: number | null;
   depositAmount: number | null;
@@ -93,4 +94,9 @@ export type DivarPostListResponse = {
   items: DivarPostSummary[];
   nextCursor: string | null;
   hasMore: boolean;
+};
+
+export type DivarPostContactInfo = {
+  phoneNumber: string | null;
+  ownerName: string | null;
 };

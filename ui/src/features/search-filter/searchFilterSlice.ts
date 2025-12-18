@@ -31,7 +31,11 @@ export type SearchFilterState = {
   noteFilter: NoteFilterOption;
 };
 
-const initialState: SearchFilterState = {
+export type SearchFilterSliceState = SearchFilterState & {
+  persistNonce: number;
+};
+
+const initialFilterState: SearchFilterState = {
   provinceId: null,
   citySelection: {
     mode: 'all',
@@ -48,6 +52,11 @@ const initialState: SearchFilterState = {
   categoryFilters: {},
   ringBinderFolderId: null,
   noteFilter: 'all',
+};
+
+const initialState: SearchFilterSliceState = {
+  ...initialFilterState,
+  persistNonce: 0,
 };
 
 const searchFilterSlice = createSlice({
@@ -128,10 +137,27 @@ const searchFilterSlice = createSlice({
       }
       delete state.categoryFilters[slug];
     },
-    resetSearchFilter: () => initialState,
-    hydrateFromSaved: (_state, action: PayloadAction<SearchFilterState>) => ({
-      ...action.payload,
-    }),
+    resetSearchFilter: (state) => {
+      state.provinceId = initialFilterState.provinceId;
+      state.citySelection = initialFilterState.citySelection;
+      state.districtSelection = initialFilterState.districtSelection;
+      state.categorySelection = initialFilterState.categorySelection;
+      state.categoryFilters = initialFilterState.categoryFilters;
+      state.ringBinderFolderId = initialFilterState.ringBinderFolderId;
+      state.noteFilter = initialFilterState.noteFilter;
+    },
+    hydrateFromSaved: (state, action: PayloadAction<SearchFilterState>) => {
+      state.provinceId = action.payload.provinceId;
+      state.citySelection = action.payload.citySelection;
+      state.districtSelection = action.payload.districtSelection;
+      state.categorySelection = action.payload.categorySelection;
+      state.categoryFilters = action.payload.categoryFilters;
+      state.ringBinderFolderId = action.payload.ringBinderFolderId;
+      state.noteFilter = action.payload.noteFilter;
+    },
+    commitAppliedFilters: (state) => {
+      state.persistNonce += 1;
+    },
   },
 });
 
@@ -148,10 +174,11 @@ export const {
   setNoteFilter,
   resetSearchFilter,
   hydrateFromSaved,
+  commitAppliedFilters,
 } = searchFilterSlice.actions;
 
 export default searchFilterSlice.reducer;
-export { initialState as searchFilterInitialState };
+export { initialFilterState as searchFilterInitialState };
 
 function shouldRemoveFilterValue(value: CategoryFilterValue | null): boolean {
   if (!value) {

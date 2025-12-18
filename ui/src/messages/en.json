@@ -183,6 +183,7 @@
       "saved": {
         "title": "Saved filter sets",
         "usage": "{count} / {limit} sets used",
+        "showButton": "Show saved filter sets",
         "saveButton": "Save filter set",
         "empty": "No saved filter sets yet.",
         "apply": "Apply",
@@ -257,6 +258,11 @@
       "editFilters": "Edit filters",
       "applyFilters": "Apply filters",
       "mobileBack": "Back",
+      "tabs": {
+        "main": "Main",
+        "category": "Category",
+        "personalize": "Personalize"
+      },
       "categories": {
         "title": "Categories",
         "all": "All categories",

@@ -6,6 +6,7 @@ import counterReducer from '@/features/counter/counterSlice';
 import authReducer from '@/features/auth/authSlice';
 import searchFilterReducer, {
   type SearchFilterState,
+  type SearchFilterSliceState,
   type CategoryFilterBuckets,
   type CategoryFilterValue,
   searchFilterInitialState,
@@ -23,14 +24,14 @@ type StoredSearchFilterState = Partial<SearchFilterState> & {
 
 const SEARCH_FILTER_STORAGE_KEY = 'search-filter-state';
 
-const loadSearchFilterState = (): SearchFilterState => {
+const loadSearchFilterState = (): SearchFilterSliceState => {
   try {
     const storedValue =
       typeof window !== 'undefined'
         ? window.localStorage.getItem(SEARCH_FILTER_STORAGE_KEY)
         : null;
     if (!storedValue) {
-      return searchFilterInitialState;
+      return { ...searchFilterInitialState, persistNonce: 0 };
     }
 
     const parsed = JSON.parse(storedValue) as StoredSearchFilterState;
@@ -89,18 +90,20 @@ const loadSearchFilterState = (): SearchFilterState => {
           : null,
       noteFilter:
         parsed.noteFilter === 'has' || parsed.noteFilter === 'none' ? parsed.noteFilter : 'all',
+      persistNonce: 0,
     };
   } catch {
-    return searchFilterInitialState;
+    return { ...searchFilterInitialState, persistNonce: 0 };
   }
 };
 
-const persistSearchFilterState = (state: SearchFilterState): void => {
+const persistSearchFilterState = (state: SearchFilterSliceState): void => {
   if (typeof window === 'undefined') {
     return;
   }
   try {
-    window.localStorage.setItem(SEARCH_FILTER_STORAGE_KEY, JSON.stringify(state));
+    const { persistNonce: _persistNonce, ...persistable } = state;
+    window.localStorage.setItem(SEARCH_FILTER_STORAGE_KEY, JSON.stringify(persistable));
   } catch {
     // Ignore persistence failures (e.g., private mode).
   }
@@ -129,9 +132,18 @@ export const store = configureStore({
 
 if (typeof window !== 'undefined') {
   setupListeners(store.dispatch);
+  let lastPersistNonce: number | null = null;
   store.subscribe(() => {
     const { searchFilter } = store.getState();
-    persistSearchFilterState(searchFilter);
+    const currentNonce = searchFilter.persistNonce;
+    if (lastPersistNonce === null) {
+      lastPersistNonce = currentNonce;
+      return;
+    }
+    if (currentNonce !== lastPersistNonce) {
+      lastPersistNonce = currentNonce;
+      persistSearchFilterState(searchFilter);
+    }
   });
 }
 

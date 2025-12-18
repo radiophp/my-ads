@@ -154,6 +154,59 @@ Need a one-off run for debugging? Use the single-shot scripts, each of which loa
 - `npm run divar:analyze-posts`
 - `npm run divar:sync-media`
 
+### Phone number fetch worker (Divar)
+
+Phone numbers are fetched asynchronously via a **lease/report** worker loop to support running multiple workers without duplicate work.
+
+- **Backend API:**
+  - `POST /api/phone-fetch/lease` → returns the next eligible post (newest → oldest) plus its `externalId` (Divar token) and `contactUuid`.
+  - `POST /api/phone-fetch/report` → worker submits the result (`ok` with `phoneNumber`, or `error` with reason). Business title/phone cache updates are handled server-side when present.
+- **Worker script:** `scripts/phone-fetch-worker.js`
+- **Run command:** from `server/`
+
+```bash
+cd server
+npm run phone-fetch:worker
+```
+
+#### Configuration
+
+The worker loads configuration in this order:
+
+1. `scripts/fetch_divar_phones_worker.env` (recommended place for worker-only config)
+2. repository root `.env` (shared app config)
+
+Example `scripts/fetch_divar_phones_worker.env`:
+
+```bash
+BASE_URL=https://dev.mahanfile.com/api
+FETCH_METHOD=playwright   # playwright (default) or curl
+SLEEP=10                  # seconds between leases (rate-limit safety)
+HEADERS_FILE=jwt.txt      # only required for curl mode
+```
+
+#### Modes
+
+- **Playwright mode (default)**: opens a real Firefox UI and navigates to `https://divar.ir/v/<token>`, clicks **اطلاعات تماس**, and extracts the phone number.
+  - Login is **manual** (you log in once); the worker persists browser state under `scripts/.pw-firefox-profile` and reuses it across restarts.
+  - If the script detects you are not logged in, it opens “دیوار من” → “ورود” and waits until “خروج” appears.
+- **Curl mode**: calls Divar’s API directly (`/v8/postcontact/web/contact_info_v2/<token>`) using headers copied from a real browser session.
+  - Put your headers in `scripts/jwt.txt` exactly as captured (one header per line).
+  - Do **not** include `Content-Length` or `Connection` (the worker ignores them if present).
+
+#### Notes & troubleshooting
+
+- The worker is intentionally slow (`SLEEP` plus small internal delays) to reduce rate limiting and account bans.
+- To run multiple workers, start the command multiple times with different `WORKER_ID` values:
+
+```bash
+WORKER_ID=worker-1 npm run phone-fetch:worker
+WORKER_ID=worker-2 npm run phone-fetch:worker
+```
+
+- If Firefox opens/closes immediately, verify you have a working desktop session (X/Wayland) and that `PW_BROWSER=firefox` is set in `scripts/fetch_divar_phones_worker.env`.
+- If you want to reuse an existing Firefox profile, set `FIREFOX_USER_DIR` in `scripts/fetch_divar_phones_worker.env` (otherwise `scripts/.pw-firefox-profile` is used).
+
 ### Harvest / fetch / analyze flow
 
 - **Reactivation policy:** When the harvester spots a duplicated token it compares the stored `DivarPost.publishedAt` with the fresh payload. If the delta exceeds one hour, the token is reactivated for refetch. Logs now include the prior timestamp, the number of minutes stale, the threshold, and any skip reason (e.g., “already processing”). Reactivation also resets `fetchAttempts` so the fetch worker retries immediately.

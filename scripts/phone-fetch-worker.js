@@ -2,31 +2,60 @@
 /* eslint-disable no-console */
 const fs = require('fs');
 const path = require('path');
-const axios = require('axios');
 const { spawnSync } = require('child_process');
 const readline = require('readline');
 
+let dotenv;
+try {
+  dotenv = require('dotenv');
+} catch {
+  dotenv = require(path.join(__dirname, '..', 'server', 'node_modules', 'dotenv'));
+}
+
+let axios;
+try {
+  axios = require('axios');
+} catch {
+  axios = require(path.join(__dirname, '..', 'server', 'node_modules', 'axios'));
+}
+if (axios && axios.default) {
+  axios = axios.default;
+}
+
 const envFile = process.env.ENV_FILE || path.join(__dirname, 'fetch_divar_phones_worker.env');
 if (fs.existsSync(envFile)) {
-  require('dotenv').config({ path: envFile });
+  dotenv.config({ path: envFile });
 }
-require('dotenv').config();
+dotenv.config();
 
 const BASE_URL = process.env.BASE_URL || 'https://mahan.toncloud.observer/api';
 const HEADERS_FILE = process.env.HEADERS_FILE || path.join(__dirname, 'jwt.txt');
 const SLEEP_SEC = Number(process.env.SLEEP || 10);
 const WORKER_ID = process.env.WORKER_ID || `worker-${process.pid}`;
 const TOKEN = process.env.TOKEN;
-let FETCH_METHOD = (process.env.FETCH_METHOD || '').toLowerCase();
+let FETCH_METHOD = (process.env.FETCH_METHOD || 'playwright').toLowerCase();
+const PW_BROWSER = (process.env.PW_BROWSER || 'firefox').toLowerCase();
+const FIREFOX_USER_DIR = process.env.FIREFOX_USER_DIR;
+const FIREFOX_EXECUTABLE = process.env.FIREFOX_EXECUTABLE;
+const FIREFOX_PROFILE_DIR =
+  FIREFOX_USER_DIR || process.env.FIREFOX_TEMP_PROFILE_DIR || path.join(__dirname, '.pw-firefox-profile');
+if (!fs.existsSync(FIREFOX_PROFILE_DIR)) {
+  fs.mkdirSync(FIREFOX_PROFILE_DIR, { recursive: true });
+}
+const profileNote = `Firefox profile dir: ${FIREFOX_PROFILE_DIR}`;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const log = (...args) => console.log(`[${WORKER_ID}]`, ...args);
 const warn = (...args) => console.warn(`[${WORKER_ID}]`, ...args);
 
-const loadHeaders = () => {
+const loadHeaders = (opts = { strict: true }) => {
   if (!fs.existsSync(HEADERS_FILE)) {
-    throw new Error(`Headers file not found: ${HEADERS_FILE}`);
+    if (opts.strict) {
+      throw new Error(`Headers file not found: ${HEADERS_FILE}`);
+    }
+    warn(`Headers file not found: ${HEADERS_FILE} (continuing without headers)`);
+    return null;
   }
   const lines = fs.readFileSync(HEADERS_FILE, 'utf8').split(/\r?\n/);
   const headers = {};
@@ -47,37 +76,184 @@ const loadHeaders = () => {
 const ensurePlaywright = () => {
   try {
     return require('playwright');
-  } catch (err) {
-    warn('Playwright not found, attempting install (chromium only)...');
-    const res = spawnSync('npx', ['playwright', 'install', 'chromium'], {
-      stdio: 'inherit',
-    });
-    if (res.status !== 0) {
-      throw new Error('Playwright install failed');
+  } catch (err1) {
+    try {
+      return require(path.join(__dirname, '..', 'server', 'node_modules', 'playwright'));
+    } catch (err2) {
+      warn('Playwright not found, attempting install (chromium only)...');
+      const res = spawnSync('npx', ['playwright', 'install', 'chromium'], {
+        stdio: 'inherit',
+      });
+      if (res.status !== 0) {
+        throw new Error('Playwright install failed');
+      }
+      try {
+        return require('playwright');
+      } catch {
+        return require(path.join(__dirname, '..', 'server', 'node_modules', 'playwright'));
+      }
     }
-    return require('playwright');
+  }
+};
+
+const installBrowser = (name) => {
+  const res = spawnSync('npx', ['playwright', 'install', name], { stdio: 'inherit' });
+  if (res.status !== 0) {
+    throw new Error(`Playwright install ${name} failed`);
+  }
+};
+
+let sharedContext = null;
+let sharedBrowser = null;
+let sharedProfileDir = FIREFOX_PROFILE_DIR;
+let shuttingDown = false;
+
+const clickContactButton = async (page) => {
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await page.waitForTimeout(500);
+  // Prefer the explicit button label if present
+  const primary = page.getByRole('button', { name: /برو به اطلاعات تماس/ }).first();
+  const fallback = page.getByRole('button', { name: /اطلاعات تماس/ }).first();
+  const target = (await primary.count()) > 0 ? primary : fallback;
+  await target.scrollIntoViewIfNeeded();
+  try {
+    await target.click({ timeout: 15000, force: true });
+  } catch (err) {
+    await page.evaluate(() => {
+      const btn =
+        Array.from(document.querySelectorAll('button')).find((b) =>
+          b.innerText.includes('اطلاعات تماس'),
+        ) || null;
+      if (btn) {
+        btn.scrollIntoView({ behavior: 'instant', block: 'center' });
+        btn.click();
+      }
+    });
   }
 };
 
 const fetchPhoneWithPlaywright = async (externalId) => {
   const pw = ensurePlaywright();
-  const browser = await pw.chromium.launch({ headless: true });
+  const launchFirefoxPersistent = async () => {
+    const opts = {
+      headless: false,
+      viewport: { width: 1280, height: 720 },
+    };
+    if (FIREFOX_EXECUTABLE) {
+      opts.executablePath = FIREFOX_EXECUTABLE;
+    }
+    const profileDir = sharedProfileDir;
+    log(
+      `Using Firefox profile ${profileDir}${
+        FIREFOX_EXECUTABLE ? ` exec=${FIREFOX_EXECUTABLE}` : ''
+      }`,
+    );
+    const context = await pw.firefox.launchPersistentContext(profileDir, opts);
+    return context;
+  };
+
+  if (PW_BROWSER === 'firefox') {
+    if (!sharedContext) {
+      let context;
+      try {
+        context = await launchFirefoxPersistent();
+      } catch (err) {
+        if ((err.message || '').toLowerCase().includes('executable') || (err.message || '').toLowerCase().includes('profile')) {
+          installBrowser('firefox');
+          context = await pw.firefox.launchPersistentContext(sharedProfileDir, {
+            headless: false,
+            viewport: { width: 1280, height: 720 },
+          });
+        } else {
+          throw err;
+        }
+      }
+      sharedContext = context;
+    }
+    const page = sharedContext.pages()[0] || (await sharedContext.newPage());
+    const myDivarBtn = page.locator('button.kt-button').filter({ hasText: 'دیوار من' }).first();
+    if (await myDivarBtn.count()) {
+      await myDivarBtn.click({ timeout: 15000 }).catch(() => undefined);
+      const loginBtn = page.locator('button.kt-fullwidth-link').filter({ hasText: 'ورود' }).first();
+      if (await loginBtn.count()) {
+        await loginBtn.click({ timeout: 15000 }).catch(() => undefined);
+        log('Waiting for manual login... looking for خروج to appear');
+        await page.waitForSelector('button.kt-fullwidth-link:has-text("خروج")', {
+          timeout: 180000,
+        });
+      }
+    }
+    await page.goto(`https://divar.ir/v/${externalId}`, {
+      waitUntil: 'domcontentloaded',
+      timeout: 30000,
+    });
+    await clickContactButton(page);
+    await page.waitForSelector('.copyRow-l4byg9', { timeout: 10000 }).catch(() => undefined);
+    const phone = await page.evaluate(() => {
+      const direct = document.querySelector('.copyRow-l4byg9 a[href^="tel:"]');
+      if (direct) {
+        return direct.textContent.trim();
+      }
+      const text = document.body.innerText;
+      const m = text.match(/09\d{9}/);
+      if (m) return m[0];
+      const persianDigits = '۰۱۲۳۴۵۶۷۸۹';
+      const p = text.match(/[۰-۹]{11}/);
+      if (p) {
+        return p[0].replace(/[۰-۹]/g, (d) => persianDigits.indexOf(d));
+      }
+      return null;
+    });
+    return phone;
+  }
+
+  const browserType = PW_BROWSER === 'firefox' ? pw.firefox : pw.chromium;
+  let browser;
+  try {
+    const launchOpts = { headless: PW_BROWSER === 'firefox' ? false : true };
+    if (FIREFOX_EXECUTABLE && PW_BROWSER === 'firefox') {
+      launchOpts.executablePath = FIREFOX_EXECUTABLE;
+      log(`Using system Firefox exec=${FIREFOX_EXECUTABLE} (non-headless)`);
+    }
+    if (sharedBrowser) {
+      browser = sharedBrowser;
+    } else {
+      browser = await browserType.launch(launchOpts);
+      sharedBrowser = browser;
+    }
+  } catch (err) {
+    const msg = (err.message || '').toLowerCase();
+    if (msg.includes('executable') || msg.includes('profile')) {
+      installBrowser(PW_BROWSER === 'firefox' ? 'firefox' : 'chromium');
+      browser = await browserType.launch({ headless: PW_BROWSER === 'firefox' ? false : true });
+    } else {
+      throw err;
+    }
+  }
   const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
   try {
     await page.goto(`https://divar.ir/v/${externalId}`, {
       waitUntil: 'domcontentloaded',
-      timeout: 20000,
+      timeout: 30000,
     });
-    const btn = page.getByText('اطلاعات تماس');
-    await btn.click({ timeout: 10000 });
-    await page.waitForTimeout(500);
+    await clickContactButton(page);
+    await page.waitForTimeout(1000);
     const phone = await page.evaluate(() => {
-      const m = document.body.innerText.match(/09\d{9}/);
-      return m ? m[0] : null;
+      const text = document.body.innerText;
+      const m = text.match(/09\d{9}/);
+      if (m) return m[0];
+      const persianDigits = '۰۱۲۳۴۵۶۷۸۹';
+      const p = text.match(/[۰-۹]{11}/);
+      if (p) {
+        return p[0].replace(/[۰-۹]/g, (d) => persianDigits.indexOf(d));
+      }
+      return null;
     });
     return phone;
   } finally {
-    await browser.close();
+    if (!sharedBrowser) {
+      await browser.close();
+    }
   }
 };
 
@@ -140,10 +316,39 @@ const promptMethod = async () => {
 };
 
 const main = async () => {
+  const cleanup = async (signal) => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    if (signal) {
+      log(`Received ${signal}, closing browser and saving profile...`);
+    }
+    if (sharedContext) {
+      try {
+        await sharedContext.close();
+      } catch {
+        /* ignore */
+      }
+    }
+    if (sharedBrowser) {
+      try {
+        await sharedBrowser.close();
+      } catch {
+        /* ignore */
+      }
+    }
+    process.exit(0);
+  };
+  process.once('SIGINT', () => cleanup('SIGINT'));
+  process.once('SIGTERM', () => cleanup('SIGTERM'));
+  process.once('exit', () => cleanup('exit'));
+
   await promptMethod();
-  const headers = loadHeaders();
+  const headers = FETCH_METHOD === 'curl' ? loadHeaders({ strict: true }) : loadHeaders({ strict: false });
   log(`Using BASE_URL=${BASE_URL}`);
   log(`Using method=${FETCH_METHOD}`);
+  if (FETCH_METHOD === 'playwright' && PW_BROWSER === 'firefox') {
+    log(profileNote);
+  }
 
   while (true) {
     let lease;
@@ -177,16 +382,18 @@ const main = async () => {
       } "${postTitle || ''}"`,
     );
 
-    try {
-      await axios.get(`https://api.divar.ir/v8/posts/${externalId}`, {
-        headers: { ...headers, 'Accept-Encoding': 'identity' },
-        timeout: 10000,
-        validateStatus: () => true,
-      });
-    } catch {
-      /* ignore */
+    if (headers) {
+      try {
+        await axios.get(`https://api.divar.ir/v8/posts/${externalId}`, {
+          headers: { ...headers, 'Accept-Encoding': 'identity' },
+          timeout: 10000,
+          validateStatus: () => true,
+        });
+      } catch {
+        /* ignore */
+      }
+      await sleep(2000);
     }
-    await sleep(2000);
 
     let phoneRaw = null;
     let contactCode = 0;
@@ -225,7 +432,7 @@ const main = async () => {
     }
 
     let businessTitle = null;
-    if (needsBusinessTitle && businessRef) {
+    if (needsBusinessTitle && businessRef && headers) {
       const titleRes = await fetchBusinessTitle(headers, businessRef);
       businessTitle = titleRes.title;
       if (businessTitle) {
@@ -235,6 +442,8 @@ const main = async () => {
           `Business title not found (http ${titleRes.status}) for ${businessRef} body="${titleRes.bodySnippet}"`,
         );
       }
+    } else if (needsBusinessTitle && businessRef && !headers) {
+      warn('Skipping business title fetch (no headers available in playwright mode).');
     }
 
     const report = {

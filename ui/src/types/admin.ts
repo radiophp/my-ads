@@ -8,4 +8,5 @@ export type AdminDashboardStats = {
   postsToAnalyzePending: number;
   notifications: number;
   adminDivarSessions: number;
+  adminArkaSessions: number;
 };

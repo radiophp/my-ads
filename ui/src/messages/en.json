@@ -437,14 +437,14 @@
       "detailLoadFailed": "We could not load this post. Please try again.",
       "backToDashboard": "Back to dashboard",
       "shareWhatsApp": "Share on WhatsApp",
-    "shareTelegram": "Share on Telegram",
-    "sharePost": "Share",
-    "shareMessageBullet": "-",
-    "shareMessageTitleLabel": "Title",
-    "shareMessageLocationLabel": "Location",
-    "shareMessageDescriptionLabel": "Description",
-    "shareMessageLinkLabel": "Link",
-    "saveToFolder": "Save",
+      "shareTelegram": "Share on Telegram",
+      "sharePost": "Share",
+      "shareMessageBullet": "-",
+      "shareMessageTitleLabel": "Title",
+      "shareMessageLocationLabel": "Location",
+      "shareMessageDescriptionLabel": "Description",
+      "shareMessageLinkLabel": "Link",
+      "saveToFolder": "Save",
       "savedLabel": "Saved",
       "copyLink": "Copy link",
       "copySuccessTitle": "Link copied",
@@ -453,7 +453,6 @@
       "copyErrorDescription": "Please copy the link manually.",
       "sharePhoneLabel": "Phone",
       "sharePhoneFallbackPrompt": "There was a problem fetching the phone number. Do you want to continue sharing without it?",
-      "sharePhoneLabel": "Phone",
       "shareSms": "SMS",
       "saveDialog": {
         "title": "Save to folder",
@@ -552,7 +551,24 @@
         "unknown": "Listing owner"
       },
       "mobileBack": "Back",
-      "close": "Close"
+      "close": "Close",
+      "contactInfo": {
+        "button": "Contact info",
+        "ownerLabel": "Owner",
+        "ownerUnknown": "Owner not provided",
+        "phoneLabel": "Phone",
+        "missingShort": "Contact number not available",
+        "call": "Call",
+        "copy": "Copy info",
+        "copySuccess": "Contact info copied",
+        "copyError": "Could not copy contact info",
+        "missingTitle": "No phone number found",
+        "missingDescription": "This post does not include a phone number.",
+        "rateLimitedTitle": "Please wait before requesting more numbers",
+        "rateLimitedDescription": "Try again in {time}.",
+        "errorTitle": "Contact info unavailable",
+        "errorDescription": "Something went wrong while fetching contact details. Please try again."
+      }
     }
   },
   "admin": {
@@ -596,7 +612,68 @@
         "divarSessions": {
           "title": "Divar sessions",
           "description": "Manage admin phone sessions and JWTs for Divar API access."
+        },
+        "arkaSessions": {
+          "title": "Arka headers",
+          "description": "Manage Arka API headers used to fetch phone numbers."
         }
+      }
+    },
+    "arkaSessions": {
+      "title": "Arka API headers",
+      "description": "Store and update the headers required to call the Arka API for phone numbers.",
+      "actions": {
+        "add": "Add headers",
+        "edit": "Edit",
+        "refresh": "Refresh",
+        "save": "Save",
+        "cancel": "Cancel",
+        "enable": "Enable",
+        "disable": "Disable"
+      },
+      "fields": {
+        "label": "Label",
+        "headers": "Headers (one per line, e.g. \"Authorization: Bearer …\")",
+        "active": "Active",
+        "locked": "Locked"
+      },
+      "placeholders": {
+        "label": "e.g. Primary",
+        "headers": "Authorization: Bearer ...\nUser-Agent: ...\nOrigin: https://www.arkafile.org"
+      },
+      "columns": {
+        "label": "Label",
+        "active": "Active",
+        "locked": "Locked",
+        "updated": "Updated at",
+        "actions": "Actions",
+        "status": "Status"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive",
+        "locked": "Locked",
+        "unlocked": "Unlocked",
+        "ok": "OK",
+        "error": "Error"
+      },
+      "dialog": {
+        "addTitle": "Add Arka headers",
+        "addDescription": "Paste the required HTTP headers for Arka API requests.",
+        "editTitle": "Edit Arka headers",
+        "editDescription": "Update headers, label, or activation flags."
+      },
+      "loading": "Loading headers…",
+      "empty": "No Arka header sets yet.",
+      "toast": {
+        "missingTitle": "Headers required",
+        "missingDescription": "Please paste at least one header line.",
+        "createdTitle": "Headers saved",
+        "createdDescription": "Arka headers created.",
+        "updatedTitle": "Headers updated",
+        "updatedDescription": "Changes saved.",
+        "errorTitle": "Save failed",
+        "errorDescription": "Could not save headers. Try again."
       }
     },
     "divarSessions": {
@@ -786,22 +863,22 @@
           "placeholder": "Search cities…",
           "empty": "No cities match your search."
         },
-      "columns": {
-        "id": "ID",
-        "name": "Name",
-        "slug": "Slug",
-        "province": "Province",
-        "allowPosting": "Allow posting"
+        "columns": {
+          "id": "ID",
+          "name": "Name",
+          "slug": "Slug",
+          "province": "Province",
+          "allowPosting": "Allow posting"
+        },
+        "filters": {
+          "province": "Province",
+          "all": "All provinces"
+        },
+        "allowPosting": {
+          "enabled": "Allowed",
+          "disabled": "Blocked"
+        }
       },
-      "filters": {
-        "province": "Province",
-        "all": "All provinces"
-      },
-      "allowPosting": {
-        "enabled": "Allowed",
-        "disabled": "Blocked"
-      }
-    },
       "districts": {
         "title": "District overview",
         "description": "Select a city to explore its neighborhoods and URL slugs.",
@@ -867,13 +944,13 @@
         "fields": {
           "title": "Package title",
           "description": "Description",
-        "durationDays": "Duration (days)",
-        "freeDays": "Bonus days",
-        "includedUsers": "Included users",
-        "savedFiltersLimit": "Saved filters limit",
-        "actualPrice": "List price",
-        "discountedPrice": "Discounted price"
-      },
+          "durationDays": "Duration (days)",
+          "freeDays": "Bonus days",
+          "includedUsers": "Included users",
+          "savedFiltersLimit": "Saved filters limit",
+          "actualPrice": "List price",
+          "discountedPrice": "Discounted price"
+        },
         "createSubmit": "Save package",
         "updateSubmit": "Update package",
         "cancel": "Cancel",
@@ -895,13 +972,13 @@
         "searchEmpty": "No packages match your search.",
         "columns": {
           "package": "Package",
-        "duration": "Duration",
-        "users": "Users",
-        "pricing": "Pricing",
-        "savedFilters": "Saved filters",
-        "status": "Status",
-        "actions": "Actions"
-      },
+          "duration": "Duration",
+          "users": "Users",
+          "pricing": "Pricing",
+          "savedFilters": "Saved filters",
+          "status": "Status",
+          "actions": "Actions"
+        },
         "add": "Add package",
         "loading": "Loading packages…",
         "empty": "No packages defined yet. Create the first package above.",

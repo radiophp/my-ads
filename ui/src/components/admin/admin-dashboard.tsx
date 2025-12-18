@@ -74,6 +74,12 @@ export function AdminDashboard() {
       title: t('cards.divarSessions.title'),
       countKey: 'adminDivarSessions',
     },
+    {
+      href: '/admin/arka-sessions',
+      icon: <KeyRound className="size-8 text-primary" aria-hidden />,
+      title: t('cards.arkaSessions.title'),
+      countKey: 'adminArkaSessions',
+    },
   ];
 
   return (

@@ -46,6 +46,12 @@ enum PhoneFetchStatus {
   FAILED
 }
 
+enum ArkaTransferStatus {
+  NOT_TRANSFERRED
+  IN_PROGRESS
+  TRANSFERRED
+}
+
 model User {
   id                 String   @id @default(uuid())
   phone              String   @unique
@@ -214,6 +220,7 @@ model DivarPost {
   description     String?
   contactUuid     String?
   phoneNumber     String?
+  ownerName       String?
   businessRef     String?
   businessType    String?
   conversionType  String?
@@ -458,4 +465,52 @@ model BusinessPhoneCache {
   lockedUntil  DateTime?
   title        String?
   titleFetchedAt DateTime?
+}
+
+model AdminArkaSession {
+  id         String   @id @default(uuid())
+  label      String   @default("default")
+  headersRaw String
+  headers    Json
+  active     Boolean  @default(true)
+  locked     Boolean  @default(false)
+  lastError  String?
+  lastErrorAt DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([active, locked])
+}
+
+model ArkaPhoneCursor {
+  id           String   @id @default("singleton")
+  nextFetchId  Int      @default(10000)
+  backoffUntil DateTime?
+  lockedUntil  DateTime?
+  lockedBy     String?
+  lastStatus   Int?
+  lastError    String?
+  updatedAt    DateTime @updatedAt
+}
+
+model ArkaPhoneRecord {
+  id                String             @id @default(uuid())
+  arkaId            Int                @unique
+  divarLink         String?
+  externalId        String?
+  phoneNumber       String?
+  malkName          String?
+  payload           Json?
+  status            ArkaTransferStatus @default(NOT_TRANSFERRED)
+  fetchedAt         DateTime           @default(now())
+  transferredAt     DateTime?
+  transferLockedUntil DateTime?
+  transferAttemptCount Int             @default(0)
+  nextTransferAttemptAt DateTime?
+  transferLastError String?
+  updatedAt         DateTime           @updatedAt
+
+  @@index([status, fetchedAt])
+  @@index([externalId])
+  @@index([transferLockedUntil])
 }

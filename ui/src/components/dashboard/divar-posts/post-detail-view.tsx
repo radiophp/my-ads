@@ -1,7 +1,7 @@
 import type { JSX } from 'react';
 import { useEffect, useState } from 'react';
 import type { useTranslations } from 'next-intl';
-import type { DivarPostSummary } from '@/types/divar-posts';
+import type { DivarPostContactInfo, DivarPostSummary } from '@/types/divar-posts';
 import { PostMediaCarousel } from './post-media-carousel';
 import { AmenitiesSection, AttributeLabelGrid, AttributeValueGrid } from './post-detail-sections';
 import type { BusinessBadge } from './business-badge';
@@ -9,7 +9,7 @@ import type { PostDetailData } from './post-detail-data';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FaTelegramPlane, FaWhatsapp, FaSms, FaRegCopy } from 'react-icons/fa';
-import { Bookmark, BookmarkCheck, Pencil, Plus, Share2 } from 'lucide-react';
+import { Bookmark, BookmarkCheck, Pencil, Plus, Share2, Phone, Copy, Loader2 } from 'lucide-react';
 import { SaveToFolderDialog } from '@/components/ring-binder/save-to-folder-dialog';
 import { SavedFoldersDialog } from '@/components/ring-binder/saved-folders-dialog';
 import {
@@ -36,6 +36,9 @@ export type PostDetailViewProps = {
   smsHref?: string | null;
   onCopyLink?: () => void;
   copyLinkLabel?: string;
+  onRequestContactInfo?: () => void;
+  contactInfo?: DivarPostContactInfo | null;
+  contactLoading?: boolean;
 };
 
 export function PostDetailView({
@@ -53,6 +56,9 @@ export function PostDetailView({
   smsHref,
   onCopyLink,
   copyLinkLabel,
+  onRequestContactInfo,
+  contactInfo,
+  contactLoading,
 }: PostDetailViewProps): JSX.Element {
   const combinedDetailEntries = [
     ...detailData.featuredDetailEntries,
@@ -152,6 +158,26 @@ export function PostDetailView({
   };
   const canSaveNote = noteDraft.trim() !== (noteContent ?? '').trim();
 
+  const handleCopyContactInfo = async (info: DivarPostContactInfo) => {
+    if (!info.phoneNumber) {
+      return;
+    }
+    const owner = info.ownerName?.trim() || t('contactInfo.ownerUnknown');
+    const text = `${owner} - ${info.phoneNumber}`;
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({
+        title: t('contactInfo.copySuccess'),
+      });
+    } catch (error) {
+      console.error('Failed to copy contact info', error);
+      toast({
+        title: t('contactInfo.copyError'),
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-6 lg:flex-row">
@@ -234,6 +260,17 @@ export function PostDetailView({
                 </Dialog>
               </>
             ) : null}
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="flex items-center gap-2 px-3 py-1 text-xs"
+              onClick={onRequestContactInfo}
+              disabled={!onRequestContactInfo || contactLoading}
+            >
+              {contactLoading ? <Loader2 className="size-3.5 animate-spin" /> : <Phone className="size-3.5" />}
+              <span>{t('contactInfo.button')}</span>
+            </Button>
             {!noteContent && !isEditingNote ? (
               <Button
                 type="button"
@@ -269,6 +306,50 @@ export function PostDetailView({
               )}
             </Button>
           </div>
+          {contactInfo ? (
+            <div className="rounded-xl border border-border/70 bg-muted/30 p-3 text-sm shadow-sm">
+              <div className="flex flex-col gap-1">
+                <p className="text-xs text-muted-foreground">{t('contactInfo.ownerLabel')}</p>
+                <p className="text-sm font-semibold text-foreground">
+                  {contactInfo.ownerName ?? t('contactInfo.ownerUnknown')}
+                </p>
+              </div>
+              <div className="mt-2 flex flex-col gap-1">
+                <p className="text-xs text-muted-foreground">{t('contactInfo.phoneLabel')}</p>
+                <p className="text-base font-semibold text-foreground ltr:font-mono rtl:font-sans">
+                  {contactInfo.phoneNumber ?? t('contactInfo.missingShort')}
+                </p>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={!contactInfo.phoneNumber}
+                  className="flex items-center gap-2"
+                  onClick={() => {
+                    if (contactInfo.phoneNumber) {
+                      window.location.href = `tel:${contactInfo.phoneNumber}`;
+                    }
+                  }}
+                >
+                  <Phone className="size-4" />
+                  <span>{t('contactInfo.call')}</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={!contactInfo.phoneNumber}
+                  className="flex items-center gap-2"
+                  onClick={() => handleCopyContactInfo(contactInfo)}
+                >
+                  <Copy className="size-4" />
+                  <span>{t('contactInfo.copy')}</span>
+                </Button>
+              </div>
+            </div>
+          ) : null}
           {noteContent || isEditingNote ? (
             <div className="rounded-xl border border-border/70 bg-muted/30 p-3 text-sm">
               <div className="flex items-center justify-between gap-3">

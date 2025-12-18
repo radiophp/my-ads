@@ -239,12 +239,12 @@
         "dialog": {
           "saveTitle": "ذخیره فیلترهای فعلی",
           "saveDescription": "برای این مجموعه فیلتر یک نام انتخاب کنید.",
-        "renameTitle": "تغییر نام مجموعه",
-        "renameDescription": "نام نمایش داده‌شده در فهرست را اصلاح کنید.",
-        "deleteTitle": "حذف مجموعه ذخیره‌شده",
+          "renameTitle": "تغییر نام مجموعه",
+          "renameDescription": "نام نمایش داده‌شده در فهرست را اصلاح کنید.",
+          "deleteTitle": "حذف مجموعه ذخیره‌شده",
           "deleteDescription": "آیا از حذف «{name}» مطمئن هستید؟ این اقدام قابل بازگشت نیست.",
           "namePlaceholder": "مثلاً: تهران > آپارتمان",
-        "saveAction": "ذخیره مجموعه",
+          "saveAction": "ذخیره مجموعه",
           "renameAction": "ذخیره تغییرات",
           "deleteAction": "حذف",
           "cancel": "انصراف"
@@ -262,21 +262,21 @@
           "errorDescription": "دوباره تلاش کنید."
         }
       },
-    "mobileBack": "بازگشت",
-    "categories": {
-      "title": "دسته‌بندی‌ها",
-      "all": "همه دسته‌ها",
-      "loading": "در حال بارگذاری دسته‌ها…",
-      "empty": "هنوز دسته‌ای فعال نشده است."
-    },
-    "categoryFilters": {
-      "title": "فیلترهای اختصاصی دسته",
-      "selectCategory": "برای نمایش فیلترها یک دسته را انتخاب کنید.",
-      "loading": "در حال بارگذاری فیلترها…",
-      "error": "امکان بارگذاری فیلترها وجود ندارد.",
-      "empty": "برای این دسته فیلتری ثبت نشده است.",
-      "lastSynced": "آخرین به‌روزرسانی {value}",
-      "widgetFallback": "",
+      "mobileBack": "بازگشت",
+      "categories": {
+        "title": "دسته‌بندی‌ها",
+        "all": "همه دسته‌ها",
+        "loading": "در حال بارگذاری دسته‌ها…",
+        "empty": "هنوز دسته‌ای فعال نشده است."
+      },
+      "categoryFilters": {
+        "title": "فیلترهای اختصاصی دسته",
+        "selectCategory": "برای نمایش فیلترها یک دسته را انتخاب کنید.",
+        "loading": "در حال بارگذاری فیلترها…",
+        "error": "امکان بارگذاری فیلترها وجود ندارد.",
+        "empty": "برای این دسته فیلتری ثبت نشده است.",
+        "lastSynced": "آخرین به‌روزرسانی {value}",
+        "widgetFallback": "",
         "widgetLabels": {
           "filter_price": "قیمت",
           "filter_size": "متراژ",
@@ -306,17 +306,17 @@
           "has-photo": "دارای عکس",
           "bizzDeed": "سند اداری"
         },
-      "fieldLabel": "شناسه فیلتر: {key}",
-      "clear": "حذف فیلترها",
-      "activeCount": "{count} فیلتر فعال",
-      "singleSelectPlaceholder": "یک گزینه را انتخاب کنید",
-      "unsupportedField": "این فیلتر هنوز پشتیبانی نمی‌شود ({type}).",
-      "numberRange": {
-        "from": "از",
-        "to": "تا"
+        "fieldLabel": "شناسه فیلتر: {key}",
+        "clear": "حذف فیلترها",
+        "activeCount": "{count} فیلتر فعال",
+        "singleSelectPlaceholder": "یک گزینه را انتخاب کنید",
+        "unsupportedField": "این فیلتر هنوز پشتیبانی نمی‌شود ({type}).",
+        "numberRange": {
+          "from": "از",
+          "to": "تا"
+        }
       }
-    }
-  },
+    },
     "savedFiltersPage": {
       "badge": "مجموعه‌های ذخیره‌شده",
       "title": "مجموعه فیلترهای ذخیره‌شده",
@@ -437,14 +437,14 @@
       "detailLoadFailed": "امکان بارگذاری این آگهی وجود ندارد. لطفاً دوباره تلاش کنید.",
       "backToDashboard": "بازگشت به داشبورد",
       "shareWhatsApp": "اشتراک‌گذاری در واتساپ",
-  "shareTelegram": "اشتراک در تلگرام",
-  "sharePost": "اشتراک‌گذاری",
-  "shareMessageBullet": "-",
-  "shareMessageTitleLabel": "عنوان",
-  "shareMessageLocationLabel": "موقعیت",
-  "shareMessageDescriptionLabel": "توضیحات",
-  "shareMessageLinkLabel": "لینک",
-  "saveToFolder": "ذخیره",
+      "shareTelegram": "اشتراک در تلگرام",
+      "sharePost": "اشتراک‌گذاری",
+      "shareMessageBullet": "-",
+      "shareMessageTitleLabel": "عنوان",
+      "shareMessageLocationLabel": "موقعیت",
+      "shareMessageDescriptionLabel": "توضیحات",
+      "shareMessageLinkLabel": "لینک",
+      "saveToFolder": "ذخیره",
       "savedLabel": "ذخیره شده",
       "copyLink": "کپی لینک",
       "copySuccessTitle": "لینک کپی شد",
@@ -453,7 +453,6 @@
       "copyErrorDescription": "لطفاً لینک را دستی کپی کنید.",
       "sharePhoneLabel": "شماره",
       "sharePhoneFallbackPrompt": "در دریافت شماره تلفن مشکلی پیش آمد. می‌خواهید بدون شماره اشتراک‌گذاری کنید؟",
-      "sharePhoneLabel": "شماره",
       "shareSms": "پیامک",
       "saveDialog": {
         "title": "ذخیره در پوشه",
@@ -552,7 +551,24 @@
         "unknown": "آگهی‌دهنده"
       },
       "mobileBack": "بازگشت",
-      "close": "بستن"
+      "close": "بستن",
+      "contactInfo": {
+        "button": "اطلاعات تماس",
+        "ownerLabel": "نام مالک",
+        "ownerUnknown": "نام ثبت نشده",
+        "phoneLabel": "شماره تماس",
+        "missingShort": "شماره تماس موجود نیست",
+        "call": "تماس",
+        "copy": "کپی اطلاعات",
+        "copySuccess": "اطلاعات تماس کپی شد",
+        "copyError": "کپی اطلاعات تماس انجام نشد",
+        "missingTitle": "شماره تماسی پیدا نشد",
+        "missingDescription": "برای این آگهی شماره تماسی ثبت نشده است.",
+        "rateLimitedTitle": "محدودیت دریافت شماره",
+        "rateLimitedDescription": "لطفاً {time} دیگر تلاش کنید.",
+        "errorTitle": "خطا در دریافت اطلاعات تماس",
+        "errorDescription": "در دریافت اطلاعات تماس خطایی رخ داد. دوباره تلاش کنید."
+      }
     }
   },
   "admin": {
@@ -596,7 +612,68 @@
         "divarSessions": {
           "title": "جلسات دیوار",
           "description": "مدیریت شماره‌ها و JWTهای دیوار برای دسترسی به API."
+        },
+        "arkaSessions": {
+          "title": "هدرهای آرکا",
+          "description": "هدرهای API آرکا برای دریافت شماره‌ها را مدیریت کنید."
         }
+      }
+    },
+    "arkaSessions": {
+      "title": "هدرهای API آرکا",
+      "description": "هدرهای مورد نیاز برای فراخوانی API آرکا را ذخیره و به‌روزرسانی کنید.",
+      "actions": {
+        "add": "افزودن هدر",
+        "edit": "ویرایش",
+        "refresh": "تازه‌سازی",
+        "save": "ذخیره",
+        "cancel": "انصراف",
+        "enable": "فعال‌سازی",
+        "disable": "غیرفعال‌سازی"
+      },
+      "fields": {
+        "label": "برچسب",
+        "headers": "هدرها (هر خط یک هدر، مثلا «Authorization: Bearer …»)",
+        "active": "فعال",
+        "locked": "قفل"
+      },
+      "placeholders": {
+        "label": "مثلا اصلی",
+        "headers": "Authorization: Bearer ...\nUser-Agent: ...\nOrigin: https://www.arkafile.org"
+      },
+      "columns": {
+        "label": "برچسب",
+        "active": "فعال",
+        "locked": "قفل",
+        "updated": "به‌روزرسانی",
+        "actions": "اقدام‌ها",
+        "status": "وضعیت"
+      },
+      "status": {
+        "active": "فعال",
+        "inactive": "غیرفعال",
+        "locked": "قفل",
+        "unlocked": "باز",
+        "ok": "بدون خطا",
+        "error": "خطا"
+      },
+      "dialog": {
+        "addTitle": "افزودن هدرهای آرکا",
+        "addDescription": "هدرهای لازم برای درخواست‌های آرکا را وارد کنید.",
+        "editTitle": "ویرایش هدرهای آرکا",
+        "editDescription": "هدرها، برچسب یا وضعیت را تغییر دهید."
+      },
+      "loading": "در حال بارگذاری هدرها…",
+      "empty": "هدر آرکا ثبت نشده است.",
+      "toast": {
+        "missingTitle": "هدر لازم است",
+        "missingDescription": "حداقل یک هدر وارد کنید.",
+        "createdTitle": "هدر ذخیره شد",
+        "createdDescription": "هدرهای آرکا ثبت شد.",
+        "updatedTitle": "هدر به‌روزرسانی شد",
+        "updatedDescription": "تغییرات ذخیره شد.",
+        "errorTitle": "خطا در ذخیره",
+        "errorDescription": "امکان ذخیره هدر نبود. دوباره تلاش کنید."
       }
     },
     "divarSessions": {
@@ -765,17 +842,17 @@
           "placeholder": "جستجوی استان…",
           "empty": "استانی مطابق جستجو پیدا نشد."
         },
-      "columns": {
-        "id": "شناسه",
-        "name": "نام",
-        "slug": "اسلاگ",
-        "allowPosting": "امکان درج آگهی"
+        "columns": {
+          "id": "شناسه",
+          "name": "نام",
+          "slug": "اسلاگ",
+          "allowPosting": "امکان درج آگهی"
+        },
+        "allowPosting": {
+          "enabled": "فعال",
+          "disabled": "غیرفعال"
+        }
       },
-      "allowPosting": {
-        "enabled": "فعال",
-        "disabled": "غیرفعال"
-      }
-    },
       "cities": {
         "title": "فهرست شهرها",
         "description": "با فیلتر استان، شهرها و اسلاگ‌ آن‌ها را بررسی کنید.",
@@ -786,22 +863,22 @@
           "placeholder": "جستجوی شهر…",
           "empty": "شهری مطابق جستجو پیدا نشد."
         },
-      "columns": {
-        "id": "شناسه",
-        "name": "نام",
-        "slug": "اسلاگ",
-        "province": "استان",
-        "allowPosting": "امکان درج آگهی"
+        "columns": {
+          "id": "شناسه",
+          "name": "نام",
+          "slug": "اسلاگ",
+          "province": "استان",
+          "allowPosting": "امکان درج آگهی"
+        },
+        "filters": {
+          "province": "استان",
+          "all": "همه استان‌ها"
+        },
+        "allowPosting": {
+          "enabled": "فعال",
+          "disabled": "غیرفعال"
+        }
       },
-      "filters": {
-        "province": "استان",
-        "all": "همه استان‌ها"
-      },
-      "allowPosting": {
-        "enabled": "فعال",
-        "disabled": "غیرفعال"
-      }
-    },
       "districts": {
         "title": "فهرست محله‌ها",
         "description": "یک شهر را انتخاب کنید تا محله‌ها و اسلاگ‌ آن‌ها نمایش داده شود.",
@@ -867,13 +944,13 @@
         "fields": {
           "title": "عنوان پکیج",
           "description": "توضیحات",
-        "durationDays": "مدت (روز)",
-        "freeDays": "روزهای هدیه",
-        "includedUsers": "تعداد کاربران مشمول",
-        "savedFiltersLimit": "حداکثر فیلترهای ذخیره‌شده",
-        "actualPrice": "قیمت اصلی",
-        "discountedPrice": "قیمت با تخفیف"
-      },
+          "durationDays": "مدت (روز)",
+          "freeDays": "روزهای هدیه",
+          "includedUsers": "تعداد کاربران مشمول",
+          "savedFiltersLimit": "حداکثر فیلترهای ذخیره‌شده",
+          "actualPrice": "قیمت اصلی",
+          "discountedPrice": "قیمت با تخفیف"
+        },
         "createSubmit": "ثبت پکیج",
         "updateSubmit": "به‌روزرسانی پکیج",
         "cancel": "انصراف",
@@ -896,12 +973,12 @@
         "columns": {
           "package": "پکیج",
           "duration": "مدت",
-        "users": "کاربران",
-        "pricing": "قیمت‌گذاری",
-        "savedFilters": "فیلترهای ذخیره‌شده",
-        "status": "وضعیت",
-        "actions": "عملیات"
-      },
+          "users": "کاربران",
+          "pricing": "قیمت‌گذاری",
+          "savedFilters": "فیلترهای ذخیره‌شده",
+          "status": "وضعیت",
+          "actions": "عملیات"
+        },
         "add": "افزودن پکیج",
         "loading": "در حال بارگذاری پکیج‌ها…",
         "empty": "هنوز هیچ پکیجی تعریف نشده است. اولین پکیج را از بالا ایجاد کنید.",

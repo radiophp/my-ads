@@ -1,20 +1,20 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
+import { AnimatePresence, motion } from 'framer-motion';
 import { skipToken } from '@reduxjs/toolkit/query';
 import {
-  ArrowLeft,
   BookmarkPlus,
+  Check,
   Circle,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Eraser,
   Filter,
   Folder,
-  MoreHorizontal,
-  Pencil,
-  Trash2,
+  X,
 } from 'lucide-react';
 
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
@@ -31,6 +31,7 @@ import {
   resetSearchFilter,
   searchFilterInitialState,
   hydrateFromSaved,
+  commitAppliedFilters,
   type SearchFilterState,
 } from '@/features/search-filter/searchFilterSlice';
 import {
@@ -48,12 +49,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import type { DivarCategory } from '@/types/divar-category';
 import { CategoryFiltersPreview } from './category-filters-preview';
 import { useBackButtonClose } from '@/hooks/use-back-button-close';
@@ -62,25 +57,48 @@ import { cn } from '@/lib/utils';
 import {
   useGetSavedFiltersQuery,
   useCreateSavedFilterMutation,
-  useUpdateSavedFilterMutation,
-  useDeleteSavedFilterMutation,
 } from '@/features/api/apiSlice';
 import type { SavedFilter } from '@/types/saved-filters';
 import { SaveFilterDialog } from '@/components/dashboard/save-filter-dialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { cloneSearchFilterState, mergeSavedFilterState } from '@/features/search-filter/utils';
+
 const BASE_CATEGORY_SLUG = 'real-estate';
 const DEFAULT_SAVED_FILTER_LIMIT = 5;
+const DEFAULT_PROVINCE_NAME_FA = 'البرز';
+
+type SelectionIndicatorProps = {
+  type: 'radio' | 'checkbox';
+  checked: boolean;
+};
+
+function SelectionIndicator({ type, checked }: SelectionIndicatorProps) {
+  if (type === 'checkbox') {
+    return (
+      <span
+        aria-hidden="true"
+        className={cn(
+          'flex size-5 shrink-0 items-center justify-center rounded-sm border',
+          checked ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background',
+        )}
+      >
+        {checked ? <Check className="size-3.5" /> : null}
+      </span>
+    );
+  }
+
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        'flex size-5 shrink-0 items-center justify-center rounded-sm border bg-background',
+        checked ? 'border-primary bg-primary text-primary-foreground' : 'border-border',
+      )}
+    >
+      {checked ? <Check className="size-3.5" /> : null}
+    </span>
+  );
+}
 
 export function DashboardSearchFilterPanel() {
   const t = useTranslations('dashboard.filters');
@@ -96,6 +114,7 @@ export function DashboardSearchFilterPanel() {
     categoryFilters,
     ringBinderFolderId,
     noteFilter,
+    persistNonce,
   } = useAppSelector((state) => state.searchFilter);
   const categorySlug = categorySelection.slug;
   const categoryDepth = categorySelection.depth;
@@ -109,6 +128,8 @@ export function DashboardSearchFilterPanel() {
     isLoading: provincesLoading,
     isFetching: provincesFetching,
   } = useGetProvincesQuery();
+
+  const defaultProvinceAppliedRef = useRef(false);
 
   const {
     data: cities = [],
@@ -147,11 +168,10 @@ export function DashboardSearchFilterPanel() {
     isFetching: savedFiltersFetching,
   } = useGetSavedFiltersQuery();
   const [createSavedFilter, { isLoading: isCreatingSavedFilter }] = useCreateSavedFilterMutation();
-  const [updateSavedFilter, { isLoading: isUpdatingSavedFilter }] = useUpdateSavedFilterMutation();
-  const [deleteSavedFilter, { isLoading: isDeletingSavedFilter }] = useDeleteSavedFilterMutation();
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
-  const [renameTarget, setRenameTarget] = useState<SavedFilter | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<SavedFilter | null>(null);
+
+  const [filterModalOpen, setFilterModalOpen] = useState(false);
+  const [savedFiltersModalOpen, setSavedFiltersModalOpen] = useState(false);
 
   const [provinceDialogOpen, setProvinceDialogOpen] = useState(false);
   const [cityDialogOpen, setCityDialogOpen] = useState(false);
@@ -168,6 +188,31 @@ export function DashboardSearchFilterPanel() {
     isProvinceAll || provincesLoading || provincesFetching || citiesLoading || citiesFetching;
   const categoriesBusy = categoriesLoading || categoriesFetching;
   const districtsBusy = districtsLoading || districtsFetching;
+
+  useEffect(() => {
+    if (defaultProvinceAppliedRef.current) {
+      return;
+    }
+    if (filterModalOpen) {
+      return;
+    }
+    if (persistNonce !== 0) {
+      return;
+    }
+    if (provincesLoading || provincesFetching) {
+      return;
+    }
+    if (provinceId !== null) {
+      return;
+    }
+    const match = provinces.find((province) => province.name === DEFAULT_PROVINCE_NAME_FA);
+    if (!match) {
+      defaultProvinceAppliedRef.current = true;
+      return;
+    }
+    defaultProvinceAppliedRef.current = true;
+    dispatch(setProvince(match.id));
+  }, [dispatch, filterModalOpen, persistNonce, provinceId, provinces, provincesFetching, provincesLoading]);
 
   useEffect(() => {
     if (provinceId === null) {
@@ -387,7 +432,6 @@ export function DashboardSearchFilterPanel() {
     }
   }
 
-  const cityHelperText = isProvinceAll ? t('cityDisabledHelper') : t('cityHelper');
   const isDistrictButtonDisabled =
     selectedCityIds.length === 0 || districtsBusy || districtOptions.length === 0;
   let districtButtonLabel = t('districtButtonSelect');
@@ -400,8 +444,8 @@ export function DashboardSearchFilterPanel() {
       districtButtonLabel = t('districtAll');
     }
   }
-  const districtHelperText =
-    selectedCityIds.length === 0 ? t('districtDisabledHelper') : t('districtHelper');
+  const showCityFilter = !isProvinceAll;
+  const showDistrictFilter = !isProvinceAll && selectedCityIds.length > 0;
 
   const allowedCategories = useMemo(
     () => categories.filter((category) => category.allowPosting),
@@ -478,7 +522,10 @@ export function DashboardSearchFilterPanel() {
     categorySlug !== null
       ? visibleCategories.find((category) => category.slug === categorySlug) ?? null
       : null;
-  const [filterModalOpen, setFilterModalOpen] = useState(false);
+  const [mobileFiltersTab, setMobileFiltersTab] = useState<'main' | 'category' | 'personalize'>(
+    'main',
+  );
+  const [mobileTabDirection, setMobileTabDirection] = useState<1 | -1>(1);
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   useBackButtonClose(filterModalOpen, () => setFilterModalOpen(false));
 
@@ -487,6 +534,76 @@ export function DashboardSearchFilterPanel() {
       setCategoryModalOpen(false);
     }
   }, [filterModalOpen, categoryModalOpen]);
+
+  useEffect(() => {
+    if (filterModalOpen) {
+      setMobileFiltersTab('main');
+      setMobileTabDirection(1);
+    }
+  }, [filterModalOpen]);
+
+  useEffect(() => {
+    if (!filterModalOpen) {
+      return;
+    }
+
+    const body = document.body;
+    const html = document.documentElement;
+    const scrollY = window.scrollY;
+
+    const prev = {
+      overflow: body.style.overflow,
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+      overscrollBody: body.style.overscrollBehaviorY,
+      overscrollHtml: html.style.overscrollBehaviorY,
+    };
+
+    body.style.position = 'fixed';
+    body.style.top = `-${scrollY}px`;
+    body.style.width = '100%';
+    body.style.overflow = 'hidden';
+    body.style.overscrollBehaviorY = 'none';
+    html.style.overscrollBehaviorY = 'none';
+
+    return () => {
+      body.style.overflow = prev.overflow;
+      body.style.position = prev.position;
+      body.style.top = prev.top;
+      body.style.width = prev.width;
+      body.style.overscrollBehaviorY = prev.overscrollBody;
+      html.style.overscrollBehaviorY = prev.overscrollHtml;
+      window.scrollTo(0, scrollY);
+    };
+  }, [filterModalOpen]);
+
+  const mobileTabKeys = useMemo(() => ['main', 'category', 'personalize'] as const, []);
+  const mobileTabIndex = useMemo(() => mobileTabKeys.indexOf(mobileFiltersTab), [mobileTabKeys, mobileFiltersTab]);
+
+  const setMobileTab = useCallback(
+    (nextTab: (typeof mobileTabKeys)[number]) => {
+      if (nextTab === mobileFiltersTab) {
+        return;
+      }
+      const nextIndex = mobileTabKeys.indexOf(nextTab);
+      setMobileTabDirection(nextIndex > mobileTabIndex ? 1 : -1);
+      setMobileFiltersTab(nextTab);
+    },
+    [mobileTabIndex, mobileTabKeys, mobileFiltersTab],
+  );
+
+  const handleMobileTabSwipe = useCallback(
+    (direction: 1 | -1) => {
+      const nextIndex = mobileTabIndex + direction;
+      if (nextIndex < 0 || nextIndex >= mobileTabKeys.length) {
+        return;
+      }
+      setMobileTabDirection(direction);
+      setMobileFiltersTab(mobileTabKeys[nextIndex]);
+    },
+    [mobileTabIndex, mobileTabKeys],
+  );
 
   const breadcrumbItems = useMemo(() => {
     if (baseCategory) {
@@ -705,6 +822,7 @@ export function DashboardSearchFilterPanel() {
     (filter: SavedFilter) => {
       const normalized = mergeSavedFilterState(filter.payload);
       dispatch(hydrateFromSaved(normalized));
+      dispatch(commitAppliedFilters());
       toast({
         title: savedFiltersT('toast.appliedTitle'),
         description: savedFiltersT('toast.appliedDescription', { name: filter.name }),
@@ -737,51 +855,6 @@ export function DashboardSearchFilterPanel() {
     },
     [createSavedFilter, currentFilterState, savedFiltersT, toast],
   );
-
-  const handleRenameFilter = useCallback(
-    async (name: string) => {
-      if (!renameTarget) {
-        return;
-      }
-      try {
-        await updateSavedFilter({ id: renameTarget.id, body: { name } }).unwrap();
-        toast({
-          title: savedFiltersT('toast.renamedTitle'),
-          description: savedFiltersT('toast.renamedDescription', { name }),
-        });
-        setRenameTarget(null);
-      } catch (error) {
-        console.error('Failed to rename filter', error);
-        toast({
-          title: savedFiltersT('toast.errorTitle'),
-          description: savedFiltersT('toast.errorDescription'),
-          variant: 'destructive',
-        });
-      }
-    },
-    [renameTarget, updateSavedFilter, savedFiltersT, toast],
-  );
-
-  const handleDeleteFilter = useCallback(async () => {
-    if (!deleteTarget) {
-      return;
-    }
-    try {
-      await deleteSavedFilter(deleteTarget.id).unwrap();
-      toast({
-        title: savedFiltersT('toast.deletedTitle'),
-        description: savedFiltersT('toast.deletedDescription', { name: deleteTarget.name }),
-      });
-      setDeleteTarget(null);
-    } catch (error) {
-      console.error('Failed to delete saved filter', error);
-      toast({
-        title: savedFiltersT('toast.errorTitle'),
-        description: savedFiltersT('toast.errorDescription'),
-        variant: 'destructive',
-      });
-    }
-  }, [deleteSavedFilter, deleteTarget, savedFiltersT, toast]);
 
   return (
     <>
@@ -818,25 +891,6 @@ export function DashboardSearchFilterPanel() {
               )}
             </span>
           </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            className="rounded-full px-4 py-2 shadow"
-            disabled={!hasActiveFilters || saveLimitReached || isCreatingSavedFilter}
-            onClick={() => setSaveDialogOpen(true)}
-            title={
-              !hasActiveFilters
-                ? savedFiltersT('disabled.noFilters')
-                : saveLimitReached
-                  ? savedFiltersT('disabled.limitReached')
-                  : undefined
-            }
-          >
-            <span className="flex items-center justify-center gap-2">
-              <BookmarkPlus className="size-4" />
-              <span>{savedFiltersT('saveButton')}</span>
-            </span>
-          </Button>
         </div>
       </div>
       {filterModalOpen ? (
@@ -847,57 +901,108 @@ export function DashboardSearchFilterPanel() {
           onClick={() => setFilterModalOpen(false)}
         />
       ) : null}
-      <section
-        className={cn(
-          'bg-card w-full rounded-xl shadow-sm',
-          filterModalOpen
-            ? 'fixed inset-0 z-50 block h-dvh overflow-y-auto bg-background lg:relative lg:h-auto'
-            : 'hidden p-4 lg:flex lg:h-full lg:min-h-0 lg:flex-col lg:overflow-hidden lg:p-4',
-        )}
-      >
-        <div
-          className={cn(
-            'flex flex-col gap-5',
-            filterModalOpen
-              ? 'px-4 pb-20'
-              : 'lg:flex-1 lg:min-h-0 lg:overflow-y-auto lg:px-4 lg:pb-6',
-          )}
-        >
+	      <section
+	        className={cn(
+	          'bg-card w-full rounded-xl shadow-sm',
+	          filterModalOpen
+	            ? 'fixed inset-0 z-50 flex h-dvh flex-col overflow-hidden bg-background lg:relative lg:h-auto'
+	            : 'hidden p-4 lg:flex lg:h-full lg:min-h-0 lg:flex-col lg:overflow-hidden lg:p-4',
+	        )}
+	      >
+	        <div
+	          className={cn(
+	            'flex flex-col gap-5',
+	            filterModalOpen
+	              ? 'flex-1 min-h-0 overflow-y-auto overscroll-y-contain px-4 pb-4'
+	              : 'lg:flex-1 lg:min-h-0 lg:overflow-y-auto lg:px-4 lg:pb-6',
+	          )}
+	        >
           {filterModalOpen ? (
-            <div className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-border bg-background pb-3 pt-2 lg:hidden">
-              <p
-                className={cn(
-                  'flex-1 text-base font-semibold text-foreground',
-                  isRTL ? 'text-right' : 'text-left',
-                )}
-              >
-                {t('title')}
-              </p>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="inline-flex items-center gap-1 text-destructive hover:bg-destructive/10"
-                onClick={handleResetFilters}
-              >
-                <Eraser className="size-4" />
-                {t('clear')}
-              </Button>
-            </div>
-          ) : null}
-          <div className="rounded-2xl border border-dashed border-border/60 bg-muted/40 px-4 py-5">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <p className="text-sm font-semibold text-foreground">{savedFiltersT('title')}</p>
-                <p className="text-xs text-muted-foreground">
-                  {savedFiltersT('usage', { count: totalSavedFilters, limit: savedFiltersLimit })}
+            <div className="sticky top-0 z-20 -mx-4 border-b border-border bg-background px-4 lg:hidden">
+              <div className="flex items-center justify-between gap-2 py-2">
+                <p
+                  className={cn(
+                    'flex-1 text-base font-semibold text-foreground',
+                    isRTL ? 'text-right' : 'text-left',
+                  )}
+                >
+                  {t('title')}
                 </p>
-              </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="inline-flex items-center gap-1 text-destructive hover:bg-destructive/10"
+                  onClick={handleResetFilters}
+                >
+                  <Eraser className="size-4" />
+                  {t('clear')}
+                </Button>
+	              </div>
+	              <div className="-mx-4" dir={isRTL ? 'rtl' : 'ltr'}>
+	                {(() => {
+	                  const tabs = [
+	                    {
+	                      key: 'main' as const,
+	                      label: t('tabs.main'),
+	                      onClick: () => setMobileTab('main'),
+	                    },
+	                    {
+	                      key: 'category' as const,
+	                      label: t('tabs.category'),
+	                      onClick: () => setMobileTab('category'),
+	                    },
+	                    {
+	                      key: 'personalize' as const,
+	                      label: t('tabs.personalize'),
+	                      onClick: () => setMobileTab('personalize'),
+	                    },
+	                  ];
+	                  const orderedTabs = tabs;
+
+	                  return (
+	                    <div
+	                      className={cn(
+	                        'flex w-full overflow-hidden rounded-none border border-border divide-x divide-border',
+	                        isRTL ? 'divide-x-reverse' : null,
+	                      )}
+	                    >
+	                      {orderedTabs.map((tab) => (
+	                        <Button
+	                          key={tab.key}
+	                          type="button"
+	                          variant={mobileFiltersTab === tab.key ? 'default' : 'secondary'}
+	                          className="flex-1 rounded-none shadow-none"
+	                          onClick={tab.onClick}
+	                        >
+	                          {tab.label}
+	                        </Button>
+	                      ))}
+	                    </div>
+	                  );
+	                })()}
+	              </div>
+	              <div className="h-0.5" />
+	            </div>
+	          ) : null}
+
+	          {!filterModalOpen ? (
+	            <div className="flex flex-col gap-2">
+	            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <Button
                 type="button"
-                variant="outline"
-                size="sm"
-                className="justify-center border-border/70 text-foreground transition-colors hover:border-border hover:bg-background"
+                variant="secondary"
+                className="w-full justify-between sm:flex-1"
+                onClick={() => setSavedFiltersModalOpen(true)}
+                disabled={savedFiltersBusy}
+              >
+                <span className="truncate">{savedFiltersT('showButton')}</span>
+                <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                className="hidden w-full sm:flex-1 lg:inline-flex"
                 onClick={() => setSaveDialogOpen(true)}
                 disabled={!hasActiveFilters || saveLimitReached || isCreatingSavedFilter}
                 title={
@@ -908,173 +1013,96 @@ export function DashboardSearchFilterPanel() {
                       : undefined
                 }
               >
-                <BookmarkPlus className="mr-2 size-4" />
-                {savedFiltersT('saveButton')}
+                <span className="flex items-center justify-center gap-2">
+                  <BookmarkPlus className="size-4" />
+                  <span>{savedFiltersT('saveButton')}</span>
+                </span>
               </Button>
             </div>
-            <div className="mt-4">
-              {savedFiltersBusy ? (
-                <ul className="space-y-3">
-                  {Array.from({ length: 2 }).map((_, index) => (
-                    <li
-                      // eslint-disable-next-line react/no-array-index-key
-                      key={index}
-                      className="animate-pulse rounded-xl border border-border/50 bg-background/80 px-4 py-3"
-                    >
-                      <div className="h-4 w-1/2 rounded bg-muted" />
-                      <div className="mt-2 h-3 w-1/3 rounded bg-muted" />
-                    </li>
-                  ))}
-                </ul>
-              ) : savedFilters.length === 0 ? (
-                <p className="text-sm text-muted-foreground">{savedFiltersT('empty')}</p>
-              ) : (
-                <ul className="space-y-3">
-                  {savedFilters.map((filter) => (
-                    <li
-                      key={filter.id}
-                      className="flex items-center justify-between gap-3 rounded-2xl border border-border/70 bg-background px-4 py-3"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-semibold text-foreground">{filter.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {savedFiltersT('lastUpdated', {
-                            value: new Date(filter.updatedAt).toLocaleString(locale, {
-                              dateStyle: 'medium',
-                              timeStyle: 'short',
-                            }),
-                          })}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => handleApplySavedFilter(filter)}
-                        >
-                          {savedFiltersT('apply')}
-                        </Button>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              aria-label={savedFiltersT('menuLabel')}
-                            >
-                              <MoreHorizontal className="size-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onSelect={(event) => {
-                                event.preventDefault();
-                                setRenameTarget(filter);
-                              }}
-                            >
-                              <Pencil className="mr-2 size-4" />
-                              {savedFiltersT('rename')}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-destructive focus:text-destructive"
-                              onSelect={(event) => {
-                                event.preventDefault();
-                                setDeleteTarget(filter);
-                              }}
-                            >
-                              <Trash2 className="mr-2 size-4" />
-                              {savedFiltersT('delete')}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+            <p className="text-xs text-muted-foreground">
+              {savedFiltersT('usage', { count: totalSavedFilters, limit: savedFiltersLimit })}
+            </p>
           </div>
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-foreground">
-            {t('ringBinder.label')}
+	          ) : null}
+
+	        {!filterModalOpen ? (
+	          <div className="space-y-2">
+	          <label className="block text-sm font-medium text-foreground">
+	            {t('ringBinder.label')}
           </label>
-          <select
-            className="w-full rounded-lg border border-border/70 bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none"
-            value={ringBinderFolderId ?? ''}
-            onChange={(event) => {
-              const value = event.target.value;
-              dispatch(setRingBinderFolder(value === '' ? null : value));
-            }}
-            disabled={ringBinderLoading || ringBinderFetching}
-          >
-            <option value="">{t('ringBinder.all')}</option>
-            {ringBinderFolders.map((folder) => (
-              <option key={folder.id} value={folder.id}>
-                {folder.name}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              className={cn(
+                'w-full appearance-none rounded-lg bg-muted/30 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+                isRTL ? 'pl-10 pr-3' : 'pl-3 pr-10',
+              )}
+              value={ringBinderFolderId ?? ''}
+              onChange={(event) => {
+                const value = event.target.value;
+                dispatch(setRingBinderFolder(value === '' ? null : value));
+              }}
+              disabled={ringBinderLoading || ringBinderFetching}
+            >
+              <option value="">{t('ringBinder.all')}</option>
+              {ringBinderFolders.map((folder) => (
+                <option key={folder.id} value={folder.id}>
+                  {folder.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown
+              aria-hidden="true"
+              className={cn(
+                'pointer-events-none absolute top-1/2 size-4 -translate-y-1/2 text-muted-foreground',
+                isRTL ? 'left-3' : 'right-3',
+              )}
+            />
+          </div>
           {ringBinderLoading || ringBinderFetching ? (
             <p className="text-xs text-muted-foreground">{t('ringBinder.loading')}</p>
           ) : ringBinderFolders.length === 0 ? (
             <p className="text-xs text-muted-foreground">{t('ringBinder.empty')}</p>
           ) : null}
-        </div>
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-foreground">{t('noteFilter.label')}</label>
-          <select
-            className="w-full rounded-lg border border-border/70 bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none"
-            value={noteFilter}
-            onChange={(event) => {
-              const value = event.target.value as NoteFilterOption;
-              if (value === 'has' || value === 'none') {
-                dispatch(setNoteFilter(value));
-              } else {
-                dispatch(setNoteFilter('all'));
-              }
-            }}
-          >
-            <option value="all">{t('noteFilter.options.all')}</option>
-            <option value="has">{t('noteFilter.options.has')}</option>
-            <option value="none">{t('noteFilter.options.none')}</option>
-          </select>
-        </div>
-        {filterModalOpen ? (
-          <div className="space-y-2 lg:hidden">
-            <label className="block text-sm font-medium text-foreground">{t('categories.title')}</label>
-            <button
-              type="button"
-              onClick={handleOpenCategoryModal}
+	        </div>
+	        ) : null}
+
+	        {!filterModalOpen ? (
+	        <div className="space-y-2">
+	          <label className="block text-sm font-medium text-foreground">{t('noteFilter.label')}</label>
+	          <div className="relative">
+            <select
               className={cn(
-                'flex w-full items-center gap-3 rounded-xl border border-border/70 bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
-                isRTL ? 'flex-row-reverse justify-between' : 'flex-row justify-between',
+                'w-full appearance-none rounded-lg bg-muted/30 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+                isRTL ? 'pl-10 pr-3' : 'pl-3 pr-10',
               )}
+              value={noteFilter}
+              onChange={(event) => {
+                const value = event.target.value as NoteFilterOption;
+                if (value === 'has' || value === 'none') {
+                  dispatch(setNoteFilter(value));
+                } else {
+                  dispatch(setNoteFilter('all'));
+                }
+              }}
             >
-              {isRTL ? (
-                <>
-                  <span className="flex flex-1 items-center justify-end gap-2 text-right text-foreground">
-                    <span className="truncate">{categorySummaryLabel}</span>
-                    <Folder className="size-4 text-muted-foreground" />
-                  </span>
-                  <ChevronLeft className="size-4 text-muted-foreground" />
-                </>
-              ) : (
-                <>
-                  <span className="flex flex-1 items-center gap-2 text-left text-foreground">
-                    <Folder className="size-4 text-muted-foreground" />
-                    <span className="truncate">{categorySummaryLabel}</span>
-                  </span>
-                  <ChevronRight className="size-4 text-muted-foreground" />
-                </>
+              <option value="all">{t('noteFilter.options.all')}</option>
+              <option value="has">{t('noteFilter.options.has')}</option>
+              <option value="none">{t('noteFilter.options.none')}</option>
+            </select>
+            <ChevronDown
+              aria-hidden="true"
+              className={cn(
+                'pointer-events-none absolute top-1/2 size-4 -translate-y-1/2 text-muted-foreground',
+                isRTL ? 'left-3' : 'right-3',
               )}
-            </button>
+            />
           </div>
-        ) : null}
-        <div className="hidden lg:block">
-          <p className="text-sm font-medium text-muted-foreground">{t('categories.title')}</p>
-          {categoriesBusy ? (
+	        </div>
+	        ) : null}
+
+	        <div className="hidden lg:block">
+	          <p className="text-sm font-medium text-muted-foreground">{t('categories.title')}</p>
+	          {categoriesBusy ? (
             <p className="mt-2 text-xs text-muted-foreground">{t('categories.loading')}</p>
           ) : visibleCategories.length === 0 ? (
             <p className="mt-2 text-xs text-muted-foreground">{t('categories.empty')}</p>
@@ -1151,332 +1179,728 @@ export function DashboardSearchFilterPanel() {
           )}
         </div>
 
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-foreground">{t('provinceLabel')}</label>
-          <Dialog open={provinceDialogOpen} onOpenChange={setProvinceDialogOpen} disableBackClose>
-            <Button
-              type="button"
-              variant="outline"
-              className="justify-between"
-              onClick={() => setProvinceDialogOpen(true)}
-              disabled={provincesLoading && provinces.length === 0}
-            >
-              {provinceButtonLabel}
-            </Button>
-            <DialogContent
-              hideCloseButton
-              className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] lg:left-1/2 lg:top-1/2 lg:flex lg:max-h-[90vh] lg:w-full lg:max-w-xl lg:-translate-x-1/2 lg:-translate-y-1/2 lg:flex-col lg:overflow-hidden lg:rounded-2xl lg:border lg:p-6"
-            >
-              <div className="flex h-full flex-col overflow-hidden">
-                <div className="border-b border-border px-6 py-4 lg:hidden">
-                  <div className="flex items-center gap-2" dir="ltr">
-                    <button
-                      type="button"
-                      className="flex items-center gap-2 text-sm font-medium text-primary"
-                      onClick={() => setProvinceDialogOpen(false)}
-                    >
-                      <ArrowLeft className="size-4" />
-                      {t('mobileBack')}
-                    </button>
-                    <p
-                      className={`flex-1 text-base font-semibold ${isRTL ? 'text-right' : 'text-center'}`}
-                      dir={isRTL ? 'rtl' : 'ltr'}
-                    >
-                      {t('provinceModalTitle')}
-                    </p>
-                  </div>
-                  <p className="mt-1 text-sm text-muted-foreground">{t('provinceModalDescription')}</p>
-                </div>
-                    <div className="hidden p-0 lg:block">
-                      <DialogHeader className={isRTL ? 'text-right' : 'text-left'}>
-                        <DialogTitle>{t('provinceModalTitle')}</DialogTitle>
-                        <DialogDescription>{t('provinceModalDescription')}</DialogDescription>
-                      </DialogHeader>
-                    </div>
+			        {filterModalOpen ? (
+			          <div className="flex flex-1 flex-col lg:hidden">
+			            <AnimatePresence initial={false} custom={mobileTabDirection}>
+			              <motion.div
+			                key={mobileFiltersTab}
+			                className="flex flex-1 flex-col"
+			                custom={mobileTabDirection}
+			                initial={{
+			                  x: mobileTabDirection === 1 ? '100%' : '-100%',
+			                  opacity: 0,
+		                }}
+		                animate={{ x: 0, opacity: 1 }}
+		                exit={{
+		                  x: mobileTabDirection === 1 ? '-100%' : '100%',
+		                  opacity: 0,
+		                }}
+		                transition={{
+		                  x: { type: 'spring', stiffness: 320, damping: 35 },
+		                  opacity: { duration: 0.15 },
+		                }}
+		                drag="x"
+		                dragConstraints={{ left: 0, right: 0 }}
+		                dragElastic={0.2}
+		                onDragEnd={(_, info) => {
+		                  const threshold = 40;
+		                  const velocityThreshold = 450;
+		                  const offsetX = isRTL ? -info.offset.x : info.offset.x;
+		                  const velocityX = isRTL ? -info.velocity.x : info.velocity.x;
 
-                <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 py-4 lg:p-0">
-                  <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-dashed border-input px-3 py-2 text-sm font-medium">
-                    <input
-                      type="radio"
-                      name="province-modal-option"
-                      className="size-4 border-input text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      checked={draftProvinceAll}
-                      onChange={handleProvinceSelectAll}
-                    />
-                    {t('provinceModalSelectAll')}
-                  </label>
+		                  if (offsetX < -threshold || velocityX < -velocityThreshold) {
+		                    handleMobileTabSwipe(1);
+		                  } else if (offsetX > threshold || velocityX > velocityThreshold) {
+		                    handleMobileTabSwipe(-1);
+		                  }
+		                }}
+		                style={{ touchAction: 'pan-y' }}
+		              >
+		                {mobileFiltersTab === 'main' ? (
+		                  <>
+			                    <div className="flex flex-col gap-3">
+			                      <div className="py-0">
+			                        <div className="space-y-1 lg:hidden">
+			                          <label
+			                            className={cn(
+			                              'block px-4 text-sm font-medium text-foreground',
+			                              isRTL ? 'text-right' : 'text-left',
+			                            )}
+			                          >
+			                            {t('categories.title')}
+			                          </label>
+			                          <button
+			                            type="button"
+			                            onClick={handleOpenCategoryModal}
+			                            dir={isRTL ? 'rtl' : 'ltr'}
+			                            className={cn(
+			                              'flex w-full items-center gap-3 rounded-xl bg-muted/30 px-4 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+			                              'flex-row justify-between',
+			                            )}
+			                          >
+			                            {isRTL ? (
+			                              <>
+			                                <span className="flex flex-1 items-center justify-start gap-2 text-right text-foreground">
+			                                  <Folder className="size-4 text-muted-foreground" />
+			                                  <span className="truncate">{categorySummaryLabel}</span>
+			                                </span>
+			                                <ChevronLeft className="size-4 text-muted-foreground" />
+			                              </>
+			                            ) : (
+			                              <>
+			                                <span className="flex flex-1 items-center gap-2 text-left text-foreground">
+			                                  <Folder className="size-4 text-muted-foreground" />
+			                                  <span className="truncate">{categorySummaryLabel}</span>
+			                                </span>
+			                                <ChevronRight className="size-4 text-muted-foreground" />
+			                              </>
+			                            )}
+			                          </button>
+			                        </div>
+			                      </div>
 
-                  <div className="rounded-xl border border-input">
-                    {provinceOptions.length === 0 ? (
-                      <p className="p-4 text-sm text-muted-foreground">{t('provinceModalEmpty')}</p>
-                    ) : (
-                      <ul className="divide-y divide-border">
-                        {provinceOptions.map((province) => (
-                          <li key={province.value}>
-                            <label className="flex cursor-pointer items-center gap-3 px-3 py-2 text-sm">
-                              <input
-                                type="radio"
-                                name="province-modal-option"
-                                className="size-4 border-input text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                                checked={!draftProvinceAll && draftProvinceId === province.value}
-                                onChange={() => handleProvincePick(province.value)}
-                              />
-                              {province.label}
-                            </label>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                </div>
+			                      <div className="py-0">
+			                        <div className="flex flex-col gap-1">
+			                          <label
+			                            className={cn(
+			                              'px-4 text-sm font-medium text-foreground',
+			                              isRTL ? 'text-right' : 'text-left',
+			                            )}
+			                          >
+			                            {t('provinceLabel')}
+			                          </label>
+			                          <Dialog
+			                            open={provinceDialogOpen}
+			                            onOpenChange={setProvinceDialogOpen}
+			                            disableBackClose
+			                          >
+			                            <Button
+			                              type="button"
+			                              variant="secondary"
+			                              className="justify-between"
+			                              onClick={() => setProvinceDialogOpen(true)}
+			                              disabled={provincesLoading && provinces.length === 0}
+			                            >
+			                              <span
+			                                className="flex w-full items-center justify-between gap-3"
+			                                dir={isRTL ? 'rtl' : 'ltr'}
+			                              >
+			                                <span className="truncate">{provinceButtonLabel}</span>
+			                                <ChevronDown
+			                                  className="size-4 shrink-0 text-muted-foreground"
+			                                  aria-hidden="true"
+			                                />
+			                              </span>
+			                            </Button>
+			                            <DialogContent
+			                              hideCloseButton
+			                              className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] lg:left-1/2 lg:top-1/2 lg:flex lg:max-h-[90vh] lg:w-full lg:max-w-xl lg:-translate-x-1/2 lg:-translate-y-1/2 lg:flex-col lg:overflow-hidden lg:rounded-2xl lg:border lg:p-6"
+			                            >
+			                              <div className="flex h-full flex-col overflow-hidden">
+			                                <div className="border-b border-border px-6 py-4 lg:hidden">
+			                                  <p
+			                                    className={`text-base font-semibold ${
+			                                      isRTL ? 'text-right' : 'text-center'
+			                                    }`}
+			                                    dir={isRTL ? 'rtl' : 'ltr'}
+			                                  >
+			                                    {t('provinceModalTitle')}
+			                                  </p>
+			                                  <p className="mt-1 text-sm text-muted-foreground">
+			                                    {t('provinceModalDescription')}
+			                                  </p>
+			                                </div>
+			                                <div className="hidden p-0 lg:block">
+			                                  <DialogHeader className={isRTL ? 'text-right' : 'text-left'}>
+			                                    <DialogTitle>{t('provinceModalTitle')}</DialogTitle>
+			                                    <DialogDescription>
+			                                      {t('provinceModalDescription')}
+			                                    </DialogDescription>
+			                                  </DialogHeader>
+			                                </div>
 
-                <div className="border-t border-border bg-background/95 px-6 py-4 lg:border-0 lg:bg-transparent lg:px-0">
-                  <div className="flex flex-row justify-end gap-3">
-                    <Button
-                      type="button"
-                      className="flex-1"
-                      onClick={applyProvinceSelection}
-                      disabled={!draftProvinceAll && draftProvinceId === null}
-                    >
-                      {t('provinceModalConfirm')}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => setProvinceDialogOpen(false)}
-                    >
-                      {t('provinceModalCancel')}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+			                                <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 py-4 lg:p-0">
+			                                  <button
+			                                    type="button"
+			                                    role="radio"
+			                                    aria-checked={draftProvinceAll}
+			                                    dir={isRTL ? 'rtl' : 'ltr'}
+			                                    className={cn(
+			                                      'flex w-full items-center gap-3 rounded-lg border border-dashed border-input px-3 py-4 text-sm font-medium transition-colors hover:bg-muted/20',
+			                                      isRTL ? 'flex-row-reverse text-right' : 'flex-row text-left',
+			                                    )}
+			                                    onClick={handleProvinceSelectAll}
+			                                  >
+			                                    <SelectionIndicator type="radio" checked={draftProvinceAll} />
+			                                    <span className="flex-1">{t('provinceModalSelectAll')}</span>
+			                                  </button>
 
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-foreground">{t('cityLabel')}</label>
-          <Dialog open={cityDialogOpen} onOpenChange={setCityDialogOpen} disableBackClose>
-            <Button
-              type="button"
-              variant="outline"
-              className="justify-between"
-              onClick={() => setCityDialogOpen(true)}
-              disabled={isCityButtonDisabled}
-            >
-              {cityButtonLabel}
-            </Button>
-            <DialogContent
-              hideCloseButton
-              className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] lg:left-1/2 lg:top-1/2 lg:flex lg:max-h-[90vh] lg:w-full lg:max-w-xl lg:-translate-x-1/2 lg:-translate-y-1/2 lg:flex-col lg:overflow-hidden lg:rounded-2xl lg:border lg:p-6"
-            >
-              <div className="flex h-full flex-col overflow-hidden">
-                <div className="border-b border-border px-6 py-4 lg:hidden">
-                  <div className="flex items-center gap-2" dir="ltr">
-                    <button
-                      type="button"
-                      className="flex items-center gap-2 text-sm font-medium text-primary"
-                      onClick={() => setCityDialogOpen(false)}
-                    >
-                      <ArrowLeft className="size-4" />
-                      {t('mobileBack')}
-                    </button>
-                    <p
-                      className={`flex-1 text-base font-semibold ${isRTL ? 'text-right' : 'text-center'}`}
-                      dir={isRTL ? 'rtl' : 'ltr'}
-                    >
-                      {t('cityModalTitle')}
-                    </p>
-                  </div>
-                  <p className="mt-1 text-sm text-muted-foreground">{t('cityModalDescription')}</p>
-                </div>
-                    <div className="hidden p-0 lg:block">
-                      <DialogHeader className={isRTL ? 'text-right' : 'text-left'}>
-                        <DialogTitle>{t('cityModalTitle')}</DialogTitle>
-                        <DialogDescription>{t('cityModalDescription')}</DialogDescription>
-                      </DialogHeader>
-                    </div>
+				                                <div className="rounded-xl border-0">
+			                                    {provinceOptions.length === 0 ? (
+			                                      <p className="p-4 text-sm text-muted-foreground">
+			                                        {t('provinceModalEmpty')}
+			                                      </p>
+			                                    ) : (
+				                                      <ul
+				                                        role="radiogroup"
+				                                        aria-label={t('provinceModalTitle')}
+				                                      >
+			                                        {provinceOptions.map((province) => (
+			                                          <li key={province.value} className="border-b border-border">
+			                                            <button
+			                                              type="button"
+			                                              role="radio"
+			                                              aria-checked={
+			                                                !draftProvinceAll && draftProvinceId === province.value
+			                                              }
+			                                              dir={isRTL ? 'rtl' : 'ltr'}
+			                                              className={cn(
+			                                                'flex w-full items-center gap-3 px-3 py-4 text-sm transition-colors hover:bg-muted/20',
+			                                                isRTL
+			                                                  ? 'flex-row-reverse text-right'
+			                                                  : 'flex-row text-left',
+			                                              )}
+			                                              onClick={() => handleProvincePick(province.value)}
+			                                            >
+			                                              <SelectionIndicator
+			                                                type="radio"
+			                                                checked={
+			                                                  !draftProvinceAll &&
+			                                                  draftProvinceId === province.value
+			                                                }
+			                                              />
+			                                              <span className="flex-1">{province.label}</span>
+			                                            </button>
+			                                          </li>
+			                                        ))}
+			                                      </ul>
+			                                    )}
+			                                  </div>
+			                                </div>
 
-                <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 py-4 lg:p-0">
-                  <label className="flex items-center gap-3 rounded-lg border border-dashed border-input px-3 py-2 text-sm font-medium">
-                    <input
-                      type="checkbox"
-                      className="size-4 rounded border-input text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      checked={draftAllCities}
-                      onChange={handleSelectAllCities}
-                    />
-                    {t('cityModalSelectAll')}
-                  </label>
+			                                <div className="border-t border-border bg-background/95 px-6 py-4 lg:border-0 lg:bg-transparent lg:px-0">
+			                                  <div className="flex flex-row justify-end gap-3">
+			                                    <Button
+			                                      className="flex-1"
+			                                      type="button"
+			                                      onClick={applyProvinceSelection}
+			                                      disabled={!draftProvinceAll && draftProvinceId === null}
+			                                    >
+			                                      <span className="flex items-center justify-center gap-2">
+			                                        <Check className="size-4" aria-hidden="true" />
+			                                        <span>{t('provinceModalConfirm')}</span>
+			                                      </span>
+			                                    </Button>
+			                                    <Button
+			                                      type="button"
+			                                      variant="outline"
+			                                      className="flex-1"
+			                                      onClick={() => setProvinceDialogOpen(false)}
+			                                    >
+			                                      <span className="flex items-center justify-center gap-2">
+			                                        <X className="size-4" aria-hidden="true" />
+			                                        <span>{t('provinceModalCancel')}</span>
+			                                      </span>
+			                                    </Button>
+			                                  </div>
+			                                </div>
+			                              </div>
+			                            </DialogContent>
+			                          </Dialog>
+			                        </div>
+			                      </div>
 
-                  <div className="rounded-xl border border-input">
-                    {cityOptions.length === 0 ? (
-                      <p className="p-4 text-sm text-muted-foreground">{t('cityModalEmpty')}</p>
-                    ) : (
-                      <ul className="divide-y divide-border">
-                        {cityOptions.map((city) => (
-                          <li key={city.value}>
-                            <label className="flex cursor-pointer items-center gap-3 px-3 py-2 text-sm">
-                              <input
-                                type="checkbox"
-                                className="size-4 rounded border-input text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                                checked={!draftAllCities && draftCityIds.includes(city.value)}
-                                onChange={() => toggleCitySelection(city.value)}
-                              />
-                              {city.label}
-                            </label>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                </div>
+			                      {showCityFilter ? (
+			                      <div className="py-0">
+			                        <div className="flex flex-col gap-1">
+			                          <label
+			                            className={cn(
+			                              'px-4 text-sm font-medium text-foreground',
+			                              isRTL ? 'text-right' : 'text-left',
+			                            )}
+			                          >
+			                            {t('cityLabel')}
+			                          </label>
+			                          <Dialog open={cityDialogOpen} onOpenChange={setCityDialogOpen} disableBackClose>
+			                            <Button
+			                              type="button"
+			                              variant="secondary"
+			                              className="justify-between"
+			                              onClick={() => setCityDialogOpen(true)}
+			                              disabled={isCityButtonDisabled}
+			                            >
+			                              <span
+			                                className="flex w-full items-center justify-between gap-3"
+			                                dir={isRTL ? 'rtl' : 'ltr'}
+			                              >
+			                                <span className="truncate">{cityButtonLabel}</span>
+			                                <ChevronDown
+			                                  className="size-4 shrink-0 text-muted-foreground"
+			                                  aria-hidden="true"
+			                                />
+			                              </span>
+			                            </Button>
+			                            <DialogContent
+			                              hideCloseButton
+			                              className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] lg:left-1/2 lg:top-1/2 lg:flex lg:max-h-[90vh] lg:w-full lg:max-w-xl lg:-translate-x-1/2 lg:-translate-y-1/2 lg:flex-col lg:overflow-hidden lg:rounded-2xl lg:border lg:p-6"
+			                            >
+			                              <div className="flex h-full flex-col overflow-hidden">
+			                                <div className="border-b border-border px-6 py-4 lg:hidden">
+			                                  <p
+			                                    className={`text-base font-semibold ${
+			                                      isRTL ? 'text-right' : 'text-center'
+			                                    }`}
+			                                    dir={isRTL ? 'rtl' : 'ltr'}
+			                                  >
+			                                    {t('cityModalTitle')}
+			                                  </p>
+			                                  <p className="mt-1 text-sm text-muted-foreground">
+			                                    {t('cityModalDescription')}
+			                                  </p>
+			                                </div>
+			                                <div className="hidden p-0 lg:block">
+			                                  <DialogHeader className={isRTL ? 'text-right' : 'text-left'}>
+			                                    <DialogTitle>{t('cityModalTitle')}</DialogTitle>
+			                                    <DialogDescription>{t('cityModalDescription')}</DialogDescription>
+			                                  </DialogHeader>
+			                                </div>
 
-                <div className="border-t border-border bg-background/95 px-6 py-4 lg:border-0 lg:bg-transparent lg:px-0">
-                  <div className="flex flex-row justify-end gap-3">
-                    <Button className="flex-1" type="button" onClick={applyCitySelection}>
-                      {t('cityModalConfirm')}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => setCityDialogOpen(false)}
-                    >
-                      {t('cityModalCancel')}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-          <p className="text-xs text-muted-foreground">{cityHelperText}</p>
-        </div>
+			                                <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 py-4 lg:p-0">
+			                                  <button
+			                                    type="button"
+			                                    role="checkbox"
+			                                    aria-checked={draftAllCities}
+			                                    dir={isRTL ? 'rtl' : 'ltr'}
+			                                    className={cn(
+			                                      'flex w-full items-center gap-3 rounded-lg border border-dashed border-input px-3 py-4 text-sm font-medium transition-colors hover:bg-muted/20',
+			                                      isRTL ? 'flex-row-reverse text-right' : 'flex-row text-left',
+			                                    )}
+			                                    onClick={handleSelectAllCities}
+			                                  >
+			                                    <SelectionIndicator type="checkbox" checked={draftAllCities} />
+			                                    <span className="flex-1">{t('cityModalSelectAll')}</span>
+			                                  </button>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-foreground">{t('districtLabel')}</label>
-              <Dialog
-                open={districtDialogOpen}
-                onOpenChange={setDistrictDialogOpen}
-                disableBackClose
+				                                <div className="rounded-xl border-0">
+			                                    {cityOptions.length === 0 ? (
+			                                      <p className="p-4 text-sm text-muted-foreground">
+			                                        {t('cityModalEmpty')}
+			                                      </p>
+			                                    ) : (
+				                                      <ul aria-label={t('cityModalTitle')}>
+			                                        {cityOptions.map((city) => (
+			                                          <li key={city.value} className="border-b border-border">
+			                                            <button
+			                                              type="button"
+			                                              role="checkbox"
+			                                              aria-checked={
+			                                                !draftAllCities && draftCityIds.includes(city.value)
+			                                              }
+			                                              dir={isRTL ? 'rtl' : 'ltr'}
+			                                              className={cn(
+			                                                'flex w-full items-center gap-3 px-3 py-4 text-sm transition-colors hover:bg-muted/20',
+			                                                isRTL
+			                                                  ? 'flex-row-reverse text-right'
+			                                                  : 'flex-row text-left',
+			                                              )}
+			                                              onClick={() => toggleCitySelection(city.value)}
+			                                            >
+			                                              <SelectionIndicator
+			                                                type="checkbox"
+			                                                checked={
+			                                                  !draftAllCities && draftCityIds.includes(city.value)
+			                                                }
+			                                              />
+			                                              <span className="flex-1">{city.label}</span>
+			                                            </button>
+			                                          </li>
+			                                        ))}
+			                                      </ul>
+			                                    )}
+			                                  </div>
+			                                </div>
+
+			                                <div className="border-t border-border bg-background/95 px-6 py-4 lg:border-0 lg:bg-transparent lg:px-0">
+			                                  <div className="flex flex-row justify-end gap-3">
+			                                    <Button
+			                                      className="flex-1"
+			                                      type="button"
+			                                      onClick={applyCitySelection}
+			                                    >
+			                                      <span className="flex items-center justify-center gap-2">
+			                                        <Check className="size-4" aria-hidden="true" />
+			                                        <span>{t('cityModalConfirm')}</span>
+			                                      </span>
+			                                    </Button>
+			                                    <Button
+			                                      type="button"
+			                                      variant="outline"
+			                                      className="flex-1"
+			                                      onClick={() => setCityDialogOpen(false)}
+			                                    >
+			                                      <span className="flex items-center justify-center gap-2">
+			                                        <X className="size-4" aria-hidden="true" />
+			                                        <span>{t('cityModalCancel')}</span>
+			                                      </span>
+			                                    </Button>
+			                                  </div>
+			                                </div>
+			                              </div>
+			                            </DialogContent>
+			                          </Dialog>
+			                        </div>
+			                      </div>
+			                      ) : null}
+
+			                      {showDistrictFilter ? (
+			                      <div className="py-0">
+			                        <div className="flex flex-col gap-1">
+			                          <label
+			                            className={cn(
+			                              'px-4 text-sm font-medium text-foreground',
+			                              isRTL ? 'text-right' : 'text-left',
+			                            )}
+			                          >
+			                            {t('districtLabel')}
+			                          </label>
+			                          <Dialog
+			                            open={districtDialogOpen}
+			                            onOpenChange={setDistrictDialogOpen}
+			                            disableBackClose
+			                          >
+			                            <Button
+			                              type="button"
+			                              variant="secondary"
+			                              className="justify-between"
+			                              onClick={() => setDistrictDialogOpen(true)}
+			                              disabled={isDistrictButtonDisabled}
+			                            >
+			                              <span
+			                                className="flex w-full items-center justify-between gap-3"
+			                                dir={isRTL ? 'rtl' : 'ltr'}
+			                              >
+			                                <span className="truncate">{districtButtonLabel}</span>
+			                                <ChevronDown
+			                                  className="size-4 shrink-0 text-muted-foreground"
+			                                  aria-hidden="true"
+			                                />
+			                              </span>
+			                            </Button>
+			                            <DialogContent
+			                              hideCloseButton
+			                              className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] lg:left-1/2 lg:top-1/2 lg:flex lg:max-h-[90vh] lg:w-full lg:max-w-xl lg:-translate-x-1/2 lg:-translate-y-1/2 lg:flex-col lg:overflow-hidden lg:rounded-2xl lg:border lg:p-6"
+			                            >
+			                              <div className="flex h-full flex-col overflow-hidden">
+			                                <div className="border-b border-border px-6 py-4 lg:hidden">
+			                                  <p
+			                                    className={`text-base font-semibold ${
+			                                      isRTL ? 'text-right' : 'text-center'
+			                                    }`}
+			                                    dir={isRTL ? 'rtl' : 'ltr'}
+			                                  >
+			                                    {t('districtModalTitle')}
+			                                  </p>
+			                                  <p className="mt-1 text-sm text-muted-foreground">
+			                                    {t('districtModalDescription')}
+			                                  </p>
+			                                </div>
+			                                <div className="hidden p-0 lg:block">
+			                                  <DialogHeader className={isRTL ? 'text-right' : 'text-left'}>
+			                                    <DialogTitle>{t('districtModalTitle')}</DialogTitle>
+			                                    <DialogDescription>
+			                                      {t('districtModalDescription')}
+			                                    </DialogDescription>
+			                                  </DialogHeader>
+			                                </div>
+
+			                                <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 py-4 lg:p-0">
+			                                  <button
+			                                    type="button"
+			                                    role="checkbox"
+			                                    aria-checked={draftAllDistricts}
+			                                    dir={isRTL ? 'rtl' : 'ltr'}
+			                                    className={cn(
+			                                      'flex w-full items-center gap-3 rounded-lg border border-dashed border-input px-3 py-4 text-sm font-medium transition-colors hover:bg-muted/20',
+			                                      isRTL ? 'flex-row-reverse text-right' : 'flex-row text-left',
+			                                    )}
+			                                    onClick={handleSelectAllDistricts}
+			                                  >
+			                                    <SelectionIndicator type="checkbox" checked={draftAllDistricts} />
+			                                    <span className="flex-1">{t('districtModalSelectAll')}</span>
+			                                  </button>
+
+				                                <div className="rounded-xl border-0">
+			                                    {districtOptions.length === 0 ? (
+			                                      <p className="p-4 text-sm text-muted-foreground">
+			                                        {t('districtModalEmpty')}
+			                                      </p>
+			                                    ) : (
+				                                      <ul aria-label={t('districtModalTitle')}>
+			                                        {districtOptions.map((district) => (
+			                                          <li key={district.value} className="border-b border-border">
+			                                            <button
+			                                              type="button"
+			                                              role="checkbox"
+			                                              aria-checked={
+			                                                !draftAllDistricts &&
+			                                                draftDistrictIds.includes(district.value)
+			                                              }
+			                                              dir={isRTL ? 'rtl' : 'ltr'}
+			                                              className={cn(
+			                                                'flex w-full items-center gap-3 px-3 py-4 text-sm transition-colors hover:bg-muted/20',
+			                                                isRTL
+			                                                  ? 'flex-row-reverse text-right'
+			                                                  : 'flex-row text-left',
+			                                              )}
+			                                              onClick={() => toggleDistrictSelection(district.value)}
+			                                            >
+			                                              <SelectionIndicator
+			                                                type="checkbox"
+			                                                checked={
+			                                                  !draftAllDistricts &&
+			                                                  draftDistrictIds.includes(district.value)
+			                                                }
+			                                              />
+			                                              <span className="flex-1">{district.label}</span>
+			                                            </button>
+			                                          </li>
+			                                        ))}
+			                                      </ul>
+			                                    )}
+			                                  </div>
+			                                </div>
+
+			                                <div className="border-t border-border bg-background/95 px-6 py-4 lg:border-0 lg:bg-transparent lg:px-0">
+			                                  <div className="flex flex-row justify-end gap-3">
+			                                    <Button
+			                                      className="flex-1"
+			                                      type="button"
+			                                      onClick={applyDistrictSelection}
+			                                    >
+			                                      <span className="flex items-center justify-center gap-2">
+			                                        <Check className="size-4" aria-hidden="true" />
+			                                        <span>{t('districtModalConfirm')}</span>
+			                                      </span>
+			                                    </Button>
+			                                    <Button
+			                                      type="button"
+			                                      variant="outline"
+			                                      className="flex-1"
+			                                      onClick={() => setDistrictDialogOpen(false)}
+			                                    >
+			                                      <span className="flex items-center justify-center gap-2">
+			                                        <X className="size-4" aria-hidden="true" />
+			                                        <span>{t('districtModalCancel')}</span>
+			                                      </span>
+			                                    </Button>
+			                                  </div>
+			                                </div>
+			                              </div>
+			                            </DialogContent>
+			                          </Dialog>
+			                        </div>
+			                      </div>
+			                      ) : null}
+
+			                      <div className="py-0">
+			                        <CategoryFiltersPreview
+			                          categorySlug={categorySlug ?? baseCategory?.slug ?? null}
+			                          locale={locale}
+			                          isRTL={isRTL}
+			                          includeKeys={['business-type']}
+			                          excludeKeys={[
+			                            'addon_service_tags',
+			                            'recent_ads',
+			                            'has-video',
+			                            'has_video',
+			                          ]}
+			                        />
+			                      </div>
+			                    </div>
+			                  </>
+			                ) : mobileFiltersTab === 'category' ? (
+			                  <>
+			                    <CategoryFiltersPreview
+			                      categorySlug={categorySlug ?? baseCategory?.slug ?? null}
+			                      locale={locale}
+			                      isRTL={isRTL}
+			                      includeKeys={['addon_service_tags', 'recent_ads', 'has-video', 'has_video']}
+			                    />
+			                    <CategoryFiltersPreview
+			                      categorySlug={categorySlug ?? baseCategory?.slug ?? null}
+			                      locale={locale}
+			                      isRTL={isRTL}
+			                      excludeKeys={[
+			                        'business-type',
+			                        'addon_service_tags',
+			                        'recent_ads',
+			                        'has-video',
+			                        'has_video',
+			                      ]}
+			                    />
+			                  </>
+			                ) : (
+			                  <div className="flex flex-col gap-5">
+		                    <div className="flex flex-col gap-2">
+		                      <Button
+		                        type="button"
+		                        variant="secondary"
+		                        className="w-full justify-between"
+		                        onClick={() => setSavedFiltersModalOpen(true)}
+		                        disabled={savedFiltersBusy}
+		                      >
+		                        <span className="truncate">{savedFiltersT('showButton')}</span>
+		                        <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+		                      </Button>
+		                      <p className="text-xs text-muted-foreground">
+		                        {savedFiltersT('usage', { count: totalSavedFilters, limit: savedFiltersLimit })}
+		                      </p>
+		                    </div>
+
+			                    <div className="space-y-2">
+			                      <label
+			                        className={cn(
+			                          'block px-3 text-sm font-medium text-foreground',
+			                          isRTL ? 'text-right' : 'text-left',
+			                        )}
+			                      >
+			                        {t('ringBinder.label')}
+			                      </label>
+		                      <div className="relative">
+		                        <select
+		                          className={cn(
+		                            'w-full appearance-none rounded-lg bg-muted/30 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+		                            isRTL ? 'pl-10 pr-3' : 'pl-3 pr-10',
+		                          )}
+		                          value={ringBinderFolderId ?? ''}
+		                          onChange={(event) => {
+		                            const value = event.target.value;
+		                            dispatch(setRingBinderFolder(value === '' ? null : value));
+		                          }}
+		                          disabled={ringBinderLoading || ringBinderFetching}
+		                        >
+		                          <option value="">{t('ringBinder.all')}</option>
+		                          {ringBinderFolders.map((folder) => (
+		                            <option key={folder.id} value={folder.id}>
+		                              {folder.name}
+		                            </option>
+		                          ))}
+		                        </select>
+		                        <ChevronDown
+		                          aria-hidden="true"
+		                          className={cn(
+		                            'pointer-events-none absolute top-1/2 size-4 -translate-y-1/2 text-muted-foreground',
+		                            isRTL ? 'left-3' : 'right-3',
+		                          )}
+		                        />
+		                      </div>
+		                      {ringBinderLoading || ringBinderFetching ? (
+		                        <p className="text-xs text-muted-foreground">{t('ringBinder.loading')}</p>
+		                      ) : ringBinderFolders.length === 0 ? (
+		                        <p className="text-xs text-muted-foreground">{t('ringBinder.empty')}</p>
+		                      ) : null}
+		                    </div>
+
+			                    <div className="space-y-2">
+			                      <label
+			                        className={cn(
+			                          'block px-3 text-sm font-medium text-foreground',
+			                          isRTL ? 'text-right' : 'text-left',
+			                        )}
+			                      >
+			                        {t('noteFilter.label')}
+			                      </label>
+		                      <div className="relative">
+		                        <select
+		                          className={cn(
+		                            'w-full appearance-none rounded-lg bg-muted/30 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+		                            isRTL ? 'pl-10 pr-3' : 'pl-3 pr-10',
+		                          )}
+		                          value={noteFilter}
+		                          onChange={(event) => {
+		                            const value = event.target.value as NoteFilterOption;
+		                            if (value === 'has' || value === 'none') {
+		                              dispatch(setNoteFilter(value));
+		                            } else {
+		                              dispatch(setNoteFilter('all'));
+		                            }
+		                          }}
+		                        >
+		                          <option value="all">{t('noteFilter.options.all')}</option>
+		                          <option value="has">{t('noteFilter.options.has')}</option>
+		                          <option value="none">{t('noteFilter.options.none')}</option>
+		                        </select>
+		                        <ChevronDown
+		                          aria-hidden="true"
+		                          className={cn(
+		                            'pointer-events-none absolute top-1/2 size-4 -translate-y-1/2 text-muted-foreground',
+		                            isRTL ? 'left-3' : 'right-3',
+		                          )}
+		                        />
+		                      </div>
+		                    </div>
+		                  </div>
+		                )}
+		              </motion.div>
+		            </AnimatePresence>
+		          </div>
+		        ) : (
+		          <CategoryFiltersPreview
+		            categorySlug={categorySlug ?? baseCategory?.slug ?? null}
+		            locale={locale}
+		            isRTL={isRTL}
+		          />
+		        )}
+	        </div>
+	        {filterModalOpen ? (
+	          <div className="z-10 mt-auto flex shrink-0 flex-col justify-end gap-3 border-t border-border bg-background p-4 lg:hidden">
+	            <div className="flex flex-row gap-3">
+	              <Button
+	                type="button"
+                className="flex-1"
+                onClick={() => {
+                  dispatch(commitAppliedFilters());
+                  setFilterModalOpen(false);
+                }}
+                disabled={!modalHasPendingChanges}
               >
+                <span className="flex items-center justify-center gap-2">
+                  <Check className="size-4" aria-hidden="true" />
+                  <span>{t('applyFilters')}</span>
+                </span>
+              </Button>
+              {modalHasPendingChanges ? (
                 <Button
                   type="button"
-                  variant="outline"
-                  className="justify-between"
-                  onClick={() => setDistrictDialogOpen(true)}
-                  disabled={isDistrictButtonDisabled}
+                  variant="secondary"
+                  className="flex-1"
+                  disabled={!hasActiveFilters || saveLimitReached || isCreatingSavedFilter}
+                  onClick={() => setSaveDialogOpen(true)}
+                  title={
+                    !hasActiveFilters
+                      ? savedFiltersT('disabled.noFilters')
+                      : saveLimitReached
+                        ? savedFiltersT('disabled.limitReached')
+                        : undefined
+                  }
                 >
-                  {districtButtonLabel}
+                  <span className="flex items-center justify-center gap-2">
+                    <BookmarkPlus className="size-4" />
+                    <span>{savedFiltersT('saveButton')}</span>
+                  </span>
                 </Button>
-                <DialogContent
-                  hideCloseButton
-                  className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] lg:left-1/2 lg:top-1/2 lg:flex lg:max-h-[90vh] lg:w-full lg:max-w-xl lg:-translate-x-1/2 lg:-translate-y-1/2 lg:flex-col lg:overflow-hidden lg:rounded-2xl lg:border lg:p-6"
-                >
-                  <div className="flex h-full flex-col overflow-hidden">
-                    <div className="border-b border-border px-6 py-4 lg:hidden">
-                      <div className="flex items-center gap-2" dir="ltr">
-                        <button
-                          type="button"
-                          className="flex items-center gap-2 text-sm font-medium text-primary"
-                          onClick={() => setDistrictDialogOpen(false)}
-                        >
-                          <ArrowLeft className="size-4" />
-                          {t('mobileBack')}
-                        </button>
-                        <p
-                          className={`flex-1 text-base font-semibold ${isRTL ? 'text-right' : 'text-center'}`}
-                          dir={isRTL ? 'rtl' : 'ltr'}
-                        >
-                          {t('districtModalTitle')}
-                        </p>
-                      </div>
-                      <p className="mt-1 text-sm text-muted-foreground">{t('districtModalDescription')}</p>
-                    </div>
-                    <div className="hidden p-0 lg:block">
-                      <DialogHeader className={isRTL ? 'text-right' : 'text-left'}>
-                        <DialogTitle>{t('districtModalTitle')}</DialogTitle>
-                        <DialogDescription>{t('districtModalDescription')}</DialogDescription>
-                      </DialogHeader>
-                    </div>
-
-                    <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 py-4 lg:p-0">
-                      <label className="flex items-center gap-3 rounded-lg border border-dashed border-input px-3 py-2 text-sm font-medium">
-                        <input
-                          type="checkbox"
-                          className="size-4 rounded border-input text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                          checked={draftAllDistricts}
-                          onChange={handleSelectAllDistricts}
-                        />
-                        {t('districtModalSelectAll')}
-                      </label>
-
-                      <div className="rounded-xl border border-input">
-                        {districtOptions.length === 0 ? (
-                          <p className="p-4 text-sm text-muted-foreground">{t('districtModalEmpty')}</p>
-                        ) : (
-                          <ul className="divide-y divide-border">
-                            {districtOptions.map((district) => (
-                              <li key={district.value}>
-                                <label className="flex cursor-pointer items-center gap-3 px-3 py-2 text-sm">
-                                  <input
-                                    type="checkbox"
-                                    className="size-4 rounded border-input text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                                    checked={!draftAllDistricts && draftDistrictIds.includes(district.value)}
-                                    onChange={() => toggleDistrictSelection(district.value)}
-                                  />
-                                  {district.label}
-                                </label>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="border-t border-border bg-background/95 px-6 py-4 lg:border-0 lg:bg-transparent lg:px-0">
-                      <div className="flex flex-row justify-end gap-3">
-                        <Button className="flex-1" type="button" onClick={applyDistrictSelection}>
-                          {t('districtModalConfirm')}
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="flex-1"
-                          onClick={() => setDistrictDialogOpen(false)}
-                        >
-                          {t('districtModalCancel')}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-              <p className="text-xs text-muted-foreground">{districtHelperText}</p>
+              ) : null}
             </div>
-            <CategoryFiltersPreview
-              categorySlug={categorySlug ?? baseCategory?.slug ?? null}
-              locale={locale}
-              isRTL={isRTL}
-            />
-        </div>
-        {filterModalOpen ? (
-          <div className="sticky bottom-0 z-10 flex justify-end gap-3 border-t border-border bg-background p-4 lg:hidden">
-            <Button
-              type="button"
-              className="flex-1"
-              onClick={() => setFilterModalOpen(false)}
-              disabled={!modalHasPendingChanges}
-            >
-              {t('applyFilters')}
-            </Button>
             <Button
               type="button"
               variant="outline"
-              className="flex-1"
+              className="w-full"
               onClick={() => setFilterModalOpen(false)}
             >
-              {t('mobileBack')}
+              <span className="flex items-center justify-center gap-2">
+                <X className="size-4" aria-hidden="true" />
+                <span>{t('mobileBack')}</span>
+              </span>
             </Button>
           </div>
         ) : null}
@@ -1511,47 +1935,90 @@ export function DashboardSearchFilterPanel() {
         defaultName=""
         onSubmit={handleSaveFilter}
       />
-      <SaveFilterDialog
-        open={Boolean(renameTarget)}
-        onOpenChange={(open) => {
-          if (!open) {
-            setRenameTarget(null);
-          }
-        }}
-        title={savedFiltersT('dialog.renameTitle')}
-        description={savedFiltersT('dialog.renameDescription')}
-        placeholder={savedFiltersT('dialog.namePlaceholder')}
-        submitLabel={savedFiltersT('dialog.renameAction')}
-        cancelLabel={savedFiltersT('dialog.cancel')}
-        loading={isUpdatingSavedFilter}
-        defaultName={renameTarget?.name ?? ''}
-        onSubmit={handleRenameFilter}
-      />
-      <AlertDialog
-        open={Boolean(deleteTarget)}
-        onOpenChange={(open) => {
-          if (!open) {
-            setDeleteTarget(null);
-          }
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{savedFiltersT('dialog.deleteTitle')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {savedFiltersT('dialog.deleteDescription', { name: deleteTarget?.name ?? '' })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeletingSavedFilter}>
-              {savedFiltersT('dialog.cancel')}
-            </AlertDialogCancel>
-            <AlertDialogAction onClick={() => void handleDeleteFilter()} disabled={isDeletingSavedFilter}>
-              {savedFiltersT('dialog.deleteAction')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+
+      <Dialog open={savedFiltersModalOpen} onOpenChange={setSavedFiltersModalOpen} disableBackClose>
+        <DialogContent
+          hideCloseButton
+          className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] lg:left-1/2 lg:top-1/2 lg:flex lg:max-h-[90vh] lg:w-full lg:max-w-xl lg:-translate-x-1/2 lg:-translate-y-1/2 lg:flex-col lg:overflow-hidden lg:rounded-2xl lg:border lg:p-6"
+        >
+          <div className="flex h-full flex-col overflow-hidden">
+            <div className="border-b border-border px-6 py-4 lg:hidden">
+              <p className={cn('text-base font-semibold', isRTL ? 'text-right' : 'text-left')}>
+                {savedFiltersT('title')}
+              </p>
+              <p className={cn('mt-1 text-sm text-muted-foreground', isRTL ? 'text-right' : 'text-left')}>
+                {savedFiltersT('usage', { count: totalSavedFilters, limit: savedFiltersLimit })}
+              </p>
+            </div>
+
+            <div className="hidden px-0 py-4 lg:block">
+              <DialogHeader className={isRTL ? 'text-right' : 'text-left'}>
+                <DialogTitle>{savedFiltersT('title')}</DialogTitle>
+                <DialogDescription>
+                  {savedFiltersT('usage', { count: totalSavedFilters, limit: savedFiltersLimit })}
+                </DialogDescription>
+              </DialogHeader>
+            </div>
+
+            <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 py-4 lg:px-4">
+              {savedFiltersBusy ? (
+                <div className="space-y-3">
+                  {Array.from({ length: 3 }).map((_, index) => (
+                    <div
+                      // eslint-disable-next-line react/no-array-index-key
+                      key={index}
+                      className="h-14 animate-pulse rounded-xl bg-muted/40"
+                    />
+                  ))}
+                </div>
+              ) : savedFilters.length === 0 ? (
+                <p className="text-sm text-muted-foreground">{savedFiltersT('empty')}</p>
+              ) : (
+                <ul className="space-y-3">
+                  {savedFilters.map((filter) => (
+                    <li
+                      key={filter.id}
+                      className="flex items-center justify-between gap-3 rounded-xl bg-muted/30 px-4 py-3"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-foreground">{filter.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {savedFiltersT('lastUpdated', {
+                            value: new Date(filter.updatedAt).toLocaleString(locale, {
+                              dateStyle: 'medium',
+                              timeStyle: 'short',
+                            }),
+                          })}
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => {
+                          handleApplySavedFilter(filter);
+                          setSavedFiltersModalOpen(false);
+                        }}
+                      >
+                        {savedFiltersT('apply')}
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="border-t border-border bg-background/95 px-6 py-4 lg:border-0 lg:bg-transparent lg:px-4">
+              <Button type="button" variant="outline" className="w-full" onClick={() => setSavedFiltersModalOpen(false)}>
+                <span className="flex items-center justify-center gap-2">
+                  <X className="size-4" aria-hidden="true" />
+                  <span>{savedFiltersT('dialog.cancel')}</span>
+                </span>
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

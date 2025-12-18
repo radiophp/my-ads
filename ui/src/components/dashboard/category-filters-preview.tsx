@@ -3,6 +3,7 @@
 import { skipToken } from '@reduxjs/toolkit/query';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useTranslations, type TranslationValues } from 'next-intl';
+import { Check, ChevronLeft, ChevronRight, Eraser, X } from 'lucide-react';
 
 import { useGetPublicDivarCategoryFilterQuery } from '@/features/api/apiSlice';
 import { Button } from '@/components/ui/button';
@@ -12,14 +13,12 @@ import { Switch } from '@/components/ui/switch';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import { cn } from '@/lib/utils';
 import {
-  clearCategoryFilters,
   setCategoryFilterValue,
 } from '@/features/search-filter/searchFilterSlice';
 
@@ -96,6 +95,8 @@ type CategoryFiltersPreviewProps = {
   categorySlug: string | null;
   locale: string;
   isRTL: boolean;
+  includeKeys?: string[];
+  excludeKeys?: string[];
 };
 
 const SUPPORTED_NUMBER_RANGE_KEYS = new Set([
@@ -134,6 +135,8 @@ const SUPPORTED_TOGGLE_KEYS = new Set([
   'balcony',
   'rebuilt',
   'has-photo',
+  'has-video',
+  'has_video',
   'bizzDeed',
 ]);
 
@@ -155,13 +158,17 @@ const TRANSLATED_WIDGET_LABEL_KEY_SET = new Set<TranslatedWidgetLabelKey>(TRANSL
 
 type TranslateFn = (key: string, values?: TranslationValues) => string;
 
-export function CategoryFiltersPreview({ categorySlug, locale, isRTL }: CategoryFiltersPreviewProps) {
+export function CategoryFiltersPreview({
+  categorySlug,
+  locale,
+  isRTL,
+  includeKeys,
+  excludeKeys,
+}: CategoryFiltersPreviewProps) {
   const t = useTranslations('dashboard.filters');
   const dispatch = useAppDispatch();
   const categoryFilters = useAppSelector((state) => state.searchFilter.categoryFilters);
   const activeFilters = categorySlug ? categoryFilters[categorySlug] ?? {} : {};
-  const activeFilterCount = Object.keys(activeFilters).length;
-  const hasActiveFilters = activeFilterCount > 0;
   const [filterOptionsModal, setFilterOptionsModal] = useState<FilterOptionsModalState | null>(null);
   const rangeInputClass =
     'h-9 rounded-none border-0 px-2 py-1 ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0';
@@ -182,7 +189,34 @@ export function CategoryFiltersPreview({ categorySlug, locale, isRTL }: Category
     [categorySlug, data],
   );
 
-  const actionableWidgets = widgets.filter((widget) => widget.kind !== 'title');
+  const includeKeySet = useMemo(
+    () => (Array.isArray(includeKeys) && includeKeys.length > 0 ? new Set(includeKeys) : null),
+    [includeKeys],
+  );
+  const excludeKeySet = useMemo(
+    () => (Array.isArray(excludeKeys) && excludeKeys.length > 0 ? new Set(excludeKeys) : null),
+    [excludeKeys],
+  );
+
+  const actionableWidgets = useMemo(() => {
+    const filtered = widgets.filter((widget) => widget.kind !== 'title');
+    if (!includeKeySet && !excludeKeySet) {
+      return filtered;
+    }
+    return filtered.filter((widget) => {
+      const key = 'key' in widget ? widget.key : null;
+      if (!key) {
+        return false;
+      }
+      if (includeKeySet && !includeKeySet.has(key)) {
+        return false;
+      }
+      if (excludeKeySet && excludeKeySet.has(key)) {
+        return false;
+      }
+      return true;
+    });
+  }, [excludeKeySet, includeKeySet, widgets]);
   const hasWidgets = actionableWidgets.length > 0;
   const filterPlaceholderText = t('categoryFilters.singleSelectPlaceholder');
 
@@ -267,27 +301,6 @@ export function CategoryFiltersPreview({ categorySlug, locale, isRTL }: Category
       ? getActiveSingleValue(filterOptionsModal.key)
       : null;
 
-  const lastSynced = useMemo(() => {
-    if (!data?.updatedAt) {
-      return null;
-    }
-    const date = new Date(data.updatedAt);
-    if (Number.isNaN(date.getTime())) {
-      return null;
-    }
-    return new Intl.DateTimeFormat(locale, {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    }).format(date);
-  }, [data?.updatedAt, locale]);
-
-  const clearFilters = () => {
-    if (!categorySlug || !hasActiveFilters) {
-      return;
-    }
-    dispatch(clearCategoryFilters({ slug: categorySlug }));
-  };
-
   const updateNumberRange = (key: string, next: { min?: number; max?: number }) => {
     if (!categorySlug) {
       return;
@@ -330,18 +343,9 @@ export function CategoryFiltersPreview({ categorySlug, locale, isRTL }: Category
   } else {
     content = (
       <div className="flex flex-col gap-3" dir={isRTL ? 'rtl' : 'ltr'}>
-        {widgets.map((widget) => {
+        {actionableWidgets.map((widget) => {
           const label = getWidgetLabel(widget, t);
           switch (widget.kind) {
-            case 'title':
-              return (
-                <div key={widget.id} className="pt-2">
-                  <p className="text-xs font-semibold text-foreground">{label}</p>
-                  {widget.description ? (
-                    <p className="text-[11px] text-muted-foreground">{widget.description}</p>
-                  ) : null}
-                </div>
-              );
             case 'numberRange': {
               const current = activeFilters[widget.key];
               const currentMin =
@@ -357,9 +361,9 @@ export function CategoryFiltersPreview({ categorySlug, locale, isRTL }: Category
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-sm font-medium text-foreground">{label}</p>
                   </div>
-                  <div className="mt-4 flex items-stretch rounded-lg">
+                  <div className="mt-4 flex items-stretch gap-2">
                     <div
-                      className={cn('flex flex-1 flex-col gap-2 px-3', 'border-x border-border', 'rounded-s-lg')}
+                      className={cn('flex flex-1 flex-col gap-2 rounded-lg bg-muted/30 px-3')}
                     >
                       <div className={cn('relative', 'pt-3', isRTL ? 'pl-3' : 'pr-3')}>
                         <Label
@@ -393,7 +397,7 @@ export function CategoryFiltersPreview({ categorySlug, locale, isRTL }: Category
                         </div>
                     </div>
                     <div
-                      className={cn('flex flex-1 flex-col gap-2 px-3', 'border-x border-border', 'rounded-e-lg', '-ml-px')}
+                      className={cn('flex flex-1 flex-col gap-2 rounded-lg bg-muted/30 px-3')}
                     >
                       <div className={cn('relative', 'pt-3', isRTL ? 'pr-3' : 'pl-3')}>
                         <Label
@@ -440,24 +444,28 @@ export function CategoryFiltersPreview({ categorySlug, locale, isRTL }: Category
                       .join('، ')
                   : filterPlaceholderText;
               return (
-                <div key={widget.id} className="rounded-lg border border-border px-3 py-2">
+                <div key={widget.id} className="flex flex-col gap-2">
                   <p className="text-sm font-medium text-foreground">{label}</p>
                   <Button
                     type="button"
-                    variant="ghost"
-                    className="mt-2 flex w-full items-center justify-between gap-2 border border-transparent px-0 text-sm font-medium text-foreground"
+                    variant="secondary"
+                    className="w-full justify-between text-sm"
                     onClick={() => openFilterOptionsModal(widget)}
                     disabled={widget.options.length === 0}
                   >
                     <span
-                      className={cn(
-                        'flex-1 truncate',
-                        isRTL ? 'order-last text-right' : 'order-first text-left',
-                      )}
+                      dir={isRTL ? 'rtl' : 'ltr'}
+                      className="flex w-full flex-row items-center justify-between gap-3"
                     >
-                      {widget.options.length === 0 ? filterPlaceholderText : summary}
+                      <span className={cn('flex-1 truncate', isRTL ? 'text-right' : 'text-left')}>
+                        {widget.options.length === 0 ? filterPlaceholderText : summary}
+                      </span>
+                      {isRTL ? (
+                        <ChevronLeft className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                      ) : (
+                        <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                      )}
                     </span>
-                    <span className="order-last text-muted-foreground">‹</span>
                   </Button>
                 </div>
               );
@@ -469,17 +477,27 @@ export function CategoryFiltersPreview({ categorySlug, locale, isRTL }: Category
                 ? optionLabelMap.get(selectedValue) ?? selectedValue
                 : filterPlaceholderText;
               return (
-                <div key={widget.id} className="rounded-lg border border-border px-3 py-2">
+                <div key={widget.id} className="flex flex-col gap-2">
                   <p className="text-sm font-medium text-foreground">{label}</p>
                   <Button
                     type="button"
-                    variant="outline"
-                    className="mt-2 justify-between text-sm"
+                    variant="secondary"
+                    className="w-full justify-between text-sm"
                     onClick={() => openFilterOptionsModal(widget)}
                     disabled={widget.options.length === 0}
                   >
-                    <span className={cn('truncate', isRTL ? 'text-right' : 'text-left')}>
-                      {widget.options.length === 0 ? filterPlaceholderText : summary}
+                    <span
+                      dir={isRTL ? 'rtl' : 'ltr'}
+                      className="flex w-full flex-row items-center justify-between gap-3"
+                    >
+                      <span className={cn('flex-1 truncate', isRTL ? 'text-right' : 'text-left')}>
+                        {widget.options.length === 0 ? filterPlaceholderText : summary}
+                      </span>
+                      {isRTL ? (
+                        <ChevronLeft className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                      ) : (
+                        <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                      )}
                     </span>
                   </Button>
                 </div>
@@ -492,7 +510,7 @@ export function CategoryFiltersPreview({ categorySlug, locale, isRTL }: Category
               return (
                 <div
                   key={widget.id}
-                  className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2 text-sm text-foreground"
+                  className="flex items-center justify-between gap-2 rounded-lg bg-muted/30 px-3 py-2 text-sm text-foreground"
                 >
                   <span id={switchLabelId}>{label}</span>
                   <Switch
@@ -506,7 +524,7 @@ export function CategoryFiltersPreview({ categorySlug, locale, isRTL }: Category
             }
             case 'unsupported':
               return (
-                <div key={widget.id} className="rounded-lg border border-dashed border-border px-3 py-2">
+                <div key={widget.id} className="rounded-lg bg-muted/30 px-3 py-2">
                   <p className="text-sm font-medium text-foreground">{label}</p>
                   <p className="mt-1 text-xs text-muted-foreground">
                     {t('categoryFilters.unsupportedField', { type: widget.rawType })}
@@ -523,28 +541,6 @@ export function CategoryFiltersPreview({ categorySlug, locale, isRTL }: Category
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-sm font-medium text-muted-foreground">{t('categoryFilters.title')}</p>
-        {hasActiveFilters ? (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="text-xs"
-            onClick={clearFilters}
-          >
-            {t('categoryFilters.clear')}
-          </Button>
-        ) : null}
-      </div>
-      {hasActiveFilters ? (
-        <p className="text-[11px] text-muted-foreground">
-          {t('categoryFilters.activeCount', { count: activeFilterCount })}
-        </p>
-      ) : null}
-      {lastSynced ? (
-        <p className="text-[11px] text-muted-foreground">{t('categoryFilters.lastSynced', { value: lastSynced })}</p>
-      ) : null}
       {content}
       <FilterOptionsDialog
         modal={filterOptionsModal}
@@ -574,6 +570,24 @@ type FilterOptionsDialogProps = {
   placeholder: string;
   translation: ReturnType<typeof useTranslations>;
 };
+
+type OptionIndicatorProps = {
+  checked: boolean;
+};
+
+function OptionIndicator({ checked }: OptionIndicatorProps) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        'flex size-5 shrink-0 items-center justify-center rounded-sm border',
+        checked ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-background',
+      )}
+    >
+      {checked ? <Check className="size-3.5" /> : null}
+    </span>
+  );
+}
 
 function FilterOptionsDialog({
   modal,
@@ -625,83 +639,116 @@ function FilterOptionsDialog({
 
   const isMulti = modal.type === 'multi';
   const options = modal.options;
+  const hasDraftSelection = isMulti ? draftMulti.length > 0 : Boolean(draftSingle);
 
   return (
     <Dialog open={open} onOpenChange={(next) => (!next ? onClose() : null)} disableBackClose>
-      <DialogContent className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] lg:left-1/2 lg:top-1/2 lg:flex lg:max-h-[90vh] lg:w-full lg:max-w-xl lg:-translate-x-1/2 lg:-translate-y-1/2 lg:flex-col lg:overflow-hidden lg:rounded-2xl lg:border lg:p-6">
+      <DialogContent
+        hideCloseButton
+        className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] lg:left-1/2 lg:top-1/2 lg:flex lg:max-h-[90vh] lg:w-full lg:max-w-xl lg:-translate-x-1/2 lg:-translate-y-1/2 lg:flex-col lg:overflow-hidden lg:rounded-2xl lg:border lg:p-6"
+      >
         <div className="flex h-full flex-col overflow-hidden">
           <div className="border-b border-border px-6 py-4 lg:hidden">
-            <button
-              type="button"
-              className="text-sm font-medium text-primary"
-              onClick={onClose}
-            >
-              {t('cityModalCancel')}
-            </button>
-            <p className="mt-2 text-base font-semibold">{modal.title}</p>
-            {modal.description ? (
-              <p className="mt-1 text-sm text-muted-foreground">{modal.description}</p>
-            ) : null}
+            <div className="flex items-center gap-3" dir={isRTL ? 'rtl' : 'ltr'}>
+              <p className={cn('flex-1 text-base font-semibold', isRTL ? 'text-right' : 'text-left')}>
+                {modal.title}
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="shrink-0"
+                onClick={clear}
+                disabled={!hasDraftSelection}
+              >
+                <span className="flex items-center justify-center gap-2">
+                  <Eraser className="size-4" aria-hidden="true" />
+                  <span>{t('categoryFilters.clear')}</span>
+                </span>
+              </Button>
+            </div>
           </div>
 
           <div className="hidden px-0 py-4 lg:block">
-            <DialogHeader className={isRTL ? 'text-right' : 'text-left'}>
-              <DialogTitle>{modal.title}</DialogTitle>
-              {modal.description ? <DialogDescription>{modal.description}</DialogDescription> : null}
-            </DialogHeader>
+            <div className="flex items-center gap-3" dir={isRTL ? 'rtl' : 'ltr'}>
+              <DialogHeader className={cn('flex-1', isRTL ? 'text-right' : 'text-left')}>
+                <DialogTitle>{modal.title}</DialogTitle>
+              </DialogHeader>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="shrink-0"
+                onClick={clear}
+                disabled={!hasDraftSelection}
+              >
+                <span className="flex items-center justify-center gap-2">
+                  <Eraser className="size-4" aria-hidden="true" />
+                  <span>{t('categoryFilters.clear')}</span>
+                </span>
+              </Button>
+            </div>
           </div>
 
-          <div className="flex flex-1 flex-col gap-2 overflow-y-auto px-6 py-4 lg:px-4">
-            {options.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{t('categoryFilters.empty')}</p>
-            ) : (
-              <ul className="space-y-2" dir={isRTL ? 'rtl' : 'ltr'}>
-                {options.map((option) => (
-                  <li key={option.value}>
-                    <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-border px-3 py-2 text-sm">
-                      {isMulti ? (
-                        <input
-                          type="checkbox"
-                          className="size-4 rounded border-input text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                          checked={draftMulti.includes(option.value)}
-                          onChange={() => {
-                            setDraftMulti((prev) =>
-                              prev.includes(option.value)
-                                ? prev.filter((value) => value !== option.value)
-                                : [...prev, option.value],
-                            );
-                          }}
-                        />
-                      ) : (
-                        <input
-                          type="radio"
-                          name={`filter-option-${modal.key}`}
-                          className="size-4 rounded-full border-input text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                          checked={draftSingle === option.value}
-                          onChange={() => setDraftSingle(option.value)}
-                        />
-                      )}
-                      <span>{option.label}</span>
-                    </label>
-                  </li>
-                ))}
-                {!isMulti && modal.clearable ? (
-                  <li>
-                    <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-border px-3 py-2 text-sm text-muted-foreground">
-                      <input
-                        type="radio"
-                        name={`filter-option-${modal.key}`}
-                        className="size-4 rounded-full border-input text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                        checked={!draftSingle}
-                        onChange={() => setDraftSingle(null)}
-                      />
-                      {placeholder}
-                    </label>
-                  </li>
-                ) : null}
-              </ul>
-            )}
-          </div>
+	          <div className="flex flex-1 flex-col gap-2 overflow-y-auto px-6 py-4 lg:px-4">
+	            {options.length === 0 ? (
+	              <p className="text-sm text-muted-foreground">{t('categoryFilters.empty')}</p>
+	            ) : (
+	              <ul className="divide-y divide-border" dir={isRTL ? 'rtl' : 'ltr'}>
+	                {options.map((option) => {
+	                  const checked = isMulti
+	                    ? draftMulti.includes(option.value)
+	                    : draftSingle === option.value;
+
+	                  return (
+	                    <li key={option.value}>
+	                      <button
+	                        type="button"
+	                        role={isMulti ? 'checkbox' : 'radio'}
+	                        aria-checked={checked}
+	                        className={cn(
+	                          'flex w-full items-center gap-3 px-3 py-4 text-sm transition-colors hover:bg-muted/20',
+	                          checked ? 'bg-muted/10' : null,
+	                          isRTL ? 'flex-row-reverse text-right' : 'flex-row text-left',
+	                        )}
+	                        onClick={() => {
+	                          if (isMulti) {
+	                            setDraftMulti((prev) =>
+	                              prev.includes(option.value)
+	                                ? prev.filter((value) => value !== option.value)
+	                                : [...prev, option.value],
+	                            );
+	                            return;
+	                          }
+	                          setDraftSingle(option.value);
+	                        }}
+	                      >
+	                        <OptionIndicator checked={checked} />
+	                        <span className="flex-1">{option.label}</span>
+	                      </button>
+	                    </li>
+	                  );
+	                })}
+	                {!isMulti && modal.clearable ? (
+	                  <li>
+	                    <button
+	                      type="button"
+	                      role="radio"
+	                      aria-checked={!draftSingle}
+	                      className={cn(
+	                        'flex w-full items-center gap-3 px-3 py-4 text-sm text-muted-foreground transition-colors hover:bg-muted/20',
+	                        isRTL ? 'flex-row-reverse text-right' : 'flex-row text-left',
+	                      )}
+	                      onClick={() => setDraftSingle(null)}
+	                    >
+	                      <OptionIndicator checked={!draftSingle} />
+	                      <span className="flex-1">{placeholder}</span>
+	                    </button>
+	                  </li>
+	                ) : null}
+	              </ul>
+	            )}
+	          </div>
 
           <div className="border-t border-border bg-background/95 px-6 py-4 lg:border-0 lg:bg-transparent lg:px-4">
             <div
@@ -710,8 +757,11 @@ function FilterOptionsDialog({
                 isRTL ? 'lg:flex-row-reverse' : 'lg:flex-row',
               )}
             >
-              <Button type="button" variant="ghost" className="min-w-[120px] flex-1" onClick={clear}>
-                {t('categoryFilters.clear')}
+              <Button type="button" className="min-w-[120px] flex-1" onClick={confirm}>
+                <span className="flex items-center justify-center gap-2">
+                  <Check className="size-4" aria-hidden="true" />
+                  <span>{t('applyFilters')}</span>
+                </span>
               </Button>
               <Button
                 type="button"
@@ -719,10 +769,10 @@ function FilterOptionsDialog({
                 className="min-w-[120px] flex-1"
                 onClick={onClose}
               >
-                {t('cityModalCancel')}
-              </Button>
-              <Button type="button" className="min-w-[120px] flex-1" onClick={confirm}>
-                {t('cityModalConfirm')}
+                <span className="flex items-center justify-center gap-2">
+                  <X className="size-4" aria-hidden="true" />
+                  <span>{t('cityModalCancel')}</span>
+                </span>
               </Button>
             </div>
           </div>

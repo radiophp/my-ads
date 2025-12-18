@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight, Folder } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Folder } from 'lucide-react';
 import type { useTranslations } from 'next-intl';
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -27,6 +27,24 @@ type Props = {
 
 const hasChildren = (category: DivarCategory | null, structures: CategoryStructures) =>
   !!category && (structures.children.get(category.id)?.length ?? 0) > 0;
+
+type SelectionIndicatorProps = {
+  checked: boolean;
+};
+
+function SelectionIndicator({ checked }: SelectionIndicatorProps) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        'flex size-5 shrink-0 items-center justify-center rounded-sm border bg-background',
+        checked ? 'border-primary bg-primary text-primary-foreground' : 'border-border',
+      )}
+    >
+      {checked ? <Check className="size-3.5" /> : null}
+    </span>
+  );
+}
 
 export function CategorySelectionModal({
   open,
@@ -143,7 +161,6 @@ export function CategorySelectionModal({
               <ul className="mt-4 flex flex-col gap-2" dir={isRTL ? 'rtl' : 'ltr'}>
                 {path.length > 1 ? (
                   <li className="flex items-center gap-3 rounded-xl border border-border/70 px-3 py-2">
-                    <ChevronLeft className="size-4 text-muted-foreground" />
                     <button
                       type="button"
                       className={cn('flex-1 text-sm font-medium text-foreground', isRTL ? 'text-right' : 'text-left')}
@@ -151,35 +168,38 @@ export function CategorySelectionModal({
                     >
                       {t('mobileBack')}
                     </button>
+                    <ChevronLeft className="size-4 text-muted-foreground" />
                   </li>
                 ) : null}
                 {currentChildren.map((category) => {
                   const childList = categoryStructures.children.get(category.id) ?? [];
                   const isLeaf = childList.length === 0;
-                  const isSelected =
+                  const isSelected = Boolean(
                     isLeaf &&
-                    (draft?.id === category.id || (!draft && selectedCategory && selectedCategory.id === category.id));
+                      (draft?.id === category.id ||
+                        (!draft && selectedCategory?.id === category.id)),
+                  );
                   return (
                     <li
                       key={category.id}
                       className={cn(
                         'flex items-center gap-3 rounded-xl border border-border/70 px-3 py-2',
-                        isRTL ? 'flex-row-reverse text-right' : 'flex-row text-left',
+                        isRTL ? 'text-right' : 'text-left',
                       )}
                     >
                       <button
                         type="button"
                         className={cn(
-                          'flex flex-1 items-center gap-2 text-sm',
+                          'flex flex-1 items-center gap-2 text-sm justify-start',
                           isSelected ? 'font-semibold text-primary' : 'text-foreground',
-                          isRTL ? 'flex-row-reverse justify-end' : 'flex-row justify-start',
+                          'flex-row',
                         )}
                         onClick={() => (isLeaf ? setDraft(category) : handleDrillDown(category))}
                       >
                         {isRTL ? (
                           <>
-                            <span className="truncate">{category.name}</span>
                             <Folder className="size-4 text-muted-foreground" />
+                            <span className="truncate">{category.name}</span>
                           </>
                         ) : (
                           <>
@@ -189,12 +209,7 @@ export function CategorySelectionModal({
                         )}
                       </button>
                       {isLeaf ? (
-                        <span
-                          className={cn(
-                            'size-3 rounded-full border border-primary',
-                            isSelected ? 'bg-primary' : 'bg-transparent',
-                          )}
-                        />
+                        <SelectionIndicator checked={isSelected} />
                       ) : (
                         <RowChevron className="size-4 text-muted-foreground" />
                       )}

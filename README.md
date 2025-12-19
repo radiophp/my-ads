@@ -21,6 +21,7 @@ The **My Ads** project is a NestJS + Fastify backend that powers a classified ad
 - **Public Module (`modules/public`)** — Health, info, and other publicly accessible routes. Rate limited by default.
 - **Uploads Module (`modules/uploads`)** — File upload orchestration layered over MinIO/S3 storage.
 - **User Panel & Admin Panel (`modules/user-panel`, `modules/admin-panel`)** — Domain-specific APIs protected by role guards.
+- **Telegram Module (`modules/telegram`)** — Bot entrypoint to collect user phone via contact share and deliver posts (albums) to users.
 
 ### Platform Services
 
@@ -76,6 +77,8 @@ npm run prisma:migrate -- --name init
 
 ```bash
 npm run start:dev
+# In a separate shell (Telegram bot polling/dev with auto-reload)
+npm run telegram:bot:dev
 ```
 
 The API listens on `http://localhost:6200` (public routes under `/public`, authenticated API under `/api` by default). Fastify reloads on file changes.
@@ -118,6 +121,8 @@ Services exposed:
 | RabbitMQ | 6213 | connection URL `amqp://rabbitmq:6213` |
 | MinIO | 6204 | console available if enabled in compose |
 | Prometheus | 9090 | uses configuration in `observability/` |
+| Telegram Bot | n/a | separate `telegram-bot` service runs `npm run telegram:bot` |
+| Telegram Bot | (runs alongside API; no exposed port) | separate `telegram-bot` service runs `npm run telegram:bot` |
 | Grafana | 3000 | provisions dashboards from `observability/grafana/...` |
 
 Stop with `docker compose down`.

@@ -32,6 +32,8 @@
     "business:title-refresh": "ENABLE_CRON_JOBS=true dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-business-title-refresh.ts",
     "arka:fetch": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-arka-phone-fetch.ts",
     "arka:transfer": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-arka-phone-transfer.ts",
+    "telegram:bot": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-telegram-bot.ts",
+    "telegram:bot:dev": "dotenv -e ../.env -- ts-node-dev --respawn -r tsconfig-paths/register ./src/scripts/run-telegram-bot.ts",
     "prepare": "husky install",
     "lint-staged": "lint-staged"
   },
@@ -97,6 +99,7 @@
     "rimraf": "^6.1.0",
     "rxjs": "^7.8.1",
     "socket.io": "^4.8.1",
+    "telegraf": "^4.16.3",
     "uuid": "^13.0.0",
     "web-push": "^3.6.7"
   },
@@ -132,6 +135,7 @@
     "ts-jest": "^29.4.5",
     "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.2"

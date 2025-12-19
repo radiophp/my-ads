@@ -739,19 +739,24 @@
         "userId": "User ID",
         "savedFilterId": "Saved filter ID",
         "postId": "Post ID",
-        "message": "Message (optional)",
-        "messagePlaceholder": "Fallback to post title/description if empty"
-      },
+      "message": "Message (optional)",
+      "messagePlaceholder": "Fallback to post title/description if empty",
+      "sendTelegram": "Also send via Telegram bot",
+      "sendTelegramHelper": "User must have started the bot and shared their contact."
+    },
       "actions": {
         "send": "Send notification",
         "sending": "Sending…"
       },
       "toast": {
         "successTitle": "Notification enqueued",
-        "successDescription": "Notification ID: {id}",
-        "errorTitle": "Failed to send notification",
-        "errorDescription": "Please check the IDs and try again."
-      },
+    "successDescription": "Notification ID: {id} • Telegram: {tg}",
+    "telegramSent": "sent",
+    "telegramNotSent": "not sent",
+    "telegramSkipped": "skipped",
+    "errorTitle": "Failed to send notification",
+    "errorDescription": "Please check the IDs and try again."
+  },
       "errors": {
         "missing": "Missing required fields",
         "required": "Enter user ID, saved filter ID, and post ID."
@@ -1125,6 +1130,7 @@
     "installTitle": "Install Pro UI Base",
     "installDescription": "Get offline access and an app-like experience.",
     "installButton": "Install",
+    "dismissButton": "Maybe later",
     "installedTitle": "Success",
     "installedDescription": "The app is installing on your device.",
     "installingLabel": "Installing…",

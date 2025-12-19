@@ -44,6 +44,7 @@ import pushConfig from './platform/config/push.config';
 import { AdminDivarSessionsModule } from './modules/admin-divar-sessions/admin-divar-sessions.module';
 import { PhoneFetchModule } from './modules/phone-fetch/phone-fetch.module';
 import { ArkaModule } from './modules/arka/arka.module';
+import { TelegramModule } from './modules/telegram/telegram.module';
 
 @Module({
   imports: [
@@ -104,6 +105,7 @@ import { ArkaModule } from './modules/arka/arka.module';
     AdminDivarSessionsModule,
     PhoneFetchModule,
     ArkaModule,
+    TelegramModule,
   ],
 })
 export class AppModule {}

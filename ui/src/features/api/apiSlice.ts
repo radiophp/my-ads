@@ -180,8 +180,8 @@ export const apiSlice = createApi({
       invalidatesTags: ['User'],
     }),
     sendTestNotification: builder.mutation<
-      { notificationId: string; status: string },
-      { userId: string; savedFilterId: string; postId: string; message?: string }
+      { notificationId: string; status: string; telegramSent?: boolean },
+      { userId: string; savedFilterId: string; postId: string; message?: string; sendTelegram?: boolean }
     >({
       query: (body) => ({
         url: '/notifications/admin/test',

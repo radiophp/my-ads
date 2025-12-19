@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
+import { Switch } from '@/components/ui/switch';
 
 export function AdminNotificationsClient() {
   const t = useTranslations('admin.notifications');
@@ -16,6 +17,7 @@ export function AdminNotificationsClient() {
   const [savedFilterId, setSavedFilterId] = useState('');
   const [postId, setPostId] = useState('');
   const [message, setMessage] = useState('');
+  const [sendTelegram, setSendTelegram] = useState(false);
   const [sendTest, { isLoading }] = useSendTestNotificationMutation();
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -34,10 +36,18 @@ export function AdminNotificationsClient() {
         savedFilterId: savedFilterId.trim(),
         postId: postId.trim(),
         message: message.trim() || undefined,
+        sendTelegram,
       }).unwrap();
       toast({
         title: t('toast.successTitle'),
-        description: t('toast.successDescription', { id: result.notificationId }),
+        description: t('toast.successDescription', {
+          id: result.notificationId,
+          tg: sendTelegram
+            ? result.telegramSent
+              ? t('toast.telegramSent')
+              : t('toast.telegramNotSent')
+            : t('toast.telegramSkipped'),
+        }),
       });
     } catch (error) {
       toast({
@@ -102,6 +112,20 @@ export function AdminNotificationsClient() {
             onChange={(e) => setMessage(e.target.value)}
             placeholder={t('fields.messagePlaceholder')}
             autoComplete="off"
+          />
+        </div>
+        <div className="flex items-center justify-between rounded-md border border-border/60 bg-muted/20 px-3 py-2">
+          <div className="space-y-1">
+            <Label htmlFor="send-telegram" className="text-sm font-medium">
+              {t('fields.sendTelegram')}
+            </Label>
+            <p className="text-xs text-muted-foreground">{t('fields.sendTelegramHelper')}</p>
+          </div>
+          <Switch
+            id="send-telegram"
+            checked={sendTelegram}
+            onCheckedChange={setSendTelegram}
+            aria-label={t('fields.sendTelegram')}
           />
         </div>
         <div className="flex justify-end gap-3">

@@ -10,9 +10,17 @@ import { NotificationQueueProcessor } from './notification-queue.processor';
 import { NotificationMatcherService } from './notification-matcher.service';
 import { NotificationMaintenanceService } from './notification-maintenance.service';
 import { PushNotificationService } from './push-notification.service';
+import { TelegramModule } from '../telegram/telegram.module';
 
 @Module({
-  imports: [ConfigModule, PrismaModule, QueueModule, WebsocketModule, DivarPostsModule],
+  imports: [
+    ConfigModule,
+    PrismaModule,
+    QueueModule,
+    WebsocketModule,
+    DivarPostsModule,
+    TelegramModule,
+  ],
   controllers: [NotificationsController],
   providers: [
     NotificationsService,

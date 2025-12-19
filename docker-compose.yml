@@ -117,6 +117,25 @@ services:
     profiles:
       - full
 
+  telegram-bot:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    env_file:
+      - ./.env
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    command: ["npm", "run", "telegram:bot"]
+    restart: unless-stopped
+    <<: *default-extra-hosts
+    networks:
+      app_net:
+        ipv4_address: 172.30.0.16
+    profiles:
+      - full
+
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.99.0
     restart: unless-stopped

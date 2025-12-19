@@ -171,7 +171,7 @@ export function CategoryFiltersPreview({
   const activeFilters = categorySlug ? categoryFilters[categorySlug] ?? {} : {};
   const [filterOptionsModal, setFilterOptionsModal] = useState<FilterOptionsModalState | null>(null);
   const rangeInputClass =
-    'h-9 rounded-none border-0 px-2 py-1 ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0';
+    'h-9 w-full rounded-none border-0 bg-transparent px-2 py-1 ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0';
 
   const queryArg = categorySlug ?? skipToken;
   const { data, isLoading, isFetching, isError } = useGetPublicDivarCategoryFilterQuery(queryArg);

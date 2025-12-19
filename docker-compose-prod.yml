@@ -227,6 +227,39 @@ services:
         constraints:
           - node.role == manager
 
+  telegram-bot:
+    image: ghcr.io/radiophp/my-ads-api:latest
+    command:
+      [
+        "node",
+        "dist/scripts/run-telegram-bot.js"
+      ]
+    environment:
+      NODE_ENV: production
+      APP_HOST: 0.0.0.0
+      APP_PORT: ${APP_PORT:-6200}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-my_ads}?schema=public}
+      DATABASE_DIRECT_URL: ${DATABASE_DIRECT_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-my_ads}?schema=public}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://${RABBITMQ_USERNAME:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672}
+      JWT_ACCESS_TOKEN_SECRET: ${JWT_ACCESS_TOKEN_SECRET:?JWT_ACCESS_TOKEN_SECRET not set}
+      JWT_REFRESH_TOKEN_SECRET: ${JWT_REFRESH_TOKEN_SECRET:?JWT_REFRESH_TOKEN_SECRET not set}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:?TELEGRAM_BOT_TOKEN not set}
+      TELEGRAM_BOT_AUTOSTART: 'false'
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    networks:
+      - app_net
+    deploy:
+      <<: *deploy_defaults
+      replicas: ${TELEGRAM_BOT_REPLICAS:-1}
+      placement:
+        constraints:
+          - node.role == manager
+
   ui:
     image: ghcr.io/radiophp/my-ads-ui:latest
     environment:

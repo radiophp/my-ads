@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { NotificationStatus } from '@prisma/client';
+import { NotificationStatus, NotificationTelegramStatus } from '@prisma/client';
 
 class NotificationFilterDto {
   @ApiProperty()
@@ -53,6 +53,12 @@ export class NotificationDto {
 
   @ApiProperty({ enum: NotificationStatus })
   status!: NotificationStatus;
+
+  @ApiProperty({ enum: NotificationTelegramStatus, nullable: true })
+  telegramStatus!: NotificationTelegramStatus | null;
+
+  @ApiProperty({ nullable: true })
+  telegramError!: string | null;
 
   @ApiProperty({ nullable: true })
   message!: string | null;

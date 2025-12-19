@@ -1,5 +1,10 @@
 import { Injectable, Logger, BadRequestException, NotFoundException } from '@nestjs/common';
-import { Prisma, NotificationStatus, type Notification } from '@prisma/client';
+import {
+  Prisma,
+  NotificationStatus,
+  NotificationTelegramStatus,
+  type Notification,
+} from '@prisma/client';
 import { PrismaService } from '@app/platform/database/prisma.service';
 import type { DivarPostListItemDto } from '@app/modules/divar-posts/dto/divar-post.dto';
 import { NotificationDto, PaginatedNotificationsDto } from './dto/notification.dto';
@@ -44,7 +49,10 @@ export class NotificationsService {
     savedFilterId: string;
     postId: string;
     message?: string | null;
+    telegram?: boolean | string;
   }): Promise<Notification> {
+    const sendTelegram = params.telegram === true || params.telegram === 'true';
+
     const savedFilter = await this.prisma.savedFilter.findUnique({
       where: { id: params.savedFilterId },
       select: { id: true, name: true, userId: true },
@@ -152,6 +160,8 @@ export class NotificationsService {
           message: params.message ?? post.title ?? post.description ?? null,
           payload: payload as Prisma.InputJsonValue,
           nextAttemptAt: new Date(),
+          telegramStatus: sendTelegram ? NotificationTelegramStatus.PENDING : null,
+          telegramError: null,
         },
       });
     } catch (error) {
@@ -205,6 +215,8 @@ export class NotificationsService {
           message: params.post.title ?? params.post.description ?? null,
           payload: snapshot as Prisma.InputJsonValue,
           nextAttemptAt: new Date(),
+          telegramStatus: NotificationTelegramStatus.PENDING,
+          telegramError: null,
         },
       });
     } catch (error) {
@@ -507,6 +519,8 @@ export class NotificationsService {
     return {
       id: record.id,
       status: record.status,
+      telegramStatus: (record as any).telegramStatus ?? null,
+      telegramError: (record as any).telegramError ?? null,
       message: record.message ?? null,
       sentAt: record.sentAt,
       failedAt: record.failedAt,
@@ -531,6 +545,23 @@ export class NotificationsService {
           previewImageUrl: null,
         } as NotificationDto['post']),
     };
+  }
+
+  async updateTelegramStatus(notificationId: string, status: NotificationTelegramStatus | null) {
+    await this.prisma.notification.update({
+      where: { id: notificationId },
+      data: {
+        telegramStatus: status,
+        telegramError: status === NotificationTelegramStatus.FAILED ? undefined : null,
+      },
+    });
+  }
+
+  async updateTelegramError(notificationId: string, error: string) {
+    await this.prisma.notification.update({
+      where: { id: notificationId },
+      data: { telegramError: error },
+    });
   }
 
   private castDecimal(value: Prisma.Decimal | number | null | undefined): number | null {

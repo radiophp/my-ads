@@ -739,19 +739,24 @@
         "userId": "شناسه کاربر",
         "savedFilterId": "شناسه مجموعه فیلتر",
         "postId": "شناسه آگهی",
-        "message": "پیام (اختیاری)",
-        "messagePlaceholder": "اگر خالی بماند از عنوان/توضیح آگهی استفاده می‌شود"
-      },
+      "message": "پیام (اختیاری)",
+      "messagePlaceholder": "اگر خالی بماند از عنوان/توضیح آگهی استفاده می‌شود",
+      "sendTelegram": "ارسال همزمان از طریق ربات تلگرام",
+      "sendTelegramHelper": "کاربر باید ربات را استارت کرده و شماره خود را ارسال کرده باشد."
+    },
       "actions": {
         "send": "ارسال اعلان",
         "sending": "در حال ارسال…"
       },
       "toast": {
         "successTitle": "اعلان در صف قرار گرفت",
-        "successDescription": "شناسه اعلان: {id}",
-        "errorTitle": "ارسال اعلان ناموفق بود",
-        "errorDescription": "شناسه‌ها را بررسی و دوباره تلاش کنید."
-      },
+    "successDescription": "شناسه اعلان: {id} • تلگرام: {tg}",
+    "telegramSent": "ارسال شد",
+    "telegramNotSent": "ارسال نشد",
+    "telegramSkipped": "ارسال تلگرام غیرفعال بود",
+    "errorTitle": "ارسال اعلان ناموفق بود",
+    "errorDescription": "شناسه‌ها را بررسی و دوباره تلاش کنید."
+  },
       "errors": {
         "missing": "فیلدهای لازم وارد نشده‌اند",
         "required": "شناسه کاربر، مجموعه فیلتر و آگهی را وارد کنید."
@@ -1125,6 +1130,7 @@
     "installTitle": "نصب ماهان فایل",
     "installDescription": "دسترسی آفلاین و تجربه‌ای شبیه اپلیکیشن دریافت کنید.",
     "installButton": "نصب",
+    "dismissButton": "بعداً",
     "installedTitle": "موفقیت‌آمیز",
     "installedDescription": "اپلیکیشن روی دستگاه شما در حال نصب است.",
     "installingLabel": "در حال نصب…",

@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsOptional, IsUUID, Length } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsString, IsOptional, IsUUID, Length, IsBoolean } from 'class-validator';
 
 export class CreateTestNotificationDto {
   @ApiProperty({ description: 'Target user id', format: 'uuid' })
@@ -22,4 +23,14 @@ export class CreateTestNotificationDto {
   @IsString()
   @Length(0, 200)
   message?: string;
+
+  @ApiProperty({
+    required: false,
+    description: 'Also send via Telegram bot if the user has started the bot and shared contact.',
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => value === true || value === 'true')
+  sendTelegram?: boolean;
 }

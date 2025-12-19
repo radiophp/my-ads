@@ -39,6 +39,13 @@ enum NotificationStatus {
   FAILED
 }
 
+enum NotificationTelegramStatus {
+  PENDING
+  SENT
+  FAILED
+  HAS_NOT_CONNECTED
+}
+
 enum PhoneFetchStatus {
   PENDING
   IN_PROGRESS
@@ -71,6 +78,7 @@ model User {
   savedFilters       SavedFilter[]
   notifications      Notification[]
   pushSubscriptions  PushSubscription[]
+  telegramLinks      TelegramUserLink[]
 
   @@index([cityId])
 }
@@ -335,6 +343,19 @@ model DivarPostAttribute {
   @@index([key])
 }
 
+model TelegramUserLink {
+  telegramId String @id
+  chatId     String
+  phone      String
+  userId     String?
+  user       User?  @relation(fields: [userId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  @@index([phone])
+  @@index([userId])
+}
+
 model SubscriptionPackage {
   id              String   @id @default(uuid())
   title           String
@@ -418,6 +439,8 @@ model Notification {
   postId        String
   post          DivarPost          @relation(fields: [postId], references: [id], onDelete: Cascade)
   status        NotificationStatus @default(PENDING)
+  telegramStatus NotificationTelegramStatus?
+  telegramError  String?
   message       String?
   payload       Json?
   attemptCount  Int                @default(0)

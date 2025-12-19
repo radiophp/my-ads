@@ -182,6 +182,31 @@ export function DashboardSearchFilterPanel() {
   const [draftAllCities, setDraftAllCities] = useState(true);
   const [draftDistrictIds, setDraftDistrictIds] = useState<number[]>([]);
   const [draftAllDistricts, setDraftAllDistricts] = useState(true);
+  const [desktopDialogContext, setDesktopDialogContext] = useState<'none' | 'province' | 'city' | 'district'>('none');
+
+  const handleProvinceDialogChange = (open: boolean) => {
+    setProvinceDialogOpen(open);
+    if (!open && desktopDialogContext === 'province') {
+      setDesktopDialogContext('none');
+      setFilterModalOpen(false);
+    }
+  };
+
+  const handleCityDialogChange = (open: boolean) => {
+    setCityDialogOpen(open);
+    if (!open && desktopDialogContext === 'city') {
+      setDesktopDialogContext('none');
+      setFilterModalOpen(false);
+    }
+  };
+
+  const handleDistrictDialogChange = (open: boolean) => {
+    setDistrictDialogOpen(open);
+    if (!open && desktopDialogContext === 'district') {
+      setDesktopDialogContext('none');
+      setFilterModalOpen(false);
+    }
+  };
 
   const isProvinceAll = provinceId === null;
   const isCityButtonDisabled =
@@ -372,6 +397,10 @@ export function DashboardSearchFilterPanel() {
       dispatch(setProvince(draftProvinceId));
     }
     setProvinceDialogOpen(false);
+    if (desktopDialogContext === 'province') {
+      setDesktopDialogContext('none');
+      setFilterModalOpen(false);
+    }
   };
 
   const toggleCitySelection = (cityId: number) => {
@@ -405,6 +434,10 @@ export function DashboardSearchFilterPanel() {
       dispatch(setSelectedCities(draftCityIds));
     }
     setCityDialogOpen(false);
+    if (desktopDialogContext === 'city') {
+      setDesktopDialogContext('none');
+      setFilterModalOpen(false);
+    }
   };
 
   const applyDistrictSelection = () => {
@@ -414,6 +447,10 @@ export function DashboardSearchFilterPanel() {
       dispatch(setSelectedDistricts(draftDistrictIds));
     }
     setDistrictDialogOpen(false);
+    if (desktopDialogContext === 'district') {
+      setDesktopDialogContext('none');
+      setFilterModalOpen(false);
+    }
   };
 
   const selectedCityCount =
@@ -988,7 +1025,7 @@ export function DashboardSearchFilterPanel() {
 
 	          {!filterModalOpen ? (
 	            <div className="flex flex-col gap-2">
-	            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <Button
                 type="button"
                 variant="secondary"
@@ -1023,12 +1060,139 @@ export function DashboardSearchFilterPanel() {
               {savedFiltersT('usage', { count: totalSavedFilters, limit: savedFiltersLimit })}
             </p>
           </div>
-	          ) : null}
+          ) : null}
 
-	        {!filterModalOpen ? (
-	          <div className="space-y-2">
-	          <label className="block text-sm font-medium text-foreground">
-	            {t('ringBinder.label')}
+        {!filterModalOpen ? (
+            <div className="hidden flex-col gap-4 lg:flex">
+              <div className="flex flex-col gap-1">
+                <label className={cn('text-sm font-medium text-foreground', isRTL ? 'text-right' : 'text-left')}>
+                  {t('categories.title')}
+                </label>
+                <Button
+                type="button"
+                variant="secondary"
+                className="w-full justify-between"
+                onClick={handleOpenCategoryModal}
+              >
+                <span className="flex flex-1 items-center gap-2" dir={isRTL ? 'rtl' : 'ltr'}>
+                  <Folder className="size-4 text-muted-foreground" />
+                  <span className="truncate">{categorySummaryLabel}</span>
+                </span>
+                {isRTL ? (
+                  <ChevronLeft className="size-4 text-muted-foreground" aria-hidden="true" />
+                ) : (
+                  <ChevronRight className="size-4 text-muted-foreground" aria-hidden="true" />
+                )}
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3">
+              <div className="space-y-1">
+                <label className={cn('text-sm font-medium text-foreground', isRTL ? 'text-right' : 'text-left')}>
+                  {t('provinceLabel')}
+                </label>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="w-full justify-between"
+                  onClick={() => {
+                    setDesktopDialogContext('province');
+                    setFilterModalOpen(true);
+                    setMobileTab('main');
+                    setProvinceDialogOpen(true);
+                  }}
+                  disabled={provincesLoading && provinces.length === 0}
+                >
+                  <span className="flex w-full items-center justify-between gap-3" dir={isRTL ? 'rtl' : 'ltr'}>
+                    <span className="truncate">{provinceButtonLabel}</span>
+                    <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                  </span>
+                </Button>
+              </div>
+
+              <div className="space-y-1">
+                <label className={cn('text-sm font-medium text-foreground', isRTL ? 'text-right' : 'text-left')}>
+                  {t('cityLabel')}
+                </label>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="w-full justify-between"
+                  onClick={() => {
+                    setDesktopDialogContext('city');
+                    setFilterModalOpen(true);
+                    setMobileTab('main');
+                    setCityDialogOpen(true);
+                  }}
+                  disabled={isCityButtonDisabled}
+                >
+                  <span className="flex w-full items-center justify-between gap-3" dir={isRTL ? 'rtl' : 'ltr'}>
+                    <span className="truncate">{cityButtonLabel}</span>
+                    <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                  </span>
+                </Button>
+              </div>
+
+              {showDistrictFilter ? (
+                <div className="space-y-1">
+                  <label className={cn('text-sm font-medium text-foreground', isRTL ? 'text-right' : 'text-left')}>
+                    {t('districtLabel')}
+                  </label>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="w-full justify-between"
+                  onClick={() => {
+                    setDesktopDialogContext('district');
+                    setFilterModalOpen(true);
+                    setMobileTab('main');
+                    setDistrictDialogOpen(true);
+                  }}
+                  disabled={isDistrictButtonDisabled}
+                >
+                    <span className="flex w-full items-center justify-between gap-3" dir={isRTL ? 'rtl' : 'ltr'}>
+                      <span className="truncate">{districtButtonLabel}</span>
+                      <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                    </span>
+                  </Button>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="space-y-3">
+              <CategoryFiltersPreview
+                categorySlug={categorySlug ?? baseCategory?.slug ?? null}
+                locale={locale}
+                isRTL={isRTL}
+                includeKeys={['business-type']}
+                excludeKeys={['addon_service_tags', 'recent_ads', 'has-video', 'has_video']}
+              />
+              <CategoryFiltersPreview
+                categorySlug={categorySlug ?? baseCategory?.slug ?? null}
+                locale={locale}
+                isRTL={isRTL}
+                includeKeys={['addon_service_tags', 'recent_ads', 'has-video', 'has_video']}
+              />
+              <CategoryFiltersPreview
+                categorySlug={categorySlug ?? baseCategory?.slug ?? null}
+                locale={locale}
+                isRTL={isRTL}
+                excludeKeys={[
+                  'business-type',
+                  'addon_service_tags',
+                  'recent_ads',
+                  'has-video',
+                  'has_video',
+                ]}
+              />
+            </div>
+          </div>
+        ) : null}
+
+        {!filterModalOpen ? (
+          <div className="space-y-2">
+          <label className="block text-sm font-medium text-foreground">
+            {t('ringBinder.label')}
           </label>
           <div className="relative">
             <select
@@ -1271,7 +1435,7 @@ export function DashboardSearchFilterPanel() {
 			                          </label>
 			                          <Dialog
 			                            open={provinceDialogOpen}
-			                            onOpenChange={setProvinceDialogOpen}
+			                            onOpenChange={handleProvinceDialogChange}
 			                            disableBackClose
 			                          >
 			                            <Button
@@ -1421,7 +1585,7 @@ export function DashboardSearchFilterPanel() {
 			                          >
 			                            {t('cityLabel')}
 			                          </label>
-			                          <Dialog open={cityDialogOpen} onOpenChange={setCityDialogOpen} disableBackClose>
+			                          <Dialog open={cityDialogOpen} onOpenChange={handleCityDialogChange} disableBackClose>
 			                            <Button
 			                              type="button"
 			                              variant="secondary"
@@ -1565,7 +1729,7 @@ export function DashboardSearchFilterPanel() {
 			                          </label>
 			                          <Dialog
 			                            open={districtDialogOpen}
-			                            onOpenChange={setDistrictDialogOpen}
+			                            onOpenChange={handleDistrictDialogChange}
 			                            disableBackClose
 			                          >
 			                            <Button

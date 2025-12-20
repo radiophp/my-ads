@@ -1376,10 +1376,13 @@ export function DashboardSearchFilterPanel() {
 			                            <DialogContent
 			                              hideCloseButton
 			                              dir={isRTL ? 'rtl' : 'ltr'}
-			                              className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] lg:left-1/2 lg:top-1/2 lg:flex lg:max-h-[90vh] lg:w-full lg:max-w-xl lg:-translate-x-1/2 lg:-translate-y-1/2 lg:flex-col lg:overflow-hidden lg:rounded-2xl lg:border-0 lg:p-6"
+			                              className={cn(
+			                                'left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] lg:left-1/2 lg:top-1/2 lg:flex lg:max-h-[90vh] lg:w-full lg:max-w-xl lg:-translate-x-1/2 lg:-translate-y-1/2 lg:flex-col lg:overflow-hidden lg:rounded-2xl lg:border-0 lg:p-6',
+			                                isRTL ? 'text-right' : 'text-left',
+			                              )}
 			                            >
 			                              <div className="flex h-full flex-col overflow-hidden">
-                                <div className="border-b border-border px-6 py-4 lg:hidden">
+                                <div className="border-b border-border px-6 py-4 lg:hidden" dir={isRTL ? 'rtl' : 'ltr'}>
                                   <p
                                     className={`text-base font-semibold ${
                                       isRTL ? 'text-right' : 'text-center'
@@ -1401,7 +1404,7 @@ export function DashboardSearchFilterPanel() {
                                   <div
                                     className={cn(
                                       'flex flex-col space-y-1.5',
-                                      isRTL ? 'text-right items-start' : 'text-left items-start',
+                                      isRTL ? 'text-right items-end' : 'text-left items-start',
                                     )}
                                   >
                                     <DialogTitle className={isRTL ? 'text-right' : 'text-left'}>
@@ -1575,10 +1578,13 @@ export function DashboardSearchFilterPanel() {
 			                            <DialogContent
 			                              hideCloseButton
 			                              dir={isRTL ? 'rtl' : 'ltr'}
-			                              className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] lg:left-1/2 lg:top-1/2 lg:flex lg:max-h-[90vh] lg:w-full lg:max-w-xl lg:-translate-x-1/2 lg:-translate-y-1/2 lg:flex-col lg:overflow-hidden lg:rounded-2xl lg:border-0 lg:p-6"
+			                              className={cn(
+			                                'left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] lg:left-1/2 lg:top-1/2 lg:flex lg:max-h-[90vh] lg:w-full lg:max-w-xl lg:-translate-x-1/2 lg:-translate-y-1/2 lg:flex-col lg:overflow-hidden lg:rounded-2xl lg:border-0 lg:p-6',
+			                                isRTL ? 'text-right' : 'text-left',
+			                              )}
 			                            >
 			                              <div className="flex h-full flex-col overflow-hidden">
-                                <div className="border-b border-border px-6 py-4 lg:hidden">
+                                <div className="border-b border-border px-6 py-4 lg:hidden" dir={isRTL ? 'rtl' : 'ltr'}>
                                   <p
                                     className={`text-base font-semibold ${
                                       isRTL ? 'text-right' : 'text-center'
@@ -1600,7 +1606,7 @@ export function DashboardSearchFilterPanel() {
                                   <div
                                     className={cn(
                                       'flex flex-col space-y-1.5',
-                                      isRTL ? 'text-right items-start' : 'text-left items-start',
+                                      isRTL ? 'text-right items-end' : 'text-left items-start',
                                     )}
                                   >
                                     <DialogTitle className={isRTL ? 'text-right' : 'text-left'}>
@@ -1775,10 +1781,13 @@ export function DashboardSearchFilterPanel() {
 			                            <DialogContent
 			                              hideCloseButton
 			                              dir={isRTL ? 'rtl' : 'ltr'}
-			                              className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] lg:left-1/2 lg:top-1/2 lg:flex lg:max-h-[90vh] lg:w-full lg:max-w-xl lg:-translate-x-1/2 lg:-translate-y-1/2 lg:flex-col lg:overflow-hidden lg:rounded-2xl lg:border-0 lg:p-6"
+			                              className={cn(
+			                                'left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] lg:left-1/2 lg:top-1/2 lg:flex lg:max-h-[90vh] lg:w-full lg:max-w-xl lg:-translate-x-1/2 lg:-translate-y-1/2 lg:flex-col lg:overflow-hidden lg:rounded-2xl lg:border-0 lg:p-6',
+			                                isRTL ? 'text-right' : 'text-left',
+			                              )}
 			                            >
 			                              <div className="flex h-full flex-col overflow-hidden">
-                                <div className="border-b border-border px-6 py-4 lg:hidden">
+                                <div className="border-b border-border px-6 py-4 lg:hidden" dir={isRTL ? 'rtl' : 'ltr'}>
                                   <p
                                     className={`text-base font-semibold ${
                                       isRTL ? 'text-right' : 'text-center'
@@ -1800,7 +1809,7 @@ export function DashboardSearchFilterPanel() {
                                   <div
                                     className={cn(
                                       'flex flex-col space-y-1.5',
-                                      isRTL ? 'text-right items-start' : 'text-left items-start',
+                                      isRTL ? 'text-right items-end' : 'text-left items-start',
                                     )}
                                   >
                                     <DialogTitle className={isRTL ? 'text-right' : 'text-left'}>

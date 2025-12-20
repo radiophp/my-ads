@@ -83,6 +83,18 @@ npm run telegram:bot:dev
 
 The API listens on `http://localhost:6200` (public routes under `/public`, authenticated API under `/api` by default). Fastify reloads on file changes.
 
+### 4.1 UI Development
+
+```bash
+cd ui
+npm install
+npm run dev           # Next.js frontend with hot reload
+npm run lint
+npm run typecheck
+```
+
+The frontend pulls its env from the repo root `.env` (e.g., `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_WS_BASE_URL`). Run UI lint/typecheck inside `ui/`.
+
 ### 5. Test Suite
 
 ```bash

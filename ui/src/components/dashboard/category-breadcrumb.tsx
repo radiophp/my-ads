@@ -16,7 +16,6 @@ type Props = {
 export function CategoryBreadcrumb({ breadcrumbItems, categoryOptions, categorySlug, isRTL, onSelect }: Props) {
   return (
     <div className="hidden lg:block">
-      <p className="text-sm font-medium text-foreground">دسته‌بندی‌ها</p>
       <div className="mt-2 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
         {breadcrumbItems.map((crumb, index) => {
           const isActive = crumb.slug === categorySlug;

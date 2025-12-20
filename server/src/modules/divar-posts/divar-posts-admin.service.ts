@@ -47,6 +47,7 @@ const DIVAR_POST_SUMMARY_SELECT = {
   districtName: true,
   provinceName: true,
   categorySlug: true,
+  code: true,
   businessType: true,
   publishedAt: true,
   publishedAtJalali: true,
@@ -419,6 +420,17 @@ export class DivarPostsAdminService {
   async getNormalizedPostById(id: string): Promise<DivarPostListItemDto | null> {
     const record = await this.prisma.divarPost.findUnique({
       where: { id },
+      select: DIVAR_POST_SUMMARY_SELECT,
+    });
+    if (!record) {
+      return null;
+    }
+    return this.mapRecordToListItem(record);
+  }
+
+  async getNormalizedPostByCode(code: number): Promise<DivarPostListItemDto | null> {
+    const record = await this.prisma.divarPost.findUnique({
+      where: { code },
       select: DIVAR_POST_SUMMARY_SELECT,
     });
     if (!record) {
@@ -827,6 +839,7 @@ export class DivarPostsAdminService {
   private mapRecordToListItem(record: DivarPostSummaryRecord): DivarPostListItemDto {
     return {
       id: record.id,
+      code: record.code,
       externalId: record.externalId ?? '',
       title: record.title ?? record.displayTitle ?? record.seoTitle ?? null,
       description: record.description ?? null,

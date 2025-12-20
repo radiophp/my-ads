@@ -29,7 +29,16 @@
     "menu": {
       "profile": "Profile"
     },
-    "installApp": "Install app"
+    "installApp": "Install app",
+    "search": {
+      "label": "Search by code",
+      "placeholder": "Post code…",
+      "button": "Search",
+      "invalid": "Enter a valid numeric code.",
+      "notFound": "Post not found.",
+      "rateLimited": "Please wait a minute before searching again.",
+      "genericError": "Unable to find the post. Please try again."
+    }
   },
   "landing": {
     "title": "Welcome to Mahan File",
@@ -550,7 +559,9 @@
         "externalId": "External ID",
         "permalink": "Permalink",
         "notAvailable": "Not available",
-        "otherFeatures": "Other features"
+        "otherFeatures": "Other features",
+        "postCode": "Post code",
+        "postCodeCopied": "Post code copied"
       },
       "businessType": {
         "realEstateBusiness": "Real estate agent",

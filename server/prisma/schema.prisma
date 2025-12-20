@@ -214,6 +214,7 @@ model DivarPost {
   categoryId      String?
   category        DivarCategory?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   categorySlug    String
+  code            Int                @unique @db.Integer @default(dbgenerated("nextval('\"DivarPost_code_seq\"'::regclass)"))
   cat1            String?
   cat2            String?
   cat3            String?

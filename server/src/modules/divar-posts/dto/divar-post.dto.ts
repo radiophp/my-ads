@@ -48,6 +48,9 @@ export class DivarPostListItemDto {
   id!: string;
 
   @ApiProperty()
+  code!: number;
+
+  @ApiProperty()
   externalId!: string;
 
   @ApiProperty({ nullable: true })

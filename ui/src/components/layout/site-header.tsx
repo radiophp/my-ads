@@ -22,6 +22,7 @@ import { clearAuth } from '@/features/auth/authSlice';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import { Menu, X, DownloadCloud, LogOut } from 'lucide-react';
 import { useNotificationsSocket } from '@/features/notifications/useNotificationsSocket';
+import { CodeSearch } from '@/components/layout/code-search';
 
 type NavIconKey = 'dashboard' | 'ringBinder' | 'savedFilters' | 'notifications' | 'admin';
 
@@ -214,6 +215,7 @@ export function SiteHeader() {
               {isPromptingInstall ? pwaT('installingLabel') : t('header.installApp')}
             </Button>
           ) : null}
+          {isAuthenticated ? <CodeSearch /> : null}
           <ThemeToggle />
           {isAuthenticated && auth.user ? (
             <UserMenu
@@ -491,6 +493,11 @@ function MobileNavigationDrawer({
                 {item.label}
               </Link>
             ))}
+            {isAuthenticated ? (
+              <div className="pt-2">
+                <CodeSearch variant="mobile" onSuccess={() => onOpenChange(false)} />
+              </div>
+            ) : null}
           </nav>
           <div className="space-y-4 border-t border-border/60 p-4">
             <div

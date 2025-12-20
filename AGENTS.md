@@ -10,6 +10,7 @@
 ## Build, Test, and Development Commands
 - `npm run start:dev` boots Nest + Fastify with hot reload, loading `.env` from the repo root.
 - `npm run telegram:bot:dev` runs the Telegram bot locally (dev hot-reload). Use `npm run telegram:bot` in prod or the compose service `telegram-bot`.
+- UI checks run from `/ui`: `npm run dev`, `npm run lint`, `npm run typecheck`.
 - `npm run build` compiles to `server/dist`; `npm run start:prod` serves the compiled bundle.
 - `npm test`, `npm run test:e2e`, and `npm run test:cov` span unit/integration, Fastify e2e, and coverage.
 - `npm run lint`, `npm run format`, and `npm run typecheck` enforce ESLint, Prettier, and TypeScript contracts before a PR.

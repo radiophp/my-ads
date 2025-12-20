@@ -7,7 +7,6 @@ import { skipToken } from '@reduxjs/toolkit/query';
 import {
   BookmarkPlus,
   Check,
-  Circle,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -51,7 +50,6 @@ import {
 import { Button } from '@/components/ui/button';
 import type { DivarCategory } from '@/types/divar-category';
 import { CategoryFiltersPreview } from './category-filters-preview';
-import { CategoryBreadcrumb } from './category-breadcrumb';
 import { useBackButtonClose } from '@/hooks/use-back-button-close';
 import { CategorySelectionModal } from './category-selection-modal';
 import { cn } from '@/lib/utils';
@@ -63,6 +61,8 @@ import type { SavedFilter } from '@/types/saved-filters';
 import { SaveFilterDialog } from '@/components/dashboard/save-filter-dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { cloneSearchFilterState, mergeSavedFilterState } from '@/features/search-filter/utils';
+import { DesktopCategorySection } from './desktop-category-section';
+import { DesktopRegionSelectors } from './desktop-region-selectors';
 
 const BASE_CATEGORY_SLUG = 'real-estate';
 const DEFAULT_SAVED_FILTER_LIMIT = 5;
@@ -1022,17 +1022,74 @@ export function DashboardSearchFilterPanel() {
 	              </div>
 	              <div className="h-0.5" />
 	            </div>
-	          ) : null}
+          ) : null}
+
+        {!filterModalOpen ? (
+          <>
+            <div className="hidden lg:flex justify-end">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="inline-flex items-center gap-1 text-destructive hover:bg-destructive/10"
+                onClick={handleResetFilters}
+              >
+                <Eraser className="size-4" />
+                {t('clear')}
+              </Button>
+            </div>
+            <DesktopCategorySection
+              categorySlug={categorySlug}
+              baseCategory={baseCategory}
+              breadcrumbItems={breadcrumbItems}
+              categoryOptions={categoryOptions}
+              isRTL={isRTL}
+              locale={locale}
+              categoriesBusy={categoriesBusy}
+              title={t('categories.title')}
+              loadingText={t('categories.loading')}
+              emptyText={t('categories.empty')}
+              onSelectCategory={handleCategorySelect}
+            />
+          </>
+        ) : null}
+
+        {!filterModalOpen ? (
+          <DesktopRegionSelectors
+            isRTL={isRTL}
+            provinceLabel={t('provinceLabel')}
+            cityLabel={t('cityLabel')}
+            districtLabel={t('districtLabel')}
+            provinceButtonLabel={provinceButtonLabel}
+            cityButtonLabel={cityButtonLabel}
+            districtButtonLabel={districtButtonLabel}
+            onSelectProvince={() => {
+              setDesktopDialogContext('province');
+              setFilterModalOpen(true);
+              setMobileTab('main');
+              setProvinceDialogOpen(true);
+            }}
+            onSelectCity={() => {
+              setDesktopDialogContext('city');
+              setFilterModalOpen(true);
+              setMobileTab('main');
+              setCityDialogOpen(true);
+            }}
+            onSelectDistrict={() => {
+              setDesktopDialogContext('district');
+              setFilterModalOpen(true);
+              setMobileTab('main');
+              setDistrictDialogOpen(true);
+            }}
+            disableProvince={provincesLoading && provinces.length === 0}
+            disableCity={isCityButtonDisabled}
+            disableDistrict={isDistrictButtonDisabled}
+            showDistrict={showDistrictFilter}
+          />
+        ) : null}
 
         {!filterModalOpen ? (
           <div className="hidden flex-col gap-4 lg:flex">
-            <CategoryBreadcrumb
-              breadcrumbItems={breadcrumbItems}
-              categoryOptions={categoryOptions}
-              categorySlug={categorySlug}
-              isRTL={isRTL}
-              onSelect={handleCategorySelect}
-            />
             <CategoryFiltersPreview
               categorySlug={categorySlug ?? baseCategory?.slug ?? null}
               locale={locale}
@@ -1128,84 +1185,6 @@ export function DashboardSearchFilterPanel() {
             />
           </div>
         </div>
-        ) : null}
-
-        {!filterModalOpen ? (
-          <div className="hidden flex-col gap-4 lg:flex">
-            <div className="grid grid-cols-1 gap-3">
-              <div className="space-y-1">
-                <label className={cn('text-sm font-medium text-foreground', isRTL ? 'text-right' : 'text-left')}>
-                  {t('provinceLabel')}
-                </label>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="w-full justify-between"
-                  onClick={() => {
-                    setDesktopDialogContext('province');
-                    setFilterModalOpen(true);
-                    setMobileTab('main');
-                    setProvinceDialogOpen(true);
-                  }}
-                  disabled={provincesLoading && provinces.length === 0}
-                >
-                  <span className="flex w-full items-center justify-between gap-3" dir={isRTL ? 'rtl' : 'ltr'}>
-                    <span className="truncate">{provinceButtonLabel}</span>
-                    <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                  </span>
-                </Button>
-              </div>
-
-              <div className="space-y-1">
-                <label className={cn('text-sm font-medium text-foreground', isRTL ? 'text-right' : 'text-left')}>
-                  {t('cityLabel')}
-                </label>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="w-full justify-between"
-                  onClick={() => {
-                    setDesktopDialogContext('city');
-                    setFilterModalOpen(true);
-                    setMobileTab('main');
-                    setCityDialogOpen(true);
-                  }}
-                  disabled={isCityButtonDisabled}
-                >
-                  <span className="flex w-full items-center justify-between gap-3" dir={isRTL ? 'rtl' : 'ltr'}>
-                    <span className="truncate">{cityButtonLabel}</span>
-                    <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                  </span>
-                </Button>
-              </div>
-
-              {showDistrictFilter ? (
-                <div className="space-y-1">
-                  <label className={cn('text-sm font-medium text-foreground', isRTL ? 'text-right' : 'text-left')}>
-                    {t('districtLabel')}
-                  </label>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="w-full justify-between"
-                    onClick={() => {
-                      setDesktopDialogContext('district');
-                      setFilterModalOpen(true);
-                      setMobileTab('main');
-                      setDistrictDialogOpen(true);
-                    }}
-                    disabled={isDistrictButtonDisabled}
-                  >
-                    <span className="flex w-full items-center justify-between gap-3" dir={isRTL ? 'rtl' : 'ltr'}>
-                      <span className="truncate">{districtButtonLabel}</span>
-                      <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                    </span>
-                  </Button>
-                </div>
-              ) : null}
-            </div>
-
-          </div>
         ) : null}
 
         {!filterModalOpen ? (
@@ -1459,16 +1438,20 @@ export function DashboardSearchFilterPanel() {
 			                                        <span>{t('provinceModalConfirm')}</span>
 			                                      </span>
 			                                    </Button>
-			                                    <Button
-			                                      type="button"
-			                                      variant="outline"
-			                                      className="flex-1"
-			                                      onClick={() => setProvinceDialogOpen(false)}
-			                                    >
-			                                      <span className="flex items-center justify-center gap-2">
-			                                        <X className="size-4" aria-hidden="true" />
-			                                        <span>{t('provinceModalCancel')}</span>
-			                                      </span>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      className="flex-1"
+                                      onClick={() => {
+                                        setDesktopDialogContext('none');
+                                        setFilterModalOpen(false);
+                                        setProvinceDialogOpen(false);
+                                      }}
+                                    >
+                                      <span className="flex items-center justify-center gap-2">
+                                        <X className="size-4" aria-hidden="true" />
+                                        <span>{t('provinceModalCancel')}</span>
+                                      </span>
 			                                    </Button>
 			                                  </div>
 			                                </div>
@@ -1600,16 +1583,20 @@ export function DashboardSearchFilterPanel() {
 			                                        <span>{t('cityModalConfirm')}</span>
 			                                      </span>
 			                                    </Button>
-			                                    <Button
-			                                      type="button"
-			                                      variant="outline"
-			                                      className="flex-1"
-			                                      onClick={() => setCityDialogOpen(false)}
-			                                    >
-			                                      <span className="flex items-center justify-center gap-2">
-			                                        <X className="size-4" aria-hidden="true" />
-			                                        <span>{t('cityModalCancel')}</span>
-			                                      </span>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      className="flex-1"
+                                      onClick={() => {
+                                        setDesktopDialogContext('none');
+                                        setFilterModalOpen(false);
+                                        setCityDialogOpen(false);
+                                      }}
+                                    >
+                                      <span className="flex items-center justify-center gap-2">
+                                        <X className="size-4" aria-hidden="true" />
+                                        <span>{t('cityModalCancel')}</span>
+                                      </span>
 			                                    </Button>
 			                                  </div>
 			                                </div>
@@ -1750,16 +1737,20 @@ export function DashboardSearchFilterPanel() {
 			                                        <span>{t('districtModalConfirm')}</span>
 			                                      </span>
 			                                    </Button>
-			                                    <Button
-			                                      type="button"
-			                                      variant="outline"
-			                                      className="flex-1"
-			                                      onClick={() => setDistrictDialogOpen(false)}
-			                                    >
-			                                      <span className="flex items-center justify-center gap-2">
-			                                        <X className="size-4" aria-hidden="true" />
-			                                        <span>{t('districtModalCancel')}</span>
-			                                      </span>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      className="flex-1"
+                                      onClick={() => {
+                                        setDesktopDialogContext('none');
+                                        setFilterModalOpen(false);
+                                        setDistrictDialogOpen(false);
+                                      }}
+                                    >
+                                      <span className="flex items-center justify-center gap-2">
+                                        <X className="size-4" aria-hidden="true" />
+                                        <span>{t('districtModalCancel')}</span>
+                                      </span>
 			                                    </Button>
 			                                  </div>
 			                                </div>

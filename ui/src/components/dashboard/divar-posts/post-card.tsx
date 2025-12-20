@@ -58,7 +58,7 @@ export function PostCard({
   return (
     <Link
       href={detailHref}
-      className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      className="block w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       onClick={handleClick}
       onKeyDown={handleKeyDown}
     >

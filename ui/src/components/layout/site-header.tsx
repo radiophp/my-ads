@@ -20,9 +20,20 @@ import { Link } from '@/i18n/routing';
 import { useLogoutMutation } from '@/features/api/apiSlice';
 import { clearAuth } from '@/features/auth/authSlice';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
-import { Menu, X, DownloadCloud, LogOut } from 'lucide-react';
+import {
+  Menu,
+  X,
+  DownloadCloud,
+  LogOut,
+  LayoutDashboard,
+  FolderKanban,
+  Bookmark,
+  Bell,
+  ShieldCheck,
+} from 'lucide-react';
 import { useNotificationsSocket } from '@/features/notifications/useNotificationsSocket';
 import { CodeSearch } from '@/components/layout/code-search';
+import { cn } from '@/lib/utils';
 
 type NavIconKey = 'dashboard' | 'ringBinder' | 'savedFilters' | 'notifications' | 'admin';
 
@@ -33,6 +44,19 @@ type NavItemConfig = {
   visible: boolean;
   icon: NavIconKey;
 };
+
+const navIconComponents: Record<NavIconKey, typeof LayoutDashboard> = {
+  dashboard: LayoutDashboard,
+  ringBinder: FolderKanban,
+  savedFilters: Bookmark,
+  notifications: Bell,
+  admin: ShieldCheck,
+};
+
+function renderNavIcon(icon: NavIconKey, className?: string) {
+  const Icon = navIconComponents[icon] ?? LayoutDashboard;
+  return <Icon className={cn('size-4 shrink-0 text-muted-foreground', className)} aria-hidden />;
+}
 
 export function SiteHeader() {
   const t = useTranslations();
@@ -166,40 +190,45 @@ export function SiteHeader() {
           {isAuthenticated && (
             <Link
               href="/dashboard"
-              className="hidden rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
+              className="hidden items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
             >
+              {renderNavIcon('dashboard')}
               {t('header.nav.dashboard')}
             </Link>
           )}
           {isAuthenticated && (
             <Link
               href="/dashboard/ring-binder"
-              className="hidden rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
+              className="hidden items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
             >
+              {renderNavIcon('ringBinder')}
               {t('header.nav.ringBinder')}
             </Link>
           )}
           {isAuthenticated && (
             <Link
               href="/dashboard/saved-filters"
-              className="hidden rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
+              className="hidden items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
             >
+              {renderNavIcon('savedFilters')}
               {t('header.nav.savedFilters')}
             </Link>
           )}
           {isAuthenticated && (
             <Link
               href="/dashboard/notifications"
-              className="hidden rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
+              className="hidden items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
             >
+              {renderNavIcon('notifications')}
               {t('header.nav.notifications')}
             </Link>
           )}
           {isAuthenticated && auth.user?.role === 'ADMIN' && (
             <Link
               href="/admin"
-              className="hidden rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
+              className="hidden items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
             >
+              {renderNavIcon('admin')}
               {t('header.nav.admin')}
             </Link>
           )}
@@ -207,11 +236,13 @@ export function SiteHeader() {
         <div className="hidden items-center gap-2 sm:flex">
           {showInstallButton ? (
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
               onClick={handleInstallClick}
               disabled={isPromptingInstall}
+              className="border-0 px-3 flex items-center gap-2"
             >
+              <DownloadCloud className="size-4" aria-hidden />
               {isPromptingInstall ? pwaT('installingLabel') : t('header.installApp')}
             </Button>
           ) : null}
@@ -369,70 +400,6 @@ function MobileNavigationDrawer({
   themeToggleLabel,
 }: MobileNavigationDrawerProps) {
   const themeToggleRef = useRef<HTMLButtonElement>(null);
-  const renderIcon = (icon: NavIconKey) => {
-    switch (icon) {
-      case 'dashboard':
-        return (
-          <svg viewBox="0 0 24 24" className="size-4" aria-hidden>
-            <path d="M3 13h8V3H3zm10 8h8v-8h-8zM3 21h8v-6H3zm10-18v6h8V3z" fill="currentColor" />
-          </svg>
-        );
-      case 'ringBinder':
-        return (
-          <svg viewBox="0 0 24 24" className="size-4" aria-hidden>
-            <path
-              d="M3 7h7l2 2h9v9a2 2 0 0 1-2 2H3V7Z"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              fill="none"
-            />
-            <path d="M7 11h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-        );
-      case 'savedFilters':
-        return (
-          <svg viewBox="0 0 24 24" className="size-4" aria-hidden>
-            <path
-              d="M5 5h14v14l-7-4-7 4z"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              fill="none"
-            />
-            <path d="M9 9h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            <path d="M9 12h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-        );
-      case 'notifications':
-        return (
-          <svg viewBox="0 0 24 24" className="size-4" aria-hidden>
-            <path
-              d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              fill="none"
-            />
-            <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" strokeWidth="2" />
-          </svg>
-        );
-      default:
-        return (
-          <svg viewBox="0 0 24 24" className="size-4" aria-hidden>
-            <path
-              d="M3 7h18M3 12h18M3 17h18"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-          </svg>
-        );
-    }
-  };
   return (
     <Dialog open={open} onOpenChange={onOpenChange} disableBackClose>
       {/* eslint-disable tailwindcss/classnames-order */}
@@ -489,7 +456,7 @@ function MobileNavigationDrawer({
                 className="flex items-center gap-2 rounded-lg border border-transparent px-3 py-2 text-sm font-medium text-foreground transition hover:border-border/70 hover:bg-secondary/60"
                 onClick={() => onOpenChange(false)}
               >
-                {renderIcon(item.icon)}
+                {renderNavIcon(item.icon)}
                 {item.label}
               </Link>
             ))}

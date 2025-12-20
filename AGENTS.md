@@ -21,6 +21,8 @@
 - Use PascalCase for classes/providers, kebab-case for file names (`user-panel.module.ts`), SCREAMING_SNAKE_CASE for environment constants.
 - Keep controllers thin, rely on DTOs with `class-validator`, and reuse existing platform services for integrations.
 - Run `npm run lint-staged` if a Husky pre-commit fails; it mirrors the hook configuration.
+- Feed loading uses 12 skeleton cards styled the same as post cards; when changing card layout, mirror changes in the skeleton (ui/src/components/dashboard/divar-posts-feed.tsx).
+- Post codes are numeric (starting at 1000), stored in DB, shown in cards/detail/print/share, and searchable via the header code search (rate-limited).
 
 ## Testing Guidelines
 - Jest powers every suite; use `*.spec.ts` for unit/integration and `*.e2e-spec.ts` for HTTP flows.

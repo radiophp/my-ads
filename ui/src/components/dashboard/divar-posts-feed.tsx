@@ -545,15 +545,14 @@ export function DivarPostsFeed(): JSX.Element {
   );
 
   return (
-    <Card className="flex h-full flex-col overflow-hidden border-0 shadow-sm">
-      <CardContent className="flex-1 space-y-4 overflow-y-auto p-4">
+    <Card className="flex h-full w-full flex-col overflow-hidden border-0 shadow-sm">
+      <CardContent className="flex-1 min-w-0 space-y-4 overflow-y-auto p-4 w-full">
         {initializing ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 min-[1400px]:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <div
-                key={index}
-                className="h-40 animate-pulse rounded-xl border border-border/60 bg-muted/40"
-              />
+          <div className="grid w-full grid-cols-1 gap-4 auto-rows-fr sm:grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
+            {Array.from({ length: 12 }).map((_, index) => (
+              <div key={index} className="w-full min-w-0 h-full">
+                <PostCardSkeleton />
+              </div>
             ))}
           </div>
         ) : posts.length === 0 ? (
@@ -562,7 +561,7 @@ export function DivarPostsFeed(): JSX.Element {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 min-[1400px]:grid-cols-4">
+            <div className="grid w-full grid-cols-1 gap-4 auto-rows-fr sm:grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
               {posts.map((post) => renderPostCard(post))}
             </div>
             {hasMore ? (
@@ -695,5 +694,29 @@ export function DivarPostsFeed(): JSX.Element {
         t={t}
       />
     </Card>
+  );
+}
+
+function PostCardSkeleton() {
+  return (
+    <article className="flex h-full w-full min-w-0 min-h-[360px] flex-col gap-3 overflow-hidden rounded-xl border border-border/70 bg-card p-4 shadow-sm animate-pulse">
+      <div className="-mx-4 -mt-4 overflow-hidden rounded-t-xl">
+        <div className="relative h-48 w-full bg-muted/60" />
+        <div className="pointer-events-none absolute inset-x-3 bottom-3 flex flex-wrap gap-2 text-xs">
+          <span className="inline-flex h-6 w-20 rounded-full bg-black/30" />
+          <span className="inline-flex h-6 w-24 rounded-full bg-black/30" />
+        </div>
+      </div>
+      <div className="flex flex-1 flex-col gap-2 pt-1">
+        <div className="h-4 w-3/4 rounded bg-muted/60" />
+        <div className="h-4 w-24 rounded bg-muted/50" />
+        <div className="flex flex-col gap-2 text-sm">
+          <div className="h-3 w-2/3 rounded bg-muted/50" />
+          <div className="h-3 w-1/2 rounded bg-muted/50" />
+          <div className="h-3 w-1/3 rounded bg-muted/50" />
+          <div className="h-3 w-1/4 rounded bg-muted/50" />
+        </div>
+      </div>
+    </article>
   );
 }

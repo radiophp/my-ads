@@ -1,3 +1,5 @@
+ 'use client';
+
 import * as React from 'react';
 import * as ToastPrimitives from '@radix-ui/react-toast';
 import { cva, type VariantProps } from 'class-variance-authority';
@@ -9,16 +11,33 @@ const ToastProvider = ToastPrimitives.Provider;
 const ToastViewport = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Viewport>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Viewport>
->(({ className, ...props }, ref) => (
-  <ToastPrimitives.Viewport
-    ref={ref}
-    className={cn(
-      'fixed inset-x-0 top-0 z-[100] flex max-h-screen w-screen flex-col gap-2 p-0 lg:inset-auto lg:right-6 lg:top-6 lg:w-full lg:max-w-sm lg:p-4',
-      className,
-    )}
-    {...props}
-  />
-));
+>(({ className, ...props }, ref) => {
+  const [dir, setDir] = React.useState<'ltr' | 'rtl'>('ltr');
+
+  React.useEffect(() => {
+    if (typeof document !== 'undefined') {
+      const docDir = document.documentElement.getAttribute('dir');
+      setDir(docDir === 'rtl' ? 'rtl' : 'ltr');
+    }
+  }, []);
+
+  const positionClass =
+    dir === 'rtl'
+      ? 'lg:left-6 lg:right-auto lg:bottom-6 lg:top-auto'
+      : 'lg:right-6 lg:top-6';
+
+  return (
+    <ToastPrimitives.Viewport
+      ref={ref}
+      className={cn(
+        'fixed inset-x-0 top-0 z-[100] flex max-h-screen w-screen flex-col gap-2 p-0 lg:inset-auto lg:w-full lg:max-w-sm lg:p-4',
+        positionClass,
+        className,
+      )}
+      {...props}
+    />
+  );
+});
 ToastViewport.displayName = ToastPrimitives.Viewport.displayName;
 
 const toastVariants = cva(

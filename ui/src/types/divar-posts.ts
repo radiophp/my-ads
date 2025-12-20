@@ -38,6 +38,7 @@ export type DivarPostAttribute = {
 
 export type DivarPostSummary = {
   id: string;
+  code: number;
   externalId: string;
   title: string | null;
   description: string | null;

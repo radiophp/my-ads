@@ -29,7 +29,16 @@
     "menu": {
       "profile": "پروفایل"
     },
-    "installApp": "نصب برنامه"
+    "installApp": "نصب برنامه",
+    "search": {
+      "label": "جستجو با کد آگهی",
+      "placeholder": "کد آگهی…",
+      "button": "جستجو",
+      "invalid": "یک کد عددی معتبر وارد کنید.",
+      "notFound": "آگهی یافت نشد.",
+      "rateLimited": "لطفاً یک دقیقه بعد دوباره جستجو کنید.",
+      "genericError": "امکان یافتن آگهی نیست. دوباره تلاش کنید."
+    }
   },
   "landing": {
     "title": "به ماهان فایل خوش آمدید",
@@ -550,7 +559,9 @@
         "externalId": "شناسه دیوار",
         "permalink": "لینک آگهی",
         "notAvailable": "نامشخص",
-        "otherFeatures": "سایر ویژگی‌ها"
+        "otherFeatures": "سایر ویژگی‌ها",
+        "postCode": "کد آگهی",
+        "postCodeCopied": "کد آگهی کپی شد"
       },
       "businessType": {
         "realEstateBusiness": "مشاور املاک",

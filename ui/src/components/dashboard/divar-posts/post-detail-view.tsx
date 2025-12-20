@@ -222,6 +222,7 @@ export function PostDetailView({
     ];
 
     const summaryTriples = [
+      { label: t('labels.postCode'), value: post.code?.toString() ?? '' },
       { label: printLabels.category, value: categoryDisplay },
       coreSummary[0],
       coreSummary[1],
@@ -265,15 +266,6 @@ export function PostDetailView({
           .join('')
       : '';
 
-    const amenityIconMap: Record<string, string> = {
-      hasParking: '🚗',
-      hasElevator: '🛗',
-      hasWarehouse: '🏢',
-      hasBalcony: '🪟',
-    };
-
-    const amenityRows = '';
-
     const amenityPairs = AMENITY_CONFIG.reduce<{ label: string; value: string }[]>((acc, config) => {
       const value = post[config.key];
       if (value === true) {
@@ -309,6 +301,7 @@ export function PostDetailView({
 <html ${isRTL ? 'dir="rtl"' : ''}>
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${post.title ?? t('shareMessageTitleUnknown')}</title>
   <style>
     @font-face {
@@ -323,44 +316,74 @@ export function PostDetailView({
     h2 { margin-top: 14px; margin-bottom: 6px; font-size: 12px; color: #374151; }
     table { width: 100%; border-collapse: collapse; margin-top: 6px; border:1px solid #e5e7eb; table-layout: fixed; }
     .print-table td { padding:8px; border:1px solid #e5e7eb; font-size: 12px; word-wrap: break-word; }
-    .badge { display: inline-flex; padding: 4px 10px; border-radius: 999px; background: #eef2ff; color: #4338ca; font-weight: 600; margin-right: 8px; }
-    .pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 12px; background: #ecfeff; color: #0ea5e9; font-weight: 600; }
-    .pill svg { width: 14px; height: 14px; }
+    .print-container { width:100%; max-width:1100px; margin:0 auto; }
     @page { size: A4 landscape; margin: 16mm; }
   </style>
 </head>
 <body>
-  <h1>${post.title ?? ''}</h1>
-  <table class="print-table">${summaryRows}</table>
-  <table class="print-table">
-    ${detailRows}
-  </table>
-  ${
-    attributeRows
-      ? `<table class="print-table" style="margin-top:12px;">${attributeRows}</table>`
-      : ''
-  }
-  ${labelOnlyLine}
-  ${
-    post.description
-      ? (() => {
-          const flat = post.description
-            .split('\n')
-            .map((line) => line.trim())
-            .filter(Boolean)
-            .join('. ');
-          const normalized = flat.endsWith('.') ? flat : `${flat}.`;
-          return `<div style="margin-top:16px;">
-            <p style="margin:6px 0 0 0;line-height:1.6;">
-              <span style="font-weight:700;">${t('shareMessageDescriptionLabel')}:</span>
-              <span style="margin-${isRTL ? 'right' : 'left'}:6px;">${normalized}</span>
-            </p>
-          </div>`;
-        })()
-      : ''
-  }
+  <div class="print-container">
+    <h1>${post.title ?? ''}</h1>
+    <table class="print-table">${summaryRows}</table>
+    <table class="print-table">
+      ${detailRows}
+    </table>
+    ${
+      attributeRows
+        ? `<table class="print-table" style="margin-top:12px;">${attributeRows}</table>`
+        : ''
+    }
+    ${labelOnlyLine}
+    ${
+      post.description
+        ? (() => {
+            const flat = post.description
+              .split('\n')
+              .map((line) => line.trim())
+              .filter(Boolean)
+              .join('. ');
+            const normalized = flat.endsWith('.') ? flat : `${flat}.`;
+            return `<div style="margin-top:16px;">
+              <p style="margin:6px 0 0 0;line-height:1.6;">
+                <span style="font-weight:700;">${t('shareMessageDescriptionLabel')}:</span>
+                <span style="margin-${isRTL ? 'right' : 'left'}:6px;">${normalized}</span>
+              </p>
+            </div>`;
+          })()
+        : ''
+    }
+  </div>
 </body>
 </html>`;
+
+    const openPrintWindow = () => {
+      const win = window.open('', '_blank');
+      if (!win) {
+        toast({ title: t('contactInfo.copyError'), variant: 'destructive' });
+        return;
+      }
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
+      const triggerPrint = () => {
+        try {
+          win.focus();
+          win.print();
+        } catch {
+          /* ignore */
+        }
+      };
+      if (win.document.readyState === 'complete') {
+        setTimeout(triggerPrint, 100);
+      } else {
+        win.onload = () => setTimeout(triggerPrint, 100);
+      }
+    };
+
+    const isMobileDevice = typeof navigator !== 'undefined' && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (isMobileDevice) {
+      openPrintWindow();
+      return;
+    }
 
     const iframe = document.createElement('iframe');
     iframe.style.position = 'fixed';
@@ -373,7 +396,7 @@ export function PostDetailView({
     const doc = iframe.contentWindow?.document;
     if (!doc) {
       document.body.removeChild(iframe);
-      toast({ title: t('contactInfo.copyError'), variant: 'destructive' });
+      openPrintWindow();
       return;
     }
     doc.open();
@@ -402,16 +425,6 @@ export function PostDetailView({
                 >
                   <Share2 className="size-3.5" aria-hidden="true" />
                   <span className="sr-only">{t('sharePost')}</span>
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2 px-3 py-1 text-xs"
-                  onClick={handlePrint}
-                >
-                  <Printer className="size-3.5" aria-hidden="true" />
-                  <span>{t('print')}</span>
                 </Button>
                 <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
                   <DialogContent className="max-w-sm" hideCloseButton={false}>
@@ -480,6 +493,16 @@ export function PostDetailView({
             ) : null}
             <Button
               type="button"
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2 px-3 py-1 text-xs"
+              onClick={handlePrint}
+            >
+              <Printer className="size-3.5" aria-hidden="true" />
+              <span>{t('print')}</span>
+            </Button>
+            <Button
+              type="button"
               variant="secondary"
               size="sm"
               className="flex items-center gap-2 px-3 py-1 text-xs"
@@ -524,6 +547,23 @@ export function PostDetailView({
               )}
             </Button>
           </div>
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 rounded-md border border-border/70 bg-muted/40 px-3 py-1 text-sm font-semibold text-foreground transition hover:bg-secondary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            onClick={() => {
+              if (post.code) {
+                navigator.clipboard
+                  .writeText(post.code.toString())
+                  .then(() => toast({ title: t('labels.postCodeCopied') }))
+                  .catch(() => toast({ title: t('contactInfo.copyError'), variant: 'destructive' }));
+              }
+            }}
+            aria-label={t('labels.postCode')}
+          >
+            <span>{t('labels.postCode')}:</span>
+            <span className="font-mono text-base">{post.code ?? '—'}</span>
+            <Copy className="size-4" aria-hidden />
+          </button>
           {contactInfo ? (
             <div className="rounded-xl border border-border/70 bg-muted/30 p-3 text-sm shadow-sm">
               <div className="flex flex-col gap-1">

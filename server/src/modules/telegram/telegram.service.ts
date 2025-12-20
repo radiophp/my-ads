@@ -424,6 +424,9 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     const lines: string[] = [];
     if (customMessage) lines.push(customMessage);
     lines.push(`📌 ${title}`);
+    if (post.code) {
+      lines.push(`🆔 کد آگهی: ${post.code}`);
+    }
 
     if (post.cityName || post.districtName || post.provinceName) {
       const loc = [post.provinceName, post.cityName, post.districtName].filter(Boolean).join('، ');

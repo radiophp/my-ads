@@ -103,6 +103,11 @@ export function PostCard({
             <h3 className="break-words text-sm font-semibold text-foreground sm:text-base">
               {post.title ?? t('untitled', { externalId: post.externalId })}
             </h3>
+            {post.code ? (
+              <span className="inline-flex w-fit items-center gap-1 rounded-md border border-border/70 bg-muted/60 px-2 py-0.5 text-[11px] font-semibold text-foreground">
+                {t('labels.postCode')}: <span className="font-mono">{post.code}</span>
+              </span>
+            ) : null}
             <div className="flex flex-col gap-2 text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-1 text-foreground">
                 <MapPin className="size-4" aria-hidden />

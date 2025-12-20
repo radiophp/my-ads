@@ -373,6 +373,9 @@ export function DivarPostsFeed(): JSX.Element {
       const parts: string[] = [
         labelled(icons.title, t('shareMessageTitleLabel'), title),
       ];
+      if (selectedPost.code) {
+        parts.push(labelled(icons.detail, t('labels.postCode'), selectedPost.code.toString()));
+      }
       const cityDistrict = selectedCityDistrict;
       if (typeof cityDistrict === 'string' && cityDistrict.length > 0) {
         parts.push(labelled(icons.location, t('shareMessageLocationLabel'), cityDistrict));

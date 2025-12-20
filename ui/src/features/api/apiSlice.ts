@@ -529,6 +529,10 @@ export const apiSlice = createApi({
       query: (id) => `/divar-posts/detail/${id}`,
       providesTags: (result, error, id) => [{ type: 'DivarPosts', id }],
     }),
+    getDivarPostByCode: builder.query<DivarPostSummary, number>({
+      query: (code) => `/divar-posts/code/${code}`,
+      providesTags: (result, error, code) => [{ type: 'DivarPosts', id: `code-${code}` }],
+    }),
     getRingBinderFolders: builder.query<RingBinderFolderListResponse, void>({
       query: () => '/ring-binders/folders',
       providesTags: (result) =>
@@ -721,6 +725,7 @@ export const {
   useGetDivarPostsQuery,
   useLazyGetDivarPostsQuery,
   useGetDivarPostQuery,
+  useLazyGetDivarPostByCodeQuery,
   useFetchPostPhoneMutation,
   useFetchPostContactInfoMutation,
   useGetRingBinderFoldersQuery,

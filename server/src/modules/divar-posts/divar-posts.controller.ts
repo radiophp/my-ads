@@ -110,6 +110,37 @@ export class DivarPostsController {
     });
   }
 
+  @Get('code/:code')
+  @Public()
+  @ApiOperation({ summary: 'Get a normalized Divar post by numeric code' })
+  @ApiOkResponse({ type: DivarPostListItemDto })
+  async getPostByCode(
+    @Param('code') codeParam: string,
+    @Req() request: FastifyRequest,
+  ): Promise<DivarPostListItemDto> {
+    const code = Number(codeParam);
+    if (!Number.isInteger(code) || code <= 0) {
+      throw new BadRequestException('A valid numeric code is required.');
+    }
+
+    const rate = await this.rateLimitService.checkRateLimit(
+      `code-search:${request.ip ?? 'unknown'}`,
+      { limit: 5, ttlSeconds: 60 },
+    );
+    if (rate.remaining <= 0) {
+      throw new HttpException(
+        { message: 'Too many code lookups. Try again in a minute.' },
+        HttpStatus.TOO_MANY_REQUESTS,
+      );
+    }
+
+    const post = await this.divarPostsService.getNormalizedPostByCode(code);
+    if (!post) {
+      throw new NotFoundException('Post not found.');
+    }
+    return post;
+  }
+
   @Get(':id')
   @Public()
   @ApiOperation({ summary: 'Get a normalized Divar post by id' })

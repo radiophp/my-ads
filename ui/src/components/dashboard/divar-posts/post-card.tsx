@@ -9,7 +9,7 @@ import { getBusinessTypeBadge } from './business-badge';
 type PostCardProps = {
   post: DivarPostSummary;
   t: ReturnType<typeof useTranslations>;
-  formatPrice: (value: number | null | undefined) => string | null;
+  formatPrice: (value: number | string | null | undefined) => string | null;
   getRelativeLabel: (isoDate: string | null, jalaliFallback?: string | null) => string | null;
   dateFormatter: Intl.DateTimeFormat;
   onSelect: (post: DivarPostSummary) => void;
@@ -26,7 +26,14 @@ export function PostCard({
   const publishedLabel = getRelativeLabel(post.publishedAt, post.publishedAtJalali);
   const priceLabel = formatPrice(post.priceTotal);
   const rentLabel = formatPrice(post.rentAmount);
-  const pricePerSquareLabel = formatPrice(post.pricePerSquare);
+  const depositLabel = formatPrice(post.depositAmount);
+  const pricePerSquareLabel =
+    formatPrice(post.pricePerSquare) ??
+    formatPrice(
+      post.priceTotal && post.area && post.priceTotal > 0 && post.area > 0
+        ? post.priceTotal / post.area
+        : null,
+    );
   const publishedText = publishedLabel ?? dateFormatter.format(new Date(post.createdAt));
   const mediaCountLabel = t('mediaCount', { count: post.mediaCount ?? 0 });
   const businessBadge = getBusinessTypeBadge(post.businessType ?? null, t);
@@ -117,9 +124,16 @@ export function PostCard({
               </span>
               {post.area ? <span>{t('areaLabel', { value: post.area })}</span> : null}
               {priceLabel ? <span>{t('priceLabel', { value: priceLabel })}</span> : null}
+              {depositLabel ? (
+                <span>
+                  {t('labels.depositAmount')}: {depositLabel}
+                </span>
+              ) : null}
               {rentLabel ? <span>{t('rentLabel', { value: rentLabel })}</span> : null}
               {pricePerSquareLabel ? (
-                <span>{t('labels.pricePerSquare', { value: pricePerSquareLabel })}</span>
+                <span>
+                  {t('labels.pricePerSquare')}: {pricePerSquareLabel}
+                </span>
               ) : null}
             </div>
           </div>

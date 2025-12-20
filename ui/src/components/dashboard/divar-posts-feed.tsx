@@ -286,11 +286,13 @@ export function DivarPostsFeed(): JSX.Element {
   );
 
   const formatPrice = useCallback(
-    (value: number | null | undefined): string | null => {
-      if (typeof value !== 'number' || Number.isNaN(value) || value <= 0) {
+    (value: number | string | null | undefined): string | null => {
+      const numeric =
+        typeof value === 'string' ? Number(value) : typeof value === 'number' ? value : null;
+      if (numeric === null || Number.isNaN(numeric) || numeric <= 0) {
         return null;
       }
-      return currencyFormatter.format(value);
+      return currencyFormatter.format(numeric);
     },
     [currencyFormatter],
   );
@@ -537,8 +539,8 @@ export function DivarPostsFeed(): JSX.Element {
       key={post.id}
       post={post}
       t={t}
-      onSelect={openPostModal}
       formatPrice={formatPrice}
+      onSelect={openPostModal}
       getRelativeLabel={getRelativeLabel}
       dateFormatter={dateFormatter}
     />

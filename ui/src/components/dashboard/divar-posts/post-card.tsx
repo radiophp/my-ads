@@ -1,10 +1,12 @@
 /* eslint-disable @next/next/no-img-element */
 import type { JSX, KeyboardEvent, MouseEvent } from 'react';
-import { Camera, Clock3, MapPin } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Camera, Clock3, MapPin, Image as ImageIcon } from 'lucide-react';
 import Link from 'next/link';
 import type { DivarPostSummary } from '@/types/divar-posts';
 import type { useTranslations } from 'next-intl';
 import { getBusinessTypeBadge } from './business-badge';
+import { cn } from '@/lib/utils';
 
 type PostCardProps = {
   post: DivarPostSummary;
@@ -23,6 +25,13 @@ export function PostCard({
   dateFormatter,
   onSelect,
 }: PostCardProps): JSX.Element {
+  const [imageFailed, setImageFailed] = useState(false);
+  const [imageLoading, setImageLoading] = useState<boolean>(Boolean(post.imageUrl));
+
+  useEffect(() => {
+    setImageFailed(false);
+    setImageLoading(Boolean(post.imageUrl));
+  }, [post.imageUrl]);
   const publishedLabel = getRelativeLabel(post.publishedAt, post.publishedAtJalali);
   const priceLabel = formatPrice(post.priceTotal);
   const rentLabel = formatPrice(post.rentAmount);
@@ -79,20 +88,33 @@ export function PostCard({
                   {businessBadge.label}
                 </span>
               ) : null}
-              {post.imageUrl ? (
-                <div className="relative h-48 w-full bg-muted">
-                  <img
-                    src={post.imageUrl}
-                    alt={post.title ?? post.externalId}
-                    className="size-full object-cover"
-                    loading="lazy"
-                  />
-                </div>
-              ) : (
-                <div className="relative flex h-48 w-full items-center justify-center bg-muted text-sm text-muted-foreground">
-                  {t('noImage')}
-                </div>
-              )}
+              <div className="relative h-48 w-full bg-muted">
+                <img
+                  src={post.imageUrl ?? ''}
+                  alt=""
+                  className={cn(
+                    'size-full object-cover transition-opacity duration-200',
+                    post.imageUrl && !imageFailed ? 'opacity-100' : 'opacity-0',
+                  )}
+                  loading="lazy"
+                  onLoad={() => setImageLoading(false)}
+                  onError={() => setImageFailed(true)}
+                />
+                {imageLoading && !imageFailed ? (
+                  <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <ImageIcon className="size-5 animate-pulse" aria-hidden />
+                      <span className="animate-pulse">{t('loading')}</span>
+                    </div>
+                  </div>
+                ) : null}
+                {!post.imageUrl || imageFailed ? (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-muted text-sm text-muted-foreground">
+                    <ImageIcon className="size-6" aria-hidden />
+                    <span>{t('noImage')}</span>
+                  </div>
+                ) : null}
+              </div>
               <div className="pointer-events-none absolute inset-x-3 bottom-3 flex flex-wrap gap-2 text-xs font-medium text-white">
                 <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5">
                   <Clock3 className="size-3.5" aria-hidden />

@@ -9,17 +9,19 @@ import type { PostDetailData } from './post-detail-data';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FaTelegramPlane, FaWhatsapp, FaSms, FaRegCopy } from 'react-icons/fa';
-import { Bookmark, BookmarkCheck, Pencil, Plus, Share2, Phone, Copy, Loader2 } from 'lucide-react';
+import { Bookmark, BookmarkCheck, Pencil, Plus, Share2, Phone, Copy, Loader2, Printer } from 'lucide-react';
 import { SaveToFolderDialog } from '@/components/ring-binder/save-to-folder-dialog';
 import { SavedFoldersDialog } from '@/components/ring-binder/saved-folders-dialog';
 import {
   useDeletePostNoteMutation,
   useGetPostSavedFoldersQuery,
+  useGetPublicDivarCategoryFilterQuery,
   useRemovePostFromRingBinderFolderMutation,
   useUpsertPostNoteMutation,
 } from '@/features/api/apiSlice';
 import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
+import { AMENITY_CONFIG } from './post-detail-sections';
 
 export type PostDetailViewProps = {
   post: DivarPostSummary;
@@ -65,6 +67,9 @@ export function PostDetailView({
     ...detailData.infoRowEntries,
     ...detailData.secondaryDetailEntries,
   ];
+  const { data: categoryFilter } = useGetPublicDivarCategoryFilterQuery(post.categorySlug, {
+    skip: !post.categorySlug,
+  });
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [savedDialogOpen, setSavedDialogOpen] = useState(false);
@@ -178,6 +183,209 @@ export function PostDetailView({
     }
   };
 
+  const handlePrint = () => {
+    const owner = contactInfo?.ownerName || post.ownerName || t('contactInfo.ownerUnknown');
+    const phone = contactInfo?.phoneNumber ?? t('contactInfo.phoneUnknown');
+    const published = publishedDisplay ?? t('shareMessagePublishUnknown');
+    const location = cityDistrict ?? t('shareMessageLocationUnknown');
+
+    // Pull translated labels once to ensure we don't print raw keys
+    const printLabels = {
+      owner: t('contactInfo.ownerLabel'),
+      phone: t('contactInfo.phoneLabel'),
+      location: t('shareMessageLocationLabel'),
+      publish: t('shareMessagePublishLabel'),
+      title: t('shareMessageTitleLabel'),
+      link: t('shareMessageLinkLabel'),
+      category: t('shareMessageCategoryLabel'),
+      business: t('shareMessageBusinessLabel'),
+    };
+
+    const categoryDisplay =
+      categoryFilter?.categoryName ?? post.categoryName ?? post.categorySlug ?? t('labels.notAvailable');
+
+    const coreSummary = [
+      { label: printLabels.owner, value: owner },
+      { label: printLabels.phone, value: phone },
+      { label: printLabels.location, value: location },
+      { label: printLabels.publish, value: published },
+      { label: printLabels.title, value: '' },
+      { label: printLabels.link, value: '' },
+      {
+        label: printLabels.category,
+        value: categoryDisplay,
+      },
+      {
+        label: printLabels.business,
+        value: businessBadge?.label ?? t('businessType.unknown'),
+      },
+    ];
+
+    const summaryTriples = [
+      { label: printLabels.category, value: categoryDisplay },
+      coreSummary[0],
+      coreSummary[1],
+      coreSummary[2],
+    ].filter((row) => row.value && row.value.toString().trim().length > 0);
+
+    const summaryRows =
+      summaryTriples.length > 0
+        ? `<tr>
+            ${summaryTriples
+              .map(
+                (row) =>
+                  `<td style="font-weight:700;background:#f3f4f6;">${row.label}</td>`,
+              )
+              .join('')}
+          </tr>
+          <tr>
+            ${summaryTriples
+              .map(
+                (row) =>
+                  `<td>${row.value}</td>`,
+              )
+              .join('')}
+          </tr>`
+        : '';
+
+    const detailPairs = combinedDetailEntries
+      .filter((entry) => entry.value && entry.value.toString().trim().length > 0)
+      .map((entry) => ({ label: entry.label, value: entry.value }));
+
+    const detailRows = detailPairs.length
+      ? detailPairs
+          .reduce<string[]>((rows, pair, idx) => {
+            if (idx % 3 === 0) rows.push('');
+            const rowIdx = Math.floor(idx / 3);
+            rows[rowIdx] += `<td style="font-weight:600;background:#fdfdfd;min-width:140px;">${pair.label}</td>
+                             <td style="min-width:180px;">${pair.value}</td>`;
+            return rows;
+          }, [])
+          .map((row) => `<tr>${row}</tr>`)
+          .join('')
+      : '';
+
+    const amenityIconMap: Record<string, string> = {
+      hasParking: '🚗',
+      hasElevator: '🛗',
+      hasWarehouse: '🏢',
+      hasBalcony: '🪟',
+    };
+
+    const amenityRows = '';
+
+    const amenityPairs = AMENITY_CONFIG.reduce<{ label: string; value: string }[]>((acc, config) => {
+      const value = post[config.key];
+      if (value === true) {
+        acc.push({ label: t(config.labelKey), value: t('labels.booleanYes') });
+      }
+      return acc;
+    }, []);
+
+    const attributeRows =
+      detailData.attributeValueEntries.length > 0 || amenityPairs.length > 0
+        ? [...detailData.attributeValueEntries.map((attr) => ({ label: attr.label, value: attr.value })), ...amenityPairs]
+            .reduce<string[]>((rows, pair, idx) => {
+              if (idx % 3 === 0) rows.push('');
+              const rowIdx = Math.floor(idx / 3);
+              rows[rowIdx] += `<td style="padding:8px 10px;font-weight:600;border:1px solid #e5e7eb;background:#fdfdfd;min-width:140px;">${pair.label}</td>
+                               <td style="padding:8px 10px;border:1px solid #e5e7eb;min-width:180px;">${pair.value}</td>`;
+              return rows;
+            }, [])
+            .map((row) => `<tr>${row}</tr>`)
+            .join('')
+        : '';
+
+    const labelOnlyLine =
+      detailData.attributeLabelOnlyEntries.length > 0
+        ? `<p style="margin-top:12px; margin-bottom:0; color:#111; line-height:1.6;">
+             <span style="font-weight:700;">${t('labels.otherFeatures')}:</span>
+             <span>${detailData.attributeLabelOnlyEntries.map((attr) => attr.label).join(' ، ')}</span>
+           </p>`
+        : '';
+
+    const html = `
+<!doctype html>
+<html ${isRTL ? 'dir="rtl"' : ''}>
+<head>
+  <meta charset="utf-8" />
+  <title>${post.title ?? t('shareMessageTitleUnknown')}</title>
+  <style>
+    @font-face {
+      font-family: 'IRANSans';
+      src: url('/font/IRANSans/IRANSans%20Regular/IRANSans%20Regular.ttf') format('truetype');
+      font-weight: 400;
+      font-style: normal;
+      font-display: swap;
+    }
+    body { font-family: 'IRANSans','Inter',system-ui,-apple-system,BlinkMacSystemFont,sans-serif; margin: 20px; color: #111; font-size: 12px; }
+    h1 { font-size: 16px; margin-bottom: 6px; }
+    h2 { margin-top: 14px; margin-bottom: 6px; font-size: 12px; color: #374151; }
+    table { width: 100%; border-collapse: collapse; margin-top: 6px; border:1px solid #e5e7eb; table-layout: fixed; }
+    .print-table td { padding:8px; border:1px solid #e5e7eb; font-size: 12px; word-wrap: break-word; }
+    .badge { display: inline-flex; padding: 4px 10px; border-radius: 999px; background: #eef2ff; color: #4338ca; font-weight: 600; margin-right: 8px; }
+    .pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 12px; background: #ecfeff; color: #0ea5e9; font-weight: 600; }
+    .pill svg { width: 14px; height: 14px; }
+    @page { size: A4 landscape; margin: 16mm; }
+  </style>
+</head>
+<body>
+  <h1>${post.title ?? ''}</h1>
+  <table class="print-table">${summaryRows}</table>
+  <table class="print-table">
+    ${detailRows}
+  </table>
+  ${
+    attributeRows
+      ? `<table class="print-table" style="margin-top:12px;">${attributeRows}</table>`
+      : ''
+  }
+  ${labelOnlyLine}
+  ${
+    post.description
+      ? (() => {
+          const flat = post.description
+            .split('\n')
+            .map((line) => line.trim())
+            .filter(Boolean)
+            .join('. ');
+          const normalized = flat.endsWith('.') ? flat : `${flat}.`;
+          return `<div style="margin-top:16px;">
+            <p style="margin:6px 0 0 0;line-height:1.6;">
+              <span style="font-weight:700;">${t('shareMessageDescriptionLabel')}:</span>
+              <span style="margin-${isRTL ? 'right' : 'left'}:6px;">${normalized}</span>
+            </p>
+          </div>`;
+        })()
+      : ''
+  }
+</body>
+</html>`;
+
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+    const doc = iframe.contentWindow?.document;
+    if (!doc) {
+      document.body.removeChild(iframe);
+      toast({ title: t('contactInfo.copyError'), variant: 'destructive' });
+      return;
+    }
+    doc.open();
+    doc.write(html);
+    doc.close();
+    setTimeout(() => {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+      document.body.removeChild(iframe);
+    }, 150);
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-6 lg:flex-row">
@@ -194,6 +402,16 @@ export function PostDetailView({
                 >
                   <Share2 className="size-3.5" aria-hidden="true" />
                   <span className="sr-only">{t('sharePost')}</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2 px-3 py-1 text-xs"
+                  onClick={handlePrint}
+                >
+                  <Printer className="size-3.5" aria-hidden="true" />
+                  <span>{t('print')}</span>
                 </Button>
                 <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
                   <DialogContent className="max-w-sm" hideCloseButton={false}>

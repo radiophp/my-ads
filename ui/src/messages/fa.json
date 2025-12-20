@@ -442,8 +442,14 @@
       "shareMessageBullet": "-",
       "shareMessageTitleLabel": "عنوان",
       "shareMessageLocationLabel": "موقعیت",
+      "shareMessagePublishLabel": "زمان انتشار",
       "shareMessageDescriptionLabel": "توضیحات",
       "shareMessageLinkLabel": "لینک",
+      "shareMessageDetailLabel": "جزئیات",
+      "shareMessagePublishUnknown": "نامشخص",
+      "shareMessageLocationUnknown": "نامشخص",
+      "shareMessageTitleUnknown": "بدون عنوان",
+      "print": "چاپ",
       "saveToFolder": "ذخیره",
       "savedLabel": "ذخیره شده",
       "copyLink": "کپی لینک",
@@ -543,7 +549,8 @@
         "category": "دسته بندی",
         "externalId": "شناسه دیوار",
         "permalink": "لینک آگهی",
-        "notAvailable": "نامشخص"
+        "notAvailable": "نامشخص",
+        "otherFeatures": "سایر ویژگی‌ها"
       },
       "businessType": {
         "realEstateBusiness": "مشاور املاک",
@@ -567,8 +574,17 @@
         "rateLimitedTitle": "محدودیت دریافت شماره",
         "rateLimitedDescription": "لطفاً {time} دیگر تلاش کنید.",
         "errorTitle": "خطا در دریافت اطلاعات تماس",
-        "errorDescription": "در دریافت اطلاعات تماس خطایی رخ داد. دوباره تلاش کنید."
-      }
+        "errorDescription": "در دریافت اطلاعات تماس خطایی رخ داد. دوباره تلاش کنید.",
+        "phoneUnknown": "شماره ثبت نشده"
+      },
+      "printButton": "چاپ",
+      "printError": "امکان چاپ در حال حاضر وجود ندارد",
+      "printSummary": "خلاصه آگهی",
+      "printAmenities": "امکانات",
+      "printAttributes": "جزئیات",
+      "shareMessageTitleLabel": "عنوان",
+      "shareMessageCategoryLabel": "دسته‌بندی",
+      "shareMessageBusinessLabel": "نوع آگهی‌دهنده"
     }
   },
   "admin": {

@@ -442,8 +442,14 @@
       "shareMessageBullet": "-",
       "shareMessageTitleLabel": "Title",
       "shareMessageLocationLabel": "Location",
+      "shareMessagePublishLabel": "Published",
       "shareMessageDescriptionLabel": "Description",
       "shareMessageLinkLabel": "Link",
+      "shareMessageDetailLabel": "Details",
+      "shareMessagePublishUnknown": "Unknown",
+      "shareMessageLocationUnknown": "Unknown",
+      "shareMessageTitleUnknown": "Untitled",
+      "print": "Print",
       "saveToFolder": "Save",
       "savedLabel": "Saved",
       "copyLink": "Copy link",
@@ -543,7 +549,8 @@
         "category": "Category",
         "externalId": "External ID",
         "permalink": "Permalink",
-        "notAvailable": "Not available"
+        "notAvailable": "Not available",
+        "otherFeatures": "Other features"
       },
       "businessType": {
         "realEstateBusiness": "Real estate agent",
@@ -567,8 +574,17 @@
         "rateLimitedTitle": "Please wait before requesting more numbers",
         "rateLimitedDescription": "Try again in {time}.",
         "errorTitle": "Contact info unavailable",
-        "errorDescription": "Something went wrong while fetching contact details. Please try again."
-      }
+        "errorDescription": "Something went wrong while fetching contact details. Please try again.",
+        "phoneUnknown": "Phone not provided"
+      },
+      "printButton": "Print",
+      "printError": "Print is not available right now",
+      "printSummary": "Listing summary",
+      "printAmenities": "Amenities",
+      "printAttributes": "Attributes",
+      "shareMessageTitleLabel": "Title",
+      "shareMessageCategoryLabel": "Category",
+      "shareMessageBusinessLabel": "Business type"
     }
   },
   "admin": {

@@ -51,6 +51,7 @@ import {
 import { Button } from '@/components/ui/button';
 import type { DivarCategory } from '@/types/divar-category';
 import { CategoryFiltersPreview } from './category-filters-preview';
+import { CategoryBreadcrumb } from './category-breadcrumb';
 import { useBackButtonClose } from '@/hooks/use-back-button-close';
 import { CategorySelectionModal } from './category-selection-modal';
 import { cn } from '@/lib/utils';
@@ -1023,174 +1024,39 @@ export function DashboardSearchFilterPanel() {
 	            </div>
 	          ) : null}
 
-	          {!filterModalOpen ? (
-	            <div className="flex flex-col gap-2">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <Button
-                type="button"
-                variant="secondary"
-                className="w-full justify-between sm:flex-1"
-                onClick={() => setSavedFiltersModalOpen(true)}
-                disabled={savedFiltersBusy}
-              >
-                <span className="truncate">{savedFiltersT('showButton')}</span>
-                <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                className="hidden w-full sm:flex-1 lg:inline-flex"
-                onClick={() => setSaveDialogOpen(true)}
-                disabled={!hasActiveFilters || saveLimitReached || isCreatingSavedFilter}
-                title={
-                  !hasActiveFilters
-                    ? savedFiltersT('disabled.noFilters')
-                    : saveLimitReached
-                      ? savedFiltersT('disabled.limitReached')
-                      : undefined
-                }
-              >
-                <span className="flex items-center justify-center gap-2">
-                  <BookmarkPlus className="size-4" />
-                  <span>{savedFiltersT('saveButton')}</span>
-                </span>
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {savedFiltersT('usage', { count: totalSavedFilters, limit: savedFiltersLimit })}
-            </p>
-          </div>
-          ) : null}
-
         {!filterModalOpen ? (
-            <div className="hidden flex-col gap-4 lg:flex">
-              <div className="flex flex-col gap-1">
-                <label className={cn('text-sm font-medium text-foreground', isRTL ? 'text-right' : 'text-left')}>
-                  {t('categories.title')}
-                </label>
-                <Button
-                type="button"
-                variant="secondary"
-                className="w-full justify-between"
-                onClick={handleOpenCategoryModal}
-              >
-                <span className="flex flex-1 items-center gap-2" dir={isRTL ? 'rtl' : 'ltr'}>
-                  <Folder className="size-4 text-muted-foreground" />
-                  <span className="truncate">{categorySummaryLabel}</span>
-                </span>
-                {isRTL ? (
-                  <ChevronLeft className="size-4 text-muted-foreground" aria-hidden="true" />
-                ) : (
-                  <ChevronRight className="size-4 text-muted-foreground" aria-hidden="true" />
-                )}
-              </Button>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3">
-              <div className="space-y-1">
-                <label className={cn('text-sm font-medium text-foreground', isRTL ? 'text-right' : 'text-left')}>
-                  {t('provinceLabel')}
-                </label>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="w-full justify-between"
-                  onClick={() => {
-                    setDesktopDialogContext('province');
-                    setFilterModalOpen(true);
-                    setMobileTab('main');
-                    setProvinceDialogOpen(true);
-                  }}
-                  disabled={provincesLoading && provinces.length === 0}
-                >
-                  <span className="flex w-full items-center justify-between gap-3" dir={isRTL ? 'rtl' : 'ltr'}>
-                    <span className="truncate">{provinceButtonLabel}</span>
-                    <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                  </span>
-                </Button>
-              </div>
-
-              <div className="space-y-1">
-                <label className={cn('text-sm font-medium text-foreground', isRTL ? 'text-right' : 'text-left')}>
-                  {t('cityLabel')}
-                </label>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="w-full justify-between"
-                  onClick={() => {
-                    setDesktopDialogContext('city');
-                    setFilterModalOpen(true);
-                    setMobileTab('main');
-                    setCityDialogOpen(true);
-                  }}
-                  disabled={isCityButtonDisabled}
-                >
-                  <span className="flex w-full items-center justify-between gap-3" dir={isRTL ? 'rtl' : 'ltr'}>
-                    <span className="truncate">{cityButtonLabel}</span>
-                    <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                  </span>
-                </Button>
-              </div>
-
-              {showDistrictFilter ? (
-                <div className="space-y-1">
-                  <label className={cn('text-sm font-medium text-foreground', isRTL ? 'text-right' : 'text-left')}>
-                    {t('districtLabel')}
-                  </label>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="w-full justify-between"
-                  onClick={() => {
-                    setDesktopDialogContext('district');
-                    setFilterModalOpen(true);
-                    setMobileTab('main');
-                    setDistrictDialogOpen(true);
-                  }}
-                  disabled={isDistrictButtonDisabled}
-                >
-                    <span className="flex w-full items-center justify-between gap-3" dir={isRTL ? 'rtl' : 'ltr'}>
-                      <span className="truncate">{districtButtonLabel}</span>
-                      <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                    </span>
-                  </Button>
-                </div>
-              ) : null}
-            </div>
-
-            <div className="space-y-3">
-              <CategoryFiltersPreview
-                categorySlug={categorySlug ?? baseCategory?.slug ?? null}
-                locale={locale}
-                isRTL={isRTL}
-                includeKeys={['business-type']}
-                excludeKeys={['addon_service_tags', 'recent_ads', 'has-video', 'has_video']}
-              />
-              <CategoryFiltersPreview
-                categorySlug={categorySlug ?? baseCategory?.slug ?? null}
-                locale={locale}
-                isRTL={isRTL}
-                includeKeys={['addon_service_tags', 'recent_ads', 'has-video', 'has_video']}
-              />
-              <CategoryFiltersPreview
-                categorySlug={categorySlug ?? baseCategory?.slug ?? null}
-                locale={locale}
-                isRTL={isRTL}
-                excludeKeys={[
-                  'business-type',
-                  'addon_service_tags',
-                  'recent_ads',
-                  'has-video',
-                  'has_video',
-                ]}
-              />
-            </div>
+          <div className="hidden flex-col gap-4 lg:flex">
+            <CategoryBreadcrumb
+              breadcrumbItems={breadcrumbItems}
+              categoryOptions={categoryOptions}
+              categorySlug={categorySlug}
+              isRTL={isRTL}
+              onSelect={handleCategorySelect}
+            />
+            <CategoryFiltersPreview
+              categorySlug={categorySlug ?? baseCategory?.slug ?? null}
+              locale={locale}
+              isRTL={isRTL}
+              includeKeys={['business-type']}
+              excludeKeys={['addon_service_tags', 'recent_ads', 'has-video', 'has_video']}
+            />
+            <CategoryFiltersPreview
+              categorySlug={categorySlug ?? baseCategory?.slug ?? null}
+              locale={locale}
+              isRTL={isRTL}
+              includeKeys={['addon_service_tags', 'recent_ads', 'has-video', 'has_video']}
+            />
+            <CategoryFiltersPreview
+              categorySlug={categorySlug ?? baseCategory?.slug ?? null}
+              locale={locale}
+              isRTL={isRTL}
+              excludeKeys={['business-type', 'addon_service_tags', 'recent_ads', 'has-video', 'has_video']}
+            />
           </div>
         ) : null}
 
         {!filterModalOpen ? (
-          <div className="space-y-2">
+            <div className="space-y-2">
           <label className="block text-sm font-medium text-foreground">
             {t('ringBinder.label')}
           </label>
@@ -1261,92 +1127,130 @@ export function DashboardSearchFilterPanel() {
               )}
             />
           </div>
-	        </div>
-	        ) : null}
-
-	        <div className="hidden lg:block">
-	          <p className="text-sm font-medium text-muted-foreground">{t('categories.title')}</p>
-	          {categoriesBusy ? (
-            <p className="mt-2 text-xs text-muted-foreground">{t('categories.loading')}</p>
-          ) : visibleCategories.length === 0 ? (
-            <p className="mt-2 text-xs text-muted-foreground">{t('categories.empty')}</p>
-          ) : (
-            <>
-              <div className="mt-2 flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
-                {breadcrumbItems.map((crumb, index) => {
-                  const isActive =
-                    crumb.slug === categorySlug ||
-                    (!categorySlug && baseCategory && crumb.slug === baseCategory.slug);
-                  return (
-                    <div key={`${crumb.slug ?? 'root'}-${index}`} className="inline-flex items-center">
-                      <button
-                        type="button"
-                        className={`rounded px-1 py-0.5 ${
-                          isActive ? 'font-semibold text-foreground' : 'hover:text-foreground'
-                        }`}
-                        onClick={() => handleCategorySelect(crumb.slug, crumb.depth)}
-                      >
-                        {crumb.label}
-                      </button>
-                      {index < breadcrumbItems.length - 1 ? (
-                        <span className="px-1 text-muted-foreground">{isRTL ? '«' : '»'}</span>
-                      ) : null}
-                    </div>
-                  );
-                })}
-              </div>
-              <ul className="mt-3 flex flex-col gap-2 px-3" dir={isRTL ? 'rtl' : 'ltr'}>
-                {categoryOptions.map((category) => {
-                  const isActive = category.slug === categorySlug;
-                  return (
-                    <li key={category.id} className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        dir={isRTL ? 'rtl' : 'ltr'}
-                        onClick={() => handleCategorySelect(category.slug, category.depth)}
-                        className={`flex-1 text-xs transition ${
-                          isActive ? 'font-semibold text-primary' : 'text-muted-foreground hover:text-foreground'
-                        } ${isRTL ? 'text-right' : 'text-left'}`}
-                      >
-                        <span
-                          className={cn(
-                            'inline-flex items-center gap-2',
-                            isRTL ? 'flex-row-reverse justify-end' : 'flex-row justify-start',
-                          )}
-                        >
-                          {isRTL ? (
-                            <>
-                              <span>{category.name}</span>
-                              <Folder className="size-3.5 text-muted-foreground" />
-                            </>
-                          ) : (
-                            <>
-                              <Folder className="size-3.5 text-muted-foreground" />
-                              <span>{category.name}</span>
-                            </>
-                          )}
-                        </span>
-                      </button>
-                      <Circle
-                        aria-hidden="true"
-                        className={`size-3 shrink-0 ${
-                          isActive ? 'text-primary' : 'text-muted-foreground/70'
-                        }`}
-                        strokeWidth={3}
-                        fill={isActive ? 'currentColor' : 'transparent'}
-                      />
-                    </li>
-                  );
-                })}
-              </ul>
-            </>
-          )}
         </div>
+        ) : null}
 
-			        {filterModalOpen ? (
-			          <div className="flex flex-1 flex-col lg:hidden">
-			            <AnimatePresence initial={false} custom={mobileTabDirection}>
-			              <motion.div
+        {!filterModalOpen ? (
+          <div className="hidden flex-col gap-4 lg:flex">
+            <div className="grid grid-cols-1 gap-3">
+              <div className="space-y-1">
+                <label className={cn('text-sm font-medium text-foreground', isRTL ? 'text-right' : 'text-left')}>
+                  {t('provinceLabel')}
+                </label>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="w-full justify-between"
+                  onClick={() => {
+                    setDesktopDialogContext('province');
+                    setFilterModalOpen(true);
+                    setMobileTab('main');
+                    setProvinceDialogOpen(true);
+                  }}
+                  disabled={provincesLoading && provinces.length === 0}
+                >
+                  <span className="flex w-full items-center justify-between gap-3" dir={isRTL ? 'rtl' : 'ltr'}>
+                    <span className="truncate">{provinceButtonLabel}</span>
+                    <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                  </span>
+                </Button>
+              </div>
+
+              <div className="space-y-1">
+                <label className={cn('text-sm font-medium text-foreground', isRTL ? 'text-right' : 'text-left')}>
+                  {t('cityLabel')}
+                </label>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="w-full justify-between"
+                  onClick={() => {
+                    setDesktopDialogContext('city');
+                    setFilterModalOpen(true);
+                    setMobileTab('main');
+                    setCityDialogOpen(true);
+                  }}
+                  disabled={isCityButtonDisabled}
+                >
+                  <span className="flex w-full items-center justify-between gap-3" dir={isRTL ? 'rtl' : 'ltr'}>
+                    <span className="truncate">{cityButtonLabel}</span>
+                    <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                  </span>
+                </Button>
+              </div>
+
+              {showDistrictFilter ? (
+                <div className="space-y-1">
+                  <label className={cn('text-sm font-medium text-foreground', isRTL ? 'text-right' : 'text-left')}>
+                    {t('districtLabel')}
+                  </label>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="w-full justify-between"
+                    onClick={() => {
+                      setDesktopDialogContext('district');
+                      setFilterModalOpen(true);
+                      setMobileTab('main');
+                      setDistrictDialogOpen(true);
+                    }}
+                    disabled={isDistrictButtonDisabled}
+                  >
+                    <span className="flex w-full items-center justify-between gap-3" dir={isRTL ? 'rtl' : 'ltr'}>
+                      <span className="truncate">{districtButtonLabel}</span>
+                      <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                    </span>
+                  </Button>
+                </div>
+              ) : null}
+            </div>
+
+          </div>
+        ) : null}
+
+        {!filterModalOpen ? (
+          <div className="hidden flex-col gap-2 lg:flex">
+            <Button
+              type="button"
+              variant="secondary"
+              className="w-full justify-between"
+              onClick={() => setSavedFiltersModalOpen(true)}
+              disabled={savedFiltersBusy}
+            >
+              <span className="truncate">{savedFiltersT('showButton')}</span>
+              <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              {savedFiltersT('usage', { count: totalSavedFilters, limit: savedFiltersLimit })}
+            </p>
+            <div className="hidden lg:flex">
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full justify-center"
+                onClick={() => setSaveDialogOpen(true)}
+                disabled={!hasActiveFilters || saveLimitReached || isCreatingSavedFilter}
+                title={
+                  !hasActiveFilters
+                    ? savedFiltersT('disabled.noFilters')
+                    : saveLimitReached
+                      ? savedFiltersT('disabled.limitReached')
+                      : undefined
+                }
+              >
+                <span className="flex items-center justify-center gap-2">
+                  <BookmarkPlus className="size-4" />
+                  <span>{savedFiltersT('saveButton')}</span>
+                </span>
+              </Button>
+            </div>
+          </div>
+        ) : null}
+
+        {filterModalOpen ? (
+          <div className="flex flex-1 flex-col lg:hidden">
+            <AnimatePresence initial={false} custom={mobileTabDirection}>
+              <motion.div
 			                key={mobileFiltersTab}
 			                className="flex flex-1 flex-col"
 			                custom={mobileTabDirection}
@@ -2008,13 +1912,7 @@ export function DashboardSearchFilterPanel() {
 		              </motion.div>
 		            </AnimatePresence>
 		          </div>
-		        ) : (
-		          <CategoryFiltersPreview
-		            categorySlug={categorySlug ?? baseCategory?.slug ?? null}
-		            locale={locale}
-		            isRTL={isRTL}
-		          />
-		        )}
+		        ) : null}
 	        </div>
 	        {filterModalOpen ? (
 	          <div className="z-10 mt-auto flex shrink-0 flex-col justify-end gap-3 border-t border-border bg-background p-4 lg:hidden">

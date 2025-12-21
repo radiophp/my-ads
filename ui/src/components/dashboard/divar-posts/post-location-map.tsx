@@ -88,10 +88,7 @@ export function PostLocationMap({ lat, lon, t, isRTL }: PostLocationMapProps): J
       });
       mapRef.current = map;
 
-      map.addControl(
-        new maplibre.NavigationControl({ visualizePitch: false, visualizeRotation: false }),
-        'top-right',
-      );
+      map.addControl(new maplibre.NavigationControl({ visualizePitch: false }), 'top-right');
 
       const marker = new maplibre.Marker({
         color: '#f43f5e',

@@ -1,7 +1,6 @@
-search_enabled: true
 server:
-  http_listen_port: ${TEMPO_PORT}
-  grpc_listen_port: ${TEMPO_GRPC_PORT}
+  http_listen_port: 6320
+  grpc_listen_port: 6321
 
 distributor:
   receivers:
@@ -22,10 +21,6 @@ compactor:
 storage:
   trace:
     backend: local
-    block:
-      bloom_filter_false_positive: 0.05
-      index_downsample_bytes: 10000
-      encoding: zstd
     wal:
       path: /var/tempo/wal
     local:

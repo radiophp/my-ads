@@ -18,6 +18,7 @@ const DIVAR_POST_SUMMARY_SELECT = {
   priceTotal: true,
   rentAmount: true,
   depositAmount: true,
+  phoneNumber: true,
   dailyRateNormal: true,
   dailyRateWeekend: true,
   dailyRateHoliday: true,
@@ -844,6 +845,7 @@ export class DivarPostsAdminService {
       title: record.title ?? record.displayTitle ?? record.seoTitle ?? null,
       description: record.description ?? null,
       ownerName: record.ownerName ?? null,
+      hasContactInfo: Boolean(record.phoneNumber),
       priceTotal:
         record.priceTotal !== null && record.priceTotal !== undefined
           ? Number(record.priceTotal)

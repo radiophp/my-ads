@@ -23,24 +23,43 @@ export class ArkaPhoneTransferService {
   private readonly schedulerEnabled: boolean;
   private readonly transferCronEnabled: boolean;
   private readonly recentWindowMs = 4 * 60 * 60 * 1000; // last 4 hours
+  private isRunning = false;
+  private runGuardTimer: NodeJS.Timeout | null = null;
 
   constructor(
     private readonly prisma: PrismaService,
     configService: ConfigService,
   ) {
     this.schedulerEnabled =
-      configService.get<boolean>('scheduler.enabled', { infer: true }) ?? false;
+      configService.get<boolean>('scheduler.enabled', { infer: true }) ?? true;
     this.transferCronEnabled =
-      (process.env['ENABLE_ARKA_TRANSFER_CRON'] ?? '').toLowerCase() === 'true';
+      (process.env['ENABLE_ARKA_TRANSFER_CRON'] ?? 'true').toLowerCase() === 'true';
   }
 
   @Cron(CronExpression.EVERY_5_SECONDS, { name: 'arka-phone-transfer' })
   async cronTick() {
+    if (this.isRunning) {
+      return;
+    }
+    this.isRunning = true;
+    if (this.runGuardTimer) {
+      clearTimeout(this.runGuardTimer);
+    }
+    this.runGuardTimer = setTimeout(() => {
+      this.logger.warn('Transfer cron guard timeout elapsed; releasing running flag.');
+      this.isRunning = false;
+      this.runGuardTimer = null;
+    }, 120_000);
     await this.transferOne(false).catch((error) =>
       this.logger.debug(
         `Cron transfer error: ${error instanceof Error ? error.message : String(error)}`,
       ),
     );
+    if (this.runGuardTimer) {
+      clearTimeout(this.runGuardTimer);
+      this.runGuardTimer = null;
+    }
+    this.isRunning = false;
   }
 
   async transferOne(force = false): Promise<TransferResult> {

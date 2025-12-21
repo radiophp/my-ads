@@ -43,6 +43,7 @@ export type DivarPostSummary = {
   title: string | null;
   description: string | null;
   ownerName: string | null;
+  hasContactInfo: boolean;
   priceTotal: number | null;
   rentAmount: number | null;
   depositAmount: number | null;

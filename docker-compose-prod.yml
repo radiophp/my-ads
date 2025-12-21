@@ -416,8 +416,8 @@ services:
       NODE_ENV: production
       NEXT_UI_PORT: ${NEXT_UI_PORT:-6005}
       PORT: ${NEXT_UI_PORT:-6005}
-      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://mahan.radiophp.observer}
-      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-https://mahan.radiophp.observer/api}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://mahanfile.com}
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-https://mahanfile.com/api}
       NEXT_PUBLIC_ANALYTICS_WRITE_KEY: ${NEXT_PUBLIC_ANALYTICS_WRITE_KEY:-}
     depends_on:
       - api

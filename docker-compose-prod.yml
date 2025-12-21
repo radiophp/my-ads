@@ -251,6 +251,132 @@ services:
         constraints:
           - node.role == manager
 
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.99.0
+    command: ["--config=/etc/otel-collector.yaml"]
+    volumes:
+      - ./observability/otel-collector-config.yaml:/etc/otel-collector.yaml:ro
+    ports:
+      - target: ${OTEL_COLLECTOR_HTTP_PORT:-6317}
+        published: ${OTEL_COLLECTOR_HTTP_PORT:-6317}
+        protocol: tcp
+        mode: ingress
+    environment:
+      OTEL_COLLECTOR_HTTP_PORT: ${OTEL_COLLECTOR_HTTP_PORT:-6317}
+      OTEL_COLLECTOR_GRPC_PORT: ${OTEL_COLLECTOR_GRPC_PORT:-6318}
+      TEMPO_GRPC_PORT: ${TEMPO_GRPC_PORT:-6321}
+    networks:
+      - app_net
+    deploy:
+      <<: *deploy_defaults
+      replicas: 1
+
+  loki:
+    image: grafana/loki:2.9.3
+    command: ["-config.file=/etc/loki/local-config.yaml"]
+    volumes:
+      - ./observability/loki-config.yaml:/etc/loki/local-config.yaml:ro
+      - loki_data:/var/loki
+    ports:
+      - target: ${LOKI_PORT:-6319}
+        published: ${LOKI_PORT:-6319}
+        protocol: tcp
+        mode: ingress
+    environment:
+      LOKI_PORT: ${LOKI_PORT:-6319}
+    networks:
+      - app_net
+    deploy:
+      <<: *deploy_defaults
+      replicas: 1
+
+  promtail:
+    image: grafana/promtail:2.9.3
+    command: ["--config.file=/etc/promtail/config.yaml"]
+    volumes:
+      - ./observability/promtail-config.yaml:/etc/promtail/config.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - promtail_positions:/var/lib/promtail
+    depends_on:
+      - loki
+    networks:
+      - app_net
+    deploy:
+      <<: *deploy_defaults
+      replicas: 1
+
+  tempo:
+    image: grafana/tempo:2.4.1
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./observability/tempo.yaml:/etc/tempo.yaml:ro
+      - tempo_data:/var/tempo
+    ports:
+      - target: ${TEMPO_PORT:-6320}
+        published: ${TEMPO_PORT:-6320}
+        protocol: tcp
+        mode: ingress
+    environment:
+      TEMPO_PORT: ${TEMPO_PORT:-6320}
+      TEMPO_GRPC_PORT: ${TEMPO_GRPC_PORT:-6321}
+    networks:
+      - app_net
+    deploy:
+      <<: *deploy_defaults
+      replicas: 1
+
+  prometheus:
+    image: prom/prometheus:v2.49.1
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.listen-address=:${PROMETHEUS_PORT:-6322}'
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./observability/prometheus-alerts.yml:/etc/prometheus/alerts/health-alerts.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - target: ${PROMETHEUS_PORT:-6322}
+        published: ${PROMETHEUS_PORT:-6322}
+        protocol: tcp
+        mode: ingress
+    environment:
+      PROMETHEUS_PORT: ${PROMETHEUS_PORT:-6322}
+    networks:
+      - app_net
+    deploy:
+      <<: *deploy_defaults
+      replicas: 1
+
+  grafana:
+    image: grafana/grafana:10.4.1
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_FEATURE_TOGGLES_ENABLE: traceqlEditor
+      GF_SERVER_HTTP_PORT: ${GRAFANA_PORT:-6323}
+      GF_PATHS_PROVISIONING: /etc/grafana/provisioning
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./observability/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./observability/grafana/provisioning/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - loki
+      - prometheus
+      - tempo
+    ports:
+      - target: ${GRAFANA_PORT:-6323}
+        published: ${GRAFANA_PORT:-6323}
+        protocol: tcp
+        mode: ingress
+    networks:
+      - app_net
+    deploy:
+      <<: *deploy_defaults
+      replicas: 1
+
   telegram-bot:
     image: ghcr.io/radiophp/my-ads-api:latest
     command:
@@ -317,4 +443,9 @@ networks:
 volumes:
   postgres_data:
   minio_data:
+  loki_data:
+  tempo_data:
+  prometheus_data:
+  grafana_data:
+  promtail_positions:
   rabbitmq_data:

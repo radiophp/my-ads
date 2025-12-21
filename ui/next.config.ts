@@ -35,6 +35,12 @@ const defaultApiBaseUrl =
     ? 'https://mahan.toncloud.observer/api'
     : 'http://localhost:6200/api';
 
+const mapTileBaseUrl =
+  process.env.NEXT_PUBLIC_MAP_TILE_BASE_URL ??
+  (process.env.NODE_ENV === 'production'
+    ? 'https://map.mahanfile.com'
+    : 'https://dev-map.mahanfile.com');
+
 if (!process.env.NEXT_PUBLIC_APP_URL) {
   process.env.NEXT_PUBLIC_APP_URL = defaultAppUrl;
 }
@@ -60,6 +66,27 @@ const withPWA = withPWAInit({
   workboxOptions: {
     // Keep push handlers even when the generated service worker overwrites the file
     importScripts: ['push-sw.js'],
+    runtimeCaching: [
+      {
+        // Always go to network for map tiles/styles to avoid SW interception issues
+        urlPattern: ({ url }: { url: URL }) => {
+          const hosts = ['dev-map.mahanfile.com', 'map.mahanfile.com'];
+          try {
+            const mapHost = new URL(mapTileBaseUrl).hostname;
+            if (!hosts.includes(mapHost)) {
+              hosts.push(mapHost);
+            }
+          } catch {
+            // ignore parse errors
+          }
+          return hosts.includes(url.hostname);
+        },
+        handler: 'NetworkOnly',
+        options: {
+          cacheName: 'map-tiles-bypass',
+        },
+      },
+    ],
   },
 } as any);
 

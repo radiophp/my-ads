@@ -66,6 +66,8 @@ export type DivarPostSummary = {
   yearBuiltLabel: string | null;
   capacity: number | null;
   capacityLabel: string | null;
+  latitude: number | null;
+  longitude: number | null;
   hasParking: boolean | null;
   hasElevator: boolean | null;
   hasWarehouse: boolean | null;

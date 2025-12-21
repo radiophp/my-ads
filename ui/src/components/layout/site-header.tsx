@@ -178,7 +178,7 @@ export function SiteHeader() {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            className="inline-flex items-center justify-center rounded-md border border-border/80 bg-card px-2.5 py-2 text-sm font-medium text-foreground transition hover:bg-secondary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:hidden"
+            className="bg-card inline-flex items-center justify-center rounded-md border border-border/80 px-2.5 py-2 text-sm font-medium text-foreground transition hover:bg-secondary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:hidden"
             onClick={() => setMobileMenuOpen(true)}
             aria-label={t('header.mobileMenuOpen')}
           >
@@ -240,7 +240,7 @@ export function SiteHeader() {
               size="sm"
               onClick={handleInstallClick}
               disabled={isPromptingInstall}
-              className="border-0 px-3 flex items-center gap-2"
+              className="flex items-center gap-2 border-0 px-3"
             >
               <DownloadCloud className="size-4" aria-hidden />
               {isPromptingInstall ? pwaT('installingLabel') : t('header.installApp')}

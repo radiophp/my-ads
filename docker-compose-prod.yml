@@ -20,7 +20,12 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-my_ads}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD not set}
-      PGPORT: ${POSTGRES_PORT:-5432}
+      PGPORT: ${POSTGRES_INTERNAL_PORT:-5432}
+    ports:
+      - target: ${POSTGRES_INTERNAL_PORT:-5432}
+        published: ${POSTGRES_PUBLISHED_PORT:-6301}
+        protocol: tcp
+        mode: host
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -97,8 +102,8 @@ services:
       APP_HOST: 0.0.0.0
       APP_PORT: ${APP_PORT:-6200}
       APP_GLOBAL_PREFIX: ${APP_GLOBAL_PREFIX:-api}
-      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-my_ads}?schema=public}
-      DATABASE_DIRECT_URL: ${DATABASE_DIRECT_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-my_ads}?schema=public}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:${POSTGRES_INTERNAL_PORT:-5432}/${POSTGRES_DB:-my_ads}?schema=public}
+      DATABASE_DIRECT_URL: ${DATABASE_DIRECT_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:${POSTGRES_INTERNAL_PORT:-5432}/${POSTGRES_DB:-my_ads}?schema=public}
       REDIS_HOST: ${REDIS_HOST:-redis}
       REDIS_PORT: ${REDIS_PORT:-6379}
       REDIS_DB: ${REDIS_DB:-0}
@@ -171,8 +176,8 @@ services:
       APP_HOST: 0.0.0.0
       APP_PORT: ${APP_PORT:-6300}
       APP_GLOBAL_PREFIX: ${APP_GLOBAL_PREFIX:-api}
-      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-my_ads}?schema=public}
-      DATABASE_DIRECT_URL: ${DATABASE_DIRECT_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-my_ads}?schema=public}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:${POSTGRES_INTERNAL_PORT:-5432}/${POSTGRES_DB:-my_ads}?schema=public}
+      DATABASE_DIRECT_URL: ${DATABASE_DIRECT_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:${POSTGRES_INTERNAL_PORT:-5432}/${POSTGRES_DB:-my_ads}?schema=public}
       REDIS_HOST: ${REDIS_HOST:-redis}
       REDIS_PORT: ${REDIS_PORT:-6379}
       REDIS_DB: ${REDIS_DB:-0}
@@ -223,6 +228,25 @@ services:
     deploy:
       <<: *deploy_defaults
       replicas: ${API_CRON_REPLICAS:-1}
+
+  tileserver:
+    image: maptiler/tileserver-gl:v4.8.0
+    command: ["--mbtiles", "/data/iran.mbtiles", "--port", "8080"]
+    ports:
+      - target: 8080
+        published: ${MAP_TILES_PORT:-8235}
+        protocol: tcp
+        mode: ingress
+    volumes:
+      - type: bind
+        source: ${MAP_TILES_PATH:-/var/lib/my-ads/maps}
+        target: /data
+        read_only: true
+    networks:
+      - app_net
+    deploy:
+      <<: *deploy_defaults
+      replicas: 1
       placement:
         constraints:
           - node.role == manager
@@ -238,8 +262,8 @@ services:
       NODE_ENV: production
       APP_HOST: 0.0.0.0
       APP_PORT: ${APP_PORT:-6200}
-      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-my_ads}?schema=public}
-      DATABASE_DIRECT_URL: ${DATABASE_DIRECT_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-my_ads}?schema=public}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:${POSTGRES_INTERNAL_PORT:-5432}/${POSTGRES_DB:-my_ads}?schema=public}
+      DATABASE_DIRECT_URL: ${DATABASE_DIRECT_URL:-postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:${POSTGRES_INTERNAL_PORT:-5432}/${POSTGRES_DB:-my_ads}?schema=public}
       REDIS_HOST: ${REDIS_HOST:-redis}
       REDIS_PORT: ${REDIS_PORT:-6379}
       RABBITMQ_URL: ${RABBITMQ_URL:-amqp://${RABBITMQ_USERNAME:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672}

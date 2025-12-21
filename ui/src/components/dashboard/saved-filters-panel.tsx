@@ -420,7 +420,7 @@ type DetailRowProps = {
 
 function DetailRow({ label, value }: DetailRowProps) {
   return (
-    <div className="rounded-lg border border-border/60 bg-card/60 px-3 py-2">
+    <div className="bg-card/60 rounded-lg border border-border/60 px-3 py-2">
       <p className="text-xs font-medium text-muted-foreground">{label}</p>
       <p className="text-sm font-semibold text-foreground">{value}</p>
     </div>

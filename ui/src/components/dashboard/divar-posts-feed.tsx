@@ -547,12 +547,12 @@ export function DivarPostsFeed(): JSX.Element {
   );
 
   return (
-    <Card className="flex h-full w-full flex-col overflow-hidden border-0 shadow-sm">
-      <CardContent className="flex-1 min-w-0 space-y-4 overflow-y-auto p-4 w-full">
+    <Card className="flex size-full flex-col overflow-hidden border-0 shadow-sm">
+      <CardContent className="w-full min-w-0 flex-1 space-y-4 overflow-y-auto p-4">
         {initializing ? (
-          <div className="grid w-full grid-cols-1 gap-4 auto-rows-fr sm:grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
+          <div className="grid w-full auto-rows-fr grid-cols-1 gap-4 sm:grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
             {Array.from({ length: 12 }).map((_, index) => (
-              <div key={index} className="w-full min-w-0 h-full">
+              <div key={index} className="size-full min-w-0">
                 <PostCardSkeleton />
               </div>
             ))}
@@ -563,7 +563,7 @@ export function DivarPostsFeed(): JSX.Element {
           </div>
         ) : (
           <>
-            <div className="grid w-full grid-cols-1 gap-4 auto-rows-fr sm:grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
+            <div className="grid w-full auto-rows-fr grid-cols-1 gap-4 sm:grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
               {posts.map((post) => renderPostCard(post))}
             </div>
             {hasMore ? (
@@ -701,7 +701,7 @@ export function DivarPostsFeed(): JSX.Element {
 
 function PostCardSkeleton() {
   return (
-    <article className="flex h-full w-full min-w-0 min-h-[360px] flex-col gap-3 overflow-hidden rounded-xl border border-border/70 bg-card p-4 shadow-sm animate-pulse">
+    <article className="bg-card flex size-full min-h-[360px] min-w-0 animate-pulse flex-col gap-3 overflow-hidden rounded-xl border border-border/70 p-4 shadow-sm">
       <div className="-mx-4 -mt-4 overflow-hidden rounded-t-xl">
         <div className="relative h-48 w-full bg-muted/60" />
         <div className="pointer-events-none absolute inset-x-3 bottom-3 flex flex-wrap gap-2 text-xs">

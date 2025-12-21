@@ -70,7 +70,7 @@ export function AdminNotificationsClient() {
         <p className="text-sm text-muted-foreground sm:text-base">{t('description')}</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-border/60 bg-card p-4 shadow-sm">
+      <form onSubmit={handleSubmit} className="bg-card space-y-4 rounded-xl border border-border/60 p-4 shadow-sm">
         <div className="space-y-2">
           <Label htmlFor="user-id">{t('fields.userId')}</Label>
           <Input

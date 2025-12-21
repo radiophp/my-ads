@@ -41,15 +41,17 @@ export class ArkaPhoneFetchService {
   private readonly logger = new Logger(ArkaPhoneFetchService.name);
   private readonly schedulerEnabled: boolean;
   private readonly arkaFetchCronEnabled: boolean;
+  private isRunning = false;
+  private runGuardTimer: NodeJS.Timeout | null = null;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
   ) {
     this.schedulerEnabled =
-      this.configService.get<boolean>('scheduler.enabled', { infer: true }) ?? false;
+      this.configService.get<boolean>('scheduler.enabled', { infer: true }) ?? true;
     this.arkaFetchCronEnabled =
-      (process.env['ENABLE_ARKA_FETCH_CRON'] ?? '').toLowerCase() === 'true';
+      (process.env['ENABLE_ARKA_FETCH_CRON'] ?? 'true').toLowerCase() === 'true';
   }
 
   async fetchLatestArkaId(): Promise<number | null> {
@@ -119,6 +121,18 @@ export class ArkaPhoneFetchService {
 
   @Cron(CronExpression.EVERY_5_SECONDS, { name: 'arka-phone-fetch' })
   async cronTick() {
+    if (this.isRunning) {
+      return;
+    }
+    this.isRunning = true;
+    if (this.runGuardTimer) {
+      clearTimeout(this.runGuardTimer);
+    }
+    this.runGuardTimer = setTimeout(() => {
+      this.logger.warn('Fetch cron guard timeout elapsed; releasing running flag.');
+      this.isRunning = false;
+      this.runGuardTimer = null;
+    }, 120_000);
     for (let i = 0; i < 10; i += 1) {
       const result = await this.fetchNext(false).catch((error) => {
         this.logger.debug(
@@ -131,6 +145,11 @@ export class ArkaPhoneFetchService {
         break;
       }
     }
+    if (this.runGuardTimer) {
+      clearTimeout(this.runGuardTimer);
+      this.runGuardTimer = null;
+    }
+    this.isRunning = false;
   }
 
   async fetchNext(force = false): Promise<FetchResult> {

@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import type { JSX, KeyboardEvent, MouseEvent } from 'react';
 import { useEffect, useState } from 'react';
-import { Camera, Clock3, MapPin, Image as ImageIcon } from 'lucide-react';
+import { Camera, Clock3, MapPin, Image as ImageIcon, Phone } from 'lucide-react';
 import Link from 'next/link';
 import type { DivarPostSummary } from '@/types/divar-posts';
 import type { useTranslations } from 'next-intl';
@@ -80,15 +80,24 @@ export function PostCard({
     >
       <article className="bg-card flex h-full flex-col gap-3 rounded-xl border border-border/70 p-4 shadow-sm transition hover:border-primary/60">
         <div className="flex flex-col gap-3">
-          <div className="-mx-4 -mt-4 overflow-hidden rounded-t-xl">
-            <div className="relative">
-              {businessBadge ? (
-                <span className="pointer-events-none absolute left-3 top-3 z-10 inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5 text-xs font-medium text-white">
-                  {businessBadge.icon}
-                  {businessBadge.label}
-                </span>
-              ) : null}
-              <div className="relative h-48 w-full bg-muted">
+            <div className="-mx-4 -mt-4 overflow-hidden rounded-t-xl">
+              <div className="relative">
+                {businessBadge ? (
+                  <span className="pointer-events-none absolute left-3 top-3 z-10 inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5 text-xs font-medium text-white">
+                    {businessBadge.icon}
+                    {businessBadge.label}
+                  </span>
+                ) : null}
+                {post.hasContactInfo ? (
+                  <span
+                    className="pointer-events-none absolute right-3 top-3 z-10 inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5 text-xs font-medium text-white"
+                    aria-label={t('contactInfo.button')}
+                  >
+                    <Phone className="size-3.5" aria-hidden />
+                    <span className="sr-only">{t('contactInfo.button')}</span>
+                  </span>
+                ) : null}
+                <div className="relative h-48 w-full bg-muted">
                 <img
                   src={post.imageUrl ?? ''}
                   alt=""

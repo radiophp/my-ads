@@ -62,6 +62,9 @@ export class DivarPostListItemDto {
   @ApiProperty({ nullable: true })
   ownerName!: string | null;
 
+  @ApiProperty()
+  hasContactInfo!: boolean;
+
   @ApiProperty({ nullable: true })
   priceTotal!: number | null;
 

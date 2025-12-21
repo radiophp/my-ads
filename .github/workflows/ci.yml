@@ -275,6 +275,12 @@ jobs:
         with:
           context: ui
           file: ui/Dockerfile
+          build-args: |
+            NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL || 'https://mahanfile.com' }}
+            NEXT_PUBLIC_API_BASE_URL=${{ vars.NEXT_PUBLIC_API_BASE_URL || 'https://mahanfile.com/api' }}
+            NEXT_PUBLIC_WS_BASE_URL=${{ vars.NEXT_PUBLIC_WS_BASE_URL || 'wss://mahanfile.com/socket.io' }}
+            NEXT_PUBLIC_MAP_TILE_BASE_URL=${{ vars.NEXT_PUBLIC_MAP_TILE_BASE_URL || '/map' }}
+            NEXT_PUBLIC_VAPID_PUBLIC_KEY=${{ secrets.NEXT_PUBLIC_VAPID_PUBLIC_KEY || vars.NEXT_PUBLIC_VAPID_PUBLIC_KEY }}
           push: true
           tags: |
             ghcr.io/${{ steps.vars.outputs.owner }}/my-ads-ui:${{ github.sha }}
@@ -348,7 +354,7 @@ jobs:
           RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DATABASE_DIRECT_URL: ${{ secrets.DATABASE_DIRECT_URL }}
+          # Let compose defaults handle DIRECT_URL unless you need a separate endpoint
           OTP_SENDER_API_KEY: ${{ secrets.OTP_SENDER_API_KEY }}
           NEXT_PUBLIC_ANALYTICS_WRITE_KEY: ${{ secrets.NEXT_PUBLIC_ANALYTICS_WRITE_KEY }}
           OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}

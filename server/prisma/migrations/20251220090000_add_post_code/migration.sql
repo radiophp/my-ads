@@ -18,8 +18,12 @@ UPDATE "DivarPost"
 SET "code" = nextval('"DivarPost_code_seq"')
 WHERE "code" IS NULL;
 
--- Ensure sequence is ahead of current max
-SELECT setval('"DivarPost_code_seq"', GREATEST((SELECT MAX("code") FROM "DivarPost"), 999), true);
+-- Ensure sequence is ahead of current max (fallback to 1000 to respect MINVALUE)
+SELECT setval(
+    '"DivarPost_code_seq"',
+    GREATEST(COALESCE((SELECT MAX("code") FROM "DivarPost"), 1000), 1000),
+    true
+);
 
 -- Enforce constraints
 ALTER TABLE "DivarPost"

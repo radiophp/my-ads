@@ -132,6 +132,12 @@ export class DivarPostListItemDto {
   capacityLabel!: string | null;
 
   @ApiProperty({ nullable: true })
+  latitude!: number | null;
+
+  @ApiProperty({ nullable: true })
+  longitude!: number | null;
+
+  @ApiProperty({ nullable: true })
   hasParking!: boolean | null;
 
   @ApiProperty({ nullable: true })

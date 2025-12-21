@@ -9,8 +9,8 @@ export default function OfflinePage() {
   return (
     <main className="flex min-h-screen w-full items-center justify-center bg-muted/40 px-4 py-12">
       <section className="flex w-full max-w-lg flex-col items-center gap-6 rounded-3xl border bg-background px-8 py-10 text-center shadow-lg">
-        <span className="flex h-16 w-16 items-center justify-center rounded-full bg-muted text-muted-foreground">
-          <WifiOff aria-hidden className="h-8 w-8" />
+        <span className="flex size-16 items-center justify-center rounded-full bg-muted text-muted-foreground">
+          <WifiOff aria-hidden className="size-8" />
         </span>
 
         <div className="space-y-2">

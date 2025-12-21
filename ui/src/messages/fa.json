@@ -458,6 +458,11 @@
       "shareMessageDescriptionLabel": "توضیحات",
       "shareMessageLinkLabel": "لینک",
       "shareMessageDetailLabel": "جزئیات",
+      "map": {
+        "title": "موقعیت روی نقشه",
+        "openExternal": "نمایش در نقشه کامل",
+        "coordinates": "مختصات: {lat}، {lon}"
+      },
       "shareMessagePublishUnknown": "نامشخص",
       "shareMessageLocationUnknown": "نامشخص",
       "shareMessageTitleUnknown": "بدون عنوان",

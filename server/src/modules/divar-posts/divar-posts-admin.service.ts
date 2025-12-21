@@ -38,6 +38,8 @@ const DIVAR_POST_SUMMARY_SELECT = {
   yearBuiltLabel: true,
   capacity: true,
   capacityLabel: true,
+  latitude: true,
+  longitude: true,
   hasParking: true,
   hasElevator: true,
   hasWarehouse: true,
@@ -892,6 +894,12 @@ export class DivarPostsAdminService {
       yearBuiltLabel: record.yearBuiltLabel ?? null,
       capacity: record.capacity ?? null,
       capacityLabel: record.capacityLabel ?? null,
+      latitude:
+        record.latitude !== null && record.latitude !== undefined ? Number(record.latitude) : null,
+      longitude:
+        record.longitude !== null && record.longitude !== undefined
+          ? Number(record.longitude)
+          : null,
       hasParking: record.hasParking ?? null,
       hasElevator: record.hasElevator ?? null,
       hasWarehouse: record.hasWarehouse ?? null,

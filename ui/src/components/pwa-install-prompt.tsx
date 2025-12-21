@@ -36,7 +36,7 @@ export function PwaInstallPrompt() {
       setOpen(true);
       markShown();
     }
-  }, [isInstallable]);
+  }, [isInstallable, TWO_DAYS_MS]);
 
   const handleInstall = async () => {
     const accepted = await promptInstall();

@@ -985,8 +985,8 @@ export function DashboardSearchFilterPanel() {
 	          className={cn(
 	            'flex flex-col gap-5',
 	            filterModalOpen
-	              ? 'flex-1 min-h-0 overflow-y-auto overscroll-y-contain px-4 pb-4'
-	              : 'lg:flex-1 lg:min-h-0 lg:overflow-y-auto lg:px-4 lg:pb-6',
+	              ? 'min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-4 pb-4'
+	              : 'lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:px-4 lg:pb-6',
 	          )}
 	        >
           {filterModalOpen ? (
@@ -1035,7 +1035,7 @@ export function DashboardSearchFilterPanel() {
 	                  return (
 	                    <div
 	                      className={cn(
-	                        'flex w-full overflow-hidden rounded-none border border-border divide-x divide-border',
+	                        'flex w-full divide-x divide-border overflow-hidden rounded-none border border-border',
 	                        isRTL ? 'divide-x-reverse' : null,
 	                      )}
 	                    >
@@ -1060,7 +1060,7 @@ export function DashboardSearchFilterPanel() {
 
         {!filterModalOpen ? (
           <>
-            <div className="hidden lg:flex justify-end">
+            <div className="hidden justify-end lg:flex">
               <Button
                 type="button"
                 variant="ghost"
@@ -1404,7 +1404,7 @@ export function DashboardSearchFilterPanel() {
                                   <div
                                     className={cn(
                                       'flex flex-col space-y-1.5',
-                                      isRTL ? 'text-right items-end' : 'text-left items-start',
+                                      isRTL ? 'items-end text-right' : 'items-start text-left',
                                     )}
                                   >
                                     <DialogTitle className={isRTL ? 'text-right' : 'text-left'}>
@@ -1417,7 +1417,7 @@ export function DashboardSearchFilterPanel() {
                                 </div>
 
                                 <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 py-4">
-                                  <div className="mt-1 mb-2">
+                                  <div className="mb-2 mt-1">
                                     <Input
                                       value={provinceQuery}
                                       onChange={(e) => setProvinceQuery(e.target.value)}
@@ -1606,7 +1606,7 @@ export function DashboardSearchFilterPanel() {
                                   <div
                                     className={cn(
                                       'flex flex-col space-y-1.5',
-                                      isRTL ? 'text-right items-end' : 'text-left items-start',
+                                      isRTL ? 'items-end text-right' : 'items-start text-left',
                                     )}
                                   >
                                     <DialogTitle className={isRTL ? 'text-right' : 'text-left'}>
@@ -1619,7 +1619,7 @@ export function DashboardSearchFilterPanel() {
                                 </div>
 
                                 <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 py-4">
-                                  <div className="mt-1 mb-2">
+                                  <div className="mb-2 mt-1">
                                     <Input
                                       value={cityQuery}
                                       onChange={(e) => setCityQuery(e.target.value)}
@@ -1809,7 +1809,7 @@ export function DashboardSearchFilterPanel() {
                                   <div
                                     className={cn(
                                       'flex flex-col space-y-1.5',
-                                      isRTL ? 'text-right items-end' : 'text-left items-start',
+                                      isRTL ? 'items-end text-right' : 'items-start text-left',
                                     )}
                                   >
                                     <DialogTitle className={isRTL ? 'text-right' : 'text-left'}>
@@ -1822,7 +1822,7 @@ export function DashboardSearchFilterPanel() {
                                 </div>
 
                                 <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 py-4">
-                                  <div className="mt-1 mb-2">
+                                  <div className="mb-2 mt-1">
                                     <Input
                                       value={districtQuery}
                                       onChange={(e) => setDistrictQuery(e.target.value)}

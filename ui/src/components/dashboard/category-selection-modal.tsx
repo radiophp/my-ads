@@ -190,7 +190,7 @@ export function CategorySelectionModal({
                       <button
                         type="button"
                         className={cn(
-                          'flex flex-1 items-center gap-2 text-sm justify-start',
+                          'flex flex-1 items-center justify-start gap-2 text-sm',
                           isSelected ? 'font-semibold text-primary' : 'text-foreground',
                           'flex-row',
                         )}

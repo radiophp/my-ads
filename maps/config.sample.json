@@ -1,0 +1,33 @@
+{
+  "options": {
+    "paths": {
+      "fonts": "/usr/src/app/node_modules/tileserver-gl-styles/fonts",
+      "styles": "/usr/src/app/node_modules/tileserver-gl-styles/styles"
+    }
+  },
+  "data": {
+    "openmaptiles": {
+      "mbtiles": "iran.mbtiles"
+    }
+  },
+  "styles": {
+    "osm-bright": {
+      "style": "osm-bright/style.json",
+      "tilejson": {
+        "name": "OSM Bright (labeled)"
+      }
+    },
+    "bright": {
+      "style": "bright/style.json",
+      "tilejson": {
+        "name": "Bright"
+      }
+    },
+    "basic-preview": {
+      "style": "basic-preview/style.json",
+      "tilejson": {
+        "name": "Basic Preview"
+      }
+    }
+  }
+}

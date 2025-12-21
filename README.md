@@ -151,6 +151,18 @@ npm run start:prod   # serves compiled dist/main.js
 
 Ensure the same environment variables are available in production.
 
+### Database backup & restore
+
+PostgreSQL is exposed on host-mode ports (dev `6201`, prod published `6301` targeting internal `5432`). Examples:
+
+- **Dev backup** (from host):  
+  `PGPASSWORD=postgres pg_dump -Fc -h host.docker.internal -p 6201 -U postgres -d my_ads -f /tmp/dev-backup.dump`
+
+- **Prod restore** (from host):  
+  `PGPASSWORD=zQ5gG7k3S9nK2bFw pg_restore --clean --if-exists --no-owner --no-acl -h host.docker.internal -p 6301 -U mahan_admin -d mahan_file /tmp/dev-backup.dump`
+
+Adjust usernames/passwords/ports per your env. Keep `TargetPort=5432` and `PublishedPort=6301` aligned in `docker-compose-prod.yml`.
+
 ---
 
 ## Background Jobs & Divar Pipelines
@@ -506,6 +518,13 @@ run: |
 - The health service caches the last failure per dependency to provide fast responses during outages; adjust `HEALTH_FAILURE_CACHE_MS` if you need different behaviour.
 - For TLS-enabled Redis, set `REDIS_TLS=true` and supply proper certificates (handled automatically by `ioredis` when `tls` object is present).
 - Grafana dashboards are provisioned from `observability/grafana/provisioning`; customize JSON there to extend observability out of the box.
+- Maps/tiles: TileServer-GL is wired in compose (ports `${MAP_TILES_PORT:-7235}` dev, `${MAP_TILES_PORT:-8235}` prod) and expects `maps/iran.mbtiles` locally or `${MAP_TILES_PATH:-/var/lib/my-ads/maps}/iran.mbtiles` in prod.
+  - Install tiles (choose one):
+    - **Sync a prebuilt file**: set `MBTILES_URL` to a hosted MBTiles and run `./scripts/sync-tiles.sh` (uses `MAP_TILES_PATH`, default `./maps/iran.mbtiles`). Use this in CI before `docker compose up`.
+    - **Build Iran locally**: run `OMT_POSTGRES_PORT=<free_port> MIN_ZOOM=0 MAX_ZOOM=14 ./scripts/build-iran-tiles.sh` and wait for completion (tens of minutes). The script drops a full `maps/iran.mbtiles`.
+  - After syncing/building, restart the tileserver: `docker compose --profile full restart tileserver`.
+  - Default UI config uses same-origin tiles: `NEXT_PUBLIC_MAP_TILE_BASE_URL=/map`, so requests hit `/map/styles/basic-preview/style.json` and `/map/styles/basic-preview/{z}/{x}/{y}.pbf|.png` on the app domain (no CORS).
+  - If you change tile paths/ports or revert to dedicated domains, also adjust `Caddyfile.central` (proxy `/map`, `/data`, `/fonts` to the tileserver) and `NEXT_PUBLIC_MAP_TILE_BASE_URL`.
 
 ---
 

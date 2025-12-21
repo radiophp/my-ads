@@ -200,6 +200,40 @@ mohammad-metabase.toncloud.observer {
 	reverse_proxy host.docker.internal:3554
 }
 
+dev-map.mahanfile.com {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		protocols tls1.2 tls1.3
+	}
+	log {
+		output stdout
+		format json
+	}
+	header {
+		Access-Control-Allow-Origin *
+		Access-Control-Allow-Methods "GET, OPTIONS"
+		Access-Control-Allow-Headers *
+	}
+	reverse_proxy http://host.docker.internal:7235
+}
+
+map.mahanfile.com {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		protocols tls1.2 tls1.3
+	}
+	log {
+		output stdout
+		format json
+	}
+	header {
+		Access-Control-Allow-Origin *
+		Access-Control-Allow-Methods "GET, OPTIONS"
+		Access-Control-Allow-Headers *
+	}
+	reverse_proxy http://host.docker.internal:8235
+}
+
 mohammad-storage.toncloud.observer {
 	tls {
 		dns cloudflare {env.CLOUDFLARE_API_TOKEN}

@@ -22,6 +22,7 @@ import {
 import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { AMENITY_CONFIG } from './post-detail-sections';
+import { PostLocationMap } from './post-location-map';
 
 export type PostDetailViewProps = {
   post: DivarPostSummary;
@@ -67,6 +68,7 @@ export function PostDetailView({
     ...detailData.infoRowEntries,
     ...detailData.secondaryDetailEntries,
   ];
+  const hasLocation = typeof post.latitude === 'number' && typeof post.longitude === 'number';
   const { data: categoryFilter } = useGetPublicDivarCategoryFilterQuery(post.categorySlug, {
     skip: !post.categorySlug,
   });
@@ -710,6 +712,14 @@ export function PostDetailView({
             onRequestDownload={onRequestDownload}
             t={t}
           />
+          {hasLocation ? (
+            <PostLocationMap
+              lat={post.latitude as number}
+              lon={post.longitude as number}
+              t={t}
+              isRTL={isRTL}
+            />
+          ) : null}
         </div>
       </div>
       <SaveToFolderDialog

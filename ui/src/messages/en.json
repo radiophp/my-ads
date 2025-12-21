@@ -458,6 +458,11 @@
       "shareMessageDescriptionLabel": "Description",
       "shareMessageLinkLabel": "Link",
       "shareMessageDetailLabel": "Details",
+      "map": {
+        "title": "Map location",
+        "openExternal": "Open full map",
+        "coordinates": "Coordinates: {lat}, {lon}"
+      },
       "shareMessagePublishUnknown": "Unknown",
       "shareMessageLocationUnknown": "Unknown",
       "shareMessageTitleUnknown": "Untitled",

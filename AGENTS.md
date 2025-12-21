@@ -23,6 +23,11 @@
 - Run `npm run lint-staged` if a Husky pre-commit fails; it mirrors the hook configuration.
 - Feed loading uses 12 skeleton cards styled the same as post cards; when changing card layout, mirror changes in the skeleton (ui/src/components/dashboard/divar-posts-feed.tsx).
 - Post codes are numeric (starting at 1000), stored in DB, shown in cards/detail/print/share, and searchable via the header code search (rate-limited).
+- Map tiles: TileServer-GL service added (dev port `${MAP_TILES_PORT:-7235}`, prod `${MAP_TILES_PORT:-8235}`) expecting `maps/iran.mbtiles` or `${MAP_TILES_PATH:-/var/lib/my-ads/maps}/iran.mbtiles`.
+  - Fetch prebuilt tiles: `MBTILES_URL=... ./scripts/sync-tiles.sh` (honors `MAP_TILES_PATH`). Use in CI before compose/stack deploy.
+  - Build Iran locally (full labels): `OMT_POSTGRES_PORT=<free_port> MIN_ZOOM=0 MAX_ZOOM=14 ./scripts/build-iran-tiles.sh` (long-running). Restart tileserver after build.
+  - Default UI uses same-origin tiles: `NEXT_PUBLIC_MAP_TILE_BASE_URL=/map` -> `/map/styles/basic-preview/style.json` and `/map/styles/basic-preview/{z}/{x}/{y}.(pbf|png)`. If switching to dedicated map domains, update env + Caddy accordingly and proxy `/map`, `/data`, `/fonts` to the tileserver.
+- DB backup/restore: dev Postgres on `6201` (`postgres/postgres`); prod published `6301` -> internal `5432` (`mahan_admin/zQ5gG7k3S9nK2bFw`). Backup example: `PGPASSWORD=postgres pg_dump -Fc -h host.docker.internal -p 6201 -U postgres -d my_ads -f /tmp/dev-backup.dump`. Restore to prod: `PGPASSWORD=zQ5gG7k3S9nK2bFw pg_restore --clean --if-exists --no-owner --no-acl -h host.docker.internal -p 6301 -U mahan_admin -d mahan_file /tmp/dev-backup.dump`. Keep compose target port 5432 and published port 6301 aligned.
 
 ## Testing Guidelines
 - Jest powers every suite; use `*.spec.ts` for unit/integration and `*.e2e-spec.ts` for HTTP flows.

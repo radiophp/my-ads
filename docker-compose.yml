@@ -136,6 +136,21 @@ services:
     profiles:
       - full
 
+  tileserver:
+    image: maptiler/tileserver-gl:v4.8.0
+    restart: unless-stopped
+    command: ["--mbtiles", "/data/iran.mbtiles", "--port", "8080"]
+    ports:
+      - '${MAP_TILES_PORT:-7235}:8080'
+    volumes:
+      - ./maps:/data:ro
+    <<: *default-extra-hosts
+    networks:
+      app_net:
+        ipv4_address: 172.30.0.17
+    profiles:
+      - full
+
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.99.0
     restart: unless-stopped

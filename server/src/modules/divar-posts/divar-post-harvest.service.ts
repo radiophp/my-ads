@@ -10,7 +10,7 @@ const PAGINATION_TYPE = 'type.googleapis.com/post_list.PaginationData';
 const SERVER_PAYLOAD_TYPE = 'type.googleapis.com/widgets.SearchData.ServerPayload';
 const MAX_REQUESTS_PER_SECOND = 3;
 const RATE_LIMIT_WINDOW_MS = 1000;
-const DEFAULT_REFETCH_WINDOW_MINUTES = 10 * 60;
+const DEFAULT_REFETCH_WINDOW_MINUTES = 4 * 60;
 const TEHRAN_TZ = 'Asia/Tehran';
 
 type PaginationPayload = {

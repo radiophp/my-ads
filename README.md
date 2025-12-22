@@ -164,6 +164,14 @@ PostgreSQL is exposed on host-mode ports (dev `6201`, prod published `6301` targ
 
 Adjust usernames/passwords/ports per your env. Keep `TargetPort=5432` and `PublishedPort=6301` aligned in `docker-compose-prod.yml`.
 
+After a restore, mark completed queue rows as freshly fetched to avoid mass reactivation in harvest:
+
+```sql
+UPDATE "PostToReadQueue"
+SET "lastFetchedAt" = now(), "updatedAt" = now()
+WHERE status = 'COMPLETED';
+```
+
 ### Monitoring (Grafana / Prometheus / Loki / Tempo)
 - Grafana: `monitoring.mahanfile.com` (or `localhost:6323` with `GRAFANA_PORT` default). Admin credentials come from `GF_SECURITY_ADMIN_USER` / `GF_SECURITY_ADMIN_PASSWORD` secrets.
 - Data sources:

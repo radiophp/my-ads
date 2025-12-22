@@ -45,6 +45,11 @@ services:
         "--port",
         "${REDIS_PORT}"
       ]
+    ports:
+      - target: ${REDIS_PORT}
+        published: ${REDIS_PORT}
+        protocol: tcp
+        mode: ingress
     networks:
       - app_net
     deploy:
@@ -118,8 +123,6 @@ services:
       RATE_LIMIT_MAX: ${RATE_LIMIT_MAX}
       OTP_TTL_SECONDS: ${OTP_TTL_SECONDS}
       OTP_DIGITS: ${OTP_DIGITS}
-      OTP_SENDER_BASE_URL: ${OTP_SENDER_BASE_URL}
-      OTP_SENDER_API_KEY: ${OTP_SENDER_API_KEY}
       RABBITMQ_URL: ${RABBITMQ_URL}
       RABBITMQ_QUEUE_PREFIX: ${RABBITMQ_QUEUE_PREFIX}
       RABBITMQ_PREFETCH: ${RABBITMQ_PREFETCH}
@@ -192,8 +195,6 @@ services:
       RATE_LIMIT_MAX: ${RATE_LIMIT_MAX}
       OTP_TTL_SECONDS: ${OTP_TTL_SECONDS}
       OTP_DIGITS: ${OTP_DIGITS}
-      OTP_SENDER_BASE_URL: ${OTP_SENDER_BASE_URL}
-      OTP_SENDER_API_KEY: ${OTP_SENDER_API_KEY}
       RABBITMQ_URL: ${RABBITMQ_URL}
       RABBITMQ_QUEUE_PREFIX: ${RABBITMQ_QUEUE_PREFIX}
       RABBITMQ_PREFETCH: ${RABBITMQ_PREFETCH}

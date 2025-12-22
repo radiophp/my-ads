@@ -364,12 +364,16 @@ jobs:
           APP_GLOBAL_PREFIX: ${{ vars.APP_GLOBAL_PREFIX }}
           POSTGRES_DB: ${{ vars.POSTGRES_DB }}
           POSTGRES_USER: ${{ vars.POSTGRES_USER }}
-          POSTGRES_PORT: ${{ vars.POSTGRES_PORT }}
+          POSTGRES_INTERNAL_PORT: ${{ vars.POSTGRES_INTERNAL_PORT || '5432' }}
+          POSTGRES_PUBLISHED_PORT: ${{ vars.POSTGRES_PORT }}
           REDIS_HOST: ${{ vars.REDIS_HOST }}
           REDIS_PORT: ${{ vars.REDIS_PORT }}
           REDIS_DB: ${{ vars.REDIS_DB }}
           REDIS_TLS: ${{ vars.REDIS_TLS }}
           REDIS_KEY_PREFIX: ${{ vars.REDIS_KEY_PREFIX }}
+          RABBITMQ_HOST: ${{ vars.RABBITMQ_HOST }}
+          RABBITMQ_PORT: ${{ vars.RABBITMQ_PORT }}
+          RABBITMQ_MANAGEMENT_PORT: ${{ vars.RABBITMQ_MANAGEMENT_PORT }}
           RABBITMQ_USERNAME: ${{ vars.RABBITMQ_USERNAME }}
           RABBITMQ_QUEUE_PREFIX: ${{ vars.RABBITMQ_QUEUE_PREFIX }}
           RABBITMQ_PREFETCH: ${{ vars.RABBITMQ_PREFETCH }}
@@ -401,4 +405,13 @@ jobs:
           API_REPLICAS: ${{ vars.API_REPLICAS }}
           API_CRON_REPLICAS: ${{ vars.API_CRON_REPLICAS }}
           UI_REPLICAS: ${{ vars.UI_REPLICAS }}
+          MAP_TILES_PATH: ${{ vars.MAP_TILES_PATH || '/var/lib/my-ads/maps' }}
+          MAP_TILES_PORT: ${{ vars.MAP_TILES_PORT || '8235' }}
+          OTEL_COLLECTOR_HTTP_PORT: ${{ vars.OTEL_COLLECTOR_HTTP_PORT || '6317' }}
+          OTEL_COLLECTOR_GRPC_PORT: ${{ vars.OTEL_COLLECTOR_GRPC_PORT || '6318' }}
+          TEMPO_PORT: ${{ vars.TEMPO_PORT || '6320' }}
+          TEMPO_GRPC_PORT: ${{ vars.TEMPO_GRPC_PORT || '6321' }}
+          PROMETHEUS_PORT: ${{ vars.PROMETHEUS_PORT || '6322' }}
+          GRAFANA_PORT: ${{ vars.GRAFANA_PORT || '6323' }}
+          LOKI_PORT: ${{ vars.LOKI_PORT || '6319' }}
         run: docker stack deploy -c docker-compose-prod.yml "$STACK_NAME" --with-registry-auth

@@ -6,7 +6,7 @@ on:
 
 jobs:
   server-lint:
-    if: ${{ false }} # temporarily disabled to speed up deploy-only testing
+    if: ${{ true }} # re-enabled
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -28,7 +28,7 @@ jobs:
         run: ESLINT_USE_FLAT_CONFIG=false npm run lint
 
   server-typecheck:
-    if: ${{ false }} # temporarily disabled to speed up deploy-only testing
+    if: ${{ true }} # re-enabled
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -50,7 +50,7 @@ jobs:
         run: npm run typecheck
 
   server-test:
-    if: ${{ false }} # temporarily disabled to speed up deploy-only testing
+    if: ${{ true }} # re-enabled
     runs-on: ubuntu-latest
     needs:
       - server-lint
@@ -111,7 +111,7 @@ jobs:
         run: npm run test:e2e
 
   server-build:
-    if: ${{ false }} # temporarily disabled to speed up deploy-only testing
+    if: ${{ true }} # re-enabled
     runs-on: ubuntu-latest
     needs: server-test
     steps:
@@ -134,7 +134,7 @@ jobs:
         run: npm run build
 
   ui-lint:
-    if: ${{ false }} # temporarily disabled to speed up deploy-only testing
+    if: ${{ true }} # re-enabled
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -157,7 +157,7 @@ jobs:
         run: npm run lint
 
   ui-typecheck:
-    if: ${{ false }} # temporarily disabled to speed up deploy-only testing
+    if: ${{ true }} # re-enabled
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -180,7 +180,7 @@ jobs:
         run: npm run typecheck
 
   ui-test:
-    if: ${{ false }} # temporarily disabled to speed up deploy-only testing
+    if: ${{ true }} # re-enabled
     runs-on: ubuntu-latest
     needs:
       - ui-lint
@@ -218,7 +218,7 @@ jobs:
           NEXT_UI_PORT: 6005
 
   ui-build:
-    if: ${{ false }} # temporarily disabled to speed up deploy-only testing
+    if: ${{ true }} # re-enabled
     runs-on: ubuntu-latest
     needs: ui-test
     defaults:
@@ -242,7 +242,7 @@ jobs:
         run: npm run build
 
   publish-images:
-    if: ${{ false }} # temporarily disabled to speed up deploy-only testing
+    if: ${{ true }} # re-enabled
     runs-on: ubuntu-latest
     needs:
       - server-build
@@ -373,6 +373,7 @@ jobs:
           POSTGRES_USER: ${{ vars.POSTGRES_USER }}
           POSTGRES_INTERNAL_PORT: ${{ vars.POSTGRES_INTERNAL_PORT || '5432' }}
           POSTGRES_PUBLISHED_PORT: ${{ vars.POSTGRES_PORT }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           REDIS_HOST: ${{ vars.REDIS_HOST }}
           REDIS_PORT: ${{ vars.REDIS_PORT }}
           REDIS_DB: ${{ vars.REDIS_DB }}
@@ -392,6 +393,8 @@ jobs:
           MINIO_USE_SSL: ${{ vars.MINIO_USE_SSL }}
           MINIO_BUCKET: ${{ vars.MINIO_BUCKET }}
           MINIO_REGION: ${{ vars.MINIO_REGION }}
+          MINIO_ACCESS_KEY: ${{ secrets.MINIO_ACCESS_KEY }}
+          MINIO_SECRET_KEY: ${{ secrets.MINIO_SECRET_KEY }}
           CORS_ORIGIN: ${{ vars.CORS_ORIGIN }}
           RATE_LIMIT_TTL: ${{ vars.RATE_LIMIT_TTL }}
           RATE_LIMIT_MAX: ${{ vars.RATE_LIMIT_MAX }}
@@ -399,6 +402,10 @@ jobs:
           OTP_DIGITS: ${{ vars.OTP_DIGITS }}
           OTP_SENDER_BASE_URL: ${{ vars.OTP_SENDER_BASE_URL }}
           RABBITMQ_URL: ${{ vars.RABBITMQ_URL }}
+          RABBITMQ_USERNAME: ${{ vars.RABBITMQ_USERNAME }}
+          RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
+          JWT_ACCESS_TOKEN_TTL: ${{ vars.JWT_ACCESS_TOKEN_TTL }}
+          JWT_REFRESH_TOKEN_TTL: ${{ vars.JWT_REFRESH_TOKEN_TTL }}
           OTEL_ENABLED: ${{ vars.OTEL_ENABLED }}
           OTEL_SERVICE_NAME: ${{ vars.OTEL_SERVICE_NAME }}
           OTEL_EXPORTER_OTLP_ENDPOINT: ${{ vars.OTEL_EXPORTER_OTLP_ENDPOINT }}

@@ -4,6 +4,11 @@ server:
   http_listen_port: 6319
   grpc_listen_port: 9096
 
+frontend:
+  # Allow Grafana to issue more concurrent requests without tripping
+  # "too many outstanding requests" when loading dashboards.
+  max_outstanding_per_tenant: 2048
+
 common:
   path_prefix: /loki
   storage:

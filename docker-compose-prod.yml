@@ -360,9 +360,13 @@ services:
       GF_FEATURE_TOGGLES_ENABLE: traceqlEditor
       GF_SERVER_HTTP_PORT: ${GRAFANA_PORT}
       GF_PATHS_PROVISIONING: /etc/grafana/provisioning
+      PROMETHEUS_PORT: ${PROMETHEUS_PORT}
+      LOKI_PORT: ${LOKI_PORT}
+      TEMPO_PORT: ${TEMPO_PORT}
     volumes:
       - grafana_data:/var/lib/grafana
       - ./observability/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./observability/grafana/provisioning/dashboard-providers.yml:/etc/grafana/provisioning/dashboards/dashboard-providers.yml:ro
       - ./observability/grafana/provisioning/dashboards:/var/lib/grafana/dashboards
     depends_on:
       - loki

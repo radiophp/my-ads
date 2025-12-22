@@ -26,6 +26,10 @@ This repository hosts the **My Ads** NestJS backend (`server/`). Key operational
 - **Observability**
   - Prometheus lives at `/metrics`; health metrics include dependency gauges and latencies.
   - OpenTelemetry tracing is optional (`OTEL_ENABLED`). Disabling leaves bootstrap silent without throwing.
+  - Grafana is fronted by Caddy at `https://monitoring.mahanfile.com`; admin creds come from GitHub secrets/vars (`GRAFANA_ADMIN_*`). Datasources: Prometheus, Loki, Tempo. Provisioned dashboards live in `observability/grafana/provisioning/dashboards/`:
+    - `service-health` (dependency timeline)
+    - `api-observability` (RPS, latency, errors, top paths, dependency gauge)
+    - `logs-overview` (log volume/error rate per `compose_service`, OTP failures, live stream)
 
 - **WebSockets & queues**
   - Socket.IO is backed by Redis scoped clients. Queue consumers use RabbitMQ with a helper (`register-consumer-with-retry.util.ts`) for resilient registration.

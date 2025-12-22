@@ -1,0 +1,203 @@
+{
+  "id": null,
+  "uid": "api-observability",
+  "title": "API Observability",
+  "tags": ["api", "performance", "my-ads"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "templating": {
+    "list": [
+      {
+        "name": "status",
+        "type": "query",
+        "datasource": "Prometheus",
+        "refresh": 1,
+        "hide": 0,
+        "options": [],
+        "query": "label_values(http_server_request_duration_seconds_count, status_code)",
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": ["."]
+        }
+      },
+      {
+        "name": "path",
+        "type": "query",
+        "datasource": "Prometheus",
+        "refresh": 1,
+        "hide": 0,
+        "options": [],
+        "query": "label_values(http_server_request_duration_seconds_count, path)",
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": ["."]
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Request Rate by Status",
+      "id": 1,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "color": { "mode": "palette-classic" }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by(status_code) (rate(http_server_request_duration_seconds_count{status_code=~\"$status\", path=~\"$path\"}[$__interval]))",
+          "legendFormat": "status {{status_code}}"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Error Rate (5xx)",
+      "id": 2,
+      "datasource": "Prometheus",
+      "options": {
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 0.05 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(http_server_request_duration_seconds_count{status_code=~\"5..\", path=~\"$path\"}[5m])) / sum(rate(http_server_request_duration_seconds_count{path=~\"$path\"}[5m]))"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Latency (p50 / p90 / p99)",
+      "id": 3,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": { "unit": "s" },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.50, sum by(le) (rate(http_server_request_duration_seconds_bucket{path=~\"$path\", status_code=~\"$status\"}[5m])))",
+          "legendFormat": "p50"
+        },
+        {
+          "refId": "B",
+          "expr": "histogram_quantile(0.90, sum by(le) (rate(http_server_request_duration_seconds_bucket{path=~\"$path\", status_code=~\"$status\"}[5m])))",
+          "legendFormat": "p90"
+        },
+        {
+          "refId": "C",
+          "expr": "histogram_quantile(0.99, sum by(le) (rate(http_server_request_duration_seconds_bucket{path=~\"$path\", status_code=~\"$status\"}[5m])))",
+          "legendFormat": "p99"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Top Paths (by RPS)",
+      "id": 4,
+      "datasource": "Prometheus",
+      "options": {
+        "showHeader": true,
+        "sortBy": [{ "displayName": "Value", "desc": true }]
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "topk(10, sum by(path) (rate(http_server_request_duration_seconds_count[5m])))",
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "indexByName": {
+              "Metric": true,
+              "Time": false,
+              "Value": true
+            },
+            "renameByName": { "Value": "req/s" }
+          }
+        }
+      ]
+    },
+    {
+      "type": "gauge",
+      "title": "Dependency Health",
+      "id": 5,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["lastNotNull"],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "avg(health_dependency_status)"
+        }
+      ]
+    }
+  ]
+}

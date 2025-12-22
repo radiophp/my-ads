@@ -373,7 +373,6 @@ jobs:
           POSTGRES_USER: ${{ vars.POSTGRES_USER }}
           POSTGRES_INTERNAL_PORT: ${{ vars.POSTGRES_INTERNAL_PORT || '5432' }}
           POSTGRES_PUBLISHED_PORT: ${{ vars.POSTGRES_PORT }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           REDIS_HOST: ${{ vars.REDIS_HOST }}
           REDIS_PORT: ${{ vars.REDIS_PORT }}
           REDIS_DB: ${{ vars.REDIS_DB }}
@@ -393,8 +392,6 @@ jobs:
           MINIO_USE_SSL: ${{ vars.MINIO_USE_SSL }}
           MINIO_BUCKET: ${{ vars.MINIO_BUCKET }}
           MINIO_REGION: ${{ vars.MINIO_REGION }}
-          MINIO_ACCESS_KEY: ${{ secrets.MINIO_ACCESS_KEY }}
-          MINIO_SECRET_KEY: ${{ secrets.MINIO_SECRET_KEY }}
           CORS_ORIGIN: ${{ vars.CORS_ORIGIN }}
           RATE_LIMIT_TTL: ${{ vars.RATE_LIMIT_TTL }}
           RATE_LIMIT_MAX: ${{ vars.RATE_LIMIT_MAX }}
@@ -402,8 +399,6 @@ jobs:
           OTP_DIGITS: ${{ vars.OTP_DIGITS }}
           OTP_SENDER_BASE_URL: ${{ vars.OTP_SENDER_BASE_URL }}
           RABBITMQ_URL: ${{ vars.RABBITMQ_URL }}
-          RABBITMQ_USERNAME: ${{ vars.RABBITMQ_USERNAME }}
-          RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
           JWT_ACCESS_TOKEN_TTL: ${{ vars.JWT_ACCESS_TOKEN_TTL }}
           JWT_REFRESH_TOKEN_TTL: ${{ vars.JWT_REFRESH_TOKEN_TTL }}
           OTEL_ENABLED: ${{ vars.OTEL_ENABLED }}

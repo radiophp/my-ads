@@ -138,6 +138,7 @@ Services exposed:
 | Telegram Bot | n/a | separate `telegram-bot` service runs `npm run telegram:bot` |
 | Telegram Bot | (runs alongside API; no exposed port) | separate `telegram-bot` service runs `npm run telegram:bot` |
 | Grafana | 3000 | provisions dashboards from `observability/grafana/...` |
+| Tileserver | 8080 | serves Iran MBTiles (map) at `/map` |
 
 Stop with `docker compose down`.
 
@@ -162,6 +163,18 @@ PostgreSQL is exposed on host-mode ports (dev `6201`, prod published `6301` targ
   `PGPASSWORD=zQ5gG7k3S9nK2bFw pg_restore --clean --if-exists --no-owner --no-acl -h host.docker.internal -p 6301 -U mahan_admin -d mahan_file /tmp/dev-backup.dump`
 
 Adjust usernames/passwords/ports per your env. Keep `TargetPort=5432` and `PublishedPort=6301` aligned in `docker-compose-prod.yml`.
+
+### Monitoring (Grafana / Prometheus / Loki / Tempo)
+- Grafana: `monitoring.mahanfile.com` (or `localhost:6323` with `GRAFANA_PORT` default). Admin credentials come from `GF_SECURITY_ADMIN_USER` / `GF_SECURITY_ADMIN_PASSWORD` secrets.
+- Data sources:
+  - Prometheus `http://prometheus:6322`
+  - Loki `http://loki:6319`
+  - Tempo `http://tempo:6320`
+- Dashboards are pre-provisioned (API observability, Logs overview). If panels show “no data”:
+  - Check Prometheus targets: `api:6300` and `tempo:6320` should be **up**.
+  - Ensure promtail is running and pushing to `loki:6319` (see `observability/promtail-config.yaml`).
+  - Set Grafana time range to “Last 30m” and refresh.
+  - Loki drops logs older than 24h to avoid ingest errors; recent logs should appear quickly.
 
 ---
 
@@ -311,6 +324,16 @@ npm run build          # Produces the production .next/ artefacts
 - `GET /public/health` returns structured JSON including `status`, `failedComponents`, and per-dependency details with retry/backoff caching.
 - OpenTelemetry can push traces to an OTLP endpoint when enabled via `OTEL_ENABLED=true`.
 - Logging is handled by Pino; pretty-printing is controlled with `LOG_PRETTY`.
+
+### Grafana & dashboards
+
+- Grafana runs behind `https://monitoring.mahanfile.com` (Caddy reverse proxy). Admin credentials are supplied via GitHub secrets/vars (`GRAFANA_ADMIN_USER`, `GRAFANA_ADMIN_PASSWORD`, `GRAFANA_ADMIN_EMAIL`); do **not** hardcode them in the repo.
+- Datasources are provisioned automatically (`Prometheus`, `Loki`, `Tempo`); Prometheus scrapes the API `/metrics` and Tempo.
+- Dashboards auto-provision from `observability/grafana/provisioning/dashboards/`:
+  - **Service Health Overview** (`service-health`) — dependency gauges/timeline.
+  - **API Observability** (`api-observability`) — RPS by status, error rate, latency p50/p90/p99, top paths, dependency health.
+  - **Logs Overview** (`logs-overview`) — log volume/errors/warnings by service, recent errors, OTP failure counter, and live log stream with `compose_service` labels.
+- Add new dashboards by dropping JSON files into that folder; Grafana scans the path every 60s by default.
 
 ---
 

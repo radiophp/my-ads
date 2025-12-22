@@ -6,13 +6,24 @@ positions:
   filename: /var/lib/promtail/positions.yaml
 
 clients:
-  - url: http://loki:3100/loki/api/v1/push
+  - url: http://loki:6319/loki/api/v1/push
 
 scrape_configs:
   - job_name: containers
     docker_sd_configs:
       - host: unix:///var/run/docker.sock
         refresh_interval: 5s
+        filters:
+          - name: label
+            values: ["com.docker.stack.namespace=my-ads-production"]
+    pipeline_stages:
+      # drop very old log lines so Loki won't reject them
+      - drop:
+          older_than: 24h
+      # drop anything outside our stack explicitly
+      - match:
+          selector: '{compose_service!~"^my-ads.*"}'
+          action: drop
     relabel_configs:
       - source_labels: ['__meta_docker_container_name']
         regex: '/(.*)'
@@ -21,3 +32,5 @@ scrape_configs:
         target_label: container_id
       - source_labels: ['__meta_docker_container_label_com_docker_compose_service']
         target_label: compose_service
+      - target_label: job
+        replacement: my-ads

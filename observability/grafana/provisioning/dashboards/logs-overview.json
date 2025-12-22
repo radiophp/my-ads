@@ -1,0 +1,165 @@
+{
+  "id": null,
+  "uid": "logs-overview",
+  "title": "Logs Overview",
+  "tags": ["logs", "loki", "my-ads"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "templating": {
+    "list": [
+      {
+        "name": "service",
+        "type": "query",
+        "datasource": "Loki",
+        "refresh": 1,
+        "hide": 0,
+        "options": [],
+        "query": "label_values(compose_service)",
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".+",
+        "current": {
+          "text": "All",
+          "value": [".+"]
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "bargauge",
+      "title": "Log Volume by Service",
+      "id": 1,
+      "datasource": "Loki",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "cps",
+          "color": { "mode": "continuous-BlPu" }
+        },
+        "overrides": []
+      },
+      "options": { "orientation": "horizontal", "displayMode": "gradient" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (compose_service) (count_over_time({compose_service=~\"$service\"}[$__interval]))"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Error Logs (rate)",
+      "id": 2,
+      "datasource": "Loki",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "unit": "cps"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (compose_service) (rate(({compose_service=~\"$service\"} |= \"ERROR\" |~ \"(?i)error|fail|exception\")[$__interval]))",
+          "legendFormat": "{{compose_service}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Warnings (rate)",
+      "id": 3,
+      "datasource": "Loki",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "unit": "cps"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (compose_service) (rate(({compose_service=~\"$service\"} |= \"WARN\" |~ \"(?i)warn\")[$__interval]))",
+          "legendFormat": "{{compose_service}}"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Recent Errors",
+      "id": 4,
+      "datasource": "Loki",
+      "options": {
+        "showHeader": true,
+        "sortBy": [{ "displayName": "Time", "desc": true }]
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "{compose_service=~\"$service\"} |~ \"(?i)error|fail|exception\"",
+          "queryType": "range",
+          "maxLines": 100
+        }
+      ],
+      "transformations": [
+        { "id": "extractFields", "options": { "source": "labels" } },
+        { "id": "sortBy", "options": { "fields": [{ "field": "Time", "desc": true }] } }
+      ],
+      "fieldConfig": { "defaults": {}, "overrides": [] }
+    },
+    {
+      "type": "stat",
+      "title": "OTP Delivery Failures (api)",
+      "id": 5,
+      "datasource": "Loki",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "horizontal",
+        "colorMode": "value",
+        "graphMode": "none"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(count_over_time({compose_service=\"api\"} |= \"Failed to deliver OTP\" [$__interval]))"
+        }
+      ]
+    },
+    {
+      "type": "logs",
+      "title": "Live Logs",
+      "id": 6,
+      "datasource": "Loki",
+      "options": {
+        "dedupStrategy": "none",
+        "showLabels": true,
+        "wrapLogMessage": true,
+        "enableLogDetails": true
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "{compose_service=~\"$service\"}",
+          "queryType": "range"
+        }
+      ]
+    }
+  ]
+}

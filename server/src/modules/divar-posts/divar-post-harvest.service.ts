@@ -10,7 +10,7 @@ const PAGINATION_TYPE = 'type.googleapis.com/post_list.PaginationData';
 const SERVER_PAYLOAD_TYPE = 'type.googleapis.com/widgets.SearchData.ServerPayload';
 const MAX_REQUESTS_PER_SECOND = 3;
 const RATE_LIMIT_WINDOW_MS = 1000;
-const PUBLISH_REACTIVATION_WINDOW_MS = 60 * 60 * 1000;
+const DEFAULT_REFETCH_WINDOW_MINUTES = 10 * 60;
 const TEHRAN_TZ = 'Asia/Tehran';
 
 type PaginationPayload = {
@@ -71,6 +71,7 @@ export class DivarPostHarvestService {
   private readonly nightEndHour?: number;
   private readonly requestDelayMs: number;
   private readonly requestTimeoutMs: number;
+  private readonly refetchWindowMs: number;
   private readonly requestTimestamps: number[] = [];
   private harvestRunning = false;
   private readonly schedulerEnabled: boolean;
@@ -88,6 +89,10 @@ export class DivarPostHarvestService {
       this.configService.get<number>('DIVAR_HARVEST_DELAY_MS', { infer: true }) ?? 750;
     this.requestTimeoutMs =
       this.configService.get<number>('DIVAR_HARVEST_TIMEOUT_MS', { infer: true }) ?? 15000;
+    const refetchWindowMinutes =
+      this.configService.get<number>('DIVAR_REFETCH_WINDOW_MINUTES', { infer: true }) ??
+      DEFAULT_REFETCH_WINDOW_MINUTES;
+    this.refetchWindowMs = Math.max(refetchWindowMinutes, 60) * 60 * 1000;
     this.schedulerEnabled =
       this.configService.get<boolean>('scheduler.enabled', { infer: true }) ?? false;
   }
@@ -296,7 +301,7 @@ export class DivarPostHarvestService {
             source: 'DIVAR',
             externalId: { in: tokensForInsert },
           },
-          select: { id: true, externalId: true, payload: true, status: true },
+          select: { id: true, externalId: true, payload: true, status: true, lastFetchedAt: true },
         });
 
         if (existing.length > 0) {
@@ -308,12 +313,12 @@ export class DivarPostHarvestService {
             publishTimestamps.map((record) => [record.externalId, record.publishedAt ?? null]),
           );
           const now = new Date();
-          const threshold = now.getTime() - PUBLISH_REACTIVATION_WINDOW_MS;
+          const threshold = now.getTime() - this.refetchWindowMs;
 
           const eligible: typeof existing = [];
           const freshTokens: string[] = [];
           const missingTimestampTokens: string[] = [];
-          const thresholdMinutes = Math.round(PUBLISH_REACTIVATION_WINDOW_MS / 60000);
+          const thresholdMinutes = Math.round(this.refetchWindowMs / 60000);
 
           existing.forEach((record) => {
             if (record.status === PostQueueStatus.PROCESSING) {
@@ -322,19 +327,28 @@ export class DivarPostHarvestService {
               );
               return;
             }
+            const lastFetchedAt = record.lastFetchedAt;
+            if (lastFetchedAt && lastFetchedAt.getTime() > threshold) {
+              freshTokens.push(record.externalId);
+              return;
+            }
+
             const publishedAt = publishLookup.get(record.externalId);
-            if (!publishedAt) {
+            if (!lastFetchedAt && !publishedAt) {
               missingTimestampTokens.push(record.externalId);
               return;
             }
-            if (publishedAt.getTime() <= threshold) {
-              const diffMs = now.getTime() - publishedAt.getTime();
+
+            const referenceDate = lastFetchedAt ?? publishedAt;
+            if (referenceDate && referenceDate.getTime() <= threshold) {
+              const diffMs = now.getTime() - referenceDate.getTime();
               const diffMinutes = Math.round(diffMs / 60000);
+              const refLabel = lastFetchedAt ? 'lastFetchedAt' : 'publishedAt';
               this.logger.log(
-                `Reactivating token for refetch | token=${record.externalId} | category=${category.slug} | location=${location.label} | publishedAt=${publishedAt.toISOString()} | staleBy=${diffMinutes}m | threshold=${thresholdMinutes}m`,
+                `Reactivating token for refetch | token=${record.externalId} | category=${category.slug} | location=${location.label} | ${refLabel}=${referenceDate.toISOString()} | staleBy=${diffMinutes}m | threshold=${thresholdMinutes}m`,
               );
               eligible.push(record);
-            } else {
+            } else if (referenceDate) {
               freshTokens.push(record.externalId);
             }
           });

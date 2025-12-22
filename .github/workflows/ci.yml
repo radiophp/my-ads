@@ -299,6 +299,7 @@ jobs:
       - self-hosted
       - linux
       - x64
+    needs: publish-images
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
       contents: read

@@ -76,6 +76,16 @@
         "requestFailed": "We couldn’t send the code. Try again in a moment.",
         "verifyFailed": "The code is invalid or expired. Try again."
       }
+    },
+    "kpi": {
+      "eyebrow": "Market pulse",
+      "title": "Live Divar insights by category",
+      "subtitle": "Track real-time ad volume split by personal vs. agency listings.",
+      "error": "We couldn’t load category stats. Please refresh.",
+      "labels": {
+        "personal": "Personal",
+        "business": "Agency"
+      }
     }
   },
   "profile": {

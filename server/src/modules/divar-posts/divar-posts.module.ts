@@ -9,6 +9,7 @@ import { DivarPostAnalyzeService } from './divar-post-analyze.service';
 import { DivarPostMediaSyncService } from './divar-post-media-sync.service';
 import { DivarContactFetchService } from './divar-contact-fetch.service';
 import { AdminDivarSessionsModule } from '../admin-divar-sessions/admin-divar-sessions.module';
+import { DivarPostStatsService } from './divar-post-stats.service';
 
 @Module({
   imports: [StorageModule, AdminDivarSessionsModule],
@@ -19,6 +20,7 @@ import { AdminDivarSessionsModule } from '../admin-divar-sessions/admin-divar-se
     DivarPostsAdminService,
     DivarPostMediaSyncService,
     DivarContactFetchService,
+    DivarPostStatsService,
   ],
   exports: [
     DivarPostHarvestService,
@@ -26,6 +28,7 @@ import { AdminDivarSessionsModule } from '../admin-divar-sessions/admin-divar-se
     DivarPostAnalyzeService,
     DivarPostsAdminService,
     DivarContactFetchService,
+    DivarPostStatsService,
   ],
   controllers: [DivarPostsAdminController, DivarPostsController],
 })

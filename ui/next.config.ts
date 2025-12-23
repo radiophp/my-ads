@@ -68,6 +68,14 @@ const withPWA = withPWAInit({
     importScripts: ['push-sw.js'],
     runtimeCaching: [
       {
+        // Always go to network for storage assets to avoid opaque response blocks
+        urlPattern: ({ url }: { url: URL }) => url.pathname.startsWith('/storage/'),
+        handler: 'NetworkOnly',
+        options: {
+          cacheName: 'storage-bypass',
+        },
+      },
+      {
         // Always go to network for map tiles/styles to avoid SW interception issues
         urlPattern: ({ url }: { url: URL }) => {
           const hosts = ['dev-map.mahanfile.com', 'map.mahanfile.com'];

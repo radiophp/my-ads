@@ -353,6 +353,46 @@ mahan-storage.toncloud.observer {
 	reverse_proxy http://host.docker.internal:6204
 }
 
+dev.mahanfile.com {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		protocols tls1.2 tls1.3
+	}
+	log {
+		output stdout
+		format json
+	}
+	handle_path /storage* {
+		reverse_proxy http://host.docker.internal:6204
+	}
+	handle_path /map* {
+		reverse_proxy http://host.docker.internal:7235
+	}
+	reverse_proxy /socket.io/* http://host.docker.internal:6200
+	reverse_proxy /api/* http://host.docker.internal:6200
+	reverse_proxy http://host.docker.internal:6005
+}
+
+mahanfile.com {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		protocols tls1.2 tls1.3
+	}
+	log {
+		output stdout
+		format json
+	}
+	handle_path /storage* {
+		reverse_proxy http://host.docker.internal:6304
+	}
+	handle_path /map* {
+		reverse_proxy http://host.docker.internal:7235
+	}
+	reverse_proxy /socket.io/* http://host.docker.internal:6300
+	reverse_proxy /api/* http://host.docker.internal:6300
+	reverse_proxy http://host.docker.internal:6306
+}
+
 storage.mahanfile.com {
 	tls {
 		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
@@ -362,7 +402,7 @@ storage.mahanfile.com {
 		output stdout
 		format json
 	}
-	reverse_proxy http://host.docker.internal:6304
+	redir https://mahanfile.com/storage{uri} 301
 }
 
 ############ ng v2ray #########

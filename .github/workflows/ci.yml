@@ -375,6 +375,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Use Node.js 22
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install server dependencies (migrations)
+        working-directory: server
+        run: npm ci
+
+      - name: Apply database migrations (production)
+        working-directory: server
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_DIRECT_URL: ${{ secrets.DATABASE_DIRECT_URL || secrets.DATABASE_URL }}
+        run: npx prisma migrate deploy
+
       - name: Validate deployment configuration
         env:
           STACK_NAME: ${{ env.STACK_NAME }}

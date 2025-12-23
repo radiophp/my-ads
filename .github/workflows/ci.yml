@@ -394,9 +394,14 @@ jobs:
       - name: Apply database migrations (production)
         working-directory: server
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DATABASE_DIRECT_URL: ${{ secrets.DATABASE_DIRECT_URL || secrets.DATABASE_URL }}
-        run: npx prisma migrate deploy
+          POSTGRES_DB: ${{ vars.POSTGRES_DB }}
+          POSTGRES_USER: ${{ vars.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_PUBLISHED_PORT: ${{ vars.POSTGRES_PORT }}
+        run: |
+          export DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@host.docker.internal:${POSTGRES_PUBLISHED_PORT}/${POSTGRES_DB}?schema=public"
+          export DATABASE_DIRECT_URL="$DATABASE_URL"
+          npx prisma migrate deploy
 
       - name: Validate deployment configuration
         env:

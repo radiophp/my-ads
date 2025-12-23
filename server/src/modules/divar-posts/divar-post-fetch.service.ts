@@ -15,6 +15,7 @@ const DEFAULT_BATCH_SIZE = 3;
 const MAX_ATTEMPTS = 5;
 const MIN_BATCH_INTERVAL_MS = 1000;
 const DEFAULT_RATE_LIMIT_SLEEP_MS = 5000;
+const DEFAULT_PROCESSING_TIMEOUT_MINUTES = 1;
 const BROWSER_USER_AGENTS: readonly string[] = [
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.86 Safari/537.36',
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.86 Safari/537.36',
@@ -78,6 +79,7 @@ export class DivarPostFetchService {
   private readonly sessionCookie?: string;
   private readonly batchSize: number;
   private readonly requestTimeoutMs: number;
+  private readonly processingTimeoutMs: number;
   private fetchRunning = false;
   private readonly schedulerEnabled: boolean;
   private readonly userAgents = BROWSER_USER_AGENTS;
@@ -92,6 +94,7 @@ export class DivarPostFetchService {
       DEFAULT_BATCH_SIZE;
     this.requestTimeoutMs =
       this.configService.get<number>('DIVAR_POST_FETCH_TIMEOUT_MS', { infer: true }) ?? 15000;
+    this.processingTimeoutMs = DEFAULT_PROCESSING_TIMEOUT_MINUTES * 60 * 1000;
     this.schedulerEnabled =
       this.configService.get<boolean>('scheduler.enabled', { infer: true }) ?? false;
   }
@@ -117,6 +120,8 @@ export class DivarPostFetchService {
 
   async fetchNextPosts(): Promise<{ attempted: number; succeeded: number; failed: number }> {
     const summary = { attempted: 0, succeeded: 0, failed: 0 };
+
+    await this.releaseStuckJobs();
 
     while (true) {
       const batch = await this.reserveBatch();
@@ -162,6 +167,28 @@ export class DivarPostFetchService {
     );
 
     return summary;
+  }
+
+  private async releaseStuckJobs(): Promise<void> {
+    const cutoff = new Date(Date.now() - this.processingTimeoutMs);
+    const result = await this.prisma.postToReadQueue.updateMany({
+      where: {
+        status: PostQueueStatus.PROCESSING,
+        updatedAt: { lt: cutoff },
+      },
+      data: {
+        status: PostQueueStatus.PENDING,
+        requestedAt: new Date(),
+        fetchAttempts: 0,
+      },
+    });
+
+    if (result.count > 0) {
+      const minutes = Math.round(this.processingTimeoutMs / 60000);
+      this.logger.warn(
+        `Released ${result.count} stuck queue items (PROCESSING > ${minutes}m) back to PENDING.`,
+      );
+    }
   }
 
   private async reserveBatch(): Promise<PostToReadQueue[]> {

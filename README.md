@@ -142,6 +142,24 @@ Services exposed:
 
 Stop with `docker compose down`.
 
+### Map tiles (Iran MBTiles)
+
+The map uses `maptiler/tileserver-gl` with an Iran MBTiles file and is proxied at `/map`.
+
+1) Place the MBTiles file:
+   - Dev/local: `./maps/iran.mbtiles`
+   - Prod/swarm: set `MAP_TILES_PATH` to a host directory that contains `iran.mbtiles`
+
+2) Make sure these env vars are defined:
+   - `MAP_TILES_PATH` (host directory with `iran.mbtiles`)
+   - `MAP_TILES_PORT` (published port for tileserver, e.g. `7235`)
+
+3) Bring up tileserver:
+   - Local: `docker compose --profile full up -d tileserver`
+   - Prod: redeploy the stack so the service binds the new `MAP_TILES_PATH`
+
+Tileserver expects `/data/iran.mbtiles` inside the container. If you see `ENOENT: /data/iran.mbtiles` in logs, the host path is empty or not mounted.
+
 ### 7. Production Build
 
 ```bash
@@ -264,6 +282,7 @@ WORKER_ID=worker-2 npm run phone-fetch:worker
 - **Reactivation policy:** When the harvester spots a duplicated token it compares the stored `DivarPost.publishedAt` with the fresh payload. If the delta exceeds one hour, the token is reactivated for refetch. Logs now include the prior timestamp, the number of minutes stale, the threshold, and any skip reason (e.g., “already processing”). Reactivation also resets `fetchAttempts` so the fetch worker retries immediately.
 - **Tehran-aware page limits:** `DIVAR_HARVEST_MAX_PAGES` caps how deep each category/location is crawled during daytime. Between `DIVAR_HARVEST_NIGHT_START_HOUR` and `DIVAR_HARVEST_NIGHT_END_HOUR` (evaluated in the `Asia/Tehran` timezone) the system switches to `DIVAR_HARVEST_MAX_PAGES_NIGHT`. Setting either limit to `-1` disables the cap and the harvester keeps paging until Divar has no more data.
 - **Concurrency coordination:** While `divar:fetch-posts` is working on a token it marks the queue row so harvest skips reactivation for that record until the fetch job finishes or times out. That prevents thrash whenever Divar reshuffles publish times.
+- **Stuck job recovery:** The fetcher releases any queue rows stuck in `PROCESSING` for more than 1 minute back to `PENDING` before each batch (hardcoded safeguard for crashes/restarts).
 
 ### Media mirroring
 

@@ -12,8 +12,7 @@ async function bootstrap() {
   await botService.start();
 
   // Keep process alive
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  const noop = () => {};
+  const noop = () => undefined;
   process.on('SIGINT', async () => {
     await app.close();
     process.exit(0);
@@ -28,7 +27,6 @@ async function bootstrap() {
 }
 
 bootstrap().catch((err) => {
-  // eslint-disable-next-line no-console
   console.error(err);
   process.exit(1);
 });

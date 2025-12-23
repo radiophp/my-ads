@@ -104,6 +104,16 @@ const nextConfig: NextConfig = {
         hostname: 'mahan-storage.toncloud.observer',
         pathname: '/upload/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'dev-storage.mahanfile.com',
+        pathname: '/upload/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'storage.mahanfile.com',
+        pathname: '/upload/**',
+      },
     ],
   },
   webpack(config) {

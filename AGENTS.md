@@ -3,9 +3,11 @@
 ## Project Structure & Module Organization
 - `server/src/app.module.ts` wires configuration, shared providers, and feature modules.
 - `server/src/modules/*` hosts domain logic (auth, users, panels, uploads) and should export focused Nest modules with explicit providers.
+- `server/src/modules/news` owns news categories/tags plus public list/detail endpoints and admin CRUD.
 - `server/src/common` and `server/src/platform` centralize guards, filters, logging, queues, storage, and telemetry helpers.
 - Tests live in `server/src/tests/{unit,integration,e2e}` with fixtures under `server/src/tests/setup-test.ts`; avoid creating top-level `test/` directories.
 - Root-level assets include `docker-compose.yml`, `observability/` dashboards, `rabbitmq/` seed scripts, and the Prisma schema in `server/prisma`.
+ - Public news pages live in `ui/src/app/news` (SSR, `revalidate = 300`) and are linked in the header nav.
 
 ## Build, Test, and Development Commands
 - `npm run start:dev` boots Nest + Fastify with hot reload, loading `.env` from the repo root.

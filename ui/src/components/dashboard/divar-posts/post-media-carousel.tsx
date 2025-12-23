@@ -1,4 +1,4 @@
-/* eslint-disable @next/next/no-img-element, tailwindcss/classnames-order */
+/* eslint-disable @next/next/no-img-element */
 import type { JSX, TouchEvent } from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {

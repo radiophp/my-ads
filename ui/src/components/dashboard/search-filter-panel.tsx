@@ -2237,12 +2237,8 @@ export function DashboardSearchFilterPanel() {
             <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 py-4 lg:px-4">
               {savedFiltersBusy ? (
                 <div className="space-y-3">
-                  {Array.from({ length: 3 }).map((_, index) => (
-                    <div
-                      // eslint-disable-next-line react/no-array-index-key
-                      key={index}
-                      className="h-14 animate-pulse rounded-xl bg-muted/40"
-                    />
+                  {['one', 'two', 'three'].map((key) => (
+                    <div key={key} className="h-14 animate-pulse rounded-xl bg-muted/40" />
                   ))}
                 </div>
               ) : savedFilters.length === 0 ? (

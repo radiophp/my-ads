@@ -140,7 +140,6 @@ export function PostLocationMap({
         };
       } catch (error) {
         if (!cancelled) {
-          // eslint-disable-next-line no-console
           console.warn('Map init failed', error);
           onReady?.();
         }
@@ -155,7 +154,6 @@ export function PostLocationMap({
         try {
           currentMap.remove();
         } catch (error) {
-          // eslint-disable-next-line no-console
           console.warn('Map teardown failed', error);
         }
       }

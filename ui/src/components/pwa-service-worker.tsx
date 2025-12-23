@@ -27,7 +27,6 @@ export function PwaServiceWorker() {
         }
         await navigator.serviceWorker.register(SW_PATH);
       } catch (error) {
-        // eslint-disable-next-line no-console
         if (!cancelled) console.warn('Service worker registration failed', error);
       }
     };

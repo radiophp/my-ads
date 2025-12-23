@@ -277,11 +277,11 @@ export function SavedFiltersPanel() {
 }
 
 function SavedFiltersSkeleton() {
+  const skeletonKeys = ['one', 'two', 'three'];
   return (
     <div className="space-y-4">
-      {Array.from({ length: 3 }).map((_, index) => (
-        // eslint-disable-next-line react/no-array-index-key
-        <div key={index} className="bg-card/50 animate-pulse rounded-2xl border border-border/70 p-4">
+      {skeletonKeys.map((key) => (
+        <div key={key} className="bg-card/50 animate-pulse rounded-2xl border border-border/70 p-4">
           <div className="h-5 w-1/3 rounded bg-muted" />
           <div className="mt-2 h-4 w-1/4 rounded bg-muted" />
         </div>

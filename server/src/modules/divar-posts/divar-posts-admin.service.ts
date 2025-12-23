@@ -840,7 +840,6 @@ export class DivarPostsAdminService {
     where.AND = [where.AND, condition];
   }
 
-  // eslint-disable-next-line @typescript-eslint/class-methods-use-this
   private mapRecordToListItem(record: DivarPostSummaryRecord): DivarPostListItemDto {
     return {
       id: record.id,

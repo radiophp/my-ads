@@ -12,6 +12,7 @@
       "savedFilters": "Saved filters",
       "notifications": "Notifications",
       "admin": "Admin",
+      "news": "News",
       "guides": "Guides"
     },
     "docs": "Docs",
@@ -178,6 +179,27 @@
         "checking": "Checking…",
         "unknown": "Unknown"
       }
+    }
+  },
+  "news": {
+    "title": "News",
+    "description": "Highlights, updates, and announcements from the Mahan File team.",
+    "empty": "No news published yet.",
+    "error": "Unable to load news right now.",
+    "back": "Back to news",
+    "labels": {
+      "published": "Published",
+      "source": "Source",
+      "tags": "Tags",
+      "noImage": "No image"
+    },
+    "pagination": {
+      "label": "Page {page} of {totalPages} • {totalItems} news items",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "tags": {
+      "empty": "No tags available."
     }
   },
   "dashboard": {
@@ -652,6 +674,18 @@
           "title": "Posts to analyze",
           "description": "Review Divar posts queued for normalization."
         },
+        "news": {
+          "title": "News",
+          "description": "Create and publish news items for the public site."
+        },
+        "newsCategories": {
+          "title": "News categories",
+          "description": "Manage the categories used to group news."
+        },
+        "newsTags": {
+          "title": "News tags",
+          "description": "Maintain the tags assigned to news entries."
+        },
         "notifications": {
           "title": "Test notifications",
           "description": "Send a manual test notification to a user."
@@ -664,6 +698,153 @@
           "title": "Arka headers",
           "description": "Manage Arka API headers used to fetch phone numbers."
         }
+      }
+    },
+    "news": {
+      "title": "News",
+      "description": "Create and publish news entries for the public site.",
+      "actions": {
+        "add": "Add news",
+        "refresh": "Refresh",
+        "edit": "Edit",
+        "delete": "Delete",
+        "save": "Save",
+        "cancel": "Cancel"
+      },
+      "columns": {
+        "title": "Title",
+        "category": "Category",
+        "tags": "Tags",
+        "updated": "Updated",
+        "actions": "Actions"
+      },
+      "fields": {
+        "title": "Title",
+        "slug": "Slug (optional)",
+        "shortText": "Short text",
+        "content": "Content",
+        "mainImageUrl": "Main image URL",
+        "category": "Category",
+        "categoryPlaceholder": "Select a category",
+        "tags": "Tags",
+        "categoryPreview": "Category: {name}",
+        "tagsPreview": "Tags: {tags}"
+      },
+      "dialog": {
+        "addTitle": "Add news",
+        "addDescription": "Create a new news entry.",
+        "editTitle": "Edit news",
+        "editDescription": "Update the selected news entry."
+      },
+      "loading": "Loading news…",
+      "empty": "No news items yet.",
+      "confirmDelete": "Delete this news item?",
+      "tags": {
+        "empty": "No tags selected."
+      },
+      "toast": {
+        "missingTitle": "Missing fields",
+        "missingDescription": "Title, category, and content are required.",
+        "createdTitle": "News created",
+        "createdDescription": "News entry added.",
+        "updatedTitle": "News updated",
+        "updatedDescription": "Changes saved.",
+        "deletedTitle": "News deleted",
+        "deletedDescription": "News entry removed.",
+        "errorTitle": "Save failed",
+        "errorDescription": "Unable to save news. Try again."
+      }
+    },
+    "newsCategories": {
+      "title": "News categories",
+      "description": "Manage the categories used to organize news entries.",
+      "actions": {
+        "add": "Add category",
+        "refresh": "Refresh",
+        "edit": "Edit",
+        "delete": "Delete",
+        "save": "Save",
+        "cancel": "Cancel"
+      },
+      "columns": {
+        "name": "Name",
+        "slug": "Slug",
+        "active": "Status",
+        "updated": "Updated",
+        "actions": "Actions"
+      },
+      "fields": {
+        "name": "Name",
+        "slug": "Slug (optional)",
+        "active": "Active"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "dialog": {
+        "addTitle": "Add category",
+        "addDescription": "Create a new news category.",
+        "editTitle": "Edit category",
+        "editDescription": "Update the selected category."
+      },
+      "loading": "Loading categories…",
+      "empty": "No categories yet.",
+      "confirmDelete": "Delete this category?",
+      "toast": {
+        "missingTitle": "Missing name",
+        "missingDescription": "Category name is required.",
+        "createdTitle": "Category created",
+        "createdDescription": "News category added.",
+        "updatedTitle": "Category updated",
+        "updatedDescription": "Changes saved.",
+        "deletedTitle": "Category deleted",
+        "deletedDescription": "News category removed.",
+        "errorTitle": "Save failed",
+        "errorDescription": "Unable to save category. Try again."
+      }
+    },
+    "newsTags": {
+      "title": "News tags",
+      "description": "Maintain the tags assigned to news entries.",
+      "actions": {
+        "add": "Add tag",
+        "refresh": "Refresh",
+        "edit": "Edit",
+        "delete": "Delete",
+        "save": "Save",
+        "cancel": "Cancel"
+      },
+      "columns": {
+        "name": "Name",
+        "slug": "Slug",
+        "updated": "Updated",
+        "actions": "Actions"
+      },
+      "fields": {
+        "name": "Name",
+        "slug": "Slug (optional)"
+      },
+      "dialog": {
+        "addTitle": "Add tag",
+        "addDescription": "Create a new news tag.",
+        "editTitle": "Edit tag",
+        "editDescription": "Update the selected tag."
+      },
+      "loading": "Loading tags…",
+      "empty": "No tags yet.",
+      "confirmDelete": "Delete this tag?",
+      "toast": {
+        "missingTitle": "Missing name",
+        "missingDescription": "Tag name is required.",
+        "createdTitle": "Tag created",
+        "createdDescription": "News tag added.",
+        "updatedTitle": "Tag updated",
+        "updatedDescription": "Changes saved.",
+        "deletedTitle": "Tag deleted",
+        "deletedDescription": "News tag removed.",
+        "errorTitle": "Save failed",
+        "errorDescription": "Unable to save tag. Try again."
       }
     },
     "arkaSessions": {

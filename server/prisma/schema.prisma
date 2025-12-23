@@ -538,3 +538,54 @@ model ArkaPhoneRecord {
   @@index([externalId])
   @@index([transferLockedUntil])
 }
+
+model NewsCategory {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  news      News[]
+
+  @@index([isActive])
+}
+
+model NewsTag {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  news      NewsTagOnNews[]
+}
+
+model News {
+  id           String   @id @default(uuid())
+  title        String
+  slug         String   @unique
+  shortText    String?
+  content      String   @db.Text
+  mainImageUrl String?
+  categoryId   String
+  category     NewsCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  tags         NewsTagOnNews[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([createdAt])
+}
+
+model NewsTagOnNews {
+  id        String   @id @default(uuid())
+  newsId    String
+  tagId     String
+  news      News     @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  tag       NewsTag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([newsId, tagId])
+  @@index([tagId])
+  @@index([newsId])
+}

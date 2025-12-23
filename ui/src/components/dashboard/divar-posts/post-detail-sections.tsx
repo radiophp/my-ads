@@ -1,4 +1,3 @@
-/* eslint-disable tailwindcss/classnames-order */
 import type { JSX } from 'react';
 import {
   ArrowUpDown,

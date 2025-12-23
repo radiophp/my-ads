@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import type { JSX } from 'react';
@@ -464,7 +463,6 @@ export function DivarPostsFeed(): JSX.Element {
         phone = result.phoneNumber;
       } catch (error) {
         fetchFailed = true;
-        // eslint-disable-next-line no-console
         console.warn('Failed to fetch phone for share', error);
       }
 

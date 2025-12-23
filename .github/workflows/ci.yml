@@ -365,8 +365,13 @@ jobs:
       - publish-api-image
       - publish-ui-image
     if: |
-      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-      (github.event_name == 'pull_request' && github.base_ref == 'main' && github.event.pull_request.head.repo.full_name == github.repository)
+      always() &&
+      (
+        (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+        (github.event_name == 'pull_request' && github.base_ref == 'main' && github.event.pull_request.head.repo.full_name == github.repository)
+      ) &&
+      (needs.publish-api-image.result == 'success' || needs.publish-api-image.result == 'skipped') &&
+      (needs.publish-ui-image.result == 'success' || needs.publish-ui-image.result == 'skipped')
     permissions:
       contents: read
     env:

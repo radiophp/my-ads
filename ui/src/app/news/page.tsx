@@ -1,6 +1,6 @@
+/* eslint-disable @next/next/no-img-element */
 import { headers } from 'next/headers';
 import { getLocale, getTranslations } from 'next-intl/server';
-import Image from 'next/image';
 
 import type { NewsItem, NewsListResponse } from '@/types/news';
 import { Link } from '@/i18n/routing';
@@ -125,12 +125,12 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
                 <Link href={`/news/${item.slug}`} className="flex h-full flex-col">
                   <div className="relative h-48 w-full overflow-hidden bg-muted/40">
                     {item.mainImageUrl ? (
-                      <Image
+                      <img
                         src={item.mainImageUrl}
                         alt={item.title}
-                        fill
-                        className="object-cover transition duration-300 group-hover:scale-[1.03]"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                        loading="lazy"
+                        decoding="async"
+                        className="absolute inset-0 size-full object-cover transition duration-300 group-hover:scale-[1.03]"
                       />
                     ) : (
                       <div className="flex size-full items-center justify-center bg-gradient-to-br from-muted/20 via-muted/40 to-muted/10 text-sm text-muted-foreground">

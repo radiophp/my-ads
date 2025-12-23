@@ -161,7 +161,7 @@ export function PostLocationMap({
       }
       mapRef.current = null;
     };
-  }, [lat, lon, tileBase, isRTL]);
+  }, [lat, lon, tileBase, isRTL, isTouchDevice, onReady]);
 
   const osmUrl = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=14/${lat}/${lon}`;
   const prettyCoords = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;

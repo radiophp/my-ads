@@ -13,7 +13,6 @@ import {
   Bookmark,
   BookmarkCheck,
   Pencil,
-  Plus,
   Share2,
   Phone,
   Copy,
@@ -100,6 +99,10 @@ export function PostDetailView({
   const [isEditingNote, setIsEditingNote] = useState(false);
   const [noteDraft, setNoteDraft] = useState(noteContent ?? '');
   const isMutatingNote = isSavingInlineNote || isDeletingInlineNote;
+  const actionButtonClass = cn(
+    'flex flex-1 basis-0 items-center gap-1 rounded-none px-2 py-1 text-xs',
+    isRTL ? 'first:rounded-r-md last:rounded-l-md' : 'first:rounded-l-md last:rounded-r-md',
+  );
   useEffect(() => {
     if (!isSaved && savedDialogOpen) {
       setSavedDialogOpen(false);
@@ -428,18 +431,18 @@ export function PostDetailView({
     <div className="space-y-8">
       <div className="flex flex-col gap-6 lg:flex-row">
         <div className="order-2 flex-1 space-y-6 lg:order-1">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex w-full flex-wrap gap-0">
             {onShareWhatsapp || onShareTelegram || smsHref || onCopyLink ? (
               <>
                 <Button
                   type="button"
                   variant="secondary"
                   size="sm"
-                  className="flex items-center gap-2 px-3 py-1 text-xs"
+                  className={actionButtonClass}
                   onClick={() => setShareDialogOpen(true)}
                 >
-                  <Share2 className="size-3.5" aria-hidden="true" />
-                  <span className="sr-only">{t('sharePost')}</span>
+                  <Share2 className="size-3.5 [@media(max-width:393px)]:hidden" aria-hidden="true" />
+                  <span>{t('sharePost')}</span>
                 </Button>
                 <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
                   <DialogContent className="max-w-sm" hideCloseButton={false}>
@@ -508,23 +511,27 @@ export function PostDetailView({
             ) : null}
             <Button
               type="button"
-              variant="outline"
+              variant="secondary"
               size="sm"
-              className="flex items-center gap-2 px-3 py-1 text-xs"
+              className={actionButtonClass}
               onClick={handlePrint}
             >
-              <Printer className="size-3.5" aria-hidden="true" />
+              <Printer className="size-3.5 [@media(max-width:393px)]:hidden" aria-hidden="true" />
               <span>{t('print')}</span>
             </Button>
             <Button
               type="button"
               variant="secondary"
               size="sm"
-              className="flex items-center gap-2 px-3 py-1 text-xs"
+              className={actionButtonClass}
               onClick={onRequestContactInfo}
               disabled={!onRequestContactInfo || contactLoading}
             >
-              {contactLoading ? <Loader2 className="size-3.5 animate-spin" /> : <Phone className="size-3.5" />}
+              {contactLoading ? (
+                <Loader2 className="size-3.5 animate-spin [@media(max-width:393px)]:hidden" />
+              ) : (
+                <Phone className="size-3.5 [@media(max-width:393px)]:hidden" />
+              )}
               <span>{t('contactInfo.button')}</span>
             </Button>
             {!noteContent && !isEditingNote ? (
@@ -533,9 +540,9 @@ export function PostDetailView({
                 variant="secondary"
                 size="sm"
                 onClick={handleStartNoteEdit}
-                className="flex items-center gap-2 px-3 py-1 text-xs"
+                className={actionButtonClass}
               >
-                <Plus className="size-3.5" aria-hidden="true" />
+                <Pencil className="size-3.5 [@media(max-width:393px)]:hidden" aria-hidden="true" />
                 <span>{t('noteSection.buttonLabel')}</span>
               </Button>
             ) : null}
@@ -544,28 +551,28 @@ export function PostDetailView({
               variant={isSaved ? 'outline' : 'secondary'}
               size="sm"
               className={cn(
-                'flex items-center gap-2 px-3 py-1 text-xs',
+                actionButtonClass,
                 isSaved && 'border-emerald-500 text-emerald-600 hover:bg-emerald-50',
               )}
               onClick={handleSaveButtonClick}
             >
               {isSaved ? (
                 <>
-                  <BookmarkCheck className="size-3.5" />
-                  <span>{t('savedLabel')}</span>
+                  <BookmarkCheck className="size-3.5 [@media(max-width:393px)]:hidden" />
+                  <span>{t('saveToFolder')}</span>
                 </>
               ) : (
                 <>
-                  <Bookmark className="size-3.5" />
+                  <Bookmark className="size-3.5 [@media(max-width:393px)]:hidden" />
                   <span>{t('saveToFolder')}</span>
                 </>
               )}
             </Button>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="hidden flex-wrap items-center gap-2 lg:flex">
             <button
               type="button"
-              className="inline-flex items-center gap-2 rounded-md border border-border/70 bg-muted/40 px-3 py-1 text-sm font-semibold text-foreground transition hover:bg-secondary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="inline-flex items-center gap-2 rounded-md border border-border/70 bg-muted/40 px-3 py-1 text-sm font-normal text-foreground transition hover:bg-secondary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               onClick={() => {
                 if (post.code) {
                   navigator.clipboard
@@ -579,11 +586,11 @@ export function PostDetailView({
               aria-label={t('labels.postCode')}
             >
               <span>{t('labels.postCode')}:</span>
-              <span className="font-mono text-base">{post.code ?? '—'}</span>
+              <span className="font-mono text-sm">{post.code ?? '—'}</span>
               <Copy className="size-4" aria-hidden />
             </button>
             {publishedDisplay ? (
-              <span className="inline-flex items-center gap-2 rounded-md border border-border/70 bg-muted/40 px-3 py-1 text-sm font-semibold text-foreground">
+              <span className="inline-flex items-center gap-2 rounded-md border border-border/70 bg-muted/40 px-3 py-1 text-sm font-normal text-foreground">
                 <Clock3 className="size-4" aria-hidden />
                 <span>{publishedDisplay}</span>
               </span>
@@ -724,7 +731,41 @@ export function PostDetailView({
             <AttributeLabelGrid entries={detailData.attributeLabelOnlyEntries} />
           </dl>
         </div>
-        <div className="order-1 lg:order-2 lg:w-2/5">
+        <div className="order-1 lg:order-2 lg:-mx-4 lg:w-2/5">
+          <div className="mb-3 lg:hidden">
+            <div className="flex w-full overflow-hidden rounded-md border border-border/70 bg-muted/40 text-foreground">
+              <button
+                type="button"
+                className="inline-flex flex-1 basis-0 items-center justify-center gap-2 px-3 py-2 text-xs font-normal transition hover:bg-secondary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                onClick={() => {
+                  if (post.code) {
+                    navigator.clipboard
+                      .writeText(post.code.toString())
+                      .then(() => toast({ title: t('labels.postCodeCopied') }))
+                      .catch(() =>
+                        toast({ title: t('contactInfo.copyError'), variant: 'destructive' }),
+                      );
+                  }
+                }}
+                aria-label={t('labels.postCode')}
+              >
+                <span>{t('labels.postCode')}:</span>
+                <span className="font-mono text-xs">{post.code ?? '—'}</span>
+                <Copy className="size-4" aria-hidden />
+              </button>
+              {publishedDisplay ? (
+                <span
+                  className={cn(
+                    'inline-flex flex-1 basis-0 items-center justify-center gap-2 px-3 py-2 text-xs font-normal',
+                    isRTL ? 'border-r border-border/70' : 'border-l border-border/70',
+                  )}
+                >
+                  <Clock3 className="size-4" aria-hidden />
+                  <span>{publishedDisplay}</span>
+                </span>
+              ) : null}
+            </div>
+          </div>
           <PostMediaCarousel
             post={post}
             isRTL={isRTL}

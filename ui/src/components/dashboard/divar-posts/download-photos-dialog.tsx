@@ -82,7 +82,9 @@ export function DownloadPhotosDialog({
     setDownloadingId('zip');
     const link = document.createElement('a');
     link.href = zipDownloadUrl;
-    link.download = `${sanitizeFileName(post.externalId ?? post.id ?? 'post')}-photos.zip`;
+    const fallbackId = post.externalId ?? post.id ?? 'post';
+    const downloadLabel = post.code ? `${post.code}` : fallbackId;
+    link.download = `${sanitizeFileName(downloadLabel)}-photos.zip`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -97,7 +99,7 @@ export function DownloadPhotosDialog({
         onPointerDownOutside={(event) => event.preventDefault()}
         onInteractOutside={(event) => event.preventDefault()}
       >
-        <div className="flex h-full flex-col overflow-hidden">
+        <div className="flex h-full min-h-0 flex-col overflow-hidden">
           <div className="border-b border-border px-6 py-4 sm:hidden">
             <p className="text-center text-base font-semibold">{t('downloadPhotos')}</p>
           </div>
@@ -106,9 +108,9 @@ export function DownloadPhotosDialog({
               <DialogTitle>{t('downloadPhotos')}</DialogTitle>
             </DialogHeader>
           </div>
-          <div className="flex-1 overflow-y-auto px-6 pb-4 pt-2 sm:px-6">
+          <div className="flex-1 min-h-0 touch-pan-y overflow-y-auto overscroll-contain px-6 pb-4 pt-2 sm:px-6">
             {hasDownloadableMedia ? (
-              <div className="grid grid-cols-3 gap-3 md:grid-cols-8 lg:grid-cols-12">
+              <div className="grid grid-cols-3 gap-3 md:grid-cols-5 lg:grid-cols-5">
                 {medias.map((media, index) => {
                   const downloadUrl = getMediaDownloadUrl(media);
                   const isDownloading = downloadingId === media.id;

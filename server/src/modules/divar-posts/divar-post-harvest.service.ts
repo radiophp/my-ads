@@ -10,6 +10,8 @@ const PAGINATION_TYPE = 'type.googleapis.com/post_list.PaginationData';
 const SERVER_PAYLOAD_TYPE = 'type.googleapis.com/widgets.SearchData.ServerPayload';
 const MAX_REQUESTS_PER_SECOND = 3;
 const RATE_LIMIT_WINDOW_MS = 1000;
+const DEFAULT_MAX_PAGES_PER_COMBO = 20;
+const DEFAULT_MAX_PAGES_PER_COMBO_NIGHT = 5;
 const DEFAULT_REFETCH_WINDOW_MINUTES = 4 * 60;
 const TEHRAN_TZ = 'Asia/Tehran';
 
@@ -81,8 +83,15 @@ export class DivarPostHarvestService {
     private readonly configService: ConfigService,
   ) {
     this.sessionCookie = this.configService.get<string>('DIVAR_SESSION_COOKIE');
-    this.maxPagesPerCombo = this.parseNumberEnv('DIVAR_HARVEST_MAX_PAGES');
-    this.nightMaxPagesPerCombo = this.parseNumberEnv('DIVAR_HARVEST_MAX_PAGES_NIGHT');
+    const resolvedMaxPages = this.resolvePageLimitEnv(
+      this.parseNumberEnv('DIVAR_HARVEST_MAX_PAGES'),
+      DEFAULT_MAX_PAGES_PER_COMBO,
+    );
+    this.maxPagesPerCombo = resolvedMaxPages;
+    this.nightMaxPagesPerCombo = this.resolvePageLimitEnv(
+      this.parseNumberEnv('DIVAR_HARVEST_MAX_PAGES_NIGHT'),
+      DEFAULT_MAX_PAGES_PER_COMBO_NIGHT,
+    );
     this.nightStartHour = this.parseNumberEnv('DIVAR_HARVEST_NIGHT_START_HOUR');
     this.nightEndHour = this.parseNumberEnv('DIVAR_HARVEST_NIGHT_END_HOUR');
     this.requestDelayMs =
@@ -484,6 +493,16 @@ export class DivarPostHarvestService {
     }
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : undefined;
+  }
+
+  private resolvePageLimitEnv(value: number | undefined, fallback: number): number | undefined {
+    if (value === undefined) {
+      return fallback;
+    }
+    if (value <= 0) {
+      return undefined;
+    }
+    return value;
   }
 
   private buildRequestBody({

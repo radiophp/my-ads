@@ -398,6 +398,7 @@ export class DivarPostsAdminService {
 
   async getPostWithMedias(id: string): Promise<{
     id: string;
+    code: number | null;
     externalId: string | null;
     title: string | null;
     medias: { id: string; url: string | null; localUrl: string | null }[];
@@ -406,6 +407,7 @@ export class DivarPostsAdminService {
       where: { id },
       select: {
         id: true,
+        code: true,
         externalId: true,
         title: true,
         medias: {

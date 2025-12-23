@@ -106,13 +106,28 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'mahan-storage.toncloud.observer',
+        pathname: '/mahan-file-uploads/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'dev-storage.mahanfile.com',
         pathname: '/upload/**',
       },
       {
         protocol: 'https',
+        hostname: 'dev-storage.mahanfile.com',
+        pathname: '/mahan-file-uploads/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'storage.mahanfile.com',
         pathname: '/upload/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'storage.mahanfile.com',
+        pathname: '/mahan-file-uploads/**',
       },
     ],
   },

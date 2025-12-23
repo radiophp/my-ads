@@ -92,29 +92,32 @@ const withPWA = withPWAInit({
 
 const i18nRequestRelativePath = './src/i18n/request.ts';
 
+const imageRemotePatterns = [
+  {
+    protocol: 'https',
+    hostname: 'mahan-storage.toncloud.observer',
+    pathname: '/**',
+  },
+  {
+    protocol: 'https',
+    hostname: 'dev-storage.mahanfile.com',
+    pathname: '/**',
+  },
+  {
+    protocol: 'https',
+    hostname: 'storage.mahanfile.com',
+    pathname: '/**',
+  },
+] as const satisfies NonNullable<NextConfig['images']>['remotePatterns'];
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
   images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'mahan-storage.toncloud.observer',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'dev-storage.mahanfile.com',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'storage.mahanfile.com',
-        pathname: '/**',
-      },
-    ],
+    remotePatterns: imageRemotePatterns,
+    domains: imageRemotePatterns.map((pattern) => pattern.hostname),
   },
   webpack(config) {
     config.resolve ??= {};
@@ -153,5 +156,9 @@ const turbopackConfig = configWithPlugins.turbopack as Record<string, unknown>;
 turbopackConfig.resolveAlias ??= {};
 (turbopackConfig.resolveAlias as Record<string, string>)['next-intl/config'] =
   i18nRequestRelativePath;
+
+configWithPlugins.images ??= {};
+configWithPlugins.images.remotePatterns = imageRemotePatterns;
+configWithPlugins.images.domains = imageRemotePatterns.map((pattern) => pattern.hostname);
 
 export default configWithPlugins;

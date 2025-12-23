@@ -363,6 +363,11 @@ dev.mahanfile.com {
 		format json
 	}
 	handle_path /storage* {
+		header {
+			Access-Control-Allow-Origin "*"
+			Cross-Origin-Resource-Policy "cross-origin"
+			Timing-Allow-Origin "*"
+		}
 		reverse_proxy http://host.docker.internal:6204
 	}
 	handle_path /map* {
@@ -383,6 +388,11 @@ mahanfile.com {
 		format json
 	}
 	handle_path /storage* {
+		header {
+			Access-Control-Allow-Origin "*"
+			Cross-Origin-Resource-Policy "cross-origin"
+			Timing-Allow-Origin "*"
+		}
 		reverse_proxy http://host.docker.internal:6304
 	}
 	handle_path /map* {

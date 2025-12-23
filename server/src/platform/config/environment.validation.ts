@@ -187,6 +187,10 @@ export class EnvironmentVariables {
   @IsString()
   MINIO_REGION?: string;
 
+  @IsOptional()
+  @IsString()
+  MINIO_PUBLIC_PATH?: string;
+
   @Transform(({ value }) => (typeof value === 'string' ? value === 'true' : Boolean(value)))
   @IsBoolean()
   OTEL_ENABLED: boolean = false;

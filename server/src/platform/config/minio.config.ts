@@ -9,6 +9,7 @@ export type MinioConfig = {
   bucket: string;
   region?: string;
   publicEndpoint?: string;
+  publicPath?: string;
   publicPort?: number;
   publicUseSSL?: boolean;
 };
@@ -28,6 +29,7 @@ export default registerAs<MinioConfig>('minio', () => {
 
   const host = env['MINIO_ENDPOINT'] ?? 'minio';
   const publicHost = env['MINIO_PUBLIC_ENDPOINT'];
+  const publicPath = env['MINIO_PUBLIC_PATH'];
   const publicUseSSL = parseBoolean(env['MINIO_PUBLIC_USE_SSL'], useSSL);
   const publicPortSource = env['MINIO_PUBLIC_PORT'];
 
@@ -40,6 +42,7 @@ export default registerAs<MinioConfig>('minio', () => {
     bucket: env['MINIO_BUCKET'] ?? 'upload',
     region: env['MINIO_REGION'],
     publicEndpoint: publicHost,
+    publicPath: publicHost ? publicPath : undefined,
     publicPort: publicHost ? (publicPortSource ? Number(publicPortSource) : undefined) : undefined,
     publicUseSSL: publicHost ? publicUseSSL : undefined,
   } satisfies MinioConfig;

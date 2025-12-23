@@ -100,13 +100,13 @@ const imageRemotePatterns = [
   },
   {
     protocol: 'https',
-    hostname: 'dev-storage.mahanfile.com',
-    pathname: '/**',
+    hostname: 'dev.mahanfile.com',
+    pathname: '/storage/**',
   },
   {
     protocol: 'https',
-    hostname: 'storage.mahanfile.com',
-    pathname: '/**',
+    hostname: 'mahanfile.com',
+    pathname: '/storage/**',
   },
 ] as const satisfies NonNullable<NextConfig['images']>['remotePatterns'];
 

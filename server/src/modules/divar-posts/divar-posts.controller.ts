@@ -25,8 +25,10 @@ import { Public } from '@app/common/decorators/public.decorator';
 import { StorageService } from '@app/platform/storage/storage.service';
 import { DivarPostsAdminService } from './divar-posts-admin.service';
 import { DivarPostListItemDto, type PaginatedDivarPostsDto } from './dto/divar-post.dto';
+import { DivarPostCategoryCountDto } from './dto/divar-post-category-count.dto';
 import { DivarContactFetchService } from './divar-contact-fetch.service';
 import { RateLimitService } from '@app/common/guards/rate-limit/rate-limit.service';
+import { DivarPostStatsService } from './divar-post-stats.service';
 
 type PostWithMedias = NonNullable<Awaited<ReturnType<DivarPostsAdminService['getPostWithMedias']>>>;
 
@@ -43,6 +45,7 @@ export class DivarPostsController {
     private readonly storageService: StorageService,
     private readonly contactFetchService: DivarContactFetchService,
     private readonly rateLimitService: RateLimitService,
+    private readonly divarPostStatsService: DivarPostStatsService,
   ) {}
 
   @Get()
@@ -108,6 +111,14 @@ export class DivarPostsController {
       noteFilter: normalizedNoteFilter,
       userId: request.user?.sub,
     });
+  }
+
+  @Get('category-counts')
+  @Public()
+  @ApiOperation({ summary: 'List leaf category counts' })
+  @ApiOkResponse({ type: DivarPostCategoryCountDto, isArray: true })
+  async getCategoryCounts(): Promise<DivarPostCategoryCountDto[]> {
+    return this.divarPostStatsService.getCategoryCounts();
   }
 
   @Get('code/:code')

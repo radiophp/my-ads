@@ -105,3 +105,12 @@ export type DivarPostContactInfo = {
   phoneNumber: string | null;
   ownerName: string | null;
 };
+
+export type DivarPostCategoryCount = {
+  slug: string;
+  name: string;
+  displayPath: string;
+  personalCount: number;
+  businessCount: number;
+  count: number;
+};

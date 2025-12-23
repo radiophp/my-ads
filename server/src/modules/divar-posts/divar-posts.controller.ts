@@ -223,7 +223,9 @@ export class DivarPostsController {
       throw new NotFoundException('Post not found.');
     }
 
-    const downloadName = `${this.sanitizeFileName(post.externalId ?? post.id) || 'post'}-photos.zip`;
+    const downloadLabel =
+      post.code && Number.isFinite(post.code) ? String(post.code) : (post.externalId ?? post.id);
+    const downloadName = `${this.sanitizeFileName(downloadLabel) || 'post'}-photos.zip`;
     const objectKey = this.buildPhotoArchiveKey(post.id, downloadName);
     const metadata = await this.ensurePhotoArchiveExists(post, objectKey);
     const method = (request.method ?? 'GET').toUpperCase();

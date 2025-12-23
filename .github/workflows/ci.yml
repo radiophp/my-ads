@@ -5,6 +5,22 @@ on:
   pull_request:
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      ui: ${{ steps.filter.outputs.ui }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Detect UI changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            ui:
+              - 'ui/**'
+
   server-lint:
     if: ${{ true }} # re-enabled
     runs-on: ubuntu-latest
@@ -218,9 +234,11 @@ jobs:
           NEXT_UI_PORT: 6005
 
   ui-build:
-    if: ${{ true }} # re-enabled
+    if: needs.changes.outputs.ui == 'true'
     runs-on: ubuntu-latest
-    needs: ui-test
+    needs:
+      - changes
+      - ui-test
     defaults:
       run:
         working-directory: ui
@@ -242,7 +260,9 @@ jobs:
         run: npm run build
 
   publish-api-image:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'pull_request' && github.base_ref == 'main' && github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
     needs:
       - server-build
@@ -278,21 +298,37 @@ jobs:
             ghcr.io/${{ steps.vars.outputs.owner }}/my-ads-api:latest
 
   publish-ui-image:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: |
+      always() &&
+      (
+        (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+        (github.event_name == 'pull_request' && github.base_ref == 'main' && github.event.pull_request.head.repo.full_name == github.repository)
+      )
     runs-on: ubuntu-latest
     needs:
+      - changes
       - ui-build
     permissions:
       contents: read
       packages: write
     steps:
+      - name: Skip UI image publish (no UI changes)
+        if: needs.changes.outputs.ui != 'true'
+        run: echo "No UI changes detected; skipping UI image build/push."
+
+      - name: Abort publish (UI build failed)
+        if: needs.changes.outputs.ui == 'true' && needs.ui-build.result != 'success'
+        run: exit 1
+
       - name: Checkout
         uses: actions/checkout@v6
 
       - name: Set up Docker Buildx
+        if: needs.changes.outputs.ui == 'true'
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to GitHub Container Registry
+        if: needs.changes.outputs.ui == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -304,6 +340,7 @@ jobs:
         run: echo "owner=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
 
       - name: Build and push UI image
+        if: needs.changes.outputs.ui == 'true'
         uses: docker/build-push-action@v6
         with:
           context: ui
@@ -327,7 +364,9 @@ jobs:
     needs:
       - publish-api-image
       - publish-ui-image
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'pull_request' && github.base_ref == 'main' && github.event.pull_request.head.repo.full_name == github.repository)
     permissions:
       contents: read
     env:

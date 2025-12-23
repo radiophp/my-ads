@@ -188,6 +188,8 @@ export function DashboardSearchFilterPanel() {
   const [provinceQuery, setProvinceQuery] = useState('');
   const [cityQuery, setCityQuery] = useState('');
   const [districtQuery, setDistrictQuery] = useState('');
+  const [isDesktop, setIsDesktop] = useState(false);
+  const lastPersistedSignatureRef = useRef<string | null>(null);
 
   const handleProvinceDialogChange = (open: boolean) => {
     setProvinceDialogOpen(open);
@@ -615,6 +617,21 @@ export function DashboardSearchFilterPanel() {
   }, [filterModalOpen]);
 
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    const media = window.matchMedia('(min-width: 1024px)');
+    const handleChange = () => setIsDesktop(media.matches);
+    handleChange();
+    if (media.addEventListener) {
+      media.addEventListener('change', handleChange);
+      return () => media.removeEventListener('change', handleChange);
+    }
+    media.addListener(handleChange);
+    return () => media.removeListener(handleChange);
+  }, []);
+
+  useEffect(() => {
     if (!filterModalOpen) {
       return;
     }
@@ -782,6 +799,7 @@ export function DashboardSearchFilterPanel() {
 
   const handleResetFilters = () => {
     dispatch(resetSearchFilter());
+    dispatch(commitAppliedFilters());
     setProvinceDialogOpen(false);
     setCityDialogOpen(false);
     setDistrictDialogOpen(false);
@@ -821,6 +839,21 @@ export function DashboardSearchFilterPanel() {
 
   const modalHasPendingChanges =
     modalBaselineSignature !== null && filterSignature !== modalBaselineSignature;
+
+  useEffect(() => {
+    if (!isDesktop) {
+      return;
+    }
+    if (lastPersistedSignatureRef.current === null) {
+      lastPersistedSignatureRef.current = filterSignature;
+      return;
+    }
+    if (lastPersistedSignatureRef.current === filterSignature) {
+      return;
+    }
+    lastPersistedSignatureRef.current = filterSignature;
+    dispatch(commitAppliedFilters());
+  }, [dispatch, filterSignature, isDesktop]);
 
   const hasActiveFilters = useMemo(() => {
     if (provinceId !== searchFilterInitialState.provinceId) {

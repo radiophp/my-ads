@@ -1,7 +1,7 @@
+/* eslint-disable @next/next/no-img-element */
 import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
-import Image from 'next/image';
 
 import type { NewsItem } from '@/types/news';
 import { Link } from '@/i18n/routing';
@@ -135,12 +135,12 @@ export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
 
       {item.mainImageUrl && (
         <div className="relative h-64 w-full overflow-hidden rounded-2xl border border-border/70 bg-muted/30 sm:h-80">
-          <Image
+          <img
             src={item.mainImageUrl}
             alt={item.title}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 768px"
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-0 size-full object-cover"
           />
         </div>
       )}

@@ -42,6 +42,7 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/scripts ./scripts
+COPY --from=builder /app/next.config.ts ./next.config.ts
 COPY package.json ./package.json
 EXPOSE 6005
 CMD ["npm", "run", "start"]

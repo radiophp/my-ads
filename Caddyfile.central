@@ -353,6 +353,18 @@ mahan-storage.toncloud.observer {
 	reverse_proxy http://host.docker.internal:6204
 }
 
+storage.mahanfile.com {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		protocols tls1.2 tls1.3
+	}
+	log {
+		output stdout
+		format json
+	}
+	reverse_proxy http://host.docker.internal:6304
+}
+
 ############ ng v2ray #########
 ls.pinki.app {
 	encode gzip

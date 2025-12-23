@@ -492,6 +492,9 @@ jobs:
           MINIO_USE_SSL: ${{ vars.MINIO_USE_SSL }}
           MINIO_BUCKET: ${{ vars.MINIO_BUCKET }}
           MINIO_REGION: ${{ vars.MINIO_REGION }}
+          MINIO_PUBLIC_ENDPOINT: ${{ vars.MINIO_PUBLIC_ENDPOINT }}
+          MINIO_PUBLIC_PORT: ${{ vars.MINIO_PUBLIC_PORT }}
+          MINIO_PUBLIC_USE_SSL: ${{ vars.MINIO_PUBLIC_USE_SSL }}
           CORS_ORIGIN: ${{ vars.CORS_ORIGIN }}
           RATE_LIMIT_TTL: ${{ vars.RATE_LIMIT_TTL }}
           RATE_LIMIT_MAX: ${{ vars.RATE_LIMIT_MAX }}

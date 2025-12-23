@@ -452,7 +452,7 @@
       "backToDashboard": "بازگشت به داشبورد",
       "shareWhatsApp": "اشتراک‌گذاری در واتساپ",
       "shareTelegram": "اشتراک در تلگرام",
-      "sharePost": "اشتراک‌گذاری",
+      "sharePost": "اشتراک",
       "shareMessageBullet": "-",
       "shareMessageTitleLabel": "عنوان",
       "shareMessageLocationLabel": "موقعیت",
@@ -581,7 +581,7 @@
       "mobileBack": "بازگشت",
       "close": "بستن",
       "contactInfo": {
-        "button": "اطلاعات تماس",
+        "button": "تماس",
         "ownerLabel": "نام مالک",
         "ownerUnknown": "نام ثبت نشده",
         "phoneLabel": "شماره تماس",

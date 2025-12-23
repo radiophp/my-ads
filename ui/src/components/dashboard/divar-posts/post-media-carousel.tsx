@@ -6,12 +6,15 @@ import {
   ChevronLeft,
   ChevronRight,
   Download,
+  Image as ImageIcon,
+  Maximize2,
   MapPin,
-  Clock3,
+  X,
 } from 'lucide-react';
 import type { useTranslations } from 'next-intl';
 
 import type { DivarPostSummary } from '@/types/divar-posts';
+import { Dialog, DialogClose, DialogContent } from '@/components/ui/dialog';
 import { resolveMediaAlt, resolveMediaSrc } from './helpers';
 
 type BusinessBadge = {
@@ -25,7 +28,6 @@ type PostMediaCarouselProps = {
   isRTL: boolean;
   businessBadge: BusinessBadge;
   cityDistrict: string | null;
-  publishedDisplay: string | null;
   hasDownloadableMedia: boolean;
   onRequestDownload: () => void;
   t: ReturnType<typeof useTranslations>;
@@ -36,7 +38,6 @@ export function PostMediaCarousel({
   isRTL,
   businessBadge,
   cityDistrict,
-  publishedDisplay,
   hasDownloadableMedia,
   onRequestDownload,
   t,
@@ -44,6 +45,9 @@ export function PostMediaCarousel({
   const [activeIndex, setActiveIndex] = useState(0);
   const [swipeDelta, setSwipeDelta] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [imageLoading, setImageLoading] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
   const swipeStartXRef = useRef<number | null>(null);
   const swipeLastXRef = useRef<number | null>(null);
 
@@ -54,20 +58,28 @@ export function PostMediaCarousel({
 
   const mediaCount = post.medias.length;
   const hasMultiplePhotos = mediaCount > 1;
+  const hasMedia = mediaCount > 0 || Boolean(post.imageUrl);
   const showThumbnailScrollHint = mediaCount > 3;
   const previousPhotoLabel = isRTL ? 'عکس قبلی' : 'Previous photo';
   const nextPhotoLabel = isRTL ? 'عکس بعدی' : 'Next photo';
-  const PreviousIcon = isRTL ? ChevronRight : ChevronLeft;
-  const NextIcon = isRTL ? ChevronLeft : ChevronRight;
+  const fullScreenLabel = isRTL ? 'نمایش تمام‌صفحه' : 'View full screen';
+  const PreviousIcon = ChevronLeft;
+  const NextIcon = ChevronRight;
 
   const currentMedia =
     mediaCount > 0 ? post.medias[activeIndex % mediaCount] ?? post.medias[0] : null;
+  const currentMediaSrc = resolveMediaSrc(currentMedia, post.imageUrl);
   const previousMedia = hasMultiplePhotos
     ? post.medias[(activeIndex - 1 + mediaCount) % mediaCount]
     : null;
   const nextMedia = hasMultiplePhotos
     ? post.medias[(activeIndex + 1) % mediaCount]
     : null;
+
+  useEffect(() => {
+    setImageFailed(false);
+    setImageLoading(Boolean(currentMediaSrc));
+  }, [currentMediaSrc, post.id]);
 
   const goToPrevious = useCallback(() => {
     if (!hasMultiplePhotos) {
@@ -82,6 +94,42 @@ export function PostMediaCarousel({
     }
     setActiveIndex((prev) => (prev + 1) % mediaCount);
   }, [hasMultiplePhotos, mediaCount]);
+
+  const handleOpenLightbox = useCallback(() => {
+    setLightboxOpen(true);
+  }, []);
+
+  const handleLightboxKey = useCallback(
+    (event: KeyboardEvent) => {
+      if (!lightboxOpen) {
+        return;
+      }
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setLightboxOpen(false);
+        return;
+      }
+      if (!hasMultiplePhotos) {
+        return;
+      }
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        goToPrevious();
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        goToNext();
+      }
+    },
+    [goToNext, goToPrevious, hasMultiplePhotos, lightboxOpen],
+  );
+
+  useEffect(() => {
+    if (!lightboxOpen) {
+      return;
+    }
+    window.addEventListener('keydown', handleLightboxKey);
+    return () => window.removeEventListener('keydown', handleLightboxKey);
+  }, [handleLightboxKey, lightboxOpen]);
 
   const handleTouchStart = useCallback(
     (event: TouchEvent<HTMLDivElement>) => {
@@ -137,29 +185,38 @@ export function PostMediaCarousel({
     setSwipeDelta(0);
   }, [goToNext, goToPrevious, hasMultiplePhotos]);
 
+  const handleImageLoad = useCallback(() => {
+    setImageLoading(false);
+  }, []);
+
+  const handleImageError = useCallback(() => {
+    setImageFailed(true);
+    setImageLoading(false);
+  }, []);
+
   const renderOverlayBadges = (): JSX.Element | null => {
-    if (!publishedDisplay && !cityDistrict) {
+    if (!cityDistrict && !hasMedia) {
       return null;
     }
     return (
-      <div className="pointer-events-none absolute inset-x-3 bottom-3 z-10 flex items-center text-xs font-medium text-white">
-        <div className="flex flex-1 justify-start">
-          {cityDistrict ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5">
-              <MapPin className="size-3.5" aria-hidden />
-              {cityDistrict}
-            </span>
-          ) : null}
-        </div>
-        <div className="flex flex-1 justify-end">
-          {publishedDisplay ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5">
-              <Clock3 className="size-3.5" aria-hidden />
-              {publishedDisplay}
-            </span>
-          ) : null}
-        </div>
-      </div>
+      <>
+        {hasMedia ? (
+          <button
+            type="button"
+            onClick={handleOpenLightbox}
+            className="pointer-events-auto absolute bottom-3 left-3 z-10 inline-flex size-7 items-center justify-center rounded-full bg-black/70 text-white shadow-lg transition hover:bg-black/80"
+            aria-label={fullScreenLabel}
+          >
+            <Maximize2 className="size-3" aria-hidden />
+          </button>
+        ) : null}
+        {cityDistrict ? (
+          <span className="pointer-events-none absolute bottom-3 right-3 z-10 inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5 text-xs font-medium text-white">
+            <MapPin className="size-3.5" aria-hidden />
+            {cityDistrict}
+          </span>
+        ) : null}
+      </>
     );
   };
 
@@ -200,10 +257,26 @@ export function PostMediaCarousel({
         <div className="relative overflow-hidden rounded-lg border border-border/60">
           {renderTopBadges()}
           <img
-            src={post.imageUrl ?? ''}
+            src={currentMediaSrc}
             alt={post.title ?? post.externalId}
             className="h-64 w-full object-cover"
+            onLoad={handleImageLoad}
+            onError={handleImageError}
           />
+          {imageLoading && !imageFailed ? (
+            <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <ImageIcon className="size-5 animate-pulse" aria-hidden />
+                <span className="animate-pulse">{t('loading')}</span>
+              </div>
+            </div>
+          ) : null}
+          {!currentMediaSrc || imageFailed ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-muted text-sm text-muted-foreground">
+              <ImageIcon className="size-6" aria-hidden />
+              <span>{t('noImage')}</span>
+            </div>
+          ) : null}
           {renderOverlayBadges()}
         </div>
       );
@@ -231,7 +304,7 @@ export function PostMediaCarousel({
             />
           ) : null}
           <img
-            src={resolveMediaSrc(currentMedia, post.imageUrl)}
+            src={currentMediaSrc}
             alt={resolveMediaAlt(currentMedia, post.title, post.externalId)}
             className="relative size-full select-none object-cover"
             draggable={false}
@@ -239,6 +312,8 @@ export function PostMediaCarousel({
               transform: `translateX(${swipeDelta}px)`,
               transition: isSwiping ? 'none' : 'transform 200ms ease',
             }}
+            onLoad={handleImageLoad}
+            onError={handleImageError}
           />
           {hasMultiplePhotos ? (
             <img
@@ -253,6 +328,20 @@ export function PostMediaCarousel({
             />
           ) : null}
         </div>
+        {imageLoading && !imageFailed ? (
+          <div className="absolute inset-0 flex items-center justify-center bg-muted/40">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <ImageIcon className="size-5 animate-pulse" aria-hidden />
+              <span className="animate-pulse">{t('loading')}</span>
+            </div>
+          </div>
+        ) : null}
+        {!currentMediaSrc || imageFailed ? (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-muted text-sm text-muted-foreground">
+            <ImageIcon className="size-6" aria-hidden />
+            <span>{t('noImage')}</span>
+          </div>
+        ) : null}
         {hasMultiplePhotos ? (
           <>
             <button
@@ -285,6 +374,46 @@ export function PostMediaCarousel({
   return (
     <div className="space-y-2">
       <div className="mx-auto w-full max-w-[400px]">{renderMediaBlock()}</div>
+      <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
+        <DialogContent
+          hideCloseButton
+          className="h-dvh w-dvw max-w-none rounded-none bg-black p-0"
+        >
+          <div className="relative flex size-full items-center justify-center">
+            <DialogClose className="absolute right-4 top-4 inline-flex size-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20">
+              <X className="size-5" aria-hidden />
+            </DialogClose>
+            <img
+              src={resolveMediaSrc(currentMedia, post.imageUrl)}
+              alt={resolveMediaAlt(currentMedia, post.title, post.externalId)}
+              className="max-h-[88vh] max-w-[92vw] object-contain"
+            />
+            {hasMultiplePhotos ? (
+              <>
+                <button
+                  type="button"
+                  onClick={goToPrevious}
+                  className="absolute left-4 top-1/2 flex size-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+                  aria-label={previousPhotoLabel}
+                >
+                  <PreviousIcon className="size-6" aria-hidden />
+                </button>
+                <button
+                  type="button"
+                  onClick={goToNext}
+                  className="absolute right-4 top-1/2 flex size-12 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+                  aria-label={nextPhotoLabel}
+                >
+                  <NextIcon className="size-6" aria-hidden />
+                </button>
+                <span className="absolute bottom-5 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-3 py-1 text-xs text-white">
+                  {activeIndex + 1} / {mediaCount}
+                </span>
+              </>
+            ) : null}
+          </div>
+        </DialogContent>
+      </Dialog>
       {mediaCount > 1 ? (
         <>
           <div className="relative mx-auto w-full max-w-[400px]">

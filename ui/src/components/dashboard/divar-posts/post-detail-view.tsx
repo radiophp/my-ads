@@ -9,7 +9,18 @@ import type { PostDetailData } from './post-detail-data';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FaTelegramPlane, FaWhatsapp, FaSms, FaRegCopy } from 'react-icons/fa';
-import { Bookmark, BookmarkCheck, Pencil, Plus, Share2, Phone, Copy, Loader2, Printer } from 'lucide-react';
+import {
+  Bookmark,
+  BookmarkCheck,
+  Pencil,
+  Plus,
+  Share2,
+  Phone,
+  Copy,
+  Loader2,
+  Printer,
+  Clock3,
+} from 'lucide-react';
 import { SaveToFolderDialog } from '@/components/ring-binder/save-to-folder-dialog';
 import { SavedFoldersDialog } from '@/components/ring-binder/saved-folders-dialog';
 import {
@@ -549,23 +560,33 @@ export function PostDetailView({
               )}
             </Button>
           </div>
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 rounded-md border border-border/70 bg-muted/40 px-3 py-1 text-sm font-semibold text-foreground transition hover:bg-secondary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            onClick={() => {
-              if (post.code) {
-                navigator.clipboard
-                  .writeText(post.code.toString())
-                  .then(() => toast({ title: t('labels.postCodeCopied') }))
-                  .catch(() => toast({ title: t('contactInfo.copyError'), variant: 'destructive' }));
-              }
-            }}
-            aria-label={t('labels.postCode')}
-          >
-            <span>{t('labels.postCode')}:</span>
-            <span className="font-mono text-base">{post.code ?? '—'}</span>
-            <Copy className="size-4" aria-hidden />
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-md border border-border/70 bg-muted/40 px-3 py-1 text-sm font-semibold text-foreground transition hover:bg-secondary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              onClick={() => {
+                if (post.code) {
+                  navigator.clipboard
+                    .writeText(post.code.toString())
+                    .then(() => toast({ title: t('labels.postCodeCopied') }))
+                    .catch(() =>
+                      toast({ title: t('contactInfo.copyError'), variant: 'destructive' }),
+                    );
+                }
+              }}
+              aria-label={t('labels.postCode')}
+            >
+              <span>{t('labels.postCode')}:</span>
+              <span className="font-mono text-base">{post.code ?? '—'}</span>
+              <Copy className="size-4" aria-hidden />
+            </button>
+            {publishedDisplay ? (
+              <span className="inline-flex items-center gap-2 rounded-md border border-border/70 bg-muted/40 px-3 py-1 text-sm font-semibold text-foreground">
+                <Clock3 className="size-4" aria-hidden />
+                <span>{publishedDisplay}</span>
+              </span>
+            ) : null}
+          </div>
           {contactInfo ? (
             <div className="rounded-xl border border-border/70 bg-muted/30 p-3 text-sm shadow-sm">
               <div className="flex flex-col gap-1">
@@ -707,7 +728,6 @@ export function PostDetailView({
             isRTL={isRTL}
             businessBadge={businessBadge}
             cityDistrict={cityDistrict}
-            publishedDisplay={publishedDisplay}
             hasDownloadableMedia={hasDownloadableMedia}
             onRequestDownload={onRequestDownload}
             t={t}

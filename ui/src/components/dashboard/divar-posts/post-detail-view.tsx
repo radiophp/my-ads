@@ -733,15 +733,27 @@ export function PostDetailView({
             t={t}
           />
           {hasLocation ? (
-            <PostLocationMap
-              lat={post.latitude as number}
-              lon={post.longitude as number}
-              t={t}
-              isRTL={isRTL}
-            />
+            <div className="hidden lg:block">
+              <PostLocationMap
+                lat={post.latitude as number}
+                lon={post.longitude as number}
+                t={t}
+                isRTL={isRTL}
+              />
+            </div>
           ) : null}
         </div>
       </div>
+      {hasLocation ? (
+        <div className="mt-6 lg:hidden">
+          <PostLocationMap
+            lat={post.latitude as number}
+            lon={post.longitude as number}
+            t={t}
+            isRTL={isRTL}
+          />
+        </div>
+      ) : null}
       <SaveToFolderDialog
         post={post}
         open={saveDialogOpen}

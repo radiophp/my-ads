@@ -379,7 +379,12 @@ export function PostMediaCarousel({
           hideCloseButton
           className="h-dvh w-dvw max-w-none rounded-none bg-black p-0"
         >
-          <div className="relative flex size-full items-center justify-center">
+          <div
+            className="relative flex size-full items-center justify-center"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
             <DialogClose className="absolute right-4 top-4 inline-flex size-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20">
               <X className="size-5" aria-hidden />
             </DialogClose>

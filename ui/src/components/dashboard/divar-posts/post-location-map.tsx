@@ -18,6 +18,12 @@ export function PostLocationMap({ lat, lon, t, isRTL }: PostLocationMapProps): J
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const markerRef = useRef<MapLibreMarker | null>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
+  const isTouchDevice = useMemo(() => {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+    return window.matchMedia?.('(pointer: coarse)')?.matches ?? false;
+  }, []);
   const tileBase = useMemo(() => {
     const envBase = process.env.NEXT_PUBLIC_MAP_TILE_BASE_URL?.replace(/\/+$/, '');
     if (envBase) return envBase;
@@ -85,6 +91,7 @@ export function PostLocationMap({ lat, lon, t, isRTL }: PostLocationMapProps): J
         ],
         attributionControl: false,
         locale: isRTL ? 'fa' : 'en',
+        cooperativeGestures: isTouchDevice,
       });
       mapRef.current = map;
 

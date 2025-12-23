@@ -3,7 +3,7 @@
 
 import type { JSX } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ExternalLink, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ExternalLink, Loader2 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,7 @@ import { buildPostDetailData } from '@/components/dashboard/divar-posts/post-det
 import { PostDetailView } from '@/components/dashboard/divar-posts/post-detail-view';
 import { getBusinessTypeBadge } from '@/components/dashboard/divar-posts/business-badge';
 import { useToast } from '@/components/ui/use-toast';
+import { cn } from '@/lib/utils';
 
 type ShareIconMap = {
   title: string;
@@ -70,6 +71,12 @@ export function DivarPostsFeed(): JSX.Element {
   const categorySlug = categorySelection.slug;
   const categoryDepth = categorySelection.depth;
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const selectedIndex = useMemo(
+    () => (selectedPost ? posts.findIndex((post) => post.id === selectedPost.id) : -1),
+    [posts, selectedPost],
+  );
+  const hasPrevious = selectedIndex > 0;
+  const hasNext = selectedIndex >= 0 && selectedIndex < posts.length - 1;
 
   const cityFilterIds = useMemo(() => {
     if (citySelection.mode !== 'custom') {
@@ -218,6 +225,21 @@ export function DivarPostsFeed(): JSX.Element {
     setContactInfo(null);
     setContactLoading(false);
   }, [selectedPost?.id]);
+
+  const handleNavigateByOffset = useCallback(
+    (offset: number) => {
+      if (selectedIndex < 0) {
+        return;
+      }
+      const target = posts[selectedIndex + offset];
+      if (!target) {
+        return;
+      }
+      setSelectedPost(target);
+      setDialogOpen(true);
+    },
+    [posts, selectedIndex],
+  );
 
   const currencyFormatter = useMemo(
     () =>
@@ -652,33 +674,74 @@ export function DivarPostsFeed(): JSX.Element {
 
               <div className="border-t border-border bg-background/95 px-6 py-4 sm:border-0 sm:bg-transparent sm:px-0">
                 <div
-                  className={`flex flex-wrap gap-3 ${
-                    isRTL
-                      ? 'flex-row-reverse sm:justify-start'
-                      : 'flex-row sm:justify-end'
-                  }`}
+                  className={cn(
+                    'flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between',
+                    isRTL ? 'sm:flex-row-reverse' : 'sm:flex-row',
+                  )}
                 >
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="min-w-[140px] flex-1 sm:flex-none"
-                    onClick={() => closeDialog(false)}
-                  >
-                    {t('close')}
-                  </Button>
-                  <Button asChild className="min-w-[140px] flex-1 sm:flex-none">
-                    <a
-                      href={
-                        selectedPost.permalink ?? `https://divar.ir/v/${selectedPost.externalId}`
-                      }
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center justify-center gap-2"
+                  <div className={cn('flex flex-wrap gap-3', isRTL ? 'flex-row-reverse' : 'flex-row')}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className={cn(
+                        'min-w-[140px] flex-1 sm:flex-none',
+                        isRTL ? 'order-last' : 'order-first',
+                      )}
+                      onClick={() => handleNavigateByOffset(-1)}
+                      disabled={!hasPrevious}
                     >
-                      {t('openOnDivar')}
-                      <ExternalLink className="size-4" aria-hidden />
-                    </a>
-                  </Button>
+                      <span className="flex items-center gap-2">
+                        {isRTL ? (
+                          <ChevronRight className="size-4" aria-hidden />
+                        ) : (
+                          <ChevronLeft className="size-4" aria-hidden />
+                        )}
+                        {t('previousPost')}
+                      </span>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className={cn(
+                        'min-w-[140px] flex-1 sm:flex-none',
+                        isRTL ? 'order-first' : 'order-last',
+                      )}
+                      onClick={() => handleNavigateByOffset(1)}
+                      disabled={!hasNext}
+                    >
+                      <span className="flex items-center gap-2">
+                        {t('nextPost')}
+                        {isRTL ? (
+                          <ChevronLeft className="size-4" aria-hidden />
+                        ) : (
+                          <ChevronRight className="size-4" aria-hidden />
+                        )}
+                      </span>
+                    </Button>
+                  </div>
+                  <div className={cn('flex flex-wrap gap-3', isRTL ? 'flex-row-reverse' : 'flex-row')}>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      className="min-w-[140px] flex-1 sm:flex-none"
+                      onClick={() => closeDialog(false)}
+                    >
+                      {t('close')}
+                    </Button>
+                    <Button asChild className="min-w-[140px] flex-1 sm:flex-none">
+                      <a
+                        href={
+                          selectedPost.permalink ?? `https://divar.ir/v/${selectedPost.externalId}`
+                        }
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center justify-center gap-2"
+                      >
+                        {t('openOnDivar')}
+                        <ExternalLink className="size-4" aria-hidden />
+                      </a>
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>

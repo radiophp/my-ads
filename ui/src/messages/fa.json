@@ -12,6 +12,7 @@
       "savedFilters": "مجموعه فیلترهای ذخیره‌شده",
       "notifications": "اعلان‌ها",
       "admin": "مدیریت",
+      "news": "اخبار",
       "guides": "راهنماها"
     },
     "docs": "مستندات",
@@ -178,6 +179,27 @@
         "checking": "در حال بررسی…",
         "unknown": "نامشخص"
       }
+    }
+  },
+  "news": {
+    "title": "اخبار",
+    "description": "آخرین بروزرسانی‌ها و اطلاعیه‌های تیم ماهان فایل را دنبال کنید.",
+    "empty": "هنوز خبری منتشر نشده است.",
+    "error": "امکان دریافت اخبار وجود ندارد.",
+    "back": "بازگشت به اخبار",
+    "labels": {
+      "published": "زمان انتشار",
+      "source": "منبع",
+      "tags": "برچسب‌ها",
+      "noImage": "بدون تصویر"
+    },
+    "pagination": {
+      "label": "صفحه {page} از {totalPages} • {totalItems} خبر",
+      "previous": "قبلی",
+      "next": "بعدی"
+    },
+    "tags": {
+      "empty": "برچسبی ثبت نشده است."
     }
   },
   "dashboard": {
@@ -652,6 +674,18 @@
           "title": "آگهی‌های در صف تحلیل",
           "description": "آگهی‌های دریافت‌شده از دیوار که منتظر نرمال‌سازی هستند را بررسی کنید."
         },
+        "news": {
+          "title": "اخبار",
+          "description": "انتشار و مدیریت خبرهای عمومی سامانه."
+        },
+        "newsCategories": {
+          "title": "دسته‌بندی اخبار",
+          "description": "گروه‌بندی و مرتب‌سازی خبرها."
+        },
+        "newsTags": {
+          "title": "برچسب‌های اخبار",
+          "description": "مدیریت برچسب‌های قابل استفاده در خبرها."
+        },
         "notifications": {
           "title": "اعلان آزمایشی",
           "description": "برای یک کاربر اعلان دستی ارسال کنید."
@@ -664,6 +698,153 @@
           "title": "هدرهای آرکا",
           "description": "هدرهای API آرکا برای دریافت شماره‌ها را مدیریت کنید."
         }
+      }
+    },
+    "news": {
+      "title": "اخبار",
+      "description": "خبرهای عمومی سامانه را ایجاد و منتشر کنید.",
+      "actions": {
+        "add": "افزودن خبر",
+        "refresh": "تازه‌سازی",
+        "edit": "ویرایش",
+        "delete": "حذف",
+        "save": "ذخیره",
+        "cancel": "انصراف"
+      },
+      "columns": {
+        "title": "عنوان",
+        "category": "دسته‌بندی",
+        "tags": "برچسب‌ها",
+        "updated": "آخرین بروزرسانی",
+        "actions": "عملیات"
+      },
+      "fields": {
+        "title": "عنوان",
+        "slug": "اسلاگ (اختیاری)",
+        "shortText": "خلاصه کوتاه",
+        "content": "متن خبر",
+        "mainImageUrl": "نشانی تصویر اصلی",
+        "category": "دسته‌بندی",
+        "categoryPlaceholder": "انتخاب دسته‌بندی",
+        "tags": "برچسب‌ها",
+        "categoryPreview": "دسته‌بندی: {name}",
+        "tagsPreview": "برچسب‌ها: {tags}"
+      },
+      "dialog": {
+        "addTitle": "افزودن خبر",
+        "addDescription": "یک خبر جدید بسازید.",
+        "editTitle": "ویرایش خبر",
+        "editDescription": "جزئیات خبر را به‌روزرسانی کنید."
+      },
+      "loading": "در حال بارگذاری خبرها…",
+      "empty": "هنوز خبری ثبت نشده است.",
+      "confirmDelete": "این خبر حذف شود؟",
+      "tags": {
+        "empty": "برچسبی انتخاب نشده است."
+      },
+      "toast": {
+        "missingTitle": "اطلاعات ناقص",
+        "missingDescription": "عنوان، دسته‌بندی و متن خبر الزامی است.",
+        "createdTitle": "خبر ثبت شد",
+        "createdDescription": "خبر جدید افزوده شد.",
+        "updatedTitle": "خبر به‌روزرسانی شد",
+        "updatedDescription": "تغییرات ذخیره شد.",
+        "deletedTitle": "خبر حذف شد",
+        "deletedDescription": "خبر موردنظر حذف شد.",
+        "errorTitle": "ذخیره ناموفق",
+        "errorDescription": "ثبت خبر ممکن نیست. دوباره تلاش کنید."
+      }
+    },
+    "newsCategories": {
+      "title": "دسته‌بندی اخبار",
+      "description": "دسته‌بندی‌های خبرها را مدیریت کنید.",
+      "actions": {
+        "add": "افزودن دسته‌بندی",
+        "refresh": "تازه‌سازی",
+        "edit": "ویرایش",
+        "delete": "حذف",
+        "save": "ذخیره",
+        "cancel": "انصراف"
+      },
+      "columns": {
+        "name": "نام",
+        "slug": "اسلاگ",
+        "active": "وضعیت",
+        "updated": "آخرین بروزرسانی",
+        "actions": "عملیات"
+      },
+      "fields": {
+        "name": "نام",
+        "slug": "اسلاگ (اختیاری)",
+        "active": "فعال"
+      },
+      "status": {
+        "active": "فعال",
+        "inactive": "غیرفعال"
+      },
+      "dialog": {
+        "addTitle": "افزودن دسته‌بندی",
+        "addDescription": "یک دسته‌بندی خبر جدید بسازید.",
+        "editTitle": "ویرایش دسته‌بندی",
+        "editDescription": "جزئیات دسته‌بندی را به‌روزرسانی کنید."
+      },
+      "loading": "در حال بارگذاری دسته‌بندی‌ها…",
+      "empty": "هنوز دسته‌بندی ثبت نشده است.",
+      "confirmDelete": "این دسته‌بندی حذف شود؟",
+      "toast": {
+        "missingTitle": "نام لازم است",
+        "missingDescription": "نام دسته‌بندی الزامی است.",
+        "createdTitle": "دسته‌بندی ثبت شد",
+        "createdDescription": "دسته‌بندی خبر افزوده شد.",
+        "updatedTitle": "دسته‌بندی به‌روزرسانی شد",
+        "updatedDescription": "تغییرات ذخیره شد.",
+        "deletedTitle": "دسته‌بندی حذف شد",
+        "deletedDescription": "دسته‌بندی خبر حذف شد.",
+        "errorTitle": "ذخیره ناموفق",
+        "errorDescription": "ثبت دسته‌بندی ممکن نیست. دوباره تلاش کنید."
+      }
+    },
+    "newsTags": {
+      "title": "برچسب‌های اخبار",
+      "description": "برچسب‌های خبرها را مدیریت کنید.",
+      "actions": {
+        "add": "افزودن برچسب",
+        "refresh": "تازه‌سازی",
+        "edit": "ویرایش",
+        "delete": "حذف",
+        "save": "ذخیره",
+        "cancel": "انصراف"
+      },
+      "columns": {
+        "name": "نام",
+        "slug": "اسلاگ",
+        "updated": "آخرین بروزرسانی",
+        "actions": "عملیات"
+      },
+      "fields": {
+        "name": "نام",
+        "slug": "اسلاگ (اختیاری)"
+      },
+      "dialog": {
+        "addTitle": "افزودن برچسب",
+        "addDescription": "یک برچسب خبر جدید بسازید.",
+        "editTitle": "ویرایش برچسب",
+        "editDescription": "جزئیات برچسب را به‌روزرسانی کنید."
+      },
+      "loading": "در حال بارگذاری برچسب‌ها…",
+      "empty": "هنوز برچسبی ثبت نشده است.",
+      "confirmDelete": "این برچسب حذف شود؟",
+      "toast": {
+        "missingTitle": "نام لازم است",
+        "missingDescription": "نام برچسب الزامی است.",
+        "createdTitle": "برچسب ثبت شد",
+        "createdDescription": "برچسب خبر افزوده شد.",
+        "updatedTitle": "برچسب به‌روزرسانی شد",
+        "updatedDescription": "تغییرات ذخیره شد.",
+        "deletedTitle": "برچسب حذف شد",
+        "deletedDescription": "برچسب خبر حذف شد.",
+        "errorTitle": "ذخیره ناموفق",
+        "errorDescription": "ثبت برچسب ممکن نیست. دوباره تلاش کنید."
       }
     },
     "arkaSessions": {

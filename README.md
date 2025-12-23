@@ -22,6 +22,7 @@ The **My Ads** project is a NestJS + Fastify backend that powers a classified ad
 - **Uploads Module (`modules/uploads`)** — File upload orchestration layered over MinIO/S3 storage.
 - **User Panel & Admin Panel (`modules/user-panel`, `modules/admin-panel`)** — Domain-specific APIs protected by role guards.
 - **Telegram Module (`modules/telegram`)** — Bot entrypoint to collect user phone via contact share and deliver posts (albums) to users.
+- **News Module (`modules/news`)** — News categories/tags plus public list/detail endpoints and admin CRUD for publishing updates.
 - **Post Codes & Search** — Every post has a numeric code (starts at 1000). Codes appear on cards, detail, print, share messages, and Telegram captions. Use the header code search to jump to a post (rate limited).
 
 ### Platform Services
@@ -96,6 +97,7 @@ npm run typecheck
 
 The frontend pulls its env from the repo root `.env` (e.g., `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_WS_BASE_URL`). Run UI lint/typecheck inside `ui/`.
 - Feed loading state shows 12 skeleton cards matching the post-card layout. If you change card styling, mirror updates in `ui/src/components/dashboard/divar-posts-feed.tsx` so skeletons stay in sync.
+- Public news pages are server-rendered at `/news` and `/news/[slug]` with a 5-minute revalidation window (`revalidate = 300`), and the header nav links to `/news`.
 
 ### 5. Test Suite
 

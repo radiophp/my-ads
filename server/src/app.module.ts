@@ -45,6 +45,7 @@ import { AdminDivarSessionsModule } from './modules/admin-divar-sessions/admin-d
 import { PhoneFetchModule } from './modules/phone-fetch/phone-fetch.module';
 import { ArkaModule } from './modules/arka/arka.module';
 import { TelegramModule } from './modules/telegram/telegram.module';
+import { NewsModule } from './modules/news/news.module';
 
 @Module({
   imports: [
@@ -106,6 +107,7 @@ import { TelegramModule } from './modules/telegram/telegram.module';
     PhoneFetchModule,
     ArkaModule,
     TelegramModule,
+    NewsModule,
   ],
 })
 export class AppModule {}

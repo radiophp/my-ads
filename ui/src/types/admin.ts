@@ -9,4 +9,7 @@ export type AdminDashboardStats = {
   notifications: number;
   adminDivarSessions: number;
   adminArkaSessions: number;
+  news: number;
+  newsCategories: number;
+  newsTags: number;
 };

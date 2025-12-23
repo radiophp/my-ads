@@ -37,5 +37,6 @@ This repository hosts the **My Ads** NestJS backend (`server/`). Key operational
 - **Dashboard/UI context**
   - The Next.js dashboard now hydrates auth in a `useLayoutEffect` and wraps RTK Query base calls with automatic token refresh. Any work touching auth must keep `setAuth`/`clearAuth` semantics intact or requests will loop on 401.
   - Divar cards rely on the iconised overlay badges (business type, publish time, media count). When editing cards, preserve the `pointer-events-none` wrappers so clicking still opens the modal.
+  - News is public-facing: list and detail pages live in `ui/src/app/news` and use SSR with `revalidate = 300`. Admin CRUD routes are under `/admin/news`, `/admin/news/categories`, and `/admin/news/tags`, backed by `server/src/modules/news`.
 
 Keep outputs ASCII-only when editing files, prefer `apply_patch`, and avoid destructive git commands. Refer to `README.md` for a full architecture and environment overview.

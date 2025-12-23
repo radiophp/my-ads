@@ -95,7 +95,6 @@ export function AdminDivarSessionsManager() {
         description: t('toast.errorDescription'),
         variant: 'destructive',
       });
-      // eslint-disable-next-line no-console
       console.error(error);
     }
   };

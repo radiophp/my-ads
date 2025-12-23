@@ -13,7 +13,7 @@
     "build": "nest build",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write \"src/**/*.ts\"",
-    "lint": "cross-env ESLINT_USE_FLAT_CONFIG=false eslint \"{src,tests}/**/*.ts\"",
+    "lint": "eslint \"{src,tests}/**/*.ts\"",
     "test": "dotenv --quiet -e ../.env -- jest",
     "test:watch": "dotenv --quiet -e ../.env -- jest --watch",
     "test:cov": "dotenv --quiet -e ../.env -- jest --coverage",
@@ -32,6 +32,7 @@
     "business:title-refresh": "ENABLE_CRON_JOBS=true dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-business-title-refresh.ts",
     "arka:fetch": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-arka-phone-fetch.ts",
     "arka:transfer": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-arka-phone-transfer.ts",
+    "news:crawl:eghtesad": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-eghtesad-housing-crawl.ts",
     "telegram:bot": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-telegram-bot.ts",
     "telegram:bot:dev": "dotenv -e ../.env -- ts-node-dev --respawn -r tsconfig-paths/register ./src/scripts/run-telegram-bot.ts",
     "prepare": "husky install",
@@ -105,6 +106,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.39.0",
     "@nestjs/cli": "^11.0.10",
     "@nestjs/schematics": "^11.0.9",
     "@nestjs/testing": "^11.1.8",
@@ -143,7 +145,7 @@
   "lint-staged": {
     "*.{ts,tsx}": [
       "prettier --write",
-      "cross-env ESLINT_USE_FLAT_CONFIG=false eslint --max-warnings=0 --fix"
+      "eslint --max-warnings=0 --fix"
     ],
     "*.{json,md,yml,yaml}": [
       "prettier --write"

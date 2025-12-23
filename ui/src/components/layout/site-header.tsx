@@ -30,12 +30,13 @@ import {
   Bookmark,
   Bell,
   ShieldCheck,
+  Newspaper,
 } from 'lucide-react';
 import { useNotificationsSocket } from '@/features/notifications/useNotificationsSocket';
 import { CodeSearch } from '@/components/layout/code-search';
 import { cn } from '@/lib/utils';
 
-type NavIconKey = 'dashboard' | 'ringBinder' | 'savedFilters' | 'notifications' | 'admin';
+type NavIconKey = 'dashboard' | 'ringBinder' | 'savedFilters' | 'notifications' | 'admin' | 'news';
 
 type NavItemConfig = {
   key: string;
@@ -51,6 +52,7 @@ const navIconComponents: Record<NavIconKey, typeof LayoutDashboard> = {
   savedFilters: Bookmark,
   notifications: Bell,
   admin: ShieldCheck,
+  news: Newspaper,
 };
 
 function renderNavIcon(icon: NavIconKey, className?: string) {
@@ -116,6 +118,13 @@ export function SiteHeader() {
   };
 
   const availableNavItems: NavItemConfig[] = [
+    {
+      key: 'news',
+      label: t('header.nav.news'),
+      href: '/news',
+      visible: true,
+      icon: 'news' as const,
+    },
     {
       key: 'dashboard',
       label: t('header.nav.dashboard'),
@@ -186,6 +195,13 @@ export function SiteHeader() {
           </button>
           <Link href="/" className="text-lg font-semibold">
             {t('header.brand')}
+          </Link>
+          <Link
+            href="/news"
+            className="hidden items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
+          >
+            {renderNavIcon('news')}
+            {t('header.nav.news')}
           </Link>
           {isAuthenticated && (
             <Link

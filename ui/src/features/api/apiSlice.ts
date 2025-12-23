@@ -39,6 +39,17 @@ import type {
 import type { NotificationsResponse } from '@/types/notifications';
 import type { AdminDivarSession } from '@/types/admin-divar-session';
 import type { AdminArkaSession } from '@/types/admin-arka-session';
+import type {
+  CreateNewsCategoryPayload,
+  CreateNewsPayload,
+  CreateNewsTagPayload,
+  NewsCategory,
+  NewsItem,
+  NewsTag,
+  UpdateNewsCategoryPayload,
+  UpdateNewsPayload,
+  UpdateNewsTagPayload,
+} from '@/types/news';
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:6200/api';
 
@@ -140,6 +151,9 @@ export const apiSlice = createApi({
     'Notifications',
     'AdminDivarSessions',
     'AdminArkaSessions',
+    'AdminNews',
+    'AdminNewsCategories',
+    'AdminNewsTags',
   ],
   endpoints: (builder) => ({
     getHealth: builder.query<{ status: string }, void>({
@@ -189,6 +203,90 @@ export const apiSlice = createApi({
         method: 'POST',
         body,
       }),
+    }),
+    getAdminNews: builder.query<NewsItem[], void>({
+      query: () => '/admin/news',
+      providesTags: ['AdminNews'],
+    }),
+    createAdminNews: builder.mutation<NewsItem, CreateNewsPayload>({
+      query: (body) => ({
+        url: '/admin/news',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['AdminNews'],
+    }),
+    updateAdminNews: builder.mutation<NewsItem, { id: string; body: UpdateNewsPayload }>({
+      query: ({ id, body }) => ({
+        url: `/admin/news/${id}`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: ['AdminNews'],
+    }),
+    deleteAdminNews: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/admin/news/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['AdminNews'],
+    }),
+    getAdminNewsCategories: builder.query<NewsCategory[], void>({
+      query: () => '/admin/news-categories',
+      providesTags: ['AdminNewsCategories'],
+    }),
+    createAdminNewsCategory: builder.mutation<NewsCategory, CreateNewsCategoryPayload>({
+      query: (body) => ({
+        url: '/admin/news-categories',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['AdminNewsCategories', 'AdminNews'],
+    }),
+    updateAdminNewsCategory: builder.mutation<
+      NewsCategory,
+      { id: string; body: UpdateNewsCategoryPayload }
+    >({
+      query: ({ id, body }) => ({
+        url: `/admin/news-categories/${id}`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: ['AdminNewsCategories', 'AdminNews'],
+    }),
+    deleteAdminNewsCategory: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/admin/news-categories/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['AdminNewsCategories', 'AdminNews'],
+    }),
+    getAdminNewsTags: builder.query<NewsTag[], void>({
+      query: () => '/admin/news-tags',
+      providesTags: ['AdminNewsTags'],
+    }),
+    createAdminNewsTag: builder.mutation<NewsTag, CreateNewsTagPayload>({
+      query: (body) => ({
+        url: '/admin/news-tags',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['AdminNewsTags', 'AdminNews'],
+    }),
+    updateAdminNewsTag: builder.mutation<NewsTag, { id: string; body: UpdateNewsTagPayload }>({
+      query: ({ id, body }) => ({
+        url: `/admin/news-tags/${id}`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: ['AdminNewsTags', 'AdminNews'],
+    }),
+    deleteAdminNewsTag: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/admin/news-tags/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['AdminNewsTags', 'AdminNews'],
     }),
     fetchPostPhone: builder.mutation<{ phoneNumber: string | null }, { postId: string }>({
       query: ({ postId }) => ({
@@ -725,6 +823,18 @@ export const {
   useGetAdminDivarSessionsQuery,
   useCreateAdminDivarSessionMutation,
   useUpdateAdminDivarSessionMutation,
+  useGetAdminNewsQuery,
+  useCreateAdminNewsMutation,
+  useUpdateAdminNewsMutation,
+  useDeleteAdminNewsMutation,
+  useGetAdminNewsCategoriesQuery,
+  useCreateAdminNewsCategoryMutation,
+  useUpdateAdminNewsCategoryMutation,
+  useDeleteAdminNewsCategoryMutation,
+  useGetAdminNewsTagsQuery,
+  useCreateAdminNewsTagMutation,
+  useUpdateAdminNewsTagMutation,
+  useDeleteAdminNewsTagMutation,
   useGetPostsToAnalyzeQuery,
   useGetDivarPostsQuery,
   useLazyGetDivarPostsQuery,

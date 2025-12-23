@@ -55,7 +55,6 @@ export function AdminNotificationsClient() {
         description: t('toast.errorDescription'),
         variant: 'destructive',
       });
-      // eslint-disable-next-line no-console
       console.error('Failed to send test notification', error);
     }
   };

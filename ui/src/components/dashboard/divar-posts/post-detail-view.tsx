@@ -53,6 +53,7 @@ export type PostDetailViewProps = {
   onRequestContactInfo?: () => void;
   contactInfo?: DivarPostContactInfo | null;
   contactLoading?: boolean;
+  onMapReady?: () => void;
 };
 
 export function PostDetailView({
@@ -73,6 +74,7 @@ export function PostDetailView({
   onRequestContactInfo,
   contactInfo,
   contactLoading,
+  onMapReady,
 }: PostDetailViewProps): JSX.Element {
   const combinedDetailEntries = [
     ...detailData.featuredDetailEntries,
@@ -734,26 +736,28 @@ export function PostDetailView({
           />
           {hasLocation ? (
             <div className="hidden lg:block">
-              <PostLocationMap
-                lat={post.latitude as number}
-                lon={post.longitude as number}
-                t={t}
-                isRTL={isRTL}
-              />
-            </div>
-          ) : null}
-        </div>
+            <PostLocationMap
+              lat={post.latitude as number}
+              lon={post.longitude as number}
+              t={t}
+              isRTL={isRTL}
+              onReady={onMapReady}
+            />
+          </div>
+        ) : null}
       </div>
-      {hasLocation ? (
-        <div className="mt-6 lg:hidden">
-          <PostLocationMap
-            lat={post.latitude as number}
-            lon={post.longitude as number}
-            t={t}
-            isRTL={isRTL}
-          />
-        </div>
-      ) : null}
+    </div>
+    {hasLocation ? (
+      <div className="mt-6 lg:hidden">
+        <PostLocationMap
+          lat={post.latitude as number}
+          lon={post.longitude as number}
+          t={t}
+          isRTL={isRTL}
+          onReady={onMapReady}
+        />
+      </div>
+    ) : null}
       <SaveToFolderDialog
         post={post}
         open={saveDialogOpen}

@@ -12,9 +12,16 @@ type PostLocationMapProps = {
   lon: number;
   t: ReturnType<typeof useTranslations>;
   isRTL?: boolean;
+  onReady?: () => void;
 };
 
-export function PostLocationMap({ lat, lon, t, isRTL }: PostLocationMapProps): JSX.Element {
+export function PostLocationMap({
+  lat,
+  lon,
+  t,
+  isRTL,
+  onReady,
+}: PostLocationMapProps): JSX.Element {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const markerRef = useRef<MapLibreMarker | null>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
@@ -36,99 +43,123 @@ export function PostLocationMap({ lat, lon, t, isRTL }: PostLocationMapProps): J
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const maplibre = await import('maplibre-gl');
-      if (cancelled || !mapContainerRef.current) return;
+      try {
+        const maplibre = await import('maplibre-gl');
+        if (cancelled || !mapContainerRef.current) return;
 
-      const rewriteStyle = async (): Promise<StyleSpecification> => {
-        const res = await fetch(`${tileBase}/styles/basic-preview/style.json`);
-        const style = (await res.json()) as StyleSpecification & { sprite?: string };
+        const rewriteStyle = async (): Promise<StyleSpecification> => {
+          const res = await fetch(`${tileBase}/styles/basic-preview/style.json`);
+          const style = (await res.json()) as StyleSpecification & { sprite?: string };
 
-        // Drop sprite (not present) and force glyph path to same-origin
-        delete style.sprite;
-        style.glyphs = `${tileBase}/fonts/{fontstack}/{range}.pbf`;
+          // Drop sprite (not present) and force glyph path to same-origin
+          delete style.sprite;
+          style.glyphs = `${tileBase}/fonts/{fontstack}/{range}.pbf`;
 
-        // Rewrite vector source URLs/tiles to same-origin paths
-        if (style.sources) {
-          Object.entries(style.sources).forEach(([key, source]) => {
-            if (!source || typeof source !== 'object') return;
-            if ('url' in source && typeof source.url === 'string') {
-              source.url = `${tileBase}/data/v3.json`;
-            }
-            if ('tiles' in source && Array.isArray(source.tiles)) {
-              source.tiles = source.tiles.map((u) =>
-                typeof u === 'string'
-                  ? `${tileBase}/data/v3/{z}/{x}/{y}.pbf`
-                  : u,
-              );
-            }
-            style.sources[key] = source;
-          });
+          // Rewrite vector source URLs/tiles to same-origin paths
+          if (style.sources) {
+            Object.entries(style.sources).forEach(([key, source]) => {
+              if (!source || typeof source !== 'object') return;
+              if ('url' in source && typeof source.url === 'string') {
+                source.url = `${tileBase}/data/v3.json`;
+              }
+              if ('tiles' in source && Array.isArray(source.tiles)) {
+                source.tiles = source.tiles.map((u) =>
+                  typeof u === 'string'
+                    ? `${tileBase}/data/v3/{z}/{x}/{y}.pbf`
+                    : u,
+                );
+              }
+              style.sources[key] = source;
+            });
+          }
+          return style;
+        };
+
+        const clampToBounds = (lngLat: [number, number]): [number, number] => {
+          const minLng = 43;
+          const maxLng = 64;
+          const minLat = 24;
+          const maxLat = 40;
+          return [
+            Math.min(Math.max(lngLat[0], minLng), maxLng),
+            Math.min(Math.max(lngLat[1], minLat), maxLat),
+          ];
+        };
+        const clampedCenter = clampToBounds([lon, lat]);
+        const style = await rewriteStyle();
+        if (cancelled || !mapContainerRef.current) return;
+
+        const map = new maplibre.Map({
+          container: mapContainerRef.current,
+          style,
+          center: clampedCenter,
+          zoom: 14,
+          maxZoom: 14,
+          minZoom: 5,
+          renderWorldCopies: false,
+          maxBounds: [
+            [43, 24],
+            [64, 40],
+          ],
+          attributionControl: false,
+          locale: isRTL ? 'fa' : 'en',
+          cooperativeGestures: isTouchDevice,
+        });
+        mapRef.current = map;
+
+        map.addControl(new maplibre.NavigationControl({ visualizePitch: false }), 'top-right');
+
+        const marker = new maplibre.Marker({
+          color: '#f43f5e',
+        })
+          .setLngLat([lon, lat])
+          .addTo(map);
+        markerRef.current = marker;
+
+        // Ensure proper sizing if the map is created in a modal/hidden container
+        const resize = () => map.resize();
+        map.once('load', () => {
+          resize();
+          onReady?.();
+        });
+        // Resize observer to react to layout changes
+        const resizeObserver =
+          typeof ResizeObserver !== 'undefined'
+            ? new ResizeObserver(() => resize())
+            : null;
+        resizeObserver?.observe(mapContainerRef.current);
+        window.addEventListener('resize', resize);
+
+        // Extra delayed resize as a fallback
+        setTimeout(resize, 200);
+        setTimeout(resize, 600);
+
+        return () => {
+          resizeObserver?.disconnect();
+          window.removeEventListener('resize', resize);
+        };
+      } catch (error) {
+        if (!cancelled) {
+          // eslint-disable-next-line no-console
+          console.warn('Map init failed', error);
+          onReady?.();
         }
-        return style;
-      };
-
-      const clampToBounds = (lngLat: [number, number]): [number, number] => {
-        const minLng = 43;
-        const maxLng = 64;
-        const minLat = 24;
-        const maxLat = 40;
-        return [Math.min(Math.max(lngLat[0], minLng), maxLng), Math.min(Math.max(lngLat[1], minLat), maxLat)];
-      };
-      const clampedCenter = clampToBounds([lon, lat]);
-      const style = await rewriteStyle();
-
-      const map = new maplibre.Map({
-        container: mapContainerRef.current,
-        style,
-        center: clampedCenter,
-        zoom: 14,
-        maxZoom: 14,
-        minZoom: 5,
-        renderWorldCopies: false,
-        maxBounds: [
-          [43, 24],
-          [64, 40],
-        ],
-        attributionControl: false,
-        locale: isRTL ? 'fa' : 'en',
-        cooperativeGestures: isTouchDevice,
-      });
-      mapRef.current = map;
-
-      map.addControl(new maplibre.NavigationControl({ visualizePitch: false }), 'top-right');
-
-      const marker = new maplibre.Marker({
-        color: '#f43f5e',
-      })
-        .setLngLat([lon, lat])
-        .addTo(map);
-      markerRef.current = marker;
-
-      // Ensure proper sizing if the map is created in a modal/hidden container
-      const resize = () => map.resize();
-      map.once('load', resize);
-      // Resize observer to react to layout changes
-      const resizeObserver =
-        typeof ResizeObserver !== 'undefined'
-          ? new ResizeObserver(() => resize())
-          : null;
-      resizeObserver?.observe(mapContainerRef.current);
-      window.addEventListener('resize', resize);
-
-      // Extra delayed resize as a fallback
-      setTimeout(resize, 200);
-      setTimeout(resize, 600);
-
-      return () => {
-        resizeObserver?.disconnect();
-        window.removeEventListener('resize', resize);
-      };
+      }
     })();
 
     return () => {
       cancelled = true;
       markerRef.current?.remove();
-      mapRef.current?.remove();
+      const currentMap = mapRef.current as (MapLibreMap & { handlers?: { destroy?: () => void } }) | null;
+      if (currentMap?.handlers?.destroy) {
+        try {
+          currentMap.remove();
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.warn('Map teardown failed', error);
+        }
+      }
+      mapRef.current = null;
     };
   }, [lat, lon, tileBase, isRTL]);
 

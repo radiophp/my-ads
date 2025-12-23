@@ -54,6 +54,7 @@ export function DivarPostsFeed(): JSX.Element {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [downloadDialogOpen, setDownloadDialogOpen] = useState(false);
+  const [mapReady, setMapReady] = useState(true);
   const [fetchPosts] = useLazyGetDivarPostsQuery();
   const [fetchPhone] = useFetchPostPhoneMutation();
   const [fetchContactInfo] = useFetchPostContactInfoMutation();
@@ -77,6 +78,13 @@ export function DivarPostsFeed(): JSX.Element {
   );
   const hasPrevious = selectedIndex > 0;
   const hasNext = selectedIndex >= 0 && selectedIndex < posts.length - 1;
+  const hasLocationForPost = useCallback(
+    (post: DivarPostSummary | null) =>
+      Boolean(
+        post && typeof post.latitude === 'number' && typeof post.longitude === 'number',
+      ),
+    [],
+  );
 
   const cityFilterIds = useMemo(() => {
     if (citySelection.mode !== 'custom') {
@@ -226,6 +234,16 @@ export function DivarPostsFeed(): JSX.Element {
     setContactLoading(false);
   }, [selectedPost?.id]);
 
+  useEffect(() => {
+    if (!selectedPost) {
+      setMapReady(true);
+      return;
+    }
+    const hasLocation =
+      typeof selectedPost.latitude === 'number' && typeof selectedPost.longitude === 'number';
+    setMapReady(!hasLocation);
+  }, [selectedPost]);
+
   const handleNavigateByOffset = useCallback(
     (offset: number) => {
       if (selectedIndex < 0) {
@@ -235,10 +253,11 @@ export function DivarPostsFeed(): JSX.Element {
       if (!target) {
         return;
       }
+      setMapReady(!hasLocationForPost(target));
       setSelectedPost(target);
       setDialogOpen(true);
     },
-    [posts, selectedIndex],
+    [hasLocationForPost, posts, selectedIndex],
   );
 
   const currencyFormatter = useMemo(
@@ -545,6 +564,7 @@ export function DivarPostsFeed(): JSX.Element {
   }, [fetchContactInfo, selectedPost, t, toast]);
 
   const openPostModal = (post: DivarPostSummary) => {
+    setMapReady(!hasLocationForPost(post));
     setSelectedPost(post);
     setDialogOpen(true);
   };
@@ -668,6 +688,7 @@ export function DivarPostsFeed(): JSX.Element {
                     onRequestContactInfo={handleFetchContactInfo}
                     contactInfo={contactInfo}
                     contactLoading={contactLoading}
+                    onMapReady={() => setMapReady(true)}
                   />
                 ) : null}
               </div>
@@ -688,7 +709,7 @@ export function DivarPostsFeed(): JSX.Element {
                         isRTL ? 'order-last' : 'order-first',
                       )}
                       onClick={() => handleNavigateByOffset(-1)}
-                      disabled={!hasPrevious}
+                      disabled={!hasPrevious || !mapReady}
                     >
                       <span className="flex items-center gap-2">
                         {isRTL ? (
@@ -707,7 +728,7 @@ export function DivarPostsFeed(): JSX.Element {
                         isRTL ? 'order-first' : 'order-last',
                       )}
                       onClick={() => handleNavigateByOffset(1)}
-                      disabled={!hasNext}
+                      disabled={!hasNext || !mapReady}
                     >
                       <span className="flex items-center gap-2">
                         {t('nextPost')}

@@ -5,9 +5,20 @@ import type { NewsItem, NewsListResponse } from '@/types/news';
 import { Link } from '@/i18n/routing';
 import { Button } from '@/components/ui/button';
 import { NewsCard } from '@/components/news/news-card';
+import { buildSeoMetadata } from '@/lib/server/seo';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+
+export async function generateMetadata() {
+  const t = await getTranslations('news');
+  return buildSeoMetadata({
+    pageKey: 'news-list',
+    defaultTitle: t('title'),
+    defaultDescription: t('description'),
+    canonicalPath: '/news',
+  });
+}
 
 const normalizeBaseUrl = (value: string): string => value.replace(/\/$/, '');
 

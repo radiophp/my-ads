@@ -46,6 +46,9 @@ import { PhoneFetchModule } from './modules/phone-fetch/phone-fetch.module';
 import { ArkaModule } from './modules/arka/arka.module';
 import { TelegramModule } from './modules/telegram/telegram.module';
 import { NewsModule } from './modules/news/news.module';
+import { BlogModule } from './modules/blog/blog.module';
+import { SlidesModule } from './modules/slides/slides.module';
+import { SeoSettingsModule } from './modules/seo-settings/seo-settings.module';
 
 @Module({
   imports: [
@@ -108,6 +111,9 @@ import { NewsModule } from './modules/news/news.module';
     ArkaModule,
     TelegramModule,
     NewsModule,
+    BlogModule,
+    SlidesModule,
+    SeoSettingsModule,
   ],
 })
 export class AppModule {}

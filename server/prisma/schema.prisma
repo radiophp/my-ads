@@ -604,3 +604,99 @@ model NewsTagOnNews {
   @@index([tagId])
   @@index([newsId])
 }
+
+model BlogCategory {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  blogs     Blog[]
+
+  @@index([isActive])
+}
+
+model BlogSource {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  blogs     Blog[]
+
+  @@index([isActive])
+}
+
+model BlogTag {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  blogs     BlogTagOnBlog[]
+}
+
+model Blog {
+  id           String   @id @default(uuid())
+  title        String
+  slug         String   @unique
+  shortText    String?
+  content      String   @db.Text
+  mainImageUrl String?
+  categoryId   String
+  category     BlogCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  sourceId     String
+  source       BlogSource @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+  tags         BlogTagOnBlog[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([sourceId])
+  @@index([createdAt])
+}
+
+model BlogTagOnBlog {
+  id        String   @id @default(uuid())
+  blogId    String
+  tagId     String
+  blog      Blog     @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  tag       BlogTag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([blogId, tagId])
+  @@index([tagId])
+  @@index([blogId])
+}
+
+model Slide {
+  id              String   @id @default(uuid())
+  title           String?
+  description     String?
+  linkUrl         String?
+  linkLabel       String?
+  imageDesktopUrl String
+  imageTabletUrl  String?
+  imageMobileUrl  String?
+  sortOrder       Int      @default(0)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+  @@index([createdAt])
+}
+
+model SeoSetting {
+  id          String   @id @default(uuid())
+  pageKey     String   @unique
+  title       String?
+  description String?
+  keywords    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([pageKey])
+}

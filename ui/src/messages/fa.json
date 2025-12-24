@@ -13,6 +13,8 @@
       "notifications": "اعلان‌ها",
       "admin": "مدیریت",
       "news": "اخبار",
+      "blog": "وبلاگ",
+      "about": "درباره ما",
       "guides": "راهنماها"
     },
     "docs": "مستندات",
@@ -93,6 +95,12 @@
       "description": "به‌روزترین تیترهای مسکن و تغییرات بازار را دنبال کنید.",
       "more": "مشاهده همه اخبار",
       "empty": "هنوز خبری منتشر نشده است."
+    },
+    "blog": {
+      "title": "جدیدترین مقالات",
+      "description": "تحلیل‌ها و راهنماهای کاربردی برای تصمیم‌گیری در بازار مسکن.",
+      "more": "مشاهده همه مقالات",
+      "empty": "هنوز مقاله‌ای منتشر نشده است."
     }
   },
   "profile": {
@@ -212,6 +220,37 @@
     "tags": {
       "empty": "برچسبی ثبت نشده است."
     }
+  },
+  "blog": {
+    "title": "وبلاگ",
+    "description": "راهنماها، تحلیل‌ها و داستان‌های ماهان فایل را در این بخش بخوانید.",
+    "empty": "هنوز مقاله‌ای در وبلاگ منتشر نشده است.",
+    "error": "امکان دریافت مقالات وبلاگ وجود ندارد.",
+    "back": "بازگشت به وبلاگ",
+    "labels": {
+      "published": "زمان انتشار",
+      "source": "منبع",
+      "tags": "برچسب‌ها",
+      "noImage": "بدون تصویر"
+    },
+    "pagination": {
+      "label": "صفحه {page} از {totalPages} • {totalItems} مقاله",
+      "previous": "قبلی",
+      "next": "بعدی"
+    },
+    "latest": {
+      "title": "آخرین مقالات وبلاگ",
+      "more": "مشاهده همه",
+      "empty": "مقاله تازه‌ای موجود نیست."
+    },
+    "tags": {
+      "empty": "برچسبی ثبت نشده است."
+    }
+  },
+  "about": {
+    "title": "درباره ماهان فایل",
+    "description": "ما در ماهان فایل تلاش می‌کنیم مسیر جستجوی ملک در ایران را ساده‌تر کنیم.",
+    "body": "ماهان فایل آگهی‌های معتبر، فیلترهای ذخیره‌شده و اعلان‌های لحظه‌ای را کنار هم می‌آورد تا بتوانید بازار مسکن را با اطمینان دنبال کنید. ابزارهای ما داده‌های آگهی را با اخبار و تحلیل‌های منتخب ترکیب می‌کند تا تصمیم‌گیری هوشمندانه‌تری داشته باشید."
   },
   "dashboard": {
     "title": "داشبورد",
@@ -655,6 +694,28 @@
     "dashboard": {
       "title": "مدیریت سامانه",
       "description": "برای مدیریت داده‌های مرجع و محتوا یکی از بخش‌ها را انتخاب کنید.",
+      "sections": {
+        "core": {
+          "title": "پیکربندی اصلی",
+          "description": "تنظیمات پایه و ساختارهای اشتراک را مدیریت کنید."
+        },
+        "locations": {
+          "title": "مناطق",
+          "description": "استان‌ها، شهرها و محله‌ها را نگهداری کنید."
+        },
+        "divar": {
+          "title": "پایپلاین دیوار",
+          "description": "دسته‌بندی‌ها، فیلترها، صف‌ها و سشن‌های دیوار را پایش کنید."
+        },
+        "content": {
+          "title": "محتوا",
+          "description": "اخبار و مقالات عمومی را مدیریت کنید."
+        },
+        "integrations": {
+          "title": "یکپارچه‌سازی‌ها",
+          "description": "هدرهای خارجی و ابزار اعلان را پیکربندی کنید."
+        }
+      },
       "cards": {
         "cta": "مدیریت",
         "packages": {
@@ -701,6 +762,30 @@
           "title": "منابع اخبار",
           "description": "بررسی و فعال‌سازی منابع خبر."
         },
+        "blog": {
+          "title": "وبلاگ",
+          "description": "انتشار و مدیریت مقالات وبلاگ."
+        },
+        "blogCategories": {
+          "title": "دسته‌بندی وبلاگ",
+          "description": "گروه‌بندی و مرتب‌سازی مقالات."
+        },
+        "blogTags": {
+          "title": "برچسب‌های وبلاگ",
+          "description": "مدیریت برچسب‌های مقالات وبلاگ."
+        },
+        "blogSources": {
+          "title": "منابع وبلاگ",
+          "description": "بررسی و فعال‌سازی منابع وبلاگ."
+        },
+        "slides": {
+          "title": "اسلایدهای صفحه اصلی",
+          "description": "مدیریت اسلایدهای نمایشی در صفحه اصلی."
+        },
+        "seoSettings": {
+          "title": "تنظیمات سئو",
+          "description": "متادیتای صفحات عمومی را مدیریت کنید."
+        },
         "notifications": {
           "title": "اعلان آزمایشی",
           "description": "برای یک کاربر اعلان دستی ارسال کنید."
@@ -713,6 +798,122 @@
           "title": "هدرهای آرکا",
           "description": "هدرهای API آرکا برای دریافت شماره‌ها را مدیریت کنید."
         }
+      }
+    },
+    "slides": {
+      "title": "اسلایدهای صفحه اصلی",
+      "description": "اسلایدهای نمایشی صفحه اصلی را مدیریت کنید.",
+      "actions": {
+        "add": "افزودن اسلاید",
+        "refresh": "تازه‌سازی",
+        "edit": "ویرایش",
+        "delete": "حذف",
+        "clearSearch": "پاک کردن جستجو",
+        "back": "بازگشت",
+        "save": "ذخیره"
+      },
+      "columns": {
+        "thumbnail": "تصویر",
+        "title": "عنوان",
+        "status": "وضعیت",
+        "order": "ترتیب",
+        "updated": "آخرین بروزرسانی",
+        "actions": "عملیات"
+      },
+      "fields": {
+        "title": "عنوان",
+        "titlePlaceholder": "عنوان اختیاری اسلاید",
+        "description": "توضیح",
+        "descriptionPlaceholder": "توضیح کوتاه اختیاری",
+        "linkUrl": "لینک",
+        "linkUrlPlaceholder": "آدرس مقصد (اختیاری)",
+        "linkLabel": "عنوان دکمه",
+        "linkLabelPlaceholder": "برچسب دکمه (اختیاری)",
+        "sortOrder": "ترتیب نمایش",
+        "sortOrderPlaceholder": "عدد کمتر زودتر نمایش داده می‌شود",
+        "search": "جستجو بر اساس عنوان",
+        "isActive": "اسلاید فعال",
+        "isActiveHint": "اسلایدهای غیرفعال در صفحه اصلی نمایش داده نمی‌شوند."
+      },
+      "form": {
+        "createTitle": "ایجاد اسلاید",
+        "createDescription": "اسلاید جدید برای صفحه اصلی اضافه کنید.",
+        "editTitle": "ویرایش اسلاید",
+        "editDescription": "اسلاید انتخاب‌شده را بروزرسانی کنید."
+      },
+      "status": {
+        "active": "فعال",
+        "inactive": "غیرفعال"
+      },
+      "image": {
+        "desktopLabel": "تصویر دسکتاپ",
+        "desktopHelper": "اندازه پیشنهادی: ۱۶۰۰×۶۰۰ (۸:۳).",
+        "tabletLabel": "تصویر تبلت",
+        "tabletHelper": "اندازه پیشنهادی: ۱۲۰۰×۶۰۰ (۲:۱).",
+        "mobileLabel": "تصویر موبایل",
+        "mobileHelper": "اندازه پیشنهادی: ۷۲۰×۵۴۰ (۴:۳).",
+        "cta": "برای بارگذاری، تصویر را رها کنید",
+        "helper": "تصویر را بکشید و رها کنید یا فایل انتخاب کنید.",
+        "select": "انتخاب تصویر",
+        "uploading": "در حال بارگذاری",
+        "remove": "حذف تصویر",
+        "error": "بارگذاری تصویر ناموفق بود",
+        "previewAlt": "پیش‌نمایش تصویر اسلاید"
+      },
+      "loading": "در حال دریافت اسلایدها…",
+      "empty": "هیچ اسلایدی ثبت نشده است.",
+      "confirmDelete": "اسلاید حذف شود؟",
+      "pagination": {
+        "label": "صفحه {page} از {totalPages} (مجموع {totalItems})",
+        "prev": "قبلی",
+        "next": "بعدی"
+      },
+      "placeholders": {
+        "untitled": "اسلاید بدون عنوان"
+      },
+      "toast": {
+        "missingTitle": "اطلاعات لازم کامل نیست",
+        "missingImage": "تصویر دسکتاپ را بارگذاری کنید.",
+        "createdTitle": "اسلاید ایجاد شد",
+        "createdDescription": "اسلاید جدید ذخیره شد.",
+        "updatedTitle": "اسلاید بروزرسانی شد",
+        "updatedDescription": "تغییرات ذخیره شد.",
+        "deletedTitle": "اسلاید حذف شد",
+        "deletedDescription": "اسلاید حذف شد.",
+        "errorTitle": "ذخیره ناموفق",
+        "errorDescription": "امکان ذخیره اسلاید وجود ندارد."
+      }
+    },
+    "seoSettings": {
+      "title": "تنظیمات سئو",
+      "description": "عنوان، توضیحات و کلمات کلیدی صفحات عمومی را تنظیم کنید.",
+      "actions": {
+        "refresh": "تازه‌سازی",
+        "save": "ذخیره",
+        "saving": "در حال ذخیره…"
+      },
+      "fields": {
+        "title": "عنوان",
+        "titlePlaceholder": "عنوان صفحه (اختیاری)",
+        "description": "توضیحات",
+        "descriptionPlaceholder": "توضیح متای صفحه",
+        "keywords": "کلمات کلیدی",
+        "keywordsPlaceholder": "کلمات کلیدی را با ویرگول جدا کنید",
+        "keywordsHint": "کلمات کلیدی را با ویرگول جدا کنید.",
+        "helper": "تنظیمات سئو این صفحه را بروزرسانی کنید."
+      },
+      "pages": {
+        "home": "صفحه اصلی",
+        "newsList": "فهرست اخبار",
+        "blogList": "فهرست وبلاگ",
+        "about": "درباره ما",
+        "dashboard": "داشبورد"
+      },
+      "toast": {
+        "savedTitle": "تنظیمات سئو ذخیره شد",
+        "savedDescription": "تغییرات این صفحه ثبت شد.",
+        "errorTitle": "خطا در ذخیره",
+        "errorDescription": "ذخیره تنظیمات سئو ناموفق بود."
       }
     },
     "news": {
@@ -897,6 +1098,204 @@
     "newsSources": {
       "title": "منابع اخبار",
       "description": "منابع خبر را فعال یا غیرفعال کنید.",
+      "actions": {
+        "refresh": "تازه‌سازی",
+        "activate": "فعال‌سازی",
+        "deactivate": "غیرفعال‌سازی"
+      },
+      "columns": {
+        "name": "نام",
+        "slug": "اسلاگ",
+        "active": "وضعیت",
+        "updated": "آخرین بروزرسانی",
+        "actions": "عملیات"
+      },
+      "status": {
+        "active": "فعال",
+        "inactive": "غیرفعال"
+      },
+      "loading": "در حال بارگذاری منابع...",
+      "empty": "منبعی یافت نشد.",
+      "toast": {
+        "updatedTitle": "منبع به‌روزرسانی شد",
+        "updatedDescription": "وضعیت ذخیره شد.",
+        "errorTitle": "بروزرسانی ناموفق",
+        "errorDescription": "بروزرسانی منبع انجام نشد."
+      }
+    },
+    "blog": {
+      "title": "وبلاگ",
+      "description": "مقالات وبلاگ را ایجاد و منتشر کنید.",
+      "actions": {
+        "add": "افزودن مقاله",
+        "refresh": "تازه‌سازی",
+        "edit": "ویرایش",
+        "delete": "حذف",
+        "clearSearch": "پاک کردن جستجو",
+        "save": "ذخیره",
+        "cancel": "انصراف"
+      },
+      "columns": {
+        "thumbnail": "تصویر",
+        "title": "عنوان",
+        "category": "دسته‌بندی",
+        "source": "منبع",
+        "tags": "برچسب‌ها",
+        "updated": "آخرین بروزرسانی",
+        "actions": "عملیات"
+      },
+      "fields": {
+        "title": "عنوان",
+        "titlePlaceholder": "عنوان مقاله را بنویسید",
+        "slug": "اسلاگ (اختیاری)",
+        "slugPlaceholder": "اسلاگ دلخواه (اختیاری)",
+        "search": "جستجو بر اساس عنوان",
+        "shortText": "خلاصه کوتاه",
+        "shortTextPlaceholder": "یک خلاصه کوتاه بنویسید",
+        "content": "متن مقاله",
+        "contentPlaceholder": "متن کامل مقاله را بنویسید",
+        "mainImageUrl": "نشانی تصویر اصلی",
+        "mainImagePlaceholder": "نشانی تصویر را وارد کنید یا آپلود کنید",
+        "category": "دسته‌بندی",
+        "categoryPlaceholder": "انتخاب دسته‌بندی",
+        "tags": "برچسب‌ها",
+        "categoryPreview": "دسته‌بندی: {name}",
+        "tagsPreview": "برچسب‌ها: {tags}"
+      },
+      "form": {
+        "createTitle": "ایجاد مقاله",
+        "createDescription": "یک مقاله جدید برای وبلاگ منتشر کنید.",
+        "editTitle": "ویرایش مقاله",
+        "editDescription": "جزئیات مقاله انتخاب‌شده را تغییر دهید.",
+        "back": "بازگشت به وبلاگ",
+        "save": "ذخیره تغییرات"
+      },
+      "image": {
+        "title": "تصویر اصلی",
+        "cta": "تصویر را برای آپلود رها کنید",
+        "helper": "تصویر را بکشید و رها کنید یا یک فایل انتخاب کنید.",
+        "select": "انتخاب تصویر",
+        "uploading": "در حال آپلود",
+        "remove": "حذف تصویر",
+        "error": "آپلود تصویر ناموفق بود",
+        "previewAlt": "پیش‌نمایش تصویر مقاله"
+      },
+      "loading": "در حال بارگذاری مقالات…",
+      "empty": "هنوز مقاله‌ای ثبت نشده است.",
+      "confirmDelete": "این مقاله حذف شود؟",
+      "pagination": {
+        "label": "صفحه {page} از {totalPages} ({totalItems} مورد)",
+        "previous": "قبلی",
+        "next": "بعدی"
+      },
+      "toast": {
+        "missingTitle": "عنوان لازم است",
+        "missingDescription": "لطفاً عنوان مقاله را وارد کنید.",
+        "createdTitle": "مقاله ثبت شد",
+        "createdDescription": "مقاله وبلاگ منتشر شد.",
+        "updatedTitle": "مقاله به‌روزرسانی شد",
+        "updatedDescription": "تغییرات ذخیره شد.",
+        "deletedTitle": "مقاله حذف شد",
+        "deletedDescription": "مقاله وبلاگ حذف شد.",
+        "errorTitle": "ذخیره ناموفق",
+        "errorDescription": "ثبت مقاله ممکن نیست. دوباره تلاش کنید."
+      }
+    },
+    "blogCategories": {
+      "title": "دسته‌بندی وبلاگ",
+      "description": "دسته‌بندی‌های مقالات وبلاگ را مدیریت کنید.",
+      "actions": {
+        "add": "افزودن دسته‌بندی",
+        "refresh": "تازه‌سازی",
+        "edit": "ویرایش",
+        "delete": "حذف",
+        "save": "ذخیره",
+        "cancel": "انصراف"
+      },
+      "columns": {
+        "name": "نام",
+        "slug": "اسلاگ",
+        "active": "وضعیت",
+        "updated": "آخرین بروزرسانی",
+        "actions": "عملیات"
+      },
+      "fields": {
+        "name": "نام",
+        "slug": "اسلاگ (اختیاری)",
+        "active": "فعال"
+      },
+      "status": {
+        "active": "فعال",
+        "inactive": "غیرفعال"
+      },
+      "dialog": {
+        "addTitle": "افزودن دسته‌بندی",
+        "addDescription": "یک دسته‌بندی جدید برای وبلاگ ایجاد کنید.",
+        "editTitle": "ویرایش دسته‌بندی",
+        "editDescription": "جزئیات دسته‌بندی را به‌روزرسانی کنید."
+      },
+      "loading": "در حال بارگذاری دسته‌بندی‌ها…",
+      "empty": "هنوز دسته‌بندی‌ای ثبت نشده است.",
+      "confirmDelete": "این دسته‌بندی حذف شود؟",
+      "toast": {
+        "missingTitle": "نام لازم است",
+        "missingDescription": "نام دسته‌بندی الزامی است.",
+        "createdTitle": "دسته‌بندی ثبت شد",
+        "createdDescription": "دسته‌بندی وبلاگ افزوده شد.",
+        "updatedTitle": "دسته‌بندی به‌روزرسانی شد",
+        "updatedDescription": "تغییرات ذخیره شد.",
+        "deletedTitle": "دسته‌بندی حذف شد",
+        "deletedDescription": "دسته‌بندی وبلاگ حذف شد.",
+        "errorTitle": "ذخیره ناموفق",
+        "errorDescription": "ثبت دسته‌بندی ممکن نیست. دوباره تلاش کنید."
+      }
+    },
+    "blogTags": {
+      "title": "برچسب‌های وبلاگ",
+      "description": "برچسب‌های مقالات وبلاگ را مدیریت کنید.",
+      "actions": {
+        "add": "افزودن برچسب",
+        "refresh": "تازه‌سازی",
+        "edit": "ویرایش",
+        "delete": "حذف",
+        "save": "ذخیره",
+        "cancel": "انصراف"
+      },
+      "columns": {
+        "name": "نام",
+        "slug": "اسلاگ",
+        "updated": "آخرین بروزرسانی",
+        "actions": "عملیات"
+      },
+      "fields": {
+        "name": "نام",
+        "slug": "اسلاگ (اختیاری)"
+      },
+      "dialog": {
+        "addTitle": "افزودن برچسب",
+        "addDescription": "یک برچسب جدید برای وبلاگ ایجاد کنید.",
+        "editTitle": "ویرایش برچسب",
+        "editDescription": "جزئیات برچسب را به‌روزرسانی کنید."
+      },
+      "loading": "در حال بارگذاری برچسب‌ها…",
+      "empty": "هنوز برچسبی ثبت نشده است.",
+      "confirmDelete": "این برچسب حذف شود؟",
+      "toast": {
+        "missingTitle": "نام لازم است",
+        "missingDescription": "نام برچسب الزامی است.",
+        "createdTitle": "برچسب ثبت شد",
+        "createdDescription": "برچسب وبلاگ افزوده شد.",
+        "updatedTitle": "برچسب به‌روزرسانی شد",
+        "updatedDescription": "تغییرات ذخیره شد.",
+        "deletedTitle": "برچسب حذف شد",
+        "deletedDescription": "برچسب وبلاگ حذف شد.",
+        "errorTitle": "ذخیره ناموفق",
+        "errorDescription": "ثبت برچسب ممکن نیست. دوباره تلاش کنید."
+      }
+    },
+    "blogSources": {
+      "title": "منابع وبلاگ",
+      "description": "منابع وبلاگ را فعال یا غیرفعال کنید.",
       "actions": {
         "refresh": "تازه‌سازی",
         "activate": "فعال‌سازی",
@@ -1395,11 +1794,13 @@
       "title": "پوشه‌های شما",
       "emptyTitle": "پوشه‌ای ثبت نشده است",
       "emptyDescription": "اولین پوشه را بسازید تا موارد بعدی را راحت‌تر ساماندهی کنید.",
+      "savedCount": "{count} آگهی ذخیره‌شده",
       "createdAt": "ساخته شده در {date}",
       "error": "امکان بارگذاری پوشه‌ها نیست. کمی بعد دوباره تلاش کنید.",
       "refreshing": "در حال به‌روزرسانی…"
     },
     "actions": {
+      "view": "نمایش پوشه",
       "rename": "تغییر نام",
       "delete": "حذف"
     },

@@ -13,6 +13,8 @@
       "notifications": "Notifications",
       "admin": "Admin",
       "news": "News",
+      "blog": "Blog",
+      "about": "About",
       "guides": "Guides"
     },
     "docs": "Docs",
@@ -93,6 +95,12 @@
       "description": "Stay updated with fresh housing headlines and market shifts.",
       "more": "View all news",
       "empty": "No news published yet."
+    },
+    "blog": {
+      "title": "Latest articles",
+      "description": "Deep dives, guides, and market insights for real estate decision-makers.",
+      "more": "View all articles",
+      "empty": "No articles published yet."
     }
   },
   "profile": {
@@ -212,6 +220,37 @@
     "tags": {
       "empty": "No tags available."
     }
+  },
+  "blog": {
+    "title": "Blog",
+    "description": "Insights, guides, and stories from the Mahan File team.",
+    "empty": "No blog articles published yet.",
+    "error": "Unable to load blog articles right now.",
+    "back": "Back to blog",
+    "labels": {
+      "published": "Published",
+      "source": "Source",
+      "tags": "Tags",
+      "noImage": "No image"
+    },
+    "pagination": {
+      "label": "Page {page} of {totalPages} • {totalItems} blog articles",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "latest": {
+      "title": "Latest blog articles",
+      "more": "View all",
+      "empty": "No recent blog articles available."
+    },
+    "tags": {
+      "empty": "No tags available."
+    }
+  },
+  "about": {
+    "title": "About Mahan File",
+    "description": "Learn how we help you navigate real estate listings across Iran.",
+    "body": "Mahan File brings together verified listings, saved filters, and real-time alerts so you can monitor the market with confidence. Our tools pair listing data with curated news and insights to support smarter decisions."
   },
   "dashboard": {
     "title": "Dashboard",
@@ -655,6 +694,28 @@
     "dashboard": {
       "title": "Administration",
       "description": "Choose a management area to maintain catalog data and platform content.",
+      "sections": {
+        "core": {
+          "title": "Core configuration",
+          "description": "Manage foundational settings and billing structures."
+        },
+        "locations": {
+          "title": "Locations",
+          "description": "Maintain provinces, cities, and districts for listings."
+        },
+        "divar": {
+          "title": "Divar pipeline",
+          "description": "Monitor Divar taxonomy, filters, queues, and sessions."
+        },
+        "content": {
+          "title": "Content",
+          "description": "Manage public news and blog content."
+        },
+        "integrations": {
+          "title": "Integrations",
+          "description": "Configure external headers and notification tools."
+        }
+      },
       "cards": {
         "cta": "Manage",
         "packages": {
@@ -701,6 +762,30 @@
           "title": "News sources",
           "description": "Review and toggle crawler sources for news."
         },
+        "blog": {
+          "title": "Blog",
+          "description": "Create and publish blog articles for the public site."
+        },
+        "blogCategories": {
+          "title": "Blog categories",
+          "description": "Manage the categories used to group blog articles."
+        },
+        "blogTags": {
+          "title": "Blog tags",
+          "description": "Maintain the tags assigned to blog articles."
+        },
+        "blogSources": {
+          "title": "Blog sources",
+          "description": "Review and toggle sources for blog articles."
+        },
+        "slides": {
+          "title": "Home slides",
+          "description": "Manage the hero slides shown on the public homepage."
+        },
+        "seoSettings": {
+          "title": "SEO settings",
+          "description": "Configure metadata for public pages."
+        },
         "notifications": {
           "title": "Test notifications",
           "description": "Send a manual test notification to a user."
@@ -713,6 +798,122 @@
           "title": "Arka headers",
           "description": "Manage Arka API headers used to fetch phone numbers."
         }
+      }
+    },
+    "slides": {
+      "title": "Home slides",
+      "description": "Manage the hero slides shown on the public homepage.",
+      "actions": {
+        "add": "Add slide",
+        "refresh": "Refresh",
+        "edit": "Edit",
+        "delete": "Delete",
+        "clearSearch": "Clear search",
+        "back": "Back",
+        "save": "Save"
+      },
+      "columns": {
+        "thumbnail": "Image",
+        "title": "Title",
+        "status": "Status",
+        "order": "Order",
+        "updated": "Updated",
+        "actions": "Actions"
+      },
+      "fields": {
+        "title": "Title",
+        "titlePlaceholder": "Optional slide title",
+        "description": "Description",
+        "descriptionPlaceholder": "Optional short description",
+        "linkUrl": "Link URL",
+        "linkUrlPlaceholder": "Optional destination link",
+        "linkLabel": "Link label",
+        "linkLabelPlaceholder": "Optional button label",
+        "sortOrder": "Sort order",
+        "sortOrderPlaceholder": "Lower numbers appear first",
+        "search": "Search by title",
+        "isActive": "Active slide",
+        "isActiveHint": "Inactive slides are hidden on the homepage."
+      },
+      "form": {
+        "createTitle": "Create slide",
+        "createDescription": "Upload a new hero slide for the homepage.",
+        "editTitle": "Edit slide",
+        "editDescription": "Update the selected slide."
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "image": {
+        "desktopLabel": "Desktop image",
+        "desktopHelper": "Recommended size: 1600×600 (8:3).",
+        "tabletLabel": "Tablet image",
+        "tabletHelper": "Recommended size: 1200×600 (2:1).",
+        "mobileLabel": "Mobile image",
+        "mobileHelper": "Recommended size: 720×540 (4:3).",
+        "cta": "Drop the image to upload",
+        "helper": "Drag and drop an image here or choose a file.",
+        "select": "Choose image",
+        "uploading": "Uploading",
+        "remove": "Remove image",
+        "error": "Image upload failed",
+        "previewAlt": "Slide image preview"
+      },
+      "loading": "Loading slides…",
+      "empty": "No slides yet.",
+      "confirmDelete": "Delete this slide?",
+      "pagination": {
+        "label": "Page {page} of {totalPages} ({totalItems} items)",
+        "prev": "Previous",
+        "next": "Next"
+      },
+      "placeholders": {
+        "untitled": "Untitled slide"
+      },
+      "toast": {
+        "missingTitle": "Missing required data",
+        "missingImage": "Upload a desktop slide image before saving.",
+        "createdTitle": "Slide created",
+        "createdDescription": "The slide is now live.",
+        "updatedTitle": "Slide updated",
+        "updatedDescription": "Changes saved.",
+        "deletedTitle": "Slide deleted",
+        "deletedDescription": "Slide removed.",
+        "errorTitle": "Save failed",
+        "errorDescription": "Unable to save slide. Try again."
+      }
+    },
+    "seoSettings": {
+      "title": "SEO settings",
+      "description": "Set page titles, descriptions, and keywords for public pages.",
+      "actions": {
+        "refresh": "Refresh",
+        "save": "Save",
+        "saving": "Saving…"
+      },
+      "fields": {
+        "title": "Title",
+        "titlePlaceholder": "Optional page title",
+        "description": "Description",
+        "descriptionPlaceholder": "Optional meta description",
+        "keywords": "Keywords",
+        "keywordsPlaceholder": "Comma-separated keywords",
+        "keywordsHint": "Separate multiple keywords with commas.",
+        "helper": "Update SEO values for this page."
+      },
+      "pages": {
+        "home": "Home page",
+        "newsList": "News list",
+        "blogList": "Blog list",
+        "about": "About us",
+        "dashboard": "Dashboard"
+      },
+      "toast": {
+        "savedTitle": "SEO settings updated",
+        "savedDescription": "Changes saved for this page.",
+        "errorTitle": "Update failed",
+        "errorDescription": "Unable to update SEO settings."
       }
     },
     "news": {
@@ -897,6 +1098,204 @@
     "newsSources": {
       "title": "News sources",
       "description": "Enable or disable news sources.",
+      "actions": {
+        "refresh": "Refresh",
+        "activate": "Activate",
+        "deactivate": "Deactivate"
+      },
+      "columns": {
+        "name": "Name",
+        "slug": "Slug",
+        "active": "Status",
+        "updated": "Updated",
+        "actions": "Actions"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "loading": "Loading sources…",
+      "empty": "No sources found.",
+      "toast": {
+        "updatedTitle": "Source updated",
+        "updatedDescription": "Status saved.",
+        "errorTitle": "Update failed",
+        "errorDescription": "Unable to update source."
+      }
+    },
+    "blog": {
+      "title": "Blog",
+      "description": "Create and publish blog articles for the public site.",
+      "actions": {
+        "add": "Add article",
+        "refresh": "Refresh",
+        "edit": "Edit",
+        "delete": "Delete",
+        "clearSearch": "Clear search",
+        "save": "Save",
+        "cancel": "Cancel"
+      },
+      "columns": {
+        "thumbnail": "Image",
+        "title": "Title",
+        "category": "Category",
+        "source": "Source",
+        "tags": "Tags",
+        "updated": "Updated",
+        "actions": "Actions"
+      },
+      "fields": {
+        "title": "Title",
+        "titlePlaceholder": "Enter a blog title",
+        "slug": "Slug (optional)",
+        "slugPlaceholder": "Optional custom slug",
+        "search": "Search by title",
+        "shortText": "Short text",
+        "shortTextPlaceholder": "Optional short summary",
+        "content": "Content",
+        "contentPlaceholder": "Write the full blog content",
+        "mainImageUrl": "Main image URL",
+        "mainImagePlaceholder": "Paste or upload an image URL",
+        "category": "Category",
+        "categoryPlaceholder": "Select a category",
+        "tags": "Tags",
+        "categoryPreview": "Category: {name}",
+        "tagsPreview": "Tags: {tags}"
+      },
+      "form": {
+        "createTitle": "Create blog",
+        "createDescription": "Publish a new blog article.",
+        "editTitle": "Edit blog",
+        "editDescription": "Update the selected blog article.",
+        "back": "Back to blog",
+        "save": "Save changes"
+      },
+      "image": {
+        "title": "Main image",
+        "cta": "Drop the image to upload",
+        "helper": "Drag and drop an image here or choose a file.",
+        "select": "Choose image",
+        "uploading": "Uploading",
+        "remove": "Remove image",
+        "error": "Image upload failed",
+        "previewAlt": "Blog main image preview"
+      },
+      "loading": "Loading blog articles…",
+      "empty": "No blog articles yet.",
+      "confirmDelete": "Delete this article?",
+      "pagination": {
+        "label": "Page {page} of {totalPages} ({totalItems} items)",
+        "previous": "Previous",
+        "next": "Next"
+      },
+      "toast": {
+        "missingTitle": "Missing title",
+        "missingDescription": "Please enter a title.",
+        "createdTitle": "Blog created",
+        "createdDescription": "Blog article published.",
+        "updatedTitle": "Blog updated",
+        "updatedDescription": "Changes saved.",
+        "deletedTitle": "Blog deleted",
+        "deletedDescription": "Blog article removed.",
+        "errorTitle": "Save failed",
+        "errorDescription": "Unable to save blog. Try again."
+      }
+    },
+    "blogCategories": {
+      "title": "Blog categories",
+      "description": "Manage the categories used to organize blog articles.",
+      "actions": {
+        "add": "Add category",
+        "refresh": "Refresh",
+        "edit": "Edit",
+        "delete": "Delete",
+        "save": "Save",
+        "cancel": "Cancel"
+      },
+      "columns": {
+        "name": "Name",
+        "slug": "Slug",
+        "active": "Status",
+        "updated": "Updated",
+        "actions": "Actions"
+      },
+      "fields": {
+        "name": "Name",
+        "slug": "Slug (optional)",
+        "active": "Active"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "dialog": {
+        "addTitle": "Add category",
+        "addDescription": "Create a new blog category.",
+        "editTitle": "Edit category",
+        "editDescription": "Update the selected category."
+      },
+      "loading": "Loading categories…",
+      "empty": "No categories yet.",
+      "confirmDelete": "Delete this category?",
+      "toast": {
+        "missingTitle": "Missing name",
+        "missingDescription": "Category name is required.",
+        "createdTitle": "Category created",
+        "createdDescription": "Blog category added.",
+        "updatedTitle": "Category updated",
+        "updatedDescription": "Changes saved.",
+        "deletedTitle": "Category deleted",
+        "deletedDescription": "Blog category removed.",
+        "errorTitle": "Save failed",
+        "errorDescription": "Unable to save category. Try again."
+      }
+    },
+    "blogTags": {
+      "title": "Blog tags",
+      "description": "Maintain the tags assigned to blog articles.",
+      "actions": {
+        "add": "Add tag",
+        "refresh": "Refresh",
+        "edit": "Edit",
+        "delete": "Delete",
+        "save": "Save",
+        "cancel": "Cancel"
+      },
+      "columns": {
+        "name": "Name",
+        "slug": "Slug",
+        "updated": "Updated",
+        "actions": "Actions"
+      },
+      "fields": {
+        "name": "Name",
+        "slug": "Slug (optional)"
+      },
+      "dialog": {
+        "addTitle": "Add tag",
+        "addDescription": "Create a new blog tag.",
+        "editTitle": "Edit tag",
+        "editDescription": "Update the selected tag."
+      },
+      "loading": "Loading tags…",
+      "empty": "No tags yet.",
+      "confirmDelete": "Delete this tag?",
+      "toast": {
+        "missingTitle": "Missing name",
+        "missingDescription": "Tag name is required.",
+        "createdTitle": "Tag created",
+        "createdDescription": "Blog tag added.",
+        "updatedTitle": "Tag updated",
+        "updatedDescription": "Changes saved.",
+        "deletedTitle": "Tag deleted",
+        "deletedDescription": "Blog tag removed.",
+        "errorTitle": "Save failed",
+        "errorDescription": "Unable to save tag. Try again."
+      }
+    },
+    "blogSources": {
+      "title": "Blog sources",
+      "description": "Enable or disable blog sources.",
       "actions": {
         "refresh": "Refresh",
         "activate": "Activate",
@@ -1395,11 +1794,13 @@
       "title": "Your folders",
       "emptyTitle": "No folders yet",
       "emptyDescription": "Add your first folder to keep upcoming posts tidy.",
+      "savedCount": "{count} saved posts",
       "createdAt": "Created {date}",
       "error": "Unable to load folders. Please try again later.",
       "refreshing": "Updating list…"
     },
     "actions": {
+      "view": "View folder",
       "rename": "Rename",
       "delete": "Delete"
     },

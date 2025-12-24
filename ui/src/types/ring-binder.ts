@@ -5,6 +5,7 @@ export type RingBinderFolder = {
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
+  savedPostCount?: number;
 };
 
 export type RingBinderFolderListResponse = {

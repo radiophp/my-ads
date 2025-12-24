@@ -2,7 +2,7 @@
 
 import { FormEvent, useMemo, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { Pencil, Trash2 } from 'lucide-react';
+import { ExternalLink, Pencil, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/use-toast';
+import { Link } from '@/i18n/routing';
 import {
   useCreateRingBinderFolderMutation,
   useDeleteRingBinderFolderMutation,
@@ -203,13 +204,32 @@ export function RingBinderPanel() {
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <p className="text-base font-semibold text-foreground">{folder.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {t('list.createdAt', {
-                            date: dateFormatter.format(new Date(folder.createdAt)),
-                          })}
-                        </p>
+                        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                          <span>
+                            {t('list.savedCount', {
+                              count: (folder.savedPostCount ?? 0).toLocaleString(locale),
+                            })}
+                          </span>
+                          <span aria-hidden="true">•</span>
+                          <span>
+                            {t('list.createdAt', {
+                              date: dateFormatter.format(new Date(folder.createdAt)),
+                            })}
+                          </span>
+                        </div>
                       </div>
                       <div className="flex gap-2">
+                        <Button
+                          asChild
+                          type="button"
+                          variant="outline"
+                          size="icon-sm"
+                          aria-label={t('actions.view')}
+                        >
+                          <Link href={`/dashboard?ringFolderId=${folder.id}`}>
+                            <ExternalLink className="size-4" aria-hidden />
+                          </Link>
+                        </Button>
                         <Button
                           type="button"
                           variant="outline"

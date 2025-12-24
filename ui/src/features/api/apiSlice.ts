@@ -53,6 +53,22 @@ import type {
   UpdateNewsTagPayload,
   UpdateNewsSourcePayload,
 } from '@/types/news';
+import type {
+  CreateBlogCategoryPayload,
+  CreateBlogPayload,
+  CreateBlogTagPayload,
+  BlogCategory,
+  BlogItem,
+  BlogListResponse,
+  BlogTag,
+  BlogSource,
+  UpdateBlogCategoryPayload,
+  UpdateBlogPayload,
+  UpdateBlogTagPayload,
+  UpdateBlogSourcePayload,
+} from '@/types/blog';
+import type { Slide, SlideListResponse } from '@/types/slide';
+import type { SeoSetting } from '@/types/seo-settings';
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:6200/api';
 
@@ -158,6 +174,12 @@ export const apiSlice = createApi({
     'AdminNewsCategories',
     'AdminNewsTags',
     'AdminNewsSources',
+    'AdminBlog',
+    'AdminBlogCategories',
+    'AdminBlogTags',
+    'AdminBlogSources',
+    'AdminSlides',
+    'AdminSeoSettings',
   ],
   endpoints: (builder) => ({
     getHealth: builder.query<{ status: string }, void>({
@@ -316,6 +338,170 @@ export const apiSlice = createApi({
         body,
       }),
       invalidatesTags: ['AdminNewsSources', 'AdminNews'],
+    }),
+    getAdminBlog: builder.query<
+      BlogListResponse,
+      { page?: number; pageSize?: number; search?: string } | void
+    >({
+      query: (params) => ({
+        url: '/admin/blog',
+        params: params ?? undefined,
+      }),
+      providesTags: ['AdminBlog'],
+    }),
+    getAdminBlogItem: builder.query<BlogItem, string>({
+      query: (id) => `/admin/blog/${id}`,
+      providesTags: ['AdminBlog'],
+    }),
+    createAdminBlog: builder.mutation<BlogItem, CreateBlogPayload>({
+      query: (body) => ({
+        url: '/admin/blog',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['AdminBlog'],
+    }),
+    updateAdminBlog: builder.mutation<BlogItem, { id: string; body: UpdateBlogPayload }>({
+      query: ({ id, body }) => ({
+        url: `/admin/blog/${id}`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: ['AdminBlog'],
+    }),
+    deleteAdminBlog: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/admin/blog/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['AdminBlog'],
+    }),
+    getAdminBlogCategories: builder.query<BlogCategory[], void>({
+      query: () => '/admin/blog-categories',
+      providesTags: ['AdminBlogCategories'],
+    }),
+    createAdminBlogCategory: builder.mutation<BlogCategory, CreateBlogCategoryPayload>({
+      query: (body) => ({
+        url: '/admin/blog-categories',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['AdminBlogCategories', 'AdminBlog'],
+    }),
+    updateAdminBlogCategory: builder.mutation<
+      BlogCategory,
+      { id: string; body: UpdateBlogCategoryPayload }
+    >({
+      query: ({ id, body }) => ({
+        url: `/admin/blog-categories/${id}`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: ['AdminBlogCategories', 'AdminBlog'],
+    }),
+    deleteAdminBlogCategory: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/admin/blog-categories/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['AdminBlogCategories', 'AdminBlog'],
+    }),
+    getAdminBlogTags: builder.query<BlogTag[], void>({
+      query: () => '/admin/blog-tags',
+      providesTags: ['AdminBlogTags'],
+    }),
+    getAdminBlogSources: builder.query<BlogSource[], void>({
+      query: () => '/admin/blog-sources',
+      providesTags: ['AdminBlogSources'],
+    }),
+    createAdminBlogTag: builder.mutation<BlogTag, CreateBlogTagPayload>({
+      query: (body) => ({
+        url: '/admin/blog-tags',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['AdminBlogTags', 'AdminBlog'],
+    }),
+    updateAdminBlogTag: builder.mutation<BlogTag, { id: string; body: UpdateBlogTagPayload }>({
+      query: ({ id, body }) => ({
+        url: `/admin/blog-tags/${id}`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: ['AdminBlogTags', 'AdminBlog'],
+    }),
+    deleteAdminBlogTag: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/admin/blog-tags/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['AdminBlogTags', 'AdminBlog'],
+    }),
+    updateAdminBlogSource: builder.mutation<
+      BlogSource,
+      { id: string; body: UpdateBlogSourcePayload }
+    >({
+      query: ({ id, body }) => ({
+        url: `/admin/blog-sources/${id}`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: ['AdminBlogSources', 'AdminBlog'],
+    }),
+    getAdminSlides: builder.query<
+      SlideListResponse,
+      { page?: number; pageSize?: number; search?: string } | void
+    >({
+      query: (params) => ({
+        url: '/admin/slides',
+        params: params ?? undefined,
+      }),
+      providesTags: ['AdminSlides'],
+    }),
+    getAdminSlideItem: builder.query<Slide, string>({
+      query: (id) => `/admin/slides/${id}`,
+      providesTags: ['AdminSlides'],
+    }),
+    createAdminSlide: builder.mutation<Slide, CreateSlidePayload>({
+      query: (body) => ({
+        url: '/admin/slides',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['AdminSlides'],
+    }),
+    updateAdminSlide: builder.mutation<Slide, { id: string; body: UpdateSlidePayload }>({
+      query: ({ id, body }) => ({
+        url: `/admin/slides/${id}`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: ['AdminSlides'],
+    }),
+    deleteAdminSlide: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/admin/slides/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['AdminSlides'],
+    }),
+    getAdminSeoSettings: builder.query<SeoSetting[], void>({
+      query: () => '/admin/seo-settings',
+      providesTags: ['AdminSeoSettings'],
+    }),
+    updateAdminSeoSetting: builder.mutation<
+      SeoSetting,
+      { pageKey: SeoSetting['pageKey']; body: Pick<SeoSetting, 'title' | 'description' | 'keywords'> }
+    >({
+      query: ({ pageKey, body }) => ({
+        url: `/admin/seo-settings/${pageKey}`,
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: ['AdminSeoSettings'],
+    }),
+    getSeoSetting: builder.query<SeoSetting, SeoSetting['pageKey']>({
+      query: (pageKey) => `/seo-settings/${pageKey}`,
     }),
     fetchPostPhone: builder.mutation<{ phoneNumber: string | null }, { postId: string }>({
       query: ({ postId }) => ({
@@ -867,6 +1053,29 @@ export const {
   useDeleteAdminNewsTagMutation,
   useGetAdminNewsSourcesQuery,
   useUpdateAdminNewsSourceMutation,
+  useGetAdminBlogQuery,
+  useGetAdminBlogItemQuery,
+  useCreateAdminBlogMutation,
+  useUpdateAdminBlogMutation,
+  useDeleteAdminBlogMutation,
+  useGetAdminBlogCategoriesQuery,
+  useCreateAdminBlogCategoryMutation,
+  useUpdateAdminBlogCategoryMutation,
+  useDeleteAdminBlogCategoryMutation,
+  useGetAdminBlogTagsQuery,
+  useCreateAdminBlogTagMutation,
+  useUpdateAdminBlogTagMutation,
+  useDeleteAdminBlogTagMutation,
+  useGetAdminBlogSourcesQuery,
+  useUpdateAdminBlogSourceMutation,
+  useGetAdminSlidesQuery,
+  useGetAdminSlideItemQuery,
+  useCreateAdminSlideMutation,
+  useUpdateAdminSlideMutation,
+  useDeleteAdminSlideMutation,
+  useGetAdminSeoSettingsQuery,
+  useUpdateAdminSeoSettingMutation,
+  useGetSeoSettingQuery,
   useGetPostsToAnalyzeQuery,
   useGetDivarPostsQuery,
   useLazyGetDivarPostsQuery,
@@ -902,6 +1111,20 @@ type UpdateCurrentUserPayload = Partial<{
   cityId: number | null;
   profileImageUrl: string | null;
 }>;
+
+type CreateSlidePayload = {
+  title?: string | null;
+  description?: string | null;
+  linkUrl?: string | null;
+  linkLabel?: string | null;
+  imageDesktopUrl: string;
+  imageTabletUrl?: string | null;
+  imageMobileUrl?: string | null;
+  sortOrder?: number;
+  isActive?: boolean;
+};
+
+type UpdateSlidePayload = Partial<CreateSlidePayload>;
 
 type UploadResponse = {
   bucket: string;

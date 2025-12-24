@@ -2,7 +2,10 @@ const STORAGE_HOSTS = new Set([
   'storage.mahanfile.com',
   'dev-storage.mahanfile.com',
   'mahan-storage.toncloud.observer',
+  'minio',
 ]);
+
+const STORAGE_PATH_PREFIXES = ['/upload/', '/mahan-file-uploads/'];
 
 const normalizeBase = (value: string): string => value.replace(/\/$/, '');
 
@@ -17,6 +20,11 @@ export const normalizeStorageUrl = (
 ): string | undefined => {
   if (!value) return undefined;
   if (value.startsWith('/storage/')) return value;
+  for (const prefix of STORAGE_PATH_PREFIXES) {
+    if (value.startsWith(prefix)) {
+      return `${buildStorageBase(appBase)}${value}`;
+    }
+  }
 
   try {
     const parsed = new URL(value);
@@ -27,6 +35,9 @@ export const normalizeStorageUrl = (
   } catch {
     if (value.startsWith('/mahan-file-uploads/')) {
       return `${buildStorageBase(appBase)}${value}`;
+    }
+    if (value.startsWith('upload/')) {
+      return `${buildStorageBase(appBase)}/${value}`;
     }
     return value;
   }

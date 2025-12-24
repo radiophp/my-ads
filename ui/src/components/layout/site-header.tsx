@@ -31,12 +31,22 @@ import {
   Bell,
   ShieldCheck,
   Newspaper,
+  BookOpen,
+  Info,
 } from 'lucide-react';
 import { useNotificationsSocket } from '@/features/notifications/useNotificationsSocket';
 import { CodeSearch } from '@/components/layout/code-search';
 import { cn } from '@/lib/utils';
 
-type NavIconKey = 'dashboard' | 'ringBinder' | 'savedFilters' | 'notifications' | 'admin' | 'news';
+type NavIconKey =
+  | 'dashboard'
+  | 'ringBinder'
+  | 'savedFilters'
+  | 'notifications'
+  | 'admin'
+  | 'news'
+  | 'blog'
+  | 'about';
 
 type NavItemConfig = {
   key: string;
@@ -53,6 +63,8 @@ const navIconComponents: Record<NavIconKey, typeof LayoutDashboard> = {
   notifications: Bell,
   admin: ShieldCheck,
   news: Newspaper,
+  blog: BookOpen,
+  about: Info,
 };
 
 function renderNavIcon(icon: NavIconKey, className?: string) {
@@ -119,13 +131,6 @@ export function SiteHeader() {
 
   const availableNavItems: NavItemConfig[] = [
     {
-      key: 'news',
-      label: t('header.nav.news'),
-      href: '/news',
-      visible: true,
-      icon: 'news' as const,
-    },
-    {
       key: 'dashboard',
       label: t('header.nav.dashboard'),
       href: '/dashboard',
@@ -159,6 +164,27 @@ export function SiteHeader() {
       href: '/admin',
       visible: isAuthenticated && auth.user?.role === 'ADMIN',
       icon: 'admin' as const,
+    },
+    {
+      key: 'news',
+      label: t('header.nav.news'),
+      href: '/news',
+      visible: true,
+      icon: 'news' as const,
+    },
+    {
+      key: 'blog',
+      label: t('header.nav.blog'),
+      href: '/blog',
+      visible: true,
+      icon: 'blog' as const,
+    },
+    {
+      key: 'about',
+      label: t('header.nav.about'),
+      href: '/about',
+      visible: true,
+      icon: 'about' as const,
     },
   ];
 
@@ -196,13 +222,6 @@ export function SiteHeader() {
           <Link href="/" className="text-lg font-semibold">
             {t('header.brand')}
           </Link>
-          <Link
-            href="/news"
-            className="hidden items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
-          >
-            {renderNavIcon('news')}
-            {t('header.nav.news')}
-          </Link>
           {isAuthenticated && (
             <Link
               href="/dashboard"
@@ -212,6 +231,27 @@ export function SiteHeader() {
               {t('header.nav.dashboard')}
             </Link>
           )}
+          <Link
+            href="/news"
+            className="hidden items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
+          >
+            {renderNavIcon('news')}
+            {t('header.nav.news')}
+          </Link>
+          <Link
+            href="/blog"
+            className="hidden items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
+          >
+            {renderNavIcon('blog')}
+            {t('header.nav.blog')}
+          </Link>
+          <Link
+            href="/about"
+            className="hidden items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
+          >
+            {renderNavIcon('about')}
+            {t('header.nav.about')}
+          </Link>
           {isAuthenticated && (
             <Link
               href="/dashboard/ring-binder"

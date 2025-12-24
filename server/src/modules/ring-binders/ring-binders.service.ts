@@ -13,11 +13,29 @@ export const MAX_RING_BINDER_FOLDERS = 30;
 export class RingBindersService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  listFolders(userId: string) {
-    return this.prismaService.ringBinderFolder.findMany({
+  async listFolders(userId: string) {
+    const folders = await this.prismaService.ringBinderFolder.findMany({
       where: { userId, deletedAt: null },
       orderBy: { createdAt: 'asc' },
+      select: {
+        id: true,
+        userId: true,
+        name: true,
+        createdAt: true,
+        updatedAt: true,
+        deletedAt: true,
+        _count: {
+          select: {
+            posts: true,
+          },
+        },
+      },
     });
+
+    return folders.map(({ _count, ...folder }) => ({
+      ...folder,
+      savedPostCount: _count.posts,
+    }));
   }
 
   private async assertNameAvailable(userId: string, name: string, excludeId?: string) {

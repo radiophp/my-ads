@@ -13,4 +13,10 @@ export type AdminDashboardStats = {
   newsCategories: number;
   newsTags: number;
   newsSources: number;
+  blog: number;
+  blogCategories: number;
+  blogTags: number;
+  blogSources: number;
+  slides: number;
+  seoSettings: number;
 };

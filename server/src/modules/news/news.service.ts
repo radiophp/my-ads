@@ -251,6 +251,19 @@ export class NewsService {
     };
   }
 
+  async getAdminNewsById(id: string) {
+    const item = await this.prisma.news.findUnique({
+      where: { id },
+      select: newsSelect,
+    });
+
+    if (!item) {
+      throw new NotFoundException('News item not found.');
+    }
+
+    return this.mapNews(item);
+  }
+
   async createNews(dto: CreateNewsDto) {
     const slug = await this.ensureUniqueNewsSlug(dto.slug ?? dto.title);
     const tagIds = dto.tagIds ?? [];

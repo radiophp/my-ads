@@ -727,16 +727,39 @@
     },
       "fields": {
         "title": "عنوان",
+        "titlePlaceholder": "عنوان خبر را بنویسید",
         "slug": "اسلاگ (اختیاری)",
+        "slugPlaceholder": "اسلاگ دلخواه (اختیاری)",
         "search": "جستجو بر اساس عنوان",
         "shortText": "خلاصه کوتاه",
+        "shortTextPlaceholder": "یک خلاصه کوتاه بنویسید",
         "content": "متن خبر",
+        "contentPlaceholder": "متن کامل خبر را بنویسید",
         "mainImageUrl": "نشانی تصویر اصلی",
+        "mainImagePlaceholder": "نشانی تصویر را وارد کنید یا آپلود کنید",
         "category": "دسته‌بندی",
         "categoryPlaceholder": "انتخاب دسته‌بندی",
         "tags": "برچسب‌ها",
         "categoryPreview": "دسته‌بندی: {name}",
         "tagsPreview": "برچسب‌ها: {tags}"
+      },
+      "form": {
+        "createTitle": "ایجاد خبر",
+        "createDescription": "یک خبر جدید برای سایت عمومی منتشر کنید.",
+        "editTitle": "ویرایش خبر",
+        "editDescription": "جزئیات خبر انتخاب‌شده را تغییر دهید.",
+        "back": "بازگشت به خبرها",
+        "save": "ذخیره تغییرات"
+      },
+      "image": {
+        "title": "تصویر اصلی",
+        "cta": "تصویر را برای آپلود رها کنید",
+        "helper": "تصویر را بکشید و رها کنید یا یک فایل انتخاب کنید.",
+        "select": "انتخاب تصویر",
+        "uploading": "در حال آپلود",
+        "remove": "حذف تصویر",
+        "error": "آپلود تصویر ناموفق بود",
+        "previewAlt": "پیش‌نمایش تصویر خبر"
       },
       "dialog": {
         "addTitle": "افزودن خبر",

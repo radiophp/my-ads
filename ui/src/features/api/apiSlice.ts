@@ -218,6 +218,10 @@ export const apiSlice = createApi({
       }),
       providesTags: ['AdminNews'],
     }),
+    getAdminNewsItem: builder.query<NewsItem, string>({
+      query: (id) => `/admin/news/${id}`,
+      providesTags: ['AdminNews'],
+    }),
     createAdminNews: builder.mutation<NewsItem, CreateNewsPayload>({
       query: (body) => ({
         url: '/admin/news',
@@ -849,6 +853,7 @@ export const {
   useCreateAdminDivarSessionMutation,
   useUpdateAdminDivarSessionMutation,
   useGetAdminNewsQuery,
+  useGetAdminNewsItemQuery,
   useCreateAdminNewsMutation,
   useUpdateAdminNewsMutation,
   useDeleteAdminNewsMutation,

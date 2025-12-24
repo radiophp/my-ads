@@ -40,6 +40,11 @@ export class AdminNewsController {
     return this.newsService.listAdminNews(parsedPage, parsedSize, search);
   }
 
+  @Get(':id')
+  getById(@Param('id', new ParseUUIDPipe()) id: string) {
+    return this.newsService.getAdminNewsById(id);
+  }
+
   @Post()
   create(@Body() dto: CreateNewsDto) {
     return this.newsService.createNews(dto);

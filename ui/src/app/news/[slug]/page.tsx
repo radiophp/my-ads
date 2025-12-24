@@ -144,7 +144,7 @@ export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
         </div>
       )}
 
-      <article className="prose prose-sm prose-headings:text-foreground prose-p:text-muted-foreground max-w-none text-foreground">
+      <article className="prose prose-sm prose-headings:text-foreground prose-p:text-muted-foreground prose-img:block prose-img:h-auto prose-img:max-w-full prose-img:mx-auto max-w-none text-foreground">
         <div
           className="whitespace-pre-line"
           dangerouslySetInnerHTML={{ __html: normalizedContentBody }}

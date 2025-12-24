@@ -727,16 +727,39 @@
     },
       "fields": {
         "title": "Title",
+        "titlePlaceholder": "Enter a news title",
         "slug": "Slug (optional)",
+        "slugPlaceholder": "Optional custom slug",
         "search": "Search by title",
         "shortText": "Short text",
+        "shortTextPlaceholder": "Optional short summary",
         "content": "Content",
+        "contentPlaceholder": "Write the full news content",
         "mainImageUrl": "Main image URL",
+        "mainImagePlaceholder": "Paste or upload an image URL",
         "category": "Category",
         "categoryPlaceholder": "Select a category",
         "tags": "Tags",
         "categoryPreview": "Category: {name}",
         "tagsPreview": "Tags: {tags}"
+      },
+      "form": {
+        "createTitle": "Create news",
+        "createDescription": "Publish a new story for the public site.",
+        "editTitle": "Edit news",
+        "editDescription": "Update the selected news entry.",
+        "back": "Back to news",
+        "save": "Save changes"
+      },
+      "image": {
+        "title": "Main image",
+        "cta": "Drop the image to upload",
+        "helper": "Drag and drop an image here or choose a file.",
+        "select": "Choose image",
+        "uploading": "Uploading",
+        "remove": "Remove image",
+        "error": "Image upload failed",
+        "previewAlt": "News main image preview"
       },
       "dialog": {
         "addTitle": "Add news",

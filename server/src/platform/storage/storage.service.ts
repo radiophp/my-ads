@@ -2,6 +2,7 @@ import {
   CreateBucketCommand,
   DeleteObjectCommand,
   GetObjectCommand,
+  PutBucketPolicyCommand,
   HeadBucketCommand,
   HeadObjectCommand,
   PutObjectCommand,
@@ -53,6 +54,7 @@ export class StorageService implements OnModuleInit {
 
   async onModuleInit(): Promise<void> {
     await this.ensureBucketExists();
+    await this.ensureBucketPublicRead();
   }
 
   private async ensureBucketExists(): Promise<void> {
@@ -85,6 +87,35 @@ export class StorageService implements OnModuleInit {
       }
 
       this.logger.error('Failed to create MinIO bucket', error as Error);
+      throw error;
+    }
+  }
+
+  private async ensureBucketPublicRead(): Promise<void> {
+    if (!this.config.publicRead) {
+      return;
+    }
+
+    const policy = {
+      Version: '2012-10-17',
+      Statement: [
+        {
+          Sid: 'PublicReadGetObject',
+          Effect: 'Allow',
+          Principal: '*',
+          Action: ['s3:GetObject'],
+          Resource: [`arn:aws:s3:::${this.bucket}/*`],
+        },
+      ],
+    };
+
+    try {
+      await this.s3Client.send(
+        new PutBucketPolicyCommand({ Bucket: this.bucket, Policy: JSON.stringify(policy) }),
+      );
+      this.logger.log(`Applied public read policy to bucket ${this.bucket}`);
+    } catch (error) {
+      this.logger.error('Failed to apply MinIO public read policy', error as Error);
       throw error;
     }
   }

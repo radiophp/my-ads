@@ -25,6 +25,10 @@ export class CreateNewsDto {
   categoryId!: string;
 
   @IsOptional()
+  @IsUUID('4')
+  sourceId?: string;
+
+  @IsOptional()
   @IsArray()
   @IsUUID('4', { each: true })
   tagIds?: string[];

@@ -103,11 +103,6 @@ const i18nRequestRelativePath = './src/i18n/request.ts';
 const imageRemotePatterns = [
   {
     protocol: 'https',
-    hostname: 'mahan-storage.toncloud.observer',
-    pathname: '/**',
-  },
-  {
-    protocol: 'https',
     hostname: 'dev.mahanfile.com',
     pathname: '/storage/**',
   },

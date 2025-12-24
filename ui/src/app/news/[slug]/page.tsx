@@ -1,10 +1,10 @@
-/* eslint-disable @next/next/no-img-element */
 import { headers } from 'next/headers';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { getLocale, getTranslations } from 'next-intl/server';
 
 import type { NewsItem } from '@/types/news';
-import { Link } from '@/i18n/routing';
+import { normalizeStorageHtml, normalizeStorageUrl } from '@/lib/storage';
 
 export const revalidate = 300;
 
@@ -92,7 +92,9 @@ export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
       ? contentValue.replace(sourceTextMatch[0], '').trim()
       : contentValue;
   const pageUrl = appBase ? `${appBase}/news/${item.slug}` : undefined;
-  const imageUrl = toAbsoluteUrl(appBase, item.mainImageUrl);
+  const normalizedMainImageUrl = normalizeStorageUrl(item.mainImageUrl, appBase);
+  const normalizedContentBody = normalizeStorageHtml(contentBody ?? '', appBase);
+  const imageUrl = toAbsoluteUrl(appBase, normalizedMainImageUrl);
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'NewsArticle',
@@ -109,10 +111,7 @@ export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-12">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <div className="flex items-center justify-between text-sm text-muted-foreground">
-        <Link href="/news" className="inline-flex items-center gap-2 hover:text-foreground">
-          {t('back')}
-        </Link>
+      <div className="flex items-center justify-end text-sm text-muted-foreground">
         <span>{formattedDate}</span>
       </div>
 
@@ -133,13 +132,13 @@ export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
         {item.shortText && <p className="text-base text-muted-foreground">{item.shortText}</p>}
       </header>
 
-      {item.mainImageUrl && (
+      {normalizedMainImageUrl && (
         <div className="relative h-64 w-full overflow-hidden rounded-2xl border border-border/70 bg-muted/30 sm:h-80">
-          <img
-            src={item.mainImageUrl}
+          <Image
+            src={normalizedMainImageUrl}
             alt={item.title}
-            loading="lazy"
-            decoding="async"
+            fill
+            sizes="100vw"
             className="absolute inset-0 size-full object-cover"
           />
         </div>
@@ -148,7 +147,7 @@ export default async function NewsDetailPage({ params }: NewsDetailPageProps) {
       <article className="prose prose-sm prose-headings:text-foreground prose-p:text-muted-foreground max-w-none text-foreground">
         <div
           className="whitespace-pre-line"
-          dangerouslySetInnerHTML={{ __html: contentBody ?? '' }}
+          dangerouslySetInnerHTML={{ __html: normalizedContentBody }}
         />
       </article>
 

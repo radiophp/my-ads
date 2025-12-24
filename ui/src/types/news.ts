@@ -15,6 +15,15 @@ export type NewsTag = {
   updatedAt: string;
 };
 
+export type NewsSource = {
+  id: string;
+  name: string;
+  slug: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type NewsItem = {
   id: string;
   title: string;
@@ -25,6 +34,7 @@ export type NewsItem = {
   createdAt: string;
   updatedAt: string;
   category?: NewsCategory | null;
+  source?: NewsSource | null;
   tags: NewsTag[];
 };
 
@@ -42,6 +52,7 @@ export type CreateNewsPayload = {
   content: string;
   mainImageUrl?: string;
   categoryId: string;
+  sourceId?: string;
   tagIds?: string[];
 };
 
@@ -61,3 +72,9 @@ export type CreateNewsTagPayload = {
 };
 
 export type UpdateNewsTagPayload = Partial<CreateNewsTagPayload>;
+
+export type UpdateNewsSourcePayload = {
+  name?: string;
+  slug?: string;
+  isActive?: boolean;
+};

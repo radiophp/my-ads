@@ -13,6 +13,7 @@ import {
   KeyRound,
   ScrollText,
   Tag,
+  Rss,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -91,6 +92,12 @@ export function AdminDashboard() {
       icon: <Tag className="size-8 text-primary" aria-hidden />,
       title: t('cards.newsTags.title'),
       countKey: 'newsTags',
+    },
+    {
+      href: '/admin/news/sources',
+      icon: <Rss className="size-8 text-primary" aria-hidden />,
+      title: t('cards.newsSources.title'),
+      countKey: 'newsSources',
     },
     {
       href: '/admin/notifications',

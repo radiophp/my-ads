@@ -1,10 +1,11 @@
-/* eslint-disable @next/next/no-img-element */
 import { headers } from 'next/headers';
+import Image from 'next/image';
 import { getLocale, getTranslations } from 'next-intl/server';
 
 import type { NewsItem, NewsListResponse } from '@/types/news';
 import { Link } from '@/i18n/routing';
 import { Button } from '@/components/ui/button';
+import { normalizeStorageUrl } from '@/lib/storage';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -22,6 +23,18 @@ const resolveApiBase = async (): Promise<string> => {
   const host = hdrs.get('x-forwarded-host') ?? hdrs.get('host');
   const proto = hdrs.get('x-forwarded-proto') ?? 'https';
   if (host) return `${proto}://${host}/api`;
+
+  return '';
+};
+
+const resolveAppBase = async (): Promise<string> => {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_URL;
+  if (appUrl) return normalizeBaseUrl(appUrl);
+
+  const hdrs = await headers();
+  const host = hdrs.get('x-forwarded-host') ?? hdrs.get('host');
+  const proto = hdrs.get('x-forwarded-proto') ?? 'https';
+  if (host) return `${proto}://${host}`;
 
   return '';
 };
@@ -83,6 +96,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
   const page = parsePage(resolvedSearchParams?.page);
   const pageSize = 12;
   const { items, hasError, total } = await fetchNewsList(page, pageSize);
+  const appBase = await resolveAppBase();
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const hasPagination = totalPages > 1;
   const prevPage = page > 1 ? page - 1 : null;
@@ -92,6 +106,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
 
   const formatDate = (value: string) =>
     new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(value));
+  const resolveImageUrl = (value?: string | null) => normalizeStorageUrl(value, appBase);
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-12">
@@ -125,11 +140,11 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
                 <Link href={`/news/${item.slug}`} className="flex h-full flex-col">
                   <div className="relative h-48 w-full overflow-hidden bg-muted/40">
                     {item.mainImageUrl ? (
-                      <img
-                        src={item.mainImageUrl}
+                      <Image
+                        src={resolveImageUrl(item.mainImageUrl) ?? ''}
                         alt={item.title}
-                        loading="lazy"
-                        decoding="async"
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
                         className="absolute inset-0 size-full object-cover transition duration-300 group-hover:scale-[1.03]"
                       />
                     ) : (

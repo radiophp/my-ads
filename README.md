@@ -98,6 +98,7 @@ npm run typecheck
 The frontend pulls its env from the repo root `.env` (e.g., `NEXT_PUBLIC_API_BASE_URL`, `NEXT_PUBLIC_WS_BASE_URL`). Run UI lint/typecheck inside `ui/`.
 - Feed loading state shows 12 skeleton cards matching the post-card layout. If you change card styling, mirror updates in `ui/src/components/dashboard/divar-posts-feed.tsx` so skeletons stay in sync.
 - Public news pages are server-rendered at `/news` and `/news/[slug]` with a 5-minute revalidation window (`revalidate = 300`), and the header nav links to `/news`.
+- Storage URLs should be same-origin: set `MINIO_PUBLIC_ENDPOINT` to the app host (e.g., `dev.mahanfile.com` / `mahanfile.com`) and `MINIO_PUBLIC_PATH=/storage`. Public objects then resolve as `https://<app>/storage/<bucket>/<key>` (no storage subdomain).
 
 ### 5. Test Suite
 

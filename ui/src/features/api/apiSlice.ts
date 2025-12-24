@@ -45,10 +45,13 @@ import type {
   CreateNewsTagPayload,
   NewsCategory,
   NewsItem,
+  NewsListResponse,
   NewsTag,
+  NewsSource,
   UpdateNewsCategoryPayload,
   UpdateNewsPayload,
   UpdateNewsTagPayload,
+  UpdateNewsSourcePayload,
 } from '@/types/news';
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:6200/api';
@@ -154,6 +157,7 @@ export const apiSlice = createApi({
     'AdminNews',
     'AdminNewsCategories',
     'AdminNewsTags',
+    'AdminNewsSources',
   ],
   endpoints: (builder) => ({
     getHealth: builder.query<{ status: string }, void>({
@@ -204,8 +208,14 @@ export const apiSlice = createApi({
         body,
       }),
     }),
-    getAdminNews: builder.query<NewsItem[], void>({
-      query: () => '/admin/news',
+    getAdminNews: builder.query<
+      NewsListResponse,
+      { page?: number; pageSize?: number; search?: string } | void
+    >({
+      query: (params) => ({
+        url: '/admin/news',
+        params: params ?? undefined,
+      }),
       providesTags: ['AdminNews'],
     }),
     createAdminNews: builder.mutation<NewsItem, CreateNewsPayload>({
@@ -265,6 +275,10 @@ export const apiSlice = createApi({
       query: () => '/admin/news-tags',
       providesTags: ['AdminNewsTags'],
     }),
+    getAdminNewsSources: builder.query<NewsSource[], void>({
+      query: () => '/admin/news-sources',
+      providesTags: ['AdminNewsSources'],
+    }),
     createAdminNewsTag: builder.mutation<NewsTag, CreateNewsTagPayload>({
       query: (body) => ({
         url: '/admin/news-tags',
@@ -287,6 +301,17 @@ export const apiSlice = createApi({
         method: 'DELETE',
       }),
       invalidatesTags: ['AdminNewsTags', 'AdminNews'],
+    }),
+    updateAdminNewsSource: builder.mutation<
+      NewsSource,
+      { id: string; body: UpdateNewsSourcePayload }
+    >({
+      query: ({ id, body }) => ({
+        url: `/admin/news-sources/${id}`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: ['AdminNewsSources', 'AdminNews'],
     }),
     fetchPostPhone: builder.mutation<{ phoneNumber: string | null }, { postId: string }>({
       query: ({ postId }) => ({
@@ -835,6 +860,8 @@ export const {
   useCreateAdminNewsTagMutation,
   useUpdateAdminNewsTagMutation,
   useDeleteAdminNewsTagMutation,
+  useGetAdminNewsSourcesQuery,
+  useUpdateAdminNewsSourceMutation,
   useGetPostsToAnalyzeQuery,
   useGetDivarPostsQuery,
   useLazyGetDivarPostsQuery,

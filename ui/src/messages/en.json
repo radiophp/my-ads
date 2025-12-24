@@ -686,6 +686,10 @@
           "title": "News tags",
           "description": "Maintain the tags assigned to news entries."
         },
+        "newsSources": {
+          "title": "News sources",
+          "description": "Review and toggle crawler sources for news."
+        },
         "notifications": {
           "title": "Test notifications",
           "description": "Send a manual test notification to a user."
@@ -708,19 +712,23 @@
         "refresh": "Refresh",
         "edit": "Edit",
         "delete": "Delete",
+        "clearSearch": "Clear search",
         "save": "Save",
         "cancel": "Cancel"
       },
       "columns": {
+        "thumbnail": "Image",
         "title": "Title",
         "category": "Category",
+        "source": "Source",
         "tags": "Tags",
-        "updated": "Updated",
-        "actions": "Actions"
-      },
+      "updated": "Updated",
+      "actions": "Actions"
+    },
       "fields": {
         "title": "Title",
         "slug": "Slug (optional)",
+        "search": "Search by title",
         "shortText": "Short text",
         "content": "Content",
         "mainImageUrl": "Main image URL",
@@ -739,6 +747,11 @@
       "loading": "Loading news…",
       "empty": "No news items yet.",
       "confirmDelete": "Delete this news item?",
+      "pagination": {
+        "label": "Page {page} of {totalPages} ({totalItems} items)",
+        "previous": "Previous",
+        "next": "Next"
+      },
       "tags": {
         "empty": "No tags selected."
       },
@@ -845,6 +858,34 @@
         "deletedDescription": "News tag removed.",
         "errorTitle": "Save failed",
         "errorDescription": "Unable to save tag. Try again."
+      }
+    },
+    "newsSources": {
+      "title": "News sources",
+      "description": "Enable or disable news sources.",
+      "actions": {
+        "refresh": "Refresh",
+        "activate": "Activate",
+        "deactivate": "Deactivate"
+      },
+      "columns": {
+        "name": "Name",
+        "slug": "Slug",
+        "active": "Status",
+        "updated": "Updated",
+        "actions": "Actions"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "loading": "Loading sources…",
+      "empty": "No sources found.",
+      "toast": {
+        "updatedTitle": "Source updated",
+        "updatedDescription": "Status saved.",
+        "errorTitle": "Update failed",
+        "errorDescription": "Unable to update source."
       }
     },
     "arkaSessions": {

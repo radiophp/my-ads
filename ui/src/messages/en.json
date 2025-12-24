@@ -87,6 +87,12 @@
         "personal": "Personal",
         "business": "Agency"
       }
+    },
+    "news": {
+      "title": "Latest market news",
+      "description": "Stay updated with fresh housing headlines and market shifts.",
+      "more": "View all news",
+      "empty": "No news published yet."
     }
   },
   "profile": {
@@ -197,6 +203,11 @@
       "label": "Page {page} of {totalPages} • {totalItems} news items",
       "previous": "Previous",
       "next": "Next"
+    },
+    "latest": {
+      "title": "Latest news",
+      "more": "View all",
+      "empty": "No recent news available."
     },
     "tags": {
       "empty": "No tags available."

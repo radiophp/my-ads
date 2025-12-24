@@ -1,38 +1,22 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Edit3, Loader2, Plus, RefreshCw, Trash2, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
+import Link from 'next/link';
 
-import {
-  useCreateAdminNewsMutation,
-  useDeleteAdminNewsMutation,
-  useGetAdminNewsCategoriesQuery,
-  useGetAdminNewsQuery,
-  useGetAdminNewsTagsQuery,
-  useUpdateAdminNewsMutation,
-} from '@/features/api/apiSlice';
+import { useDeleteAdminNewsMutation, useGetAdminNewsQuery } from '@/features/api/apiSlice';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
-import type { NewsItem, NewsCategory, NewsTag } from '@/types/news';
+import type { NewsItem } from '@/types/news';
 import { cn } from '@/lib/utils';
 
-type NewsFormState = {
-  title: string;
-  slug: string;
-  shortText: string;
-  content: string;
-  mainImageUrl: string;
-  categoryId: string;
-  tagIds: string[];
-};
-
 export function AdminNewsManager() {
+  const router = useRouter();
   const t = useTranslations('admin.news');
   const { toast } = useToast();
   const [page, setPage] = useState(1);
@@ -46,55 +30,15 @@ export function AdminNewsManager() {
   });
   const items = data?.items ?? [];
   const totalItems = data?.total ?? 0;
-  const { data: categories = [] } = useGetAdminNewsCategoriesQuery();
-  const { data: tags = [] } = useGetAdminNewsTagsQuery();
-  const [createNews, { isLoading: isCreating }] = useCreateAdminNewsMutation();
-  const [updateNews, { isLoading: isUpdating }] = useUpdateAdminNewsMutation();
   const [deleteNews, { isLoading: isDeleting }] = useDeleteAdminNewsMutation();
-
-  const [createOpen, setCreateOpen] = useState(false);
-  const [editItem, setEditItem] = useState<NewsItem | null>(null);
-  const [form, setForm] = useState<NewsFormState>({
-    title: '',
-    slug: '',
-    shortText: '',
-    content: '',
-    mainImageUrl: '',
-    categoryId: '',
-    tagIds: [],
-  });
 
   const busy = isLoading || isFetching;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const hasPreviousPage = page > 1;
   const hasNextPage = page < totalPages;
 
-  const categoryLookup = useMemo(() => {
-    const map = new Map<string, NewsCategory>();
-    categories.forEach((category) => map.set(category.id, category));
-    return map;
-  }, [categories]);
-
-  const tagLookup = useMemo(() => {
-    const map = new Map<string, NewsTag>();
-    tags.forEach((tag) => map.set(tag.id, tag));
-    return map;
-  }, [tags]);
-
-  const resetForm = () =>
-    setForm({
-      title: '',
-      slug: '',
-      shortText: '',
-      content: '',
-      mainImageUrl: '',
-      categoryId: categories[0]?.id ?? '',
-      tagIds: [],
-    });
-
   const openCreate = () => {
-    resetForm();
-    setCreateOpen(true);
+    router.push('/admin/news/new');
   };
 
   const applySearch = () => {
@@ -110,85 +54,7 @@ export function AdminNewsManager() {
   };
 
   const openEdit = (item: NewsItem) => {
-    setForm({
-      title: item.title,
-      slug: item.slug,
-      shortText: item.shortText ?? '',
-      content: item.content ?? '',
-      mainImageUrl: item.mainImageUrl ?? '',
-      categoryId: item.category?.id ?? '',
-      tagIds: item.tags.map((tag) => tag.id),
-    });
-    setEditItem(item);
-  };
-
-  const toggleTag = (tagId: string) => {
-    setForm((prev) => {
-      const exists = prev.tagIds.includes(tagId);
-      return {
-        ...prev,
-        tagIds: exists ? prev.tagIds.filter((id) => id !== tagId) : [...prev.tagIds, tagId],
-      };
-    });
-  };
-
-  const submitCreate = async () => {
-    if (!form.title.trim() || !form.content.trim() || !form.categoryId) {
-      toast({
-        title: t('toast.missingTitle'),
-        description: t('toast.missingDescription'),
-        variant: 'destructive',
-      });
-      return;
-    }
-    try {
-      await createNews({
-        title: form.title,
-        slug: form.slug || undefined,
-        shortText: form.shortText || undefined,
-        content: form.content,
-        mainImageUrl: form.mainImageUrl || undefined,
-        categoryId: form.categoryId,
-        tagIds: form.tagIds.length > 0 ? form.tagIds : undefined,
-      }).unwrap();
-      toast({ title: t('toast.createdTitle'), description: t('toast.createdDescription') });
-      setCreateOpen(false);
-      resetForm();
-    } catch (error) {
-      toast({
-        title: t('toast.errorTitle'),
-        description: t('toast.errorDescription'),
-        variant: 'destructive',
-      });
-      console.error(error);
-    }
-  };
-
-  const submitUpdate = async () => {
-    if (!editItem) return;
-    try {
-      await updateNews({
-        id: editItem.id,
-        body: {
-          title: form.title,
-          slug: form.slug || undefined,
-          shortText: form.shortText || undefined,
-          content: form.content,
-          mainImageUrl: form.mainImageUrl || undefined,
-          categoryId: form.categoryId,
-          tagIds: form.tagIds,
-        },
-      }).unwrap();
-      toast({ title: t('toast.updatedTitle'), description: t('toast.updatedDescription') });
-      setEditItem(null);
-    } catch (error) {
-      toast({
-        title: t('toast.errorTitle'),
-        description: t('toast.errorDescription'),
-        variant: 'destructive',
-      });
-      console.error(error);
-    }
+    router.push(`/admin/news/${item.id}`);
   };
 
   const handleDelete = async (item: NewsItem) => {
@@ -304,7 +170,20 @@ export function AdminNewsManager() {
                         ) : null}
                       </div>
                     </td>
-                    <td className="py-3 pr-4 font-medium text-foreground">{item.title}</td>
+                    <td className="py-3 pr-4 font-medium text-foreground">
+                      {item.slug ? (
+                        <Link
+                          href={`/news/${item.slug}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-primary underline-offset-4 hover:underline"
+                        >
+                          {item.title}
+                        </Link>
+                      ) : (
+                        item.title
+                      )}
+                    </td>
                     <td className="py-3 pr-4 text-muted-foreground">{item.category?.name ?? '—'}</td>
                     <td className="py-3 pr-4 text-muted-foreground">{item.source?.name ?? '—'}</td>
                     <td className="py-3 pr-4 text-muted-foreground">{formatDate(item.updatedAt)}</td>
@@ -356,190 +235,6 @@ export function AdminNewsManager() {
           </div>
         </CardContent>
       </Card>
-
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{t('dialog.addTitle')}</DialogTitle>
-            <DialogDescription>{t('dialog.addDescription')}</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              placeholder={t('fields.title')}
-              value={form.title}
-              onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
-            />
-            <Input
-              placeholder={t('fields.slug')}
-              value={form.slug}
-              onChange={(event) => setForm((prev) => ({ ...prev, slug: event.target.value }))}
-            />
-            <Textarea
-              placeholder={t('fields.shortText')}
-              value={form.shortText}
-              onChange={(event) => setForm((prev) => ({ ...prev, shortText: event.target.value }))}
-              rows={3}
-            />
-            <Textarea
-              placeholder={t('fields.content')}
-              value={form.content}
-              onChange={(event) => setForm((prev) => ({ ...prev, content: event.target.value }))}
-              rows={6}
-            />
-            <Input
-              placeholder={t('fields.mainImageUrl')}
-              value={form.mainImageUrl}
-              onChange={(event) => setForm((prev) => ({ ...prev, mainImageUrl: event.target.value }))}
-            />
-            <label className="flex flex-col gap-2 text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">{t('fields.category')}</span>
-              <select
-                value={form.categoryId}
-                onChange={(event) => setForm((prev) => ({ ...prev, categoryId: event.target.value }))}
-                className="rounded-md border border-border/60 bg-background px-3 py-2 text-sm text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <option value="">{t('fields.categoryPlaceholder')}</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-foreground">{t('fields.tags')}</p>
-              <div className="flex flex-wrap gap-2">
-                {tags.length === 0 ? (
-                  <span className="text-sm text-muted-foreground">{t('tags.empty')}</span>
-                ) : (
-                  tags.map((tag) => {
-                    const active = form.tagIds.includes(tag.id);
-                    return (
-                      <Button
-                        key={tag.id}
-                        type="button"
-                        variant={active ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => toggleTag(tag.id)}
-                      >
-                        {tag.name}
-                      </Button>
-                    );
-                  })
-                )}
-              </div>
-            </div>
-          </div>
-          <DialogFooter className="gap-2 sm:justify-end">
-            <Button variant="outline" onClick={() => setCreateOpen(false)}>
-              {t('actions.cancel')}
-            </Button>
-            <Button onClick={submitCreate} disabled={isCreating}>
-              {t('actions.save')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={Boolean(editItem)} onOpenChange={(open) => (!open ? setEditItem(null) : null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{t('dialog.editTitle')}</DialogTitle>
-            <DialogDescription>{t('dialog.editDescription')}</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <Input
-              placeholder={t('fields.title')}
-              value={form.title}
-              onChange={(event) => setForm((prev) => ({ ...prev, title: event.target.value }))}
-            />
-            <Input
-              placeholder={t('fields.slug')}
-              value={form.slug}
-              onChange={(event) => setForm((prev) => ({ ...prev, slug: event.target.value }))}
-            />
-            <Textarea
-              placeholder={t('fields.shortText')}
-              value={form.shortText}
-              onChange={(event) => setForm((prev) => ({ ...prev, shortText: event.target.value }))}
-              rows={3}
-            />
-            <Textarea
-              placeholder={t('fields.content')}
-              value={form.content}
-              onChange={(event) => setForm((prev) => ({ ...prev, content: event.target.value }))}
-              rows={6}
-            />
-            <Input
-              placeholder={t('fields.mainImageUrl')}
-              value={form.mainImageUrl}
-              onChange={(event) => setForm((prev) => ({ ...prev, mainImageUrl: event.target.value }))}
-            />
-            <label className="flex flex-col gap-2 text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">{t('fields.category')}</span>
-              <select
-                value={form.categoryId}
-                onChange={(event) => setForm((prev) => ({ ...prev, categoryId: event.target.value }))}
-                className="rounded-md border border-border/60 bg-background px-3 py-2 text-sm text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <option value="">{t('fields.categoryPlaceholder')}</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-foreground">{t('fields.tags')}</p>
-              <div className="flex flex-wrap gap-2">
-                {tags.length === 0 ? (
-                  <span className="text-sm text-muted-foreground">{t('tags.empty')}</span>
-                ) : (
-                  tags.map((tag) => {
-                    const active = form.tagIds.includes(tag.id);
-                    return (
-                      <Button
-                        key={tag.id}
-                        type="button"
-                        variant={active ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => toggleTag(tag.id)}
-                      >
-                        {tag.name}
-                      </Button>
-                    );
-                  })
-                )}
-              </div>
-            </div>
-            {form.categoryId && categoryLookup.has(form.categoryId) ? (
-              <p className="text-xs text-muted-foreground">
-                {t('fields.categoryPreview', { name: categoryLookup.get(form.categoryId)?.name })}
-              </p>
-            ) : null}
-            {form.tagIds.length > 0 ? (
-              <p className="text-xs text-muted-foreground">
-                {t('fields.tagsPreview', {
-                  count: form.tagIds.length,
-                  names: form.tagIds
-                    .map((tagId) => tagLookup.get(tagId)?.name)
-                    .filter(Boolean)
-                    .join('، '),
-                })}
-              </p>
-            ) : null}
-          </div>
-          <DialogFooter className="gap-2 sm:justify-end">
-            <Button variant="outline" onClick={() => setEditItem(null)}>
-              {t('actions.cancel')}
-            </Button>
-            <Button onClick={submitUpdate} disabled={isUpdating}>
-              {t('actions.save')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

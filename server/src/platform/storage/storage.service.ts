@@ -36,6 +36,11 @@ export type StoredObjectMetadata = {
 @Injectable()
 export class StorageService implements OnModuleInit {
   private readonly logger = new Logger(StorageService.name);
+  private readonly legacyPublicHosts = new Set([
+    'storage.mahanfile.com',
+    'dev-storage.mahanfile.com',
+    'mahan-storage.toncloud.observer',
+  ]);
 
   constructor(
     @Inject(STORAGE_S3_CLIENT) private readonly s3Client: S3Client,
@@ -182,10 +187,15 @@ export class StorageService implements OnModuleInit {
       .map((segment) => encodeURIComponent(segment))
       .join('/');
     const normalizedPath = publicPath ? `/${publicPath.replace(/^\/+|\/+$/g, '')}` : '';
+    const bucketPath = `${normalizedPath}/${this.bucket}/${encodedKey}`;
+
+    if (this.config.publicEndpoint && this.legacyPublicHosts.has(this.config.publicEndpoint)) {
+      return bucketPath;
+    }
 
     const defaultPort = useSSL ? 443 : 80;
     const portSegment = port === defaultPort || typeof port === 'undefined' ? '' : `:${port}`;
 
-    return `${protocol}://${endpoint}${portSegment}${normalizedPath}/${this.bucket}/${encodedKey}`;
+    return `${protocol}://${endpoint}${portSegment}${bucketPath}`;
   }
 }

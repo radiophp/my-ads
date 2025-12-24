@@ -92,3 +92,19 @@ body {
   right: auto;
   left: 0.75rem;
 }
+
+.news-table-scroll {
+  border: 1px solid hsl(var(--border)) !important;
+}
+
+.news-table-scroll table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  border: 1px solid hsl(var(--border)) !important;
+}
+
+.news-table-scroll th,
+.news-table-scroll td {
+  border: 1px solid hsl(var(--border)) !important;
+  padding: 0.5rem !important;
+}

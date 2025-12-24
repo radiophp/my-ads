@@ -1,11 +1,10 @@
 import { headers } from 'next/headers';
-import Image from 'next/image';
 import { getLocale, getTranslations } from 'next-intl/server';
 
 import type { NewsItem, NewsListResponse } from '@/types/news';
 import { Link } from '@/i18n/routing';
 import { Button } from '@/components/ui/button';
-import { normalizeStorageUrl } from '@/lib/storage';
+import { NewsCard } from '@/components/news/news-card';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -104,10 +103,6 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
   const buildPageHref = (targetPage: number) =>
     targetPage === 1 ? '/news' : `/news?page=${targetPage}`;
 
-  const formatDate = (value: string) =>
-    new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(value));
-  const resolveImageUrl = (value?: string | null) => normalizeStorageUrl(value, appBase);
-
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-12">
       <header className="space-y-3">
@@ -133,56 +128,7 @@ export default async function NewsPage({ searchParams }: NewsPageProps) {
         <div className="flex flex-col gap-8">
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
             {items.map((item) => (
-              <article
-                key={item.id}
-                className="bg-card group overflow-hidden rounded-2xl border border-border/70 shadow-sm transition hover:border-primary/50"
-              >
-                <Link href={`/news/${item.slug}`} className="flex h-full flex-col">
-                  <div className="relative h-48 w-full overflow-hidden bg-muted/40">
-                    {item.mainImageUrl ? (
-                      <Image
-                        src={resolveImageUrl(item.mainImageUrl) ?? ''}
-                        alt={item.title}
-                        fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
-                        className="absolute inset-0 size-full object-cover transition duration-300 group-hover:scale-[1.03]"
-                      />
-                    ) : (
-                      <div className="flex size-full items-center justify-center bg-gradient-to-br from-muted/20 via-muted/40 to-muted/10 text-sm text-muted-foreground">
-                        {t('labels.noImage')}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex flex-1 flex-col gap-3 p-5">
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                      {item.category?.name && (
-                        <span className="rounded-full bg-muted/60 px-2.5 py-1 text-[11px] font-medium text-foreground">
-                          {item.category.name}
-                        </span>
-                      )}
-                      <span>{formatDate(item.createdAt)}</span>
-                    </div>
-                    <h2 className="line-clamp-2 text-base font-semibold text-foreground">
-                      {item.title}
-                    </h2>
-                    <p className="line-clamp-3 text-sm text-muted-foreground">
-                      {item.shortText ?? item.content ?? ''}
-                    </p>
-                    {item.tags.length > 0 && (
-                      <div className="mt-auto flex flex-wrap gap-2 pt-2 text-xs text-muted-foreground">
-                        {item.tags.slice(0, 3).map((tag) => (
-                          <span
-                            key={tag.id}
-                            className="rounded-full border border-border/70 px-2 py-0.5"
-                          >
-                            {tag.name}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </Link>
-              </article>
+              <NewsCard key={item.id} item={item} locale={locale} appBase={appBase} />
             ))}
           </div>
 

@@ -193,6 +193,10 @@ export class EnvironmentVariables {
 
   @Transform(({ value }) => (typeof value === 'string' ? value === 'true' : Boolean(value)))
   @IsBoolean()
+  MINIO_PUBLIC_READ: boolean = false;
+
+  @Transform(({ value }) => (typeof value === 'string' ? value === 'true' : Boolean(value)))
+  @IsBoolean()
   OTEL_ENABLED: boolean = false;
 
   @IsString()

@@ -9,6 +9,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
@@ -27,8 +28,16 @@ export class AdminNewsController {
   constructor(private readonly newsService: NewsService) {}
 
   @Get()
-  list() {
-    return this.newsService.listAdminNews();
+  list(
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+    @Query('search') search?: string,
+  ) {
+    const rawPage = page ? Number(page) : 1;
+    const rawSize = pageSize ? Number(pageSize) : undefined;
+    const parsedPage = Number.isFinite(rawPage) ? rawPage : 1;
+    const parsedSize = Number.isFinite(rawSize) ? rawSize : undefined;
+    return this.newsService.listAdminNews(parsedPage, parsedSize, search);
   }
 
   @Post()

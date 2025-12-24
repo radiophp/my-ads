@@ -16,6 +16,7 @@ export type AdminEntityCounts = {
   news: number;
   newsCategories: number;
   newsTags: number;
+  newsSources: number;
 };
 
 @Injectable()
@@ -37,6 +38,7 @@ export class AdminPanelService {
       news,
       newsCategories,
       newsTags,
+      newsSources,
     ] = await Promise.all([
       this.prisma.subscriptionPackage.count(),
       this.prisma.province.count(),
@@ -53,6 +55,7 @@ export class AdminPanelService {
       this.prisma.news.count(),
       this.prisma.newsCategory.count(),
       this.prisma.newsTag.count(),
+      this.prisma.newsSource.count(),
     ]);
 
     return {
@@ -69,6 +72,7 @@ export class AdminPanelService {
       news,
       newsCategories,
       newsTags,
+      newsSources,
     };
   }
 }

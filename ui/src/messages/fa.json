@@ -686,6 +686,10 @@
           "title": "برچسب‌های اخبار",
           "description": "مدیریت برچسب‌های قابل استفاده در خبرها."
         },
+        "newsSources": {
+          "title": "منابع اخبار",
+          "description": "بررسی و فعال‌سازی منابع خبر."
+        },
         "notifications": {
           "title": "اعلان آزمایشی",
           "description": "برای یک کاربر اعلان دستی ارسال کنید."
@@ -708,19 +712,23 @@
         "refresh": "تازه‌سازی",
         "edit": "ویرایش",
         "delete": "حذف",
+        "clearSearch": "پاک کردن جستجو",
         "save": "ذخیره",
         "cancel": "انصراف"
       },
       "columns": {
+        "thumbnail": "تصویر",
         "title": "عنوان",
         "category": "دسته‌بندی",
+        "source": "منبع",
         "tags": "برچسب‌ها",
-        "updated": "آخرین بروزرسانی",
-        "actions": "عملیات"
-      },
+      "updated": "آخرین بروزرسانی",
+      "actions": "عملیات"
+    },
       "fields": {
         "title": "عنوان",
         "slug": "اسلاگ (اختیاری)",
+        "search": "جستجو بر اساس عنوان",
         "shortText": "خلاصه کوتاه",
         "content": "متن خبر",
         "mainImageUrl": "نشانی تصویر اصلی",
@@ -739,6 +747,11 @@
       "loading": "در حال بارگذاری خبرها…",
       "empty": "هنوز خبری ثبت نشده است.",
       "confirmDelete": "این خبر حذف شود؟",
+      "pagination": {
+        "label": "صفحه {page} از {totalPages} ({totalItems} خبر)",
+        "previous": "قبلی",
+        "next": "بعدی"
+      },
       "tags": {
         "empty": "برچسبی انتخاب نشده است."
       },
@@ -845,6 +858,34 @@
         "deletedDescription": "برچسب خبر حذف شد.",
         "errorTitle": "ذخیره ناموفق",
         "errorDescription": "ثبت برچسب ممکن نیست. دوباره تلاش کنید."
+      }
+    },
+    "newsSources": {
+      "title": "منابع اخبار",
+      "description": "منابع خبر را فعال یا غیرفعال کنید.",
+      "actions": {
+        "refresh": "تازه‌سازی",
+        "activate": "فعال‌سازی",
+        "deactivate": "غیرفعال‌سازی"
+      },
+      "columns": {
+        "name": "نام",
+        "slug": "اسلاگ",
+        "active": "وضعیت",
+        "updated": "آخرین بروزرسانی",
+        "actions": "عملیات"
+      },
+      "status": {
+        "active": "فعال",
+        "inactive": "غیرفعال"
+      },
+      "loading": "در حال بارگذاری منابع...",
+      "empty": "منبعی یافت نشد.",
+      "toast": {
+        "updatedTitle": "منبع به‌روزرسانی شد",
+        "updatedDescription": "وضعیت ذخیره شد.",
+        "errorTitle": "بروزرسانی ناموفق",
+        "errorDescription": "بروزرسانی منبع انجام نشد."
       }
     },
     "arkaSessions": {

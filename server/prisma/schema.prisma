@@ -551,6 +551,18 @@ model NewsCategory {
   @@index([isActive])
 }
 
+model NewsSource {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  news      News[]
+
+  @@index([isActive])
+}
+
 model NewsTag {
   id        String   @id @default(uuid())
   name      String
@@ -569,11 +581,14 @@ model News {
   mainImageUrl String?
   categoryId   String
   category     NewsCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  sourceId     String
+  source       NewsSource @relation(fields: [sourceId], references: [id], onDelete: Restrict)
   tags         NewsTagOnNews[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   @@index([categoryId])
+  @@index([sourceId])
   @@index([createdAt])
 }
 

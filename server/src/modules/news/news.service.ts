@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '@app/platform/database/prisma.service';
 import { normalizeSlug } from './news.utils';
 import type { CreateNewsDto } from './dto/create-news.dto';
@@ -10,6 +11,8 @@ import type { UpdateNewsTagDto } from './dto/update-news-tag.dto';
 
 const DEFAULT_PAGE_SIZE = 12;
 const MAX_PAGE_SIZE = 50;
+const DEFAULT_SOURCE_SLUG = 'mahanfile';
+const DEFAULT_SOURCE_NAME = 'ماهان فایل';
 
 const newsSelect = {
   id: true,
@@ -21,6 +24,14 @@ const newsSelect = {
   createdAt: true,
   updatedAt: true,
   category: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      isActive: true,
+    },
+  },
+  source: {
     select: {
       id: true,
       name: true,
@@ -50,6 +61,13 @@ const summarySelect = {
   createdAt: true,
   updatedAt: true,
   category: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+    },
+  },
+  source: {
     select: {
       id: true,
       name: true,
@@ -131,6 +149,38 @@ export class NewsService {
     }
   }
 
+  private async ensureUniqueSourceSlug(base: string, excludeId?: string) {
+    const slug = normalizeSlug(base);
+    if (!slug) {
+      throw new BadRequestException('Source slug cannot be empty.');
+    }
+    let candidate = slug;
+    let suffix = 1;
+    while (true) {
+      const existing = await this.prisma.newsSource.findUnique({ where: { slug: candidate } });
+      if (!existing || existing.id === excludeId) {
+        return candidate;
+      }
+      candidate = `${slug}-${suffix}`;
+      suffix += 1;
+    }
+  }
+
+  private async ensureSourceId(slug: string, name: string) {
+    const existing = await this.prisma.newsSource.findUnique({ where: { slug } });
+    if (existing) {
+      return existing.id;
+    }
+    const created = await this.prisma.newsSource.create({
+      data: {
+        name,
+        slug,
+        isActive: true,
+      },
+    });
+    return created.id;
+  }
+
   async listPublic(page = 1, pageSize = DEFAULT_PAGE_SIZE) {
     const safePage = Math.max(1, page);
     const safeSize = Math.min(Math.max(1, pageSize), MAX_PAGE_SIZE);
@@ -168,18 +218,44 @@ export class NewsService {
     return this.mapNews(record);
   }
 
-  async listAdminNews() {
-    const items = await this.prisma.news.findMany({
-      orderBy: { createdAt: 'desc' },
-      select: newsSelect,
-    });
+  async listAdminNews(page = 1, pageSize = DEFAULT_PAGE_SIZE, search?: string) {
+    const safePage = Math.max(1, page);
+    const safeSize = Math.min(Math.max(1, pageSize), MAX_PAGE_SIZE);
+    const skip = (safePage - 1) * safeSize;
+    const trimmedSearch = search?.trim();
+    const where = trimmedSearch
+      ? {
+          title: {
+            contains: trimmedSearch,
+            mode: Prisma.QueryMode.insensitive,
+          },
+        }
+      : undefined;
 
-    return items.map((item) => this.mapNews(item));
+    const [items, total] = await Promise.all([
+      this.prisma.news.findMany({
+        where,
+        orderBy: { updatedAt: 'desc' },
+        skip,
+        take: safeSize,
+        select: newsSelect,
+      }),
+      this.prisma.news.count({ where }),
+    ]);
+
+    return {
+      items: items.map((item) => this.mapNews(item)),
+      total,
+      page: safePage,
+      pageSize: safeSize,
+    };
   }
 
   async createNews(dto: CreateNewsDto) {
     const slug = await this.ensureUniqueNewsSlug(dto.slug ?? dto.title);
     const tagIds = dto.tagIds ?? [];
+    const sourceId =
+      dto.sourceId ?? (await this.ensureSourceId(DEFAULT_SOURCE_SLUG, DEFAULT_SOURCE_NAME));
 
     const created = await this.prisma.news.create({
       data: {
@@ -189,6 +265,7 @@ export class NewsService {
         content: dto.content,
         mainImageUrl: dto.mainImageUrl ?? null,
         categoryId: dto.categoryId,
+        sourceId,
         tags: {
           create: tagIds.map((tagId) => ({ tagId })),
         },
@@ -224,6 +301,7 @@ export class NewsService {
         content: dto.content ?? existing.content,
         mainImageUrl: dto.mainImageUrl ?? null,
         categoryId: dto.categoryId ?? existing.categoryId,
+        sourceId: dto.sourceId ?? existing.sourceId,
         ...(tagUpdate ? { tags: tagUpdate } : {}),
       },
       select: newsSelect,
@@ -276,6 +354,29 @@ export class NewsService {
 
   async listTags() {
     return this.prisma.newsTag.findMany({ orderBy: { createdAt: 'desc' } });
+  }
+
+  async listSources() {
+    return this.prisma.newsSource.findMany({ orderBy: { updatedAt: 'desc' } });
+  }
+
+  async updateSource(id: string, dto: { name?: string; slug?: string; isActive?: boolean }) {
+    const existing = await this.prisma.newsSource.findUnique({ where: { id } });
+    if (!existing) {
+      throw new NotFoundException('News source not found.');
+    }
+
+    const slugBase = dto.slug ?? dto.name ?? existing.slug;
+    const slug = await this.ensureUniqueSourceSlug(slugBase, existing.id);
+
+    return this.prisma.newsSource.update({
+      where: { id },
+      data: {
+        name: dto.name ?? existing.name,
+        slug,
+        isActive: dto.isActive ?? existing.isActive,
+      },
+    });
   }
 
   async createTag(dto: CreateNewsTagDto) {

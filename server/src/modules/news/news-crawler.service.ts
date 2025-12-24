@@ -28,6 +28,8 @@ const TWITTER_IMAGE_PATTERN = /<meta[^>]+name="twitter:image"[^>]+content="([^"]
 const LEAD_IMAGE_PATTERN = /<img[^>]+class="lead_image"[^>]+src="([^"]+)"/i;
 const CATEGORY_SLUG = 'eghtesad-housing';
 const CATEGORY_NAME = 'اخبار مسکن';
+const SOURCE_SLUG = 'eghtesadonline';
+const SOURCE_NAME = 'اقتصاد آنلاین';
 const NEWS_SLUG_PREFIX = 'eghtesad';
 const IMAGE_KEY_PREFIX = 'news/eghtesadonline';
 const SOURCE_MARKER_PREFIX = '<!-- source: ';
@@ -44,12 +46,17 @@ export class NewsCrawlerService {
     private readonly storage: StorageService,
   ) {}
 
-  @Cron('*/10 * * * *')
+  @Cron('*/15 * * * *')
   async crawlFeed() {
     const startedAt = new Date();
     this.logger.log('Eghtesad Online housing crawl started.');
 
     try {
+      const source = await this.resolveSource();
+      if (!source.isActive) {
+        this.logger.warn(`Eghtesad Online source disabled; skipping crawl. source=${source.name}`);
+        return;
+      }
       const items = await this.fetchSectionItems();
       const categoryId = await this.ensureCategoryId();
       let newestPublishedAt = this.lastRunAt;
@@ -88,7 +95,8 @@ export class NewsCrawlerService {
         );
 
         const uploadedImageUrl = await this.downloadAndStoreImage(article.imageUrl, item.id);
-        const content = this.buildContent(item, article.content);
+        const inlineContent = await this.replaceInlineImages(item.id, article.content);
+        const content = this.buildContent(item, inlineContent);
 
         await this.prisma.news.create({
           data: {
@@ -98,6 +106,7 @@ export class NewsCrawlerService {
             content,
             mainImageUrl: uploadedImageUrl,
             categoryId,
+            sourceId: source.id,
             createdAt: article.publishedAt,
           },
         });
@@ -261,6 +270,25 @@ export class NewsCrawlerService {
     return created.id;
   }
 
+  private async resolveSource(): Promise<{ id: string; isActive: boolean; name: string }> {
+    const existing = await this.prisma.newsSource.findUnique({
+      where: { slug: SOURCE_SLUG },
+      select: { id: true, isActive: true, name: true },
+    });
+    if (existing) {
+      return existing;
+    }
+    const created = await this.prisma.newsSource.create({
+      data: {
+        name: SOURCE_NAME,
+        slug: SOURCE_SLUG,
+        isActive: true,
+      },
+      select: { id: true, isActive: true, name: true },
+    });
+    return created;
+  }
+
   private buildSlug(id: number): string {
     return `${NEWS_SLUG_PREFIX}-${id}`;
   }
@@ -289,6 +317,46 @@ export class NewsCrawlerService {
     html = html.replace(/<!--.*?-->/gs, '');
     const trimmed = html.trim();
     return trimmed.length > 0 ? trimmed : null;
+  }
+
+  private async replaceInlineImages(
+    articleId: number,
+    html: string | null,
+  ): Promise<string | null> {
+    if (!html) {
+      return null;
+    }
+
+    const imageMatches = [...html.matchAll(/<img[^>]+(?:src|data-src)=["']([^"']+)["'][^>]*>/gi)];
+    if (imageMatches.length === 0) {
+      return html;
+    }
+
+    const replacements = new Map<string, string>();
+    let index = 1;
+
+    for (const match of imageMatches) {
+      const rawUrl = match[1];
+      if (replacements.has(rawUrl)) {
+        continue;
+      }
+      const normalizedUrl = this.normalizeLink(rawUrl);
+      const storedUrl = await this.downloadAndStoreInlineImage(normalizedUrl, articleId, index);
+      if (storedUrl) {
+        replacements.set(rawUrl, storedUrl);
+        index += 1;
+      }
+    }
+
+    if (replacements.size === 0) {
+      return html;
+    }
+
+    let updated = html;
+    for (const [rawUrl, storedUrl] of replacements) {
+      updated = updated.replace(new RegExp(this.escapeRegExp(rawUrl), 'g'), storedUrl);
+    }
+    return updated;
   }
 
   private wrapPlainText(value: string): string {
@@ -327,6 +395,35 @@ export class NewsCrawlerService {
     }
   }
 
+  private async downloadAndStoreInlineImage(
+    imageUrl: string,
+    articleId: number,
+    index: number,
+  ): Promise<string | null> {
+    if (!imageUrl) {
+      return null;
+    }
+    try {
+      const response = await axios.get<ArrayBuffer>(imageUrl, {
+        responseType: 'arraybuffer',
+      });
+      const contentType = String(response.headers['content-type'] ?? '');
+      const extension = this.resolveImageExtension(imageUrl, contentType);
+      const key = `${IMAGE_KEY_PREFIX}/${articleId}/inline-${index}${extension}`;
+      const buffer = Buffer.from(response.data);
+      const stored = await this.storage.uploadObject({
+        key,
+        body: buffer,
+        contentType: contentType || undefined,
+        contentLength: buffer.length,
+      });
+      return stored.url;
+    } catch (error) {
+      this.logger.warn(`Failed to store inline image for article ${articleId}`, error as Error);
+      return null;
+    }
+  }
+
   private resolveImageExtension(url: string, contentType: string): string {
     const normalizedType = contentType.toLowerCase();
     if (normalizedType.includes('image/webp')) return '.webp';
@@ -340,5 +437,9 @@ export class NewsCrawlerService {
       return `.${urlMatch[1].toLowerCase()}`;
     }
     return '.jpg';
+  }
+
+  private escapeRegExp(value: string): string {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 }

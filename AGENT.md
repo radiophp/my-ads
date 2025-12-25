@@ -30,6 +30,7 @@ This repository hosts the **My Ads** NestJS backend (`server/`). Key operational
     - `service-health` (dependency timeline)
     - `api-observability` (RPS, latency, errors, top paths, dependency gauge)
     - `logs-overview` (log volume/error rate per `compose_service`, OTP failures, live stream)
+  - News crawlers (Eghtesad/Khabaronline/Asriran) run on cron every 15 minutes when enabled; one-off scripts exist under `npm run news:crawl:*`.
 
 - **WebSockets & queues**
   - Socket.IO is backed by Redis scoped clients. Queue consumers use RabbitMQ with a helper (`register-consumer-with-retry.util.ts`) for resilient registration.
@@ -38,5 +39,8 @@ This repository hosts the **My Ads** NestJS backend (`server/`). Key operational
   - The Next.js dashboard now hydrates auth in a `useLayoutEffect` and wraps RTK Query base calls with automatic token refresh. Any work touching auth must keep `setAuth`/`clearAuth` semantics intact or requests will loop on 401.
   - Divar cards rely on the iconised overlay badges (business type, publish time, media count). When editing cards, preserve the `pointer-events-none` wrappers so clicking still opens the modal.
   - News is public-facing: list and detail pages live in `ui/src/app/news` and use SSR with `revalidate = 300`. Admin CRUD routes are under `/admin/news`, `/admin/news/categories`, and `/admin/news/tags`, backed by `server/src/modules/news`.
+  - Blog is public-facing: list and detail pages live in `ui/src/app/blog` and use SSR with `revalidate = 300`. Admin CRUD routes are under `/admin/blog`, `/admin/blog/categories`, and `/admin/blog/tags`, backed by `server/src/modules/blog`.
+  - Site/SEO settings live under `/admin/website-settings` and `/admin/seo` (public pages hydrate from cached settings).
+  - The login page is `/login`; use the shared login form component for modal login prompts.
 
 Keep outputs ASCII-only when editing files, prefer `apply_patch`, and avoid destructive git commands. Refer to `README.md` for a full architecture and environment overview.

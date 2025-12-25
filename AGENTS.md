@@ -4,10 +4,14 @@
 - `server/src/app.module.ts` wires configuration, shared providers, and feature modules.
 - `server/src/modules/*` hosts domain logic (auth, users, panels, uploads) and should export focused Nest modules with explicit providers.
 - `server/src/modules/news` owns news categories/tags plus public list/detail endpoints and admin CRUD.
+- `server/src/modules/blog` owns blog categories/tags plus public list/detail endpoints and admin CRUD.
+- `server/src/modules/website-settings` owns public contact/social/about-us data plus admin updates.
 - `server/src/common` and `server/src/platform` centralize guards, filters, logging, queues, storage, and telemetry helpers.
 - Tests live in `server/src/tests/{unit,integration,e2e}` with fixtures under `server/src/tests/setup-test.ts`; avoid creating top-level `test/` directories.
 - Root-level assets include `docker-compose.yml`, `observability/` dashboards, `rabbitmq/` seed scripts, and the Prisma schema in `server/prisma`.
- - Public news pages live in `ui/src/app/news` (SSR, `revalidate = 300`) and are linked in the header nav.
+- Public news pages live in `ui/src/app/news` (SSR, `revalidate = 300`) and are linked in the header nav.
+- Public blog pages live in `ui/src/app/blog` (SSR, `revalidate = 300`) and are linked in the header nav.
+- The login page lives at `/login`; the homepage surfaces previews (slides, KPIs, featured posts, news/blog cards).
 
 ## Build, Test, and Development Commands
 - `npm run start:dev` boots Nest + Fastify with hot reload, loading `.env` from the repo root.
@@ -31,6 +35,7 @@
   - Build Iran locally (full labels): `OMT_POSTGRES_PORT=<free_port> MIN_ZOOM=0 MAX_ZOOM=14 ./scripts/build-iran-tiles.sh` (long-running). Restart tileserver after build.
   - Default UI uses same-origin tiles: `NEXT_PUBLIC_MAP_TILE_BASE_URL=/map` -> `/map/styles/basic-preview/style.json` and `/map/styles/basic-preview/{z}/{x}/{y}.(pbf|png)`. If switching to dedicated map domains, update env + Caddy accordingly and proxy `/map`, `/data`, `/fonts` to the tileserver.
 - DB backup/restore: dev Postgres on `6201` (`postgres/postgres`); prod published `6301` -> internal `5432` (`mahan_admin/zQ5gG7k3S9nK2bFw`). Backup example: `PGPASSWORD=postgres pg_dump -Fc -h host.docker.internal -p 6201 -U postgres -d my_ads -f /tmp/dev-backup.dump`. Restore to prod: `PGPASSWORD=zQ5gG7k3S9nK2bFw pg_restore --clean --if-exists --no-owner --no-acl -h host.docker.internal -p 6301 -U mahan_admin -d mahan_file /tmp/dev-backup.dump`. Keep compose target port 5432 and published port 6301 aligned.
+- News crawlers: Eghtesad, Khabaronline, and Asriran crawlers run every 15 minutes when cron is enabled. One-off runs: `npm run news:crawl:eghtesad`, `npm run news:crawl:khabaronline`, `npm run news:crawl:asriran`. Use the News Sources admin list to enable/disable each feed.
 
 ## Testing Guidelines
 - Jest powers every suite; use `*.spec.ts` for unit/integration and `*.e2e-spec.ts` for HTTP flows.

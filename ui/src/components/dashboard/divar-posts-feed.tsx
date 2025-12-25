@@ -23,6 +23,7 @@ import { PostDetailView } from '@/components/dashboard/divar-posts/post-detail-v
 import { getBusinessTypeBadge } from '@/components/dashboard/divar-posts/business-badge';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
+import { BASE_CATEGORY_SLUG } from '@/lib/divar-categories';
 
 type ShareIconMap = {
   title: string;
@@ -99,16 +100,26 @@ export function DivarPostsFeed(): JSX.Element {
     return districtSelection.districtIds.length > 0 ? [...districtSelection.districtIds] : undefined;
   }, [districtSelection.mode, districtSelection.districtIds]);
 
+  const categoryFilterSlug = useMemo(() => {
+    if (categorySelection.slug) {
+      return categorySelection.slug;
+    }
+    if (categoryFilters[BASE_CATEGORY_SLUG]) {
+      return BASE_CATEGORY_SLUG;
+    }
+    return null;
+  }, [categorySelection.slug, categoryFilters]);
+
   const categoryFilterPayload = useMemo(() => {
-    if (!categorySelection.slug) {
+    if (!categoryFilterSlug) {
       return undefined;
     }
-    const activeFilters = categoryFilters[categorySelection.slug];
+    const activeFilters = categoryFilters[categoryFilterSlug];
     if (!activeFilters) {
       return undefined;
     }
     return serializeCategoryFilterValues(activeFilters);
-  }, [categorySelection.slug, categoryFilters]);
+  }, [categoryFilterSlug, categoryFilters]);
 
   const filterArgs = useMemo(() => {
     const normalizedProvince = typeof provinceId === 'number' ? provinceId : undefined;
@@ -687,6 +698,7 @@ export function DivarPostsFeed(): JSX.Element {
                     contactInfo={contactInfo}
                     contactLoading={contactLoading}
                     onMapReady={() => setMapReady(true)}
+                    mapWrapperClassName="lg:px-4"
                   />
                 ) : null}
               </div>

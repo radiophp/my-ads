@@ -2,9 +2,11 @@ import { headers } from 'next/headers';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { HomeCategoryKpis } from '@/components/home/home-category-kpis';
 import { HomeSlider } from '@/components/home/home-slider';
+import { HomeFeaturedPosts } from '@/components/home/home-featured-posts';
 import type { NewsItem, NewsListResponse } from '@/types/news';
 import type { BlogItem, BlogListResponse } from '@/types/blog';
 import type { Slide } from '@/types/slide';
+import type { FeaturedPostsResponse } from '@/types/featured-posts';
 import { Link } from '@/i18n/routing';
 import { Button } from '@/components/ui/button';
 import { NewsCard } from '@/components/news/news-card';
@@ -99,6 +101,26 @@ const fetchSlides = async (): Promise<Slide[]> => {
   }
 };
 
+const fetchFeaturedPosts = async (): Promise<FeaturedPostsResponse> => {
+  const apiBase = await resolveApiBase();
+  if (!apiBase) {
+    return [];
+  }
+
+  try {
+    const response = await fetch(`${apiBase}/featured-posts`, {
+      next: { revalidate: 600 },
+    });
+    if (!response.ok) {
+      return [];
+    }
+    const data = (await response.json()) as FeaturedPostsResponse;
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+};
+
 export async function HomeLanding() {
   const t = await getTranslations('landing');
   const locale = await getLocale();
@@ -132,6 +154,7 @@ export async function HomeLanding() {
   ];
 
   const slides = await fetchSlides();
+  const featuredPosts = await fetchFeaturedPosts();
   const latestNews = await fetchLatestNews();
   const latestBlogs = await fetchLatestBlogs();
   const appBase = await resolveAppBase();
@@ -143,7 +166,12 @@ export async function HomeLanding() {
           <HomeSlider slides={slides} locale={locale} appBase={appBase} />
         </div>
       ) : null}
-      <main className="w-full py-12" />
+      <HomeFeaturedPosts
+        posts={featuredPosts}
+        title={t('featuredPosts.title')}
+        description={t('featuredPosts.description')}
+        emptyLabel={t('featuredPosts.empty')}
+      />
       <HomeCategoryKpis />
       <section className="space-y-6 pb-16">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">

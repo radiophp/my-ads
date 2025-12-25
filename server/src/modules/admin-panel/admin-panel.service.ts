@@ -22,6 +22,7 @@ export type AdminEntityCounts = {
   blogTags: number;
   blogSources: number;
   slides: number;
+  featuredPosts: number;
   seoSettings: number;
   websiteSettings: number;
 };
@@ -51,6 +52,7 @@ export class AdminPanelService {
       blogTags,
       blogSources,
       slides,
+      featuredPosts,
       seoSettings,
       websiteSettings,
     ] = await Promise.all([
@@ -75,6 +77,7 @@ export class AdminPanelService {
       this.prisma.blogTag.count(),
       this.prisma.blogSource.count(),
       this.prisma.slide.count(),
+      this.prisma.featuredPost.count(),
       this.prisma.seoSetting.count(),
       this.prisma.websiteSetting.count(),
     ]);
@@ -99,6 +102,7 @@ export class AdminPanelService {
       blogTags,
       blogSources,
       slides,
+      featuredPosts,
       seoSettings,
       websiteSettings,
     };

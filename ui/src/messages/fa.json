@@ -94,6 +94,11 @@
         "business": "املاک"
       }
     },
+    "featuredPosts": {
+      "title": "فایل‌های برگزیده",
+      "description": "فایل‌های منتخب تیم ماهان فایل.",
+      "empty": "هنوز فایل برگزیده‌ای ثبت نشده است."
+    },
     "news": {
       "title": "آخرین اخبار بازار",
       "description": "به‌روزترین تیترهای مسکن و تغییرات بازار را دنبال کنید.",
@@ -793,6 +798,10 @@
           "title": "اسلایدهای صفحه اصلی",
           "description": "مدیریت اسلایدهای نمایشی در صفحه اصلی."
         },
+        "featuredPosts": {
+          "title": "فایل‌های برگزیده",
+          "description": "مدیریت فایل‌های برگزیده صفحه اصلی."
+        },
         "seoSettings": {
           "title": "تنظیمات سئو",
           "description": "متادیتای صفحات عمومی را مدیریت کنید."
@@ -898,6 +907,79 @@
         "errorTitle": "ذخیره ناموفق",
         "errorDescription": "امکان ذخیره اسلاید وجود ندارد."
       }
+    },
+    "featuredPosts": {
+      "title": "فایل‌های برگزیده",
+      "description": "فایل‌های برگزیده صفحه اصلی را مدیریت کنید.",
+      "actions": {
+        "add": "افزودن فایل برگزیده",
+        "refresh": "تازه‌سازی",
+        "edit": "ویرایش",
+        "delete": "حذف",
+        "clearSearch": "پاک کردن جستجو",
+        "back": "بازگشت",
+        "save": "ذخیره",
+        "lookup": "جستجوی فایل"
+      },
+      "columns": {
+        "post": "فایل",
+        "code": "کد",
+        "externalId": "شناسه خارجی",
+        "status": "وضعیت",
+        "order": "ترتیب",
+        "updated": "آخرین بروزرسانی",
+        "actions": "عملیات"
+      },
+      "fields": {
+        "code": "کد فایل",
+        "codePlaceholder": "کد عددی فایل",
+        "externalId": "شناسه خارجی",
+        "externalIdPlaceholder": "شناسه خارجی دیوار",
+        "sortOrder": "ترتیب نمایش",
+        "sortOrderPlaceholder": "عدد کمتر زودتر نمایش داده می‌شود",
+        "isActive": "نمایش فعال",
+        "isActiveHint": "فایل‌های غیرفعال در صفحه اصلی نمایش داده نمی‌شوند.",
+        "search": "جستجو بر اساس عنوان"
+      },
+      "form": {
+        "createTitle": "افزودن فایل برگزیده",
+        "createDescription": "فایل را با کد یا شناسه خارجی پیدا کنید و به صفحه اصلی اضافه کنید.",
+        "editTitle": "ویرایش فایل برگزیده",
+        "editDescription": "نمایش یا ترتیب را بروزرسانی کنید."
+      },
+      "status": {
+        "active": "فعال",
+        "inactive": "غیرفعال"
+      },
+      "lookup": {
+        "title": "فایل پیدا شده",
+        "missingTitle": "کد یا شناسه خارجی را وارد کنید",
+        "missingDescription": "برای جستجو حداقل یکی از شناسه‌ها را وارد کنید.",
+        "notFoundTitle": "فایلی پیدا نشد",
+        "notFoundDescription": "فایلی با این مشخصات یافت نشد.",
+        "successTitle": "فایل پیدا شد"
+      },
+      "toast": {
+        "createdTitle": "فایل برگزیده ایجاد شد",
+        "createdDescription": "این فایل در صفحه اصلی نمایش داده می‌شود.",
+        "updatedTitle": "فایل برگزیده بروزرسانی شد",
+        "updatedDescription": "تغییرات ذخیره شد.",
+        "deletedTitle": "فایل برگزیده حذف شد",
+        "deletedDescription": "این فایل دیگر برگزیده نیست.",
+        "errorTitle": "خطا",
+        "errorDescription": "لطفاً دوباره تلاش کنید."
+      },
+      "pagination": {
+        "prev": "قبلی",
+        "next": "بعدی",
+        "label": "صفحه {page} از {totalPages} · {totalItems} مورد"
+      },
+      "placeholders": {
+        "untitled": "فایل بدون عنوان"
+      },
+      "confirmDelete": "این فایل برگزیده حذف شود؟",
+      "loading": "در حال دریافت فایل‌های برگزیده…",
+      "empty": "هنوز فایل برگزیده‌ای ثبت نشده است."
     },
     "seoSettings": {
       "title": "تنظیمات سئو",

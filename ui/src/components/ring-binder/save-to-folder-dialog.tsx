@@ -256,16 +256,33 @@ export function SaveToFolderDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] sm:left-1/2 sm:top-1/2 sm:max-h-[90vh] sm:w-full sm:max-w-md sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl sm:p-6">
+      <DialogContent
+        hideCloseButton
+        className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] sm:left-1/2 sm:top-1/2 sm:h-auto sm:max-h-[90vh] sm:w-full sm:max-w-md sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl sm:p-6"
+      >
         <div className="flex h-full flex-col overflow-hidden">
           <div className="border-b border-border px-6 py-4 sm:hidden">
-            <p className="text-center text-base font-semibold">{t('saveDialog.title')}</p>
-            <p className="mt-1 text-center text-xs text-muted-foreground">
+            <p
+              className={cn(
+                'text-base font-semibold',
+                isRTL ? 'text-right' : 'text-center',
+              )}
+              dir={isRTL ? 'rtl' : 'ltr'}
+            >
+              {t('saveDialog.title')}
+            </p>
+            <p
+              className={cn(
+                'mt-1 text-xs text-muted-foreground',
+                isRTL ? 'text-right' : 'text-center',
+              )}
+              dir={isRTL ? 'rtl' : 'ltr'}
+            >
               {t('saveDialog.description', { title: post.title ?? post.externalId })}
             </p>
           </div>
           <div className="hidden px-6 py-4 sm:block">
-            <DialogHeader>
+            <DialogHeader className={cn(isRTL && 'text-right sm:text-right')}>
               <DialogTitle>{t('saveDialog.title')}</DialogTitle>
               <DialogDescription>
                 {t('saveDialog.description', { title: post.title ?? post.externalId })}

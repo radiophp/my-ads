@@ -54,6 +54,7 @@ import { CategoryFiltersPreview } from './category-filters-preview';
 import { useBackButtonClose } from '@/hooks/use-back-button-close';
 import { CategorySelectionModal } from './category-selection-modal';
 import { cn } from '@/lib/utils';
+import { BASE_CATEGORY_SLUG } from '@/lib/divar-categories';
 import {
   useGetSavedFiltersQuery,
   useCreateSavedFilterMutation,
@@ -65,7 +66,6 @@ import { cloneSearchFilterState, mergeSavedFilterState } from '@/features/search
 import { DesktopCategorySection } from './desktop-category-section';
 import { DesktopRegionSelectors } from './desktop-region-selectors';
 
-const BASE_CATEGORY_SLUG = 'real-estate';
 const DEFAULT_SAVED_FILTER_LIMIT = 5;
 const DEFAULT_PROVINCE_NAME_FA = 'البرز';
 

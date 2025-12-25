@@ -498,6 +498,41 @@ export class DivarPostsAdminService {
     return this.mapRecordToListItem(record, categoryLabels);
   }
 
+  async getNormalizedPostByExternalId(externalId: string): Promise<DivarPostListItemDto | null> {
+    const record = await this.prisma.divarPost.findUnique({
+      where: { externalId },
+      select: DIVAR_POST_SUMMARY_SELECT,
+    });
+    if (!record) {
+      return null;
+    }
+    const categoryLabels = await this.resolveCategoryLabels([record]);
+    return this.mapRecordToListItem(record, categoryLabels);
+  }
+
+  async listPostsByIds(ids: string[]): Promise<DivarPostListItemDto[]> {
+    const uniqueIds = Array.from(new Set(ids.filter(Boolean)));
+    if (uniqueIds.length === 0) {
+      return [];
+    }
+
+    const records = await this.prisma.divarPost.findMany({
+      where: { id: { in: uniqueIds } },
+      select: DIVAR_POST_SUMMARY_SELECT,
+    });
+    if (records.length === 0) {
+      return [];
+    }
+
+    const categoryLabels = await this.resolveCategoryLabels(records);
+    const mapped = records.map((record) => this.mapRecordToListItem(record, categoryLabels));
+    const mappedById = new Map(mapped.map((item) => [item.id, item]));
+
+    return ids
+      .map((id) => mappedById.get(id))
+      .filter((item): item is DivarPostListItemDto => Boolean(item));
+  }
+
   async getPostContactInfo(id: string): Promise<{
     id: string;
     externalId: string | null;

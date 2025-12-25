@@ -29,12 +29,24 @@ type DistrictDto = {
   city: string;
   cityId: number;
   citySlug: string;
+  provinceId: number;
+  provinceSlug: string;
 };
 
 type FooterDistrictGroup = {
   city: string;
-  href?: string;
-  items: Array<{ id: number; name: string; href?: string }>;
+  cityId?: number;
+  citySlug?: string;
+  provinceId?: number;
+  items: Array<{
+    id: number;
+    name: string;
+    cityId?: number;
+    citySlug?: string;
+    provinceId?: number;
+    districtId?: number;
+    districtSlug?: string;
+  }>;
 };
 
 const normalizeBaseUrl = (value: string): string => value.replace(/\/$/, '');
@@ -296,15 +308,23 @@ export async function Footer() {
     .map((city) => ({
       id: city.id,
       name: city.name,
-      href: `/preview?city=${encodeURIComponent(city.slug)}`,
+      cityId: city.id,
+      citySlug: city.slug,
+      provinceId: city.provinceId,
     }));
   const districtGroups: FooterDistrictGroup[] = citiesWithDistricts.map((city) => ({
     city: city.name,
-    href: `/preview?city=${encodeURIComponent(city.slug)}`,
+    cityId: city.id,
+    citySlug: city.slug,
+    provinceId: city.provinceId,
     items: (districtMap[city.id] ?? []).map((district) => ({
       id: district.id,
       name: district.name,
-      href: `/preview?district=${encodeURIComponent(district.slug)}`,
+      cityId: district.cityId,
+      citySlug: district.citySlug,
+      provinceId: district.provinceId,
+      districtId: district.id,
+      districtSlug: district.slug,
     })),
   }));
   districtGroups.sort((a, b) => {
@@ -322,7 +342,9 @@ export async function Footer() {
     const otherCityItems = citiesWithoutDistricts.map((city, index) => ({
       id: -(index + 1),
       name: city.name,
-      href: `/preview?city=${encodeURIComponent(city.slug)}`,
+      cityId: city.id,
+      citySlug: city.slug,
+      provinceId: city.provinceId,
     }));
     districtGroups.push({
       city: t('otherCitiesTab'),
@@ -331,7 +353,10 @@ export async function Footer() {
   }
 
   return (
-    <footer className="border-t border-border/60 bg-background/70 text-sm text-muted-foreground transition-colors">
+    <footer
+      data-site-footer
+      className="border-t border-border/60 bg-background/70 text-sm text-muted-foreground transition-colors"
+    >
       <div className="flex w-full flex-col gap-10 px-4 py-12 lg:px-10">
         <FooterDistricts t={t} groups={districtGroups} />
         <FooterMainRow

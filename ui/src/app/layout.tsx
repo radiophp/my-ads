@@ -8,6 +8,7 @@ import { inter } from '@/app/fonts';
 import { Providers } from '@/app/providers';
 import { SiteHeader } from '@/components/layout/site-header';
 import { Footer } from '@/components/layout/site-footer';
+import { PathnameSync } from '@/components/layout/pathname-sync';
 import './globals.css';
 
 const DEFAULT_APP_URL =
@@ -81,10 +82,14 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       className={`${inter.variable} dark`}
       data-theme="dark"
     >
-      <body className={`${inter.className} min-h-screen overflow-x-hidden bg-background text-foreground`}>
+      <body
+        className={`${inter.className} min-h-screen overflow-x-hidden bg-background text-foreground`}
+        data-pathname={pathname}
+      >
         <script dangerouslySetInnerHTML={{ __html: themeInitializer }} />
         <NextIntlClientProvider locale={locale} messages={messages} timeZone="UTC">
           <Providers>
+            <PathnameSync />
             <div className="flex min-h-screen flex-col">
               <SiteHeader />
               <main className="min-h-0 flex-1">{children}</main>

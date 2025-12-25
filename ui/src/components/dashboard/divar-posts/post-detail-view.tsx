@@ -33,6 +33,8 @@ import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { AMENITY_CONFIG } from './post-detail-sections';
 import { PostLocationMap } from './post-location-map';
+import { PhoneOtpLoginForm } from '@/components/auth/phone-otp-login-form';
+import { useAppSelector } from '@/lib/hooks';
 
 export type PostDetailViewProps = {
   post: DivarPostSummary;
@@ -89,6 +91,8 @@ export function PostDetailView({
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [savedDialogOpen, setSavedDialogOpen] = useState(false);
+  const [loginDialogOpen, setLoginDialogOpen] = useState(false);
+  const isAuthenticated = useAppSelector((state) => Boolean(state.auth.accessToken));
   const { data: savedData, refetch: refetchSaved, isFetching: isFetchingSaved } =
     useGetPostSavedFoldersQuery(post.id, { skip: !post.id });
   const [removePostFromFolder, { isLoading: isRemoving }] =
@@ -115,7 +119,24 @@ export function PostDetailView({
       setNoteDraft(noteContent ?? '');
     }
   }, [noteContent, isEditingNote]);
+  useEffect(() => {
+    if (loginDialogOpen && isAuthenticated) {
+      setLoginDialogOpen(false);
+    }
+  }, [loginDialogOpen, isAuthenticated]);
+
+  const ensureAuthenticated = () => {
+    if (!isAuthenticated) {
+      setLoginDialogOpen(true);
+      return false;
+    }
+    return true;
+  };
+
   const handleSaveButtonClick = () => {
+    if (!ensureAuthenticated()) {
+      return;
+    }
     if (isSaved) {
       setSavedDialogOpen(true);
     } else {
@@ -141,6 +162,9 @@ export function PostDetailView({
   };
 
   const handleStartNoteEdit = () => {
+    if (!ensureAuthenticated()) {
+      return;
+    }
     setNoteDraft(noteContent ?? '');
     setIsEditingNote(true);
   };
@@ -822,6 +846,30 @@ export function PostDetailView({
           setSaveDialogOpen(true);
         }}
       />
+      <Dialog open={loginDialogOpen} onOpenChange={setLoginDialogOpen}>
+        <DialogContent
+          hideCloseButton
+          className="h-[100dvh] w-screen max-w-none rounded-none p-0 sm:h-auto sm:max-w-lg sm:rounded-lg"
+        >
+          <div className="flex h-full flex-col">
+            <div className="flex-1 overflow-y-auto">
+              <PhoneOtpLoginForm />
+            </div>
+            <div className="border-t border-border/70 p-4 sm:border-t-0 sm:px-6 sm:pb-6">
+              <div className={cn('flex', isRTL ? 'justify-start' : 'justify-end')}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                  onClick={() => setLoginDialogOpen(false)}
+                >
+                  {t('close')}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

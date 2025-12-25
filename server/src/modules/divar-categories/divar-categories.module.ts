@@ -1,7 +1,10 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '@app/platform/database/prisma.module';
 import { DivarCategoriesService } from './divar-categories.service';
-import { DivarCategoriesController } from './divar-categories.controller';
+import {
+  DivarCategoriesController,
+  PublicDivarCategoriesController,
+} from './divar-categories.controller';
 import { DivarCategoryFiltersService } from './divar-category-filters.service';
 import {
   DivarCategoryFiltersController,
@@ -13,6 +16,7 @@ import {
   providers: [DivarCategoriesService, DivarCategoryFiltersService],
   controllers: [
     DivarCategoriesController,
+    PublicDivarCategoriesController,
     DivarCategoryFiltersController,
     AdminDivarCategoryFiltersController,
   ],

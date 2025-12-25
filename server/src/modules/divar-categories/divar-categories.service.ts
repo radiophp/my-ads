@@ -210,6 +210,16 @@ export class DivarCategoriesService {
     return categories.map((category) => this.toDto(category));
   }
 
+  async listPublicCategories(): Promise<DivarCategoryDto[]> {
+    const categories = await this.prisma.divarCategory.findMany({
+      where: { isActive: true },
+      orderBy: [{ displayPath: 'asc' }],
+      include: this.includeForCategory(),
+    });
+
+    return categories.map((category) => this.toDto(category));
+  }
+
   async updateAllowPosting(id: string, allowPosting: boolean): Promise<DivarCategoryDto> {
     const category = await this.prisma.$transaction(async (tx) => {
       const updated = await tx.divarCategory.update({

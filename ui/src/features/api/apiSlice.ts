@@ -735,6 +735,19 @@ export const apiSlice = createApi({
             ]
           : [{ type: 'DivarCategories' as const, id: 'LIST' }],
     }),
+    getPublicDivarCategories: builder.query<DivarCategory[], void>({
+      query: () => '/public/divar-categories',
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map((category) => ({
+                type: 'DivarCategories' as const,
+                id: category.id,
+              })),
+              { type: 'DivarCategories' as const, id: 'LIST' },
+            ]
+          : [{ type: 'DivarCategories' as const, id: 'LIST' }],
+    }),
     updateDivarCategoryAllowPosting: builder.mutation<
       DivarCategory,
       { id: string; allowPosting: boolean }
@@ -1108,6 +1121,7 @@ export const {
   useDeletePackageMutation,
   useUploadPublicImageMutation,
   useGetDivarCategoriesQuery,
+  useGetPublicDivarCategoriesQuery,
   useUpdateDivarCategoryAllowPostingMutation,
   useGetDivarCategoryFiltersQuery,
   useGetDivarCategoryFilterQuery,

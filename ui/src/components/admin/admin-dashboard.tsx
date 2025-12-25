@@ -17,6 +17,7 @@ import {
   BookOpenText,
   Image as ImageIcon,
   Search,
+  Settings,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -144,6 +145,12 @@ export function AdminDashboard() {
       title: t('cards.seoSettings.title'),
       countKey: 'seoSettings',
     },
+    websiteSettings: {
+      href: '/admin/website-settings',
+      icon: <Settings className="size-8 text-primary" aria-hidden />,
+      title: t('cards.websiteSettings.title'),
+      countKey: 'websiteSettings',
+    },
     notifications: {
       href: '/admin/notifications',
       icon: <Bell className="size-8 text-primary" aria-hidden />,
@@ -179,6 +186,7 @@ export function AdminDashboard() {
         items.blogSources,
         items.slides,
         items.seoSettings,
+        items.websiteSettings,
       ],
     },
     {

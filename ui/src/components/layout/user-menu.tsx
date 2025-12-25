@@ -2,7 +2,8 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { LogOut, UserRound } from 'lucide-react';
+import { useLocale } from 'next-intl';
+import { LogOut, Settings, UserRound } from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
@@ -16,6 +17,9 @@ type UserMenuProps = {
   logoutLabel: string;
   profileLabel: string;
   profileHref: string;
+  isAdmin: boolean;
+  adminLabel: string;
+  adminHref: string;
 };
 
 export function UserMenu({
@@ -25,10 +29,14 @@ export function UserMenu({
   logoutLabel,
   profileLabel,
   profileHref,
+  isAdmin,
+  adminLabel,
+  adminHref,
 }: UserMenuProps) {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const isRtl = useLocale() === 'fa';
 
   const profileImage = useMemo(() => {
     const url = user.profileImageUrl?.trim();
@@ -113,7 +121,7 @@ export function UserMenu({
               </AvatarFallback>
             )}
           </Avatar>
-          <span className="max-w-[160px] truncate">{displayName}</span>
+          <span className="hidden max-w-[160px] truncate lg:inline-flex">{displayName}</span>
         </div>
       </button>
       {open ? (
@@ -121,14 +129,15 @@ export function UserMenu({
           ref={menuRef}
           role="menu"
           className={cn(
-            'absolute z-50 right-0 mt-2 w-48 rounded-lg border border-border/70',
-            'p-1 bg-popover/95 text-sm shadow-lg backdrop-blur',
+            'absolute z-50 mt-2 w-48 border border-border/70',
+            isRtl ? 'left-0' : 'right-0',
+            'p-2 bg-background text-sm shadow-lg backdrop-blur',
           )}
         >
           <Link
             href={profileHref}
             className={cn(
-              'flex w-full items-center gap-2 rounded-md px-3 py-2 text-left transition-colors',
+              'flex w-full items-center gap-2 px-3 py-2 text-left transition-colors',
               'hover:bg-secondary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
             )}
             role="menuitem"
@@ -137,12 +146,26 @@ export function UserMenu({
             <UserRound className="size-4" aria-hidden />
             <span>{profileLabel}</span>
           </Link>
+          {isAdmin ? (
+            <Link
+              href={adminHref}
+              className={cn(
+                'flex w-full items-center gap-2 px-3 py-2 pl-9 text-left text-sm text-muted-foreground transition-colors',
+                'hover:bg-secondary/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+              )}
+              role="menuitem"
+              onClick={() => setOpen(false)}
+            >
+              <Settings className="size-4" aria-hidden />
+              <span>{adminLabel}</span>
+            </Link>
+          ) : null}
           <button
             type="button"
             onClick={handleLogout}
             disabled={isLoggingOut}
             className={cn(
-              'flex w-full items-center gap-2 rounded-md px-3 py-2 text-left transition-colors',
+              'flex w-full items-center gap-2 px-3 py-2 text-left transition-colors',
               'hover:bg-secondary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:opacity-70',
             )}
           >

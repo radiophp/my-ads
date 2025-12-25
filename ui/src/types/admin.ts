@@ -19,4 +19,5 @@ export type AdminDashboardStats = {
   blogSources: number;
   slides: number;
   seoSettings: number;
+  websiteSettings: number;
 };

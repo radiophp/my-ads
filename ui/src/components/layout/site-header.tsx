@@ -1,6 +1,6 @@
 'use client';
 import { useTranslations } from 'next-intl';
-import { useMemo, useState, useRef } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
@@ -26,6 +26,8 @@ import {
   DownloadCloud,
   LogOut,
   LayoutDashboard,
+  Home,
+  Filter,
   FolderKanban,
   Bookmark,
   Bell,
@@ -39,12 +41,15 @@ import { CodeSearch } from '@/components/layout/code-search';
 import { cn } from '@/lib/utils';
 
 type NavIconKey =
+  | 'home'
   | 'dashboard'
   | 'ringBinder'
   | 'savedFilters'
   | 'notifications'
+  | 'filters'
   | 'admin'
   | 'news'
+  | 'newsBlog'
   | 'blog'
   | 'about';
 
@@ -57,12 +62,15 @@ type NavItemConfig = {
 };
 
 const navIconComponents: Record<NavIconKey, typeof LayoutDashboard> = {
+  home: Home,
   dashboard: LayoutDashboard,
   ringBinder: FolderKanban,
   savedFilters: Bookmark,
   notifications: Bell,
+  filters: Filter,
   admin: ShieldCheck,
   news: Newspaper,
+  newsBlog: Newspaper,
   blog: BookOpen,
   about: Info,
 };
@@ -84,10 +92,17 @@ export function SiteHeader() {
   const [showManualInstall, setShowManualInstall] = useState(false);
   const [showInstalledNotice, setShowInstalledNotice] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useNotificationsSocket();
 
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
   const isAuthenticated = Boolean(auth.accessToken);
+  const showAuthNav = isHydrated && isAuthenticated;
+  const showAdminNav = showAuthNav && auth.user?.role === 'ADMIN';
   const hasExistingInstall = isStandalone || hasRelatedInstall;
   const showInstallButton = !isStandalone;
 
@@ -131,39 +146,39 @@ export function SiteHeader() {
 
   const availableNavItems: NavItemConfig[] = [
     {
+      key: 'home',
+      label: t('header.nav.home'),
+      href: '/',
+      visible: true,
+      icon: 'home' as const,
+    },
+    {
       key: 'dashboard',
       label: t('header.nav.dashboard'),
       href: '/dashboard',
-      visible: isAuthenticated,
+      visible: showAuthNav,
       icon: 'dashboard' as const,
     },
     {
       key: 'ring-binder',
       label: t('header.nav.ringBinder'),
       href: '/dashboard/ring-binder',
-      visible: isAuthenticated,
+      visible: showAuthNav,
       icon: 'ringBinder' as const,
     },
     {
       key: 'saved-filters',
       label: t('header.nav.savedFilters'),
       href: '/dashboard/saved-filters',
-      visible: isAuthenticated,
+      visible: showAuthNav,
       icon: 'savedFilters' as const,
     },
     {
       key: 'notifications',
       label: t('header.nav.notifications'),
       href: '/dashboard/notifications',
-      visible: isAuthenticated,
+      visible: showAuthNav,
       icon: 'notifications' as const,
-    },
-    {
-      key: 'admin',
-      label: t('header.nav.admin'),
-      href: '/admin',
-      visible: isAuthenticated && auth.user?.role === 'ADMIN',
-      icon: 'admin' as const,
     },
     {
       key: 'news',
@@ -222,72 +237,66 @@ export function SiteHeader() {
           <Link href="/" className="text-lg font-semibold">
             {t('header.brand')}
           </Link>
-          {isAuthenticated && (
+          <nav className="hidden items-center gap-1 sm:flex">
             <Link
-              href="/dashboard"
-              className="hidden items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
+              href="/"
+              className="hidden items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground min-[860px]:inline-flex"
             >
-              {renderNavIcon('dashboard')}
-              {t('header.nav.dashboard')}
+              {renderNavIcon('home', 'hidden lg:block')}
+              {t('header.nav.home')}
             </Link>
-          )}
-          <Link
-            href="/news"
-            className="hidden items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
-          >
-            {renderNavIcon('news')}
-            {t('header.nav.news')}
-          </Link>
-          <Link
-            href="/blog"
-            className="hidden items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
-          >
-            {renderNavIcon('blog')}
-            {t('header.nav.blog')}
-          </Link>
-          <Link
-            href="/about"
-            className="hidden items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
-          >
-            {renderNavIcon('about')}
-            {t('header.nav.about')}
-          </Link>
-          {isAuthenticated && (
+            {showAuthNav && (
+              <Link
+                href="/dashboard"
+                className="items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
+              >
+                {renderNavIcon('dashboard', 'hidden lg:block')}
+                {t('header.nav.dashboard')}
+              </Link>
+            )}
+            {showAuthNav && (
+              <Link
+                href="/dashboard/ring-binder"
+                className="items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
+              >
+                {renderNavIcon('ringBinder', 'hidden lg:block')}
+                {t('header.nav.ringBinder')}
+              </Link>
+            )}
+            {showAuthNav && (
+              <DesktopNavDropdown
+                label={t('header.nav.filters')}
+                icon="filters"
+                items={[
+                  {
+                    href: '/dashboard/saved-filters',
+                    label: t('header.nav.savedFilters'),
+                    icon: 'savedFilters',
+                  },
+                  {
+                    href: '/dashboard/notifications',
+                    label: t('header.nav.notifications'),
+                    icon: 'notifications',
+                  },
+                ]}
+              />
+            )}
+            <DesktopNavDropdown
+              label={t('header.nav.newsBlog')}
+              icon="newsBlog"
+              items={[
+                { href: '/news', label: t('header.nav.news'), icon: 'news' },
+                { href: '/blog', label: t('header.nav.blog'), icon: 'blog' },
+              ]}
+            />
             <Link
-              href="/dashboard/ring-binder"
-              className="hidden items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
+              href="/about"
+              className="hidden items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground lg:inline-flex"
             >
-              {renderNavIcon('ringBinder')}
-              {t('header.nav.ringBinder')}
+              {renderNavIcon('about', 'hidden lg:block')}
+              {t('header.nav.about')}
             </Link>
-          )}
-          {isAuthenticated && (
-            <Link
-              href="/dashboard/saved-filters"
-              className="hidden items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
-            >
-              {renderNavIcon('savedFilters')}
-              {t('header.nav.savedFilters')}
-            </Link>
-          )}
-          {isAuthenticated && (
-            <Link
-              href="/dashboard/notifications"
-              className="hidden items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
-            >
-              {renderNavIcon('notifications')}
-              {t('header.nav.notifications')}
-            </Link>
-          )}
-          {isAuthenticated && auth.user?.role === 'ADMIN' && (
-            <Link
-              href="/admin"
-              className="hidden items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
-            >
-              {renderNavIcon('admin')}
-              {t('header.nav.admin')}
-            </Link>
-          )}
+          </nav>
         </div>
         <div className="hidden items-center gap-2 sm:flex">
           {showInstallButton ? (
@@ -299,12 +308,14 @@ export function SiteHeader() {
               className="flex items-center gap-2 border-0 px-3"
             >
               <DownloadCloud className="size-4" aria-hidden />
-              {isPromptingInstall ? pwaT('installingLabel') : t('header.installApp')}
+              <span className="sr-only lg:not-sr-only">
+                {isPromptingInstall ? pwaT('installingLabel') : t('header.installApp')}
+              </span>
             </Button>
           ) : null}
-          {isAuthenticated ? <CodeSearch /> : null}
+          {showAuthNav ? <CodeSearch /> : null}
           <ThemeToggle />
-          {isAuthenticated && auth.user ? (
+          {showAuthNav && auth.user ? (
             <UserMenu
               user={auth.user}
               onLogout={handleLogout}
@@ -312,6 +323,9 @@ export function SiteHeader() {
               logoutLabel={isLoggingOut ? t('header.loggingOut') : t('header.logout')}
               profileLabel={t('header.menu.profile')}
               profileHref="/dashboard/profile"
+              isAdmin={showAdminNav}
+              adminLabel={t('header.nav.admin')}
+              adminHref="/admin"
             />
           ) : null}
         </div>
@@ -324,13 +338,16 @@ export function SiteHeader() {
         installLabel={isPromptingInstall ? pwaT('installingLabel') : t('header.installApp')}
         onInstallClick={handleInstallClick}
         isInstallLoading={isPromptingInstall}
-        isAuthenticated={isAuthenticated}
+        isAuthenticated={showAuthNav}
         userName={userDisplayName}
         userAvatar={userAvatar}
         onLogout={handleLogout}
         logoutLabel={isLoggingOut ? t('header.loggingOut') : t('header.logout')}
         profileHref="/dashboard/profile"
         profileLabel={t('header.menu.profile')}
+        isAdmin={showAdminNav}
+        adminLabel={t('header.nav.admin')}
+        adminHref="/admin"
         menuTitle={t('header.mobileMenuTitle')}
         closeLabel={t('header.mobileMenuClose')}
         themeToggleLabel={t('header.themeToggle')}
@@ -346,6 +363,45 @@ export function SiteHeader() {
         }}
       />
     </header>
+  );
+}
+
+type DesktopNavDropdownProps = {
+  label: string;
+  icon: NavIconKey;
+  items: Array<{
+    href: string;
+    label: string;
+    icon: NavIconKey;
+  }>;
+};
+
+function DesktopNavDropdown({ label, icon, items }: DesktopNavDropdownProps) {
+  return (
+    <div className="group relative">
+      <button
+        type="button"
+        className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground"
+        aria-haspopup="menu"
+      >
+        {renderNavIcon(icon, 'hidden lg:block')}
+        {label}
+      </button>
+      <div className="absolute start-0 top-full z-50 hidden w-max min-w-48 border border-border/70 bg-background p-2 shadow-lg group-focus-within:block group-hover:block">
+        <div className="flex flex-col divide-y divide-border/70">
+          {items.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="flex items-center gap-2 whitespace-nowrap px-3 py-2 text-sm text-foreground transition-colors hover:bg-secondary/60"
+            >
+              {renderNavIcon(item.icon, 'hidden lg:block')}
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -427,6 +483,9 @@ type MobileNavigationDrawerProps = {
   isAuthenticated: boolean;
   userName: string | null;
   userAvatar: string | null;
+  isAdmin: boolean;
+  adminLabel: string;
+  adminHref: string;
   onLogout: () => Promise<void> | void;
   logoutLabel: string;
   profileHref: string;
@@ -447,6 +506,9 @@ function MobileNavigationDrawer({
   isAuthenticated,
   userName,
   userAvatar,
+  isAdmin,
+  adminLabel,
+  adminHref,
   onLogout,
   logoutLabel,
   profileHref,
@@ -502,6 +564,16 @@ function MobileNavigationDrawer({
                   {userName ?? profileLabel}
                 </span>
               </Link>
+              {isAdmin ? (
+                <Link
+                  href={adminHref}
+                  className="mt-2 flex items-center gap-2 rounded-lg px-2 py-1 text-sm text-muted-foreground transition hover:bg-secondary/60 hover:text-foreground"
+                  onClick={() => onOpenChange(false)}
+                >
+                  {renderNavIcon('admin', 'text-muted-foreground')}
+                  <span>{adminLabel}</span>
+                </Link>
+              ) : null}
             </div>
           ) : null}
           <nav className="flex flex-col gap-2 p-4">

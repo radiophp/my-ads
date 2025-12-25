@@ -700,3 +700,18 @@ model SeoSetting {
 
   @@index([pageKey])
 }
+
+model WebsiteSetting {
+  id                  String   @id @default(uuid())
+  key                 String   @unique
+  phoneContacts       Json?
+  instagramUrl        String?
+  telegramChannelUrl  String?
+  telegramBotUrl      String?
+  aboutDescription    String?
+  address             String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([key])
+}

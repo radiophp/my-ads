@@ -69,6 +69,7 @@ import type {
 } from '@/types/blog';
 import type { Slide, SlideListResponse } from '@/types/slide';
 import type { SeoSetting } from '@/types/seo-settings';
+import type { WebsiteSettings } from '@/types/website-settings';
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:6200/api';
 
@@ -180,6 +181,7 @@ export const apiSlice = createApi({
     'AdminBlogSources',
     'AdminSlides',
     'AdminSeoSettings',
+    'AdminWebsiteSettings',
   ],
   endpoints: (builder) => ({
     getHealth: builder.query<{ status: string }, void>({
@@ -499,6 +501,21 @@ export const apiSlice = createApi({
         body,
       }),
       invalidatesTags: ['AdminSeoSettings'],
+    }),
+    getAdminWebsiteSettings: builder.query<WebsiteSettings, void>({
+      query: () => '/admin/website-settings',
+      providesTags: ['AdminWebsiteSettings'],
+    }),
+    updateAdminWebsiteSettings: builder.mutation<WebsiteSettings, Partial<WebsiteSettings>>({
+      query: (body) => ({
+        url: '/admin/website-settings',
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: ['AdminWebsiteSettings'],
+    }),
+    getWebsiteSettings: builder.query<WebsiteSettings, void>({
+      query: () => '/website-settings',
     }),
     getSeoSetting: builder.query<SeoSetting, SeoSetting['pageKey']>({
       query: (pageKey) => `/seo-settings/${pageKey}`,
@@ -1075,6 +1092,9 @@ export const {
   useDeleteAdminSlideMutation,
   useGetAdminSeoSettingsQuery,
   useUpdateAdminSeoSettingMutation,
+  useGetAdminWebsiteSettingsQuery,
+  useUpdateAdminWebsiteSettingsMutation,
+  useGetWebsiteSettingsQuery,
   useGetSeoSettingQuery,
   useGetPostsToAnalyzeQuery,
   useGetDivarPostsQuery,

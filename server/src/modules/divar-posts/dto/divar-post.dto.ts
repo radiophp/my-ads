@@ -168,6 +168,12 @@ export class DivarPostListItemDto {
   categorySlug!: string;
 
   @ApiProperty({ nullable: true })
+  categoryName!: string | null;
+
+  @ApiProperty({ nullable: true })
+  categoryParentName!: string | null;
+
+  @ApiProperty({ nullable: true })
   businessType!: string | null;
 
   @ApiProperty({ type: String, nullable: true })

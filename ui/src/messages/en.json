@@ -18,7 +18,8 @@
       "news": "News",
       "blog": "Blog",
       "about": "About",
-      "guides": "Guides"
+      "guides": "Guides",
+      "login": "Sign in"
     },
     "docs": "Docs",
     "languageLabel": "Language",
@@ -696,7 +697,6 @@
       "printSummary": "Listing summary",
       "printAmenities": "Amenities",
       "printAttributes": "Attributes",
-      "shareMessageTitleLabel": "Title",
       "shareMessageCategoryLabel": "Category",
       "shareMessageBusinessLabel": "Business type"
     }
@@ -922,7 +922,8 @@
         "newsList": "News list",
         "blogList": "Blog list",
         "about": "About us",
-        "dashboard": "Dashboard"
+        "dashboard": "Dashboard",
+        "preview": "Listings Preview"
       },
       "toast": {
         "savedTitle": "SEO settings updated",
@@ -985,9 +986,9 @@
         "category": "Category",
         "source": "Source",
         "tags": "Tags",
-      "updated": "Updated",
-      "actions": "Actions"
-    },
+        "updated": "Updated",
+        "actions": "Actions"
+      },
       "fields": {
         "title": "Title",
         "titlePlaceholder": "Enter a news title",
@@ -1492,24 +1493,24 @@
         "userId": "User ID",
         "savedFilterId": "Saved filter ID",
         "postId": "Post ID",
-      "message": "Message (optional)",
-      "messagePlaceholder": "Fallback to post title/description if empty",
-      "sendTelegram": "Also send via Telegram bot",
-      "sendTelegramHelper": "User must have started the bot and shared their contact."
-    },
+        "message": "Message (optional)",
+        "messagePlaceholder": "Fallback to post title/description if empty",
+        "sendTelegram": "Also send via Telegram bot",
+        "sendTelegramHelper": "User must have started the bot and shared their contact."
+      },
       "actions": {
         "send": "Send notification",
         "sending": "Sending…"
       },
       "toast": {
         "successTitle": "Notification enqueued",
-    "successDescription": "Notification ID: {id} • Telegram: {tg}",
-    "telegramSent": "sent",
-    "telegramNotSent": "not sent",
-    "telegramSkipped": "skipped",
-    "errorTitle": "Failed to send notification",
-    "errorDescription": "Please check the IDs and try again."
-  },
+        "successDescription": "Notification ID: {id} • Telegram: {tg}",
+        "telegramSent": "sent",
+        "telegramNotSent": "not sent",
+        "telegramSkipped": "skipped",
+        "errorTitle": "Failed to send notification",
+        "errorDescription": "Please check the IDs and try again."
+      },
       "errors": {
         "missing": "Missing required fields",
         "required": "Enter user ID, saved filter ID, and post ID."
@@ -1919,6 +1920,30 @@
   "footer": {
     "privacy": "Privacy",
     "terms": "Terms",
-    "copyright": "© {year} Pro UI Base"
+    "copyright": "© {year} Mahan File",
+    "defaultTitle": "Mahan File",
+    "defaultDescription": "Real estate insights, listings, and market updates tailored for professionals.",
+    "linksTitle": "News & Articles",
+    "newsLink": "News",
+    "blogLink": "Blog",
+    "contactTitle": "Contact & Social",
+    "contactEmpty": "Contact details are not available yet.",
+    "instagram": "Instagram",
+    "telegramChannel": "Telegram channel",
+    "telegramBot": "Telegram bot",
+    "districtsTitle": "Covered districts in Alborz",
+    "districtsEmpty": "No districts found.",
+    "allCitiesTab": "All cities",
+    "otherCitiesTab": "Other cities"
+  },
+  "preview": {
+    "title": "Listings Preview",
+    "titleWithLocation": "Listings preview for {location}",
+    "description": "This page is a preview. Please sign in to view full details and advanced filters.",
+    "loginTitle": "Sign in to continue",
+    "loginDescription": "Full details and advanced filters are available after signing in.",
+    "loginAction": "Sign in",
+    "loginClose": "Not now",
+    "empty": "No listings were found for this area."
   }
 }

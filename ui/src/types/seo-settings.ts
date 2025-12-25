@@ -1,4 +1,10 @@
-export type SeoPageKey = 'home' | 'news-list' | 'blog-list' | 'about' | 'dashboard';
+export type SeoPageKey =
+  | 'home'
+  | 'news-list'
+  | 'blog-list'
+  | 'about'
+  | 'dashboard'
+  | 'preview';
 
 export type SeoSetting = {
   pageKey: SeoPageKey;

@@ -121,6 +121,24 @@ export class DivarPostsController {
     return this.divarPostStatsService.getCategoryCounts();
   }
 
+  @Get('preview')
+  @Public()
+  @ApiOperation({ summary: 'Preview latest Divar posts for public pages' })
+  @ApiOkResponse({ type: DivarPostListItemDto, isArray: true })
+  async listPreviewPosts(
+    @Query('city') citySlug?: string,
+    @Query('district') districtSlug?: string,
+    @Query('limit') limitParam?: string,
+  ): Promise<DivarPostListItemDto[]> {
+    const parsedLimit = Number(limitParam);
+    const limit = Number.isFinite(parsedLimit) ? parsedLimit : undefined;
+    return this.divarPostsService.listPreviewPosts({
+      citySlug: citySlug?.trim() || undefined,
+      districtSlug: districtSlug?.trim() || undefined,
+      limit,
+    });
+  }
+
   @Get('code/:code')
   @Public()
   @ApiOperation({ summary: 'Get a normalized Divar post by numeric code' })

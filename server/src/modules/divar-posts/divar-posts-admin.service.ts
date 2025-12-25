@@ -50,6 +50,17 @@ const DIVAR_POST_SUMMARY_SELECT = {
   districtName: true,
   provinceName: true,
   categorySlug: true,
+  cat1: true,
+  cat2: true,
+  cat3: true,
+  category: {
+    select: {
+      name: true,
+      parent: {
+        select: { name: true },
+      },
+    },
+  },
   code: true,
   businessType: true,
   publishedAt: true,
@@ -388,12 +399,53 @@ export class DivarPostsAdminService {
     const records = await this.prisma.divarPost.findMany(queryArgs);
     const hasMore = records.length > take;
     const items = hasMore ? records.slice(0, take) : records;
+    const categoryLabels = await this.resolveCategoryLabels(items);
 
     return {
-      items: items.map((record) => this.mapRecordToListItem(record)),
+      items: items.map((record) => this.mapRecordToListItem(record, categoryLabels)),
       nextCursor: hasMore ? items[items.length - 1].id : null,
       hasMore,
     };
+  }
+
+  async listPreviewPosts(options: {
+    citySlug?: string;
+    districtSlug?: string;
+    limit?: number;
+  }): Promise<DivarPostListItemDto[]> {
+    const citySlug = options.citySlug?.trim();
+    const districtSlug = options.districtSlug?.trim();
+    let cityId: number | undefined;
+    let districtId: number | undefined;
+
+    if (districtSlug) {
+      const district = await this.prisma.district.findFirst({
+        where: { slug: districtSlug },
+        select: { id: true, cityId: true },
+      });
+      if (!district) {
+        return [];
+      }
+      districtId = district.id;
+      cityId = district.cityId;
+    } else if (citySlug) {
+      const city = await this.prisma.city.findFirst({
+        where: { slug: citySlug },
+        select: { id: true },
+      });
+      if (!city) {
+        return [];
+      }
+      cityId = city.id;
+    }
+
+    const { items } = await this.listNormalizedPosts({
+      limit: options.limit ?? 40,
+      cityIds: cityId ? [cityId] : undefined,
+      districtIds: districtId ? [districtId] : undefined,
+    });
+
+    return items;
   }
 
   async getPostWithMedias(id: string): Promise<{
@@ -430,7 +482,8 @@ export class DivarPostsAdminService {
     if (!record) {
       return null;
     }
-    return this.mapRecordToListItem(record);
+    const categoryLabels = await this.resolveCategoryLabels([record]);
+    return this.mapRecordToListItem(record, categoryLabels);
   }
 
   async getNormalizedPostByCode(code: number): Promise<DivarPostListItemDto | null> {
@@ -441,7 +494,8 @@ export class DivarPostsAdminService {
     if (!record) {
       return null;
     }
-    return this.mapRecordToListItem(record);
+    const categoryLabels = await this.resolveCategoryLabels([record]);
+    return this.mapRecordToListItem(record, categoryLabels);
   }
 
   async getPostContactInfo(id: string): Promise<{
@@ -840,7 +894,12 @@ export class DivarPostsAdminService {
     where.AND = [where.AND, condition];
   }
 
-  private mapRecordToListItem(record: DivarPostSummaryRecord): DivarPostListItemDto {
+  private mapRecordToListItem(
+    record: DivarPostSummaryRecord,
+    categoryLabels?: Map<string, string>,
+  ): DivarPostListItemDto {
+    const { categoryName, categoryParentName } = this.resolveCategoryNames(record, categoryLabels);
+
     return {
       id: record.id,
       code: record.code,
@@ -911,6 +970,8 @@ export class DivarPostsAdminService {
       districtName: record.districtName ?? null,
       provinceName: record.provinceName ?? null,
       categorySlug: record.categorySlug,
+      categoryName,
+      categoryParentName,
       businessType: record.businessType ?? null,
       publishedAt: record.publishedAt,
       publishedAtJalali: record.publishedAtJalali ?? null,
@@ -942,6 +1003,58 @@ export class DivarPostsAdminService {
           rawValue: attribute.rawValue ?? null,
         })) ?? [],
     };
+  }
+
+  private resolveCategoryNames(
+    record: DivarPostSummaryRecord,
+    categoryLabels?: Map<string, string>,
+  ): { categoryName: string | null; categoryParentName: string | null } {
+    const labels = categoryLabels ?? new Map<string, string>();
+    let parentSlug: string | null = null;
+    let childSlug: string | null = null;
+
+    if (record.cat3) {
+      childSlug = record.cat3;
+      parentSlug = record.cat2 ?? null;
+    } else if (record.cat2) {
+      childSlug = record.cat2;
+      parentSlug = record.cat1 ?? null;
+    }
+
+    const categoryName =
+      (childSlug ? labels.get(childSlug) : null) ?? record.category?.name ?? null;
+    const categoryParentName =
+      (parentSlug ? labels.get(parentSlug) : null) ?? record.category?.parent?.name ?? null;
+
+    return { categoryName, categoryParentName };
+  }
+
+  private async resolveCategoryLabels(
+    records: DivarPostSummaryRecord[],
+  ): Promise<Map<string, string>> {
+    const slugs = new Set<string>();
+    records.forEach((record) => {
+      if (record.cat1) {
+        slugs.add(record.cat1);
+      }
+      if (record.cat2) {
+        slugs.add(record.cat2);
+      }
+      if (record.cat3) {
+        slugs.add(record.cat3);
+      }
+    });
+
+    if (slugs.size === 0) {
+      return new Map();
+    }
+
+    const categories = await this.prisma.divarCategory.findMany({
+      where: { slug: { in: Array.from(slugs) } },
+      select: { slug: true, name: true },
+    });
+
+    return new Map(categories.map((category) => [category.slug, category.name]));
   }
 
   private extractSeoTitle(payload: Prisma.JsonValue): string | null {

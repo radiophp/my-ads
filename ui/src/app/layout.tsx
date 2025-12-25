@@ -1,11 +1,13 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { NextIntlClientProvider } from 'next-intl';
+import { headers } from 'next/headers';
 import { getLocale, getMessages, unstable_setRequestLocale } from 'next-intl/server';
 
 import { inter } from '@/app/fonts';
 import { Providers } from '@/app/providers';
 import { SiteHeader } from '@/components/layout/site-header';
+import { Footer } from '@/components/layout/site-footer';
 import './globals.css';
 
 const DEFAULT_APP_URL =
@@ -67,6 +69,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   unstable_setRequestLocale(locale);
   const messages = await getMessages();
   const dir = locale === 'fa' ? 'rtl' : 'ltr';
+  const requestHeaders = await headers();
+  const pathname = requestHeaders.get('x-pathname') ?? '';
+  const hideFooter = pathname.startsWith('/admin') || pathname.startsWith('/dashboard');
 
   return (
     <html
@@ -83,6 +88,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             <div className="flex min-h-screen flex-col">
               <SiteHeader />
               <main className="min-h-0 flex-1">{children}</main>
+              {hideFooter ? null : <Footer />}
             </div>
           </Providers>
         </NextIntlClientProvider>

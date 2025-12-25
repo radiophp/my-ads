@@ -849,7 +849,7 @@ export function PostDetailView({
       <Dialog open={loginDialogOpen} onOpenChange={setLoginDialogOpen}>
         <DialogContent
           hideCloseButton
-          className="h-[100dvh] w-screen max-w-none rounded-none p-0 sm:h-auto sm:max-w-lg sm:rounded-lg"
+          className="h-dvh w-screen max-w-none rounded-none p-0 sm:h-auto sm:max-w-lg sm:rounded-lg"
         >
           <div className="flex h-full flex-col">
             <div className="flex-1 overflow-y-auto">

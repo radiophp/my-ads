@@ -56,7 +56,11 @@ export function CodeSearch({ onSuccess, variant = 'desktop' }: CodeSearchProps) 
         placeholder={t('placeholder')}
         value={codeValue}
         onChange={(e) => setCodeValue(e.target.value)}
-        className="h-9 w-40 rounded-l-none rounded-r-sm text-sm shadow-none ring-0 focus-visible:ring-0 sm:w-44"
+        className={
+          variant === 'desktop'
+            ? 'h-9 w-24 rounded-l-none rounded-r-sm text-sm shadow-none ring-0 focus-visible:ring-0 sm:w-28 lg:w-36'
+            : 'h-10 w-full rounded-l-none rounded-r-sm text-sm shadow-none ring-0 focus-visible:ring-0'
+        }
         aria-label={t('label')}
       />
       <Button

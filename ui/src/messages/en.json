@@ -7,11 +7,14 @@
   "header": {
     "brand": "Pro UI Base",
     "nav": {
+      "home": "Home",
       "dashboard": "Dashboard",
       "ringBinder": "Ring binder",
       "savedFilters": "Saved filters",
       "notifications": "Notifications",
+      "filters": "Filters",
       "admin": "Admin",
+      "newsBlog": "Blog & news",
       "news": "News",
       "blog": "Blog",
       "about": "About",
@@ -250,7 +253,15 @@
   "about": {
     "title": "About Mahan File",
     "description": "Learn how we help you navigate real estate listings across Iran.",
-    "body": "Mahan File brings together verified listings, saved filters, and real-time alerts so you can monitor the market with confidence. Our tools pair listing data with curated news and insights to support smarter decisions."
+    "body": "Mahan File brings together verified listings, saved filters, and real-time alerts so you can monitor the market with confidence. Our tools pair listing data with curated news and insights to support smarter decisions.",
+    "contactTitle": "Contact details",
+    "addressLabel": "Address",
+    "phoneLabel": "Phone numbers",
+    "ownerLabel": "Contact",
+    "socialLabel": "Social links",
+    "instagramLabel": "Instagram",
+    "telegramChannelLabel": "Telegram channel",
+    "telegramBotLabel": "Telegram bot"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -786,6 +797,10 @@
           "title": "SEO settings",
           "description": "Configure metadata for public pages."
         },
+        "websiteSettings": {
+          "title": "Website settings",
+          "description": "Manage public contact details, social links, and the About page."
+        },
         "notifications": {
           "title": "Test notifications",
           "description": "Send a manual test notification to a user."
@@ -914,6 +929,42 @@
         "savedDescription": "Changes saved for this page.",
         "errorTitle": "Update failed",
         "errorDescription": "Unable to update SEO settings."
+      }
+    },
+    "websiteSettings": {
+      "title": "Website settings",
+      "description": "Update contact details and public links for the website.",
+      "sections": {
+        "phones": "Phone contacts",
+        "phonesHint": "Add up to five contact numbers with their owner names.",
+        "social": "Social links",
+        "about": "About page content"
+      },
+      "fields": {
+        "phoneLabel": "Contact {index}",
+        "ownerPlaceholder": "Owner name",
+        "phonePlaceholder": "Phone number",
+        "instagram": "Instagram",
+        "instagramPlaceholder": "https://instagram.com/your-page",
+        "telegramChannel": "Telegram channel",
+        "telegramChannelPlaceholder": "https://t.me/your-channel",
+        "telegramBot": "Telegram bot",
+        "telegramBotPlaceholder": "https://t.me/your-bot",
+        "aboutDescription": "About description",
+        "aboutDescriptionPlaceholder": "Write the about page description",
+        "address": "Address",
+        "addressPlaceholder": "Company address"
+      },
+      "actions": {
+        "refresh": "Refresh",
+        "save": "Save",
+        "saving": "Saving…"
+      },
+      "toast": {
+        "savedTitle": "Website settings updated",
+        "savedDescription": "Changes saved successfully.",
+        "errorTitle": "Update failed",
+        "errorDescription": "Unable to update website settings."
       }
     },
     "news": {

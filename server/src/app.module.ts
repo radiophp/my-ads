@@ -49,6 +49,7 @@ import { NewsModule } from './modules/news/news.module';
 import { BlogModule } from './modules/blog/blog.module';
 import { SlidesModule } from './modules/slides/slides.module';
 import { SeoSettingsModule } from './modules/seo-settings/seo-settings.module';
+import { WebsiteSettingsModule } from './modules/website-settings/website-settings.module';
 
 @Module({
   imports: [
@@ -114,6 +115,7 @@ import { SeoSettingsModule } from './modules/seo-settings/seo-settings.module';
     BlogModule,
     SlidesModule,
     SeoSettingsModule,
+    WebsiteSettingsModule,
   ],
 })
 export class AppModule {}

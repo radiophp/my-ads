@@ -7,11 +7,14 @@
   "header": {
     "brand": "ماهان فایل",
     "nav": {
+      "home": "خانه",
       "dashboard": "داشبورد",
       "ringBinder": "زونکن",
       "savedFilters": "مجموعه فیلترهای ذخیره‌شده",
       "notifications": "اعلان‌ها",
+      "filters": "فیلترها",
       "admin": "مدیریت",
+      "newsBlog": "اخبار و وبلاگ",
       "news": "اخبار",
       "blog": "وبلاگ",
       "about": "درباره ما",
@@ -250,7 +253,15 @@
   "about": {
     "title": "درباره ماهان فایل",
     "description": "ما در ماهان فایل تلاش می‌کنیم مسیر جستجوی ملک در ایران را ساده‌تر کنیم.",
-    "body": "ماهان فایل آگهی‌های معتبر، فیلترهای ذخیره‌شده و اعلان‌های لحظه‌ای را کنار هم می‌آورد تا بتوانید بازار مسکن را با اطمینان دنبال کنید. ابزارهای ما داده‌های آگهی را با اخبار و تحلیل‌های منتخب ترکیب می‌کند تا تصمیم‌گیری هوشمندانه‌تری داشته باشید."
+    "body": "ماهان فایل آگهی‌های معتبر، فیلترهای ذخیره‌شده و اعلان‌های لحظه‌ای را کنار هم می‌آورد تا بتوانید بازار مسکن را با اطمینان دنبال کنید. ابزارهای ما داده‌های آگهی را با اخبار و تحلیل‌های منتخب ترکیب می‌کند تا تصمیم‌گیری هوشمندانه‌تری داشته باشید.",
+    "contactTitle": "راه‌های ارتباط",
+    "addressLabel": "آدرس",
+    "phoneLabel": "شماره‌های تماس",
+    "ownerLabel": "بدون نام",
+    "socialLabel": "شبکه‌های اجتماعی",
+    "instagramLabel": "اینستاگرام",
+    "telegramChannelLabel": "کانال تلگرام",
+    "telegramBotLabel": "بات تلگرام"
   },
   "dashboard": {
     "title": "داشبورد",
@@ -786,6 +797,10 @@
           "title": "تنظیمات سئو",
           "description": "متادیتای صفحات عمومی را مدیریت کنید."
         },
+        "websiteSettings": {
+          "title": "تنظیمات وب‌سایت",
+          "description": "مدیریت اطلاعات تماس عمومی، لینک‌های شبکه‌های اجتماعی و درباره ما."
+        },
         "notifications": {
           "title": "اعلان آزمایشی",
           "description": "برای یک کاربر اعلان دستی ارسال کنید."
@@ -914,6 +929,42 @@
         "savedDescription": "تغییرات این صفحه ثبت شد.",
         "errorTitle": "خطا در ذخیره",
         "errorDescription": "ذخیره تنظیمات سئو ناموفق بود."
+      }
+    },
+    "websiteSettings": {
+      "title": "تنظیمات وب‌سایت",
+      "description": "اطلاعات تماس و لینک‌های عمومی وب‌سایت را بروزرسانی کنید.",
+      "sections": {
+        "phones": "اطلاعات تماس",
+        "phonesHint": "حداکثر پنج شماره همراه با نام مالک وارد کنید.",
+        "social": "لینک‌های شبکه‌های اجتماعی",
+        "about": "محتوای صفحه درباره ما"
+      },
+      "fields": {
+        "phoneLabel": "تماس {index}",
+        "ownerPlaceholder": "نام مالک",
+        "phonePlaceholder": "شماره تماس",
+        "instagram": "اینستاگرام",
+        "instagramPlaceholder": "https://instagram.com/your-page",
+        "telegramChannel": "کانال تلگرام",
+        "telegramChannelPlaceholder": "https://t.me/your-channel",
+        "telegramBot": "بات تلگرام",
+        "telegramBotPlaceholder": "https://t.me/your-bot",
+        "aboutDescription": "توضیح درباره ما",
+        "aboutDescriptionPlaceholder": "توضیحات صفحه درباره ما را بنویسید",
+        "address": "آدرس",
+        "addressPlaceholder": "آدرس شرکت"
+      },
+      "actions": {
+        "refresh": "تازه‌سازی",
+        "save": "ذخیره",
+        "saving": "در حال ذخیره…"
+      },
+      "toast": {
+        "savedTitle": "تنظیمات وب‌سایت بروزرسانی شد",
+        "savedDescription": "تغییرات با موفقیت ذخیره شد.",
+        "errorTitle": "بروزرسانی ناموفق",
+        "errorDescription": "امکان بروزرسانی تنظیمات وب‌سایت وجود ندارد."
       }
     },
     "news": {

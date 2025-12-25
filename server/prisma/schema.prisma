@@ -293,6 +293,7 @@ model DivarPost {
   attributes      DivarPostAttribute[]
   savedInFolders  RingBinderFolderPost[]
   notes           DivarPostNote[]
+  featuredEntry   FeaturedPost?
   notifications   Notification[]
   notificationsChecked Boolean  @default(false)
   notificationsCheckedAt DateTime?
@@ -429,6 +430,18 @@ model DivarPostNote {
 
   @@unique([userId, postId])
   @@index([postId])
+}
+
+model FeaturedPost {
+  id        String    @id @default(uuid())
+  postId    String    @unique
+  post      DivarPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  sortOrder Int       @default(0)
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([isActive, sortOrder])
 }
 
 model Notification {

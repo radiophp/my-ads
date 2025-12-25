@@ -5,14 +5,25 @@ import { MapPin } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { Link } from '@/i18n/routing';
+import { useAppSelector } from '@/lib/hooks';
 
-type DistrictRowItem = { id: number; name: string; href?: string };
+type DistrictRowItem = {
+  id: number;
+  name: string;
+  cityId?: number;
+  citySlug?: string;
+  provinceId?: number;
+  districtId?: number;
+  districtSlug?: string;
+};
 
 type DistrictRow = DistrictRowItem[];
 
 type DistrictGroup = {
   city: string;
-  href?: string;
+  cityId?: number;
+  citySlug?: string;
+  provinceId?: number;
   items: DistrictRowItem[];
 };
 
@@ -26,6 +37,7 @@ const LARGE_COLUMN_COUNT = 6;
 const TABLET_COLUMN_COUNT = 4;
 
 export function FooterDistrictTabs({ groups, emptyLabel, defaultCity }: FooterDistrictTabsProps) {
+  const isAuthenticated = useAppSelector((state) => Boolean(state.auth.accessToken));
   const resolveDefaultIndex = useCallback((): number => {
     if (!defaultCity) return 0;
     const matchIndex = groups.findIndex((group) => group.city === defaultCity);
@@ -66,7 +78,64 @@ export function FooterDistrictTabs({ groups, emptyLabel, defaultCity }: FooterDi
     return result;
   }, [activeGroup, columnCount]);
 
+  const buildDashboardHref = (params: {
+    provinceId?: number;
+    cityId?: number;
+    districtId?: number;
+  }): string => {
+    const search = new URLSearchParams();
+    if (typeof params.provinceId === 'number') {
+      search.set('provinceId', String(params.provinceId));
+    }
+    if (typeof params.cityId === 'number') {
+      search.set('cityId', String(params.cityId));
+    }
+    if (typeof params.districtId === 'number') {
+      search.set('districtId', String(params.districtId));
+    }
+    const query = search.toString();
+    return query ? `/dashboard?${query}` : '/dashboard';
+  };
+
+  const buildPreviewHref = (params: { citySlug?: string; districtSlug?: string }): string | null => {
+    if (params.districtSlug) {
+      return `/preview?district=${encodeURIComponent(params.districtSlug)}`;
+    }
+    if (params.citySlug) {
+      return `/preview?city=${encodeURIComponent(params.citySlug)}`;
+    }
+    return null;
+  };
+
+  const resolveGroupHref = (group: DistrictGroup): string | null => {
+    if (isAuthenticated) {
+      if (typeof group.cityId === 'number') {
+        return buildDashboardHref({ provinceId: group.provinceId, cityId: group.cityId });
+      }
+      return null;
+    }
+    return buildPreviewHref({ citySlug: group.citySlug });
+  };
+
+  const resolveItemHref = (item: DistrictRowItem): string | null => {
+    if (isAuthenticated) {
+      if (typeof item.districtId === 'number') {
+        return buildDashboardHref({
+          provinceId: item.provinceId,
+          cityId: item.cityId,
+          districtId: item.districtId,
+        });
+      }
+      if (typeof item.cityId === 'number') {
+        return buildDashboardHref({ provinceId: item.provinceId, cityId: item.cityId });
+      }
+      return null;
+    }
+    return buildPreviewHref({ citySlug: item.citySlug, districtSlug: item.districtSlug });
+  };
+
   if (!activeGroup) return null;
+  const activeGroupHref = resolveGroupHref(activeGroup);
 
   return (
     <div className="mt-4 flex flex-col gap-4 text-xs text-muted-foreground">
@@ -89,9 +158,9 @@ export function FooterDistrictTabs({ groups, emptyLabel, defaultCity }: FooterDi
           </button>
         ))}
       </div>
-      {activeGroup.href ? (
+      {activeGroupHref ? (
         <Link
-          href={activeGroup.href}
+          href={activeGroupHref}
           className="w-fit text-xs font-medium text-foreground underline-offset-2 transition hover:underline"
         >
           {activeGroup.city}
@@ -108,20 +177,23 @@ export function FooterDistrictTabs({ groups, emptyLabel, defaultCity }: FooterDi
                   key={`${activeGroup.city}-row-${rowIndex}`}
                   className="border-b border-border/60 last:border-b-0"
                 >
-                  {row.map((district) => (
-                    <td key={district.id} className="px-3 py-2 text-muted-foreground">
-                      {district.href ? (
-                        <Link
-                          href={district.href}
-                          className="cursor-pointer transition hover:text-foreground"
-                        >
-                          {district.name}
-                        </Link>
-                      ) : (
-                        <span>{district.name}</span>
-                      )}
-                    </td>
-                  ))}
+                  {row.map((district) => {
+                    const itemHref = resolveItemHref(district);
+                    return (
+                      <td key={district.id} className="px-3 py-2 text-muted-foreground">
+                        {itemHref ? (
+                          <Link
+                            href={itemHref}
+                            className="cursor-pointer transition hover:text-foreground"
+                          >
+                            {district.name}
+                          </Link>
+                        ) : (
+                          <span>{district.name}</span>
+                        )}
+                      </td>
+                    );
+                  })}
                   {row.length < columnCount
                     ? Array.from({ length: columnCount - row.length }).map((_, emptyIndex) => (
                         <td key={`empty-${emptyIndex}`} className="px-3 py-2 text-transparent">

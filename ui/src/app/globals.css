@@ -76,6 +76,11 @@ body {
   @apply bg-background text-foreground antialiased transition-colors;
 }
 
+body[data-pathname^='/admin'] [data-site-footer],
+body[data-pathname^='/dashboard'] [data-site-footer] {
+  display: none;
+}
+
 ::-webkit-scrollbar {
   width: 10px;
 }

@@ -53,6 +53,7 @@ export type PostDetailViewProps = {
   contactInfo?: DivarPostContactInfo | null;
   contactLoading?: boolean;
   onMapReady?: () => void;
+  mapWrapperClassName?: string;
 };
 
 export function PostDetailView({
@@ -74,6 +75,7 @@ export function PostDetailView({
   contactInfo,
   contactLoading,
   onMapReady,
+  mapWrapperClassName,
 }: PostDetailViewProps): JSX.Element {
   const combinedDetailEntries = [
     ...detailData.featuredDetailEntries,
@@ -428,9 +430,9 @@ export function PostDetailView({
   };
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-6 lg:flex-row">
-        <div className="order-2 flex-1 space-y-6 lg:order-1">
+    <div className="space-y-8 overflow-x-hidden">
+      <div className="flex min-w-0 flex-col gap-6 lg:flex-row">
+        <div className="order-2 flex min-w-0 flex-1 flex-col gap-6 lg:order-1">
           <div className="flex w-full flex-wrap gap-0">
             {onShareWhatsapp || onShareTelegram || smsHref || onCopyLink ? (
               <>
@@ -698,10 +700,12 @@ export function PostDetailView({
               {combinedDetailEntries.map((entry) => (
                 <div
                   key={entry.id}
-              className="flex flex-col items-center gap-2 rounded-2xl border border-border/70 p-3 text-center shadow-sm"
+                  className="flex min-w-0 flex-col items-center gap-2 rounded-2xl border border-border/70 p-3 text-center shadow-sm"
                 >
                   <span className="text-xs text-muted-foreground">{entry.label}</span>
-                  <span className="text-sm font-semibold text-foreground">{entry.value}</span>
+                  <span className="break-words text-sm font-semibold text-foreground">
+                    {entry.value}
+                  </span>
                 </div>
               ))}
             </div>
@@ -731,7 +735,7 @@ export function PostDetailView({
             <AttributeLabelGrid entries={detailData.attributeLabelOnlyEntries} />
           </dl>
         </div>
-        <div className="order-1 lg:order-2 lg:-mx-4 lg:w-2/5">
+        <div className="order-1 min-w-0 lg:order-2 lg:w-2/5">
           <div className="mb-3 lg:hidden">
             <div className="flex w-full overflow-hidden rounded-md border border-border/70 bg-muted/40 text-foreground">
               <button
@@ -776,29 +780,29 @@ export function PostDetailView({
             t={t}
           />
           {hasLocation ? (
-            <div className="hidden lg:block">
-            <PostLocationMap
-              lat={post.latitude as number}
-              lon={post.longitude as number}
-              t={t}
-              isRTL={isRTL}
-              onReady={onMapReady}
-            />
-          </div>
-        ) : null}
+            <div className={cn('hidden lg:block', mapWrapperClassName)}>
+              <PostLocationMap
+                lat={post.latitude as number}
+                lon={post.longitude as number}
+                t={t}
+                isRTL={isRTL}
+                onReady={onMapReady}
+              />
+            </div>
+          ) : null}
+        </div>
       </div>
-    </div>
-    {hasLocation ? (
-      <div className="mt-6 lg:hidden">
-        <PostLocationMap
-          lat={post.latitude as number}
-          lon={post.longitude as number}
-          t={t}
-          isRTL={isRTL}
-          onReady={onMapReady}
-        />
-      </div>
-    ) : null}
+      {hasLocation ? (
+        <div className={cn('mt-6 lg:hidden', mapWrapperClassName)}>
+          <PostLocationMap
+            lat={post.latitude as number}
+            lon={post.longitude as number}
+            t={t}
+            isRTL={isRTL}
+            onReady={onMapReady}
+          />
+        </div>
+      ) : null}
       <SaveToFolderDialog
         post={post}
         open={saveDialogOpen}

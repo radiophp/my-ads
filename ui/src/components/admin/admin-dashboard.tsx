@@ -16,6 +16,7 @@ import {
   Rss,
   BookOpenText,
   Image as ImageIcon,
+  Star,
   Search,
   Settings,
 } from 'lucide-react';
@@ -139,6 +140,12 @@ export function AdminDashboard() {
       title: t('cards.slides.title'),
       countKey: 'slides',
     },
+    featuredPosts: {
+      href: '/admin/featured-posts',
+      icon: <Star className="size-8 text-primary" aria-hidden />,
+      title: t('cards.featuredPosts.title'),
+      countKey: 'featuredPosts',
+    },
     seoSettings: {
       href: '/admin/seo',
       icon: <Search className="size-8 text-primary" aria-hidden />,
@@ -185,6 +192,7 @@ export function AdminDashboard() {
         items.blogTags,
         items.blogSources,
         items.slides,
+        items.featuredPosts,
         items.seoSettings,
         items.websiteSettings,
       ],

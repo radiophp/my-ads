@@ -50,6 +50,7 @@ import { BlogModule } from './modules/blog/blog.module';
 import { SlidesModule } from './modules/slides/slides.module';
 import { SeoSettingsModule } from './modules/seo-settings/seo-settings.module';
 import { WebsiteSettingsModule } from './modules/website-settings/website-settings.module';
+import { FeaturedPostsModule } from './modules/featured-posts/featured-posts.module';
 
 @Module({
   imports: [
@@ -116,6 +117,7 @@ import { WebsiteSettingsModule } from './modules/website-settings/website-settin
     SlidesModule,
     SeoSettingsModule,
     WebsiteSettingsModule,
+    FeaturedPostsModule,
   ],
 })
 export class AppModule {}

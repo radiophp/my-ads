@@ -68,6 +68,14 @@ import type {
   UpdateBlogSourcePayload,
 } from '@/types/blog';
 import type { Slide, SlideListResponse } from '@/types/slide';
+import type {
+  CreateFeaturedPostPayload,
+  FeaturedPostAdminItem,
+  FeaturedPostLookupResponse,
+  FeaturedPostsAdminListResponse,
+  FeaturedPostsResponse,
+  UpdateFeaturedPostPayload,
+} from '@/types/featured-posts';
 import type { SeoSetting } from '@/types/seo-settings';
 import type { WebsiteSettings } from '@/types/website-settings';
 
@@ -180,6 +188,7 @@ export const apiSlice = createApi({
     'AdminBlogTags',
     'AdminBlogSources',
     'AdminSlides',
+    'AdminFeaturedPosts',
     'AdminSeoSettings',
     'AdminWebsiteSettings',
   ],
@@ -450,6 +459,9 @@ export const apiSlice = createApi({
       }),
       invalidatesTags: ['AdminBlogSources', 'AdminBlog'],
     }),
+    getFeaturedPosts: builder.query<FeaturedPostsResponse, void>({
+      query: () => '/featured-posts',
+    }),
     getAdminSlides: builder.query<
       SlideListResponse,
       { page?: number; pageSize?: number; search?: string } | void
@@ -486,6 +498,58 @@ export const apiSlice = createApi({
         method: 'DELETE',
       }),
       invalidatesTags: ['AdminSlides'],
+    }),
+    getAdminFeaturedPosts: builder.query<
+      FeaturedPostsAdminListResponse,
+      { page?: number; pageSize?: number; search?: string } | void
+    >({
+      query: (params) => ({
+        url: '/admin/featured-posts',
+        params: params ?? undefined,
+      }),
+      providesTags: ['AdminFeaturedPosts'],
+    }),
+    getAdminFeaturedPost: builder.query<FeaturedPostAdminItem, string>({
+      query: (id) => `/admin/featured-posts/${id}`,
+      providesTags: ['AdminFeaturedPosts'],
+    }),
+    lookupAdminFeaturedPost: builder.query<
+      FeaturedPostLookupResponse,
+      { code?: number; externalId?: string }
+    >({
+      query: ({ code, externalId }) => ({
+        url: '/admin/featured-posts/lookup',
+        params: {
+          ...(code ? { code } : {}),
+          ...(externalId ? { externalId } : {}),
+        },
+      }),
+    }),
+    createAdminFeaturedPost: builder.mutation<FeaturedPostAdminItem, CreateFeaturedPostPayload>({
+      query: (body) => ({
+        url: '/admin/featured-posts',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['AdminFeaturedPosts'],
+    }),
+    updateAdminFeaturedPost: builder.mutation<
+      FeaturedPostAdminItem,
+      { id: string; body: UpdateFeaturedPostPayload }
+    >({
+      query: ({ id, body }) => ({
+        url: `/admin/featured-posts/${id}`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: ['AdminFeaturedPosts'],
+    }),
+    deleteAdminFeaturedPost: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/admin/featured-posts/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['AdminFeaturedPosts'],
     }),
     getAdminSeoSettings: builder.query<SeoSetting[], void>({
       query: () => '/admin/seo-settings',
@@ -1085,11 +1149,18 @@ export const {
   useDeleteAdminBlogTagMutation,
   useGetAdminBlogSourcesQuery,
   useUpdateAdminBlogSourceMutation,
+  useGetFeaturedPostsQuery,
   useGetAdminSlidesQuery,
   useGetAdminSlideItemQuery,
   useCreateAdminSlideMutation,
   useUpdateAdminSlideMutation,
   useDeleteAdminSlideMutation,
+  useGetAdminFeaturedPostsQuery,
+  useGetAdminFeaturedPostQuery,
+  useLazyLookupAdminFeaturedPostQuery,
+  useCreateAdminFeaturedPostMutation,
+  useUpdateAdminFeaturedPostMutation,
+  useDeleteAdminFeaturedPostMutation,
   useGetAdminSeoSettingsQuery,
   useUpdateAdminSeoSettingMutation,
   useGetAdminWebsiteSettingsQuery,

@@ -94,6 +94,11 @@
         "business": "Agency"
       }
     },
+    "featuredPosts": {
+      "title": "Featured listings",
+      "description": "Hand-picked listings curated by the Mahan File team.",
+      "empty": "No featured listings yet."
+    },
     "news": {
       "title": "Latest market news",
       "description": "Stay updated with fresh housing headlines and market shifts.",
@@ -793,6 +798,10 @@
           "title": "Home slides",
           "description": "Manage the hero slides shown on the public homepage."
         },
+        "featuredPosts": {
+          "title": "Featured posts",
+          "description": "Curate highlighted posts for the homepage carousel."
+        },
         "seoSettings": {
           "title": "SEO settings",
           "description": "Configure metadata for public pages."
@@ -814,6 +823,79 @@
           "description": "Manage Arka API headers used to fetch phone numbers."
         }
       }
+    },
+    "featuredPosts": {
+      "title": "Featured posts",
+      "description": "Select posts to highlight on the public homepage.",
+      "actions": {
+        "add": "Add featured post",
+        "refresh": "Refresh",
+        "edit": "Edit",
+        "delete": "Delete",
+        "clearSearch": "Clear search",
+        "back": "Back",
+        "save": "Save",
+        "lookup": "Lookup post"
+      },
+      "columns": {
+        "post": "Post",
+        "code": "Code",
+        "externalId": "External ID",
+        "status": "Status",
+        "order": "Order",
+        "updated": "Updated",
+        "actions": "Actions"
+      },
+      "fields": {
+        "code": "Post code",
+        "codePlaceholder": "Numeric post code",
+        "externalId": "External ID",
+        "externalIdPlaceholder": "Divar external ID",
+        "sortOrder": "Sort order",
+        "sortOrderPlaceholder": "Lower numbers appear first",
+        "isActive": "Active",
+        "isActiveHint": "Inactive posts are hidden on the homepage.",
+        "search": "Search by title"
+      },
+      "form": {
+        "createTitle": "Create featured post",
+        "createDescription": "Find a post by code or external ID and add it to the homepage.",
+        "editTitle": "Edit featured post",
+        "editDescription": "Update the visibility or ordering."
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "lookup": {
+        "title": "Matched post",
+        "missingTitle": "Enter a code or external ID",
+        "missingDescription": "Provide at least one identifier to look up a post.",
+        "notFoundTitle": "Post not found",
+        "notFoundDescription": "We couldn’t find a matching post.",
+        "successTitle": "Post found"
+      },
+      "toast": {
+        "createdTitle": "Featured post created",
+        "createdDescription": "The post is now highlighted on the homepage.",
+        "updatedTitle": "Featured post updated",
+        "updatedDescription": "Changes saved successfully.",
+        "deletedTitle": "Featured post removed",
+        "deletedDescription": "The post is no longer featured.",
+        "errorTitle": "Something went wrong",
+        "errorDescription": "Please try again."
+      },
+      "pagination": {
+        "prev": "Previous",
+        "next": "Next",
+        "label": "Page {page} of {totalPages} · {totalItems} items"
+      },
+      "placeholders": {
+        "untitled": "Untitled post"
+      },
+      "confirmDelete": "Remove this featured post?",
+      "loading": "Loading…",
+      "empty": "No featured posts yet."
     },
     "slides": {
       "title": "Home slides",

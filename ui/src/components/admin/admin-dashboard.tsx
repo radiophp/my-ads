@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import {
   Boxes,
+  BarChart3,
   GitBranch,
   Map,
   MapPin,
@@ -30,7 +31,7 @@ type DashboardNavItem = {
   href: string;
   icon: ReactNode;
   title: string;
-  countKey: keyof AdminDashboardStats;
+  countKey?: keyof AdminDashboardStats;
 };
 
 type DashboardSection = {
@@ -79,6 +80,11 @@ export function AdminDashboard() {
       icon: <SlidersHorizontal className="size-8 text-primary" aria-hidden />,
       title: t('cards.divarFilters.title'),
       countKey: 'divarCategoryFilters',
+    },
+    divarReports: {
+      href: '/admin/divar-reports',
+      icon: <BarChart3 className="size-8 text-primary" aria-hidden />,
+      title: t('cards.divarReports.title'),
     },
     postsToAnalyze: {
       href: '/admin/divar-posts',
@@ -210,7 +216,13 @@ export function AdminDashboard() {
     {
       title: t('sections.divar.title'),
       description: t('sections.divar.description'),
-      items: [items.divarCategories, items.divarFilters, items.postsToAnalyze, items.divarSessions],
+      items: [
+        items.divarCategories,
+        items.divarFilters,
+        items.divarReports,
+        items.postsToAnalyze,
+        items.divarSessions,
+      ],
     },
     {
       title: t('sections.integrations.title'),
@@ -239,7 +251,7 @@ export function AdminDashboard() {
             </div>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
               {section.items.map((item) => {
-                const count = stats?.[item.countKey];
+                const count = item.countKey ? stats?.[item.countKey] : undefined;
                 return (
                   <Link
                     key={item.href}

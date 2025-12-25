@@ -304,6 +304,8 @@ model DivarPost {
   @@index([districtId])
   @@index([status])
   @@index([createdAt])
+  @@index([categorySlug, createdAt, districtId])
+  @@index([cat3, createdAt, districtId])
   @@index([businessRef])
   @@index([phoneNumber])
   @@index([contactUuid, phoneNumber])

@@ -17,13 +17,15 @@ import {
 import { toast } from '@/components/ui/use-toast';
 import { usePwaPrompt } from '@/hooks/usePwaPrompt';
 import { Link } from '@/i18n/routing';
-import { useLogoutMutation } from '@/features/api/apiSlice';
+import { useGetRingBinderFoldersQuery, useLogoutMutation } from '@/features/api/apiSlice';
 import { clearAuth } from '@/features/auth/authSlice';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
+import type { RingBinderFolder } from '@/types/ring-binder';
 import {
   Menu,
   X,
   DownloadCloud,
+  ChevronDown,
   LogOut,
   LayoutDashboard,
   Home,
@@ -109,6 +111,14 @@ export function SiteHeader() {
   const showAdminNav = showAuthNav && auth.user?.role === 'ADMIN';
   const hasExistingInstall = isStandalone || hasRelatedInstall;
   const showInstallButton = !isStandalone;
+  const {
+    data: ringBinderData,
+    isLoading: isRingBinderLoading,
+    isError: isRingBinderError,
+  } = useGetRingBinderFoldersQuery(undefined, {
+    skip: !showAuthNav,
+  });
+  const ringBinderFolders = ringBinderData?.folders ?? [];
 
   const handleLogout = async () => {
     try {
@@ -236,7 +246,7 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur transition-colors">
       <div className="flex h-16 w-full items-center justify-between px-4">
-        <div className="flex items-center gap-3">
+        <div className="flex w-full items-center gap-3 sm:w-auto rtl:justify-between sm:rtl:justify-start">
           <button
             type="button"
             className="bg-card inline-flex items-center justify-center rounded-md border border-border/80 px-2.5 py-2 text-sm font-medium text-foreground transition hover:bg-secondary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:hidden"
@@ -245,8 +255,16 @@ export function SiteHeader() {
           >
             <Menu className="size-5" aria-hidden />
           </button>
-          <Link href="/" className="text-lg font-semibold">
-            {t('header.brand')}
+          <Link href="/" className="flex items-center gap-2">
+            <Image
+              src="/logo-mahan-file.png"
+              alt={t('header.brand')}
+              width={1000}
+              height={357}
+              className="h-9 w-auto shrink-0 sm:h-12"
+              priority
+            />
+            <span className="sr-only">{t('header.brand')}</span>
           </Link>
           <nav className="hidden items-center gap-1 sm:flex">
             <Link
@@ -266,13 +284,16 @@ export function SiteHeader() {
               </Link>
             )}
             {showAuthNav && (
-              <Link
-                href="/dashboard/ring-binder"
-                className="items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
-              >
-                {renderNavIcon('ringBinder', 'hidden lg:block')}
-                {t('header.nav.ringBinder')}
-              </Link>
+              <RingBinderNavDropdown
+                label={t('header.nav.ringBinder')}
+                manageLabel={t('ringBinder.title')}
+                folders={ringBinderFolders}
+                isLoading={isRingBinderLoading}
+                isError={isRingBinderError}
+                loadingLabel={t('dashboard.filters.ringBinder.loading')}
+                emptyLabel={t('ringBinder.list.emptyTitle')}
+                errorLabel={t('ringBinder.list.error')}
+              />
             )}
             {showAuthNav && (
               <DesktopNavDropdown
@@ -368,6 +389,13 @@ export function SiteHeader() {
         isAdmin={showAdminNav}
         adminLabel={t('header.nav.admin')}
         adminHref="/admin"
+        ringBinderFolders={ringBinderFolders}
+        ringBinderLoading={isRingBinderLoading}
+        ringBinderError={isRingBinderError}
+        ringBinderManageLabel={t('ringBinder.title')}
+        ringBinderLoadingLabel={t('dashboard.filters.ringBinder.loading')}
+        ringBinderEmptyLabel={t('ringBinder.list.emptyTitle')}
+        ringBinderErrorLabel={t('ringBinder.list.error')}
         menuTitle={t('header.mobileMenuTitle')}
         closeLabel={t('header.mobileMenuClose')}
         themeToggleLabel={t('header.themeToggle')}
@@ -419,6 +447,76 @@ function DesktopNavDropdown({ label, icon, items }: DesktopNavDropdownProps) {
               {item.label}
             </Link>
           ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+type RingBinderNavDropdownProps = {
+  label: string;
+  manageLabel: string;
+  folders: RingBinderFolder[];
+  isLoading: boolean;
+  isError: boolean;
+  loadingLabel: string;
+  emptyLabel: string;
+  errorLabel: string;
+};
+
+function RingBinderNavDropdown({
+  label,
+  manageLabel,
+  folders,
+  isLoading,
+  isError,
+  loadingLabel,
+  emptyLabel,
+  errorLabel,
+}: RingBinderNavDropdownProps) {
+  const hasFolders = folders.length > 0;
+  const maxLabelLength = 15;
+  const truncateLabel = (name: string) =>
+    name.length > maxLabelLength ? `${name.slice(0, maxLabelLength)}...` : name;
+
+  return (
+    <div className="group relative">
+      <Link
+        href="/dashboard/ring-binder"
+        className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground"
+        aria-haspopup="menu"
+      >
+        {renderNavIcon('ringBinder', 'hidden lg:block')}
+        {label}
+      </Link>
+      <div className="absolute start-0 top-full z-50 hidden w-max min-w-48 border border-border/70 bg-background p-2 shadow-lg group-focus-within:block group-hover:block">
+        <div className="flex flex-col divide-y divide-border/70">
+          <Link
+            href="/dashboard/ring-binder"
+            className="flex items-center gap-2 whitespace-nowrap px-3 py-2 text-sm text-foreground transition-colors hover:bg-secondary/60"
+          >
+            {renderNavIcon('ringBinder', 'hidden lg:block')}
+            {manageLabel}
+          </Link>
+          {isLoading ? (
+            <div className="px-3 py-2 text-sm text-muted-foreground">{loadingLabel}</div>
+          ) : isError ? (
+            <div className="px-3 py-2 text-sm text-muted-foreground">{errorLabel}</div>
+          ) : hasFolders ? (
+            folders.map((folder) => (
+              <Link
+                key={folder.id}
+                href={`/dashboard?ringFolderId=${encodeURIComponent(folder.id)}`}
+                className="flex items-center gap-2 whitespace-nowrap px-3 py-2 text-sm text-foreground transition-colors hover:bg-secondary/60"
+                title={folder.name}
+              >
+                {renderNavIcon('ringBinder', 'hidden lg:block')}
+                {truncateLabel(folder.name)}
+              </Link>
+            ))
+          ) : (
+            <div className="px-3 py-2 text-sm text-muted-foreground">{emptyLabel}</div>
+          )}
         </div>
       </div>
     </div>
@@ -513,6 +611,13 @@ type MobileNavigationDrawerProps = {
   menuTitle: string;
   closeLabel: string;
   themeToggleLabel: string;
+  ringBinderFolders: RingBinderFolder[];
+  ringBinderLoading: boolean;
+  ringBinderError: boolean;
+  ringBinderManageLabel: string;
+  ringBinderLoadingLabel: string;
+  ringBinderEmptyLabel: string;
+  ringBinderErrorLabel: string;
 };
 
 function MobileNavigationDrawer({
@@ -536,8 +641,25 @@ function MobileNavigationDrawer({
   menuTitle,
   closeLabel,
   themeToggleLabel,
+  ringBinderFolders,
+  ringBinderLoading,
+  ringBinderError,
+  ringBinderManageLabel,
+  ringBinderLoadingLabel,
+  ringBinderEmptyLabel,
+  ringBinderErrorLabel,
 }: MobileNavigationDrawerProps) {
   const themeToggleRef = useRef<HTMLButtonElement>(null);
+  const [ringBinderExpanded, setRingBinderExpanded] = useState(false);
+  const maxLabelLength = 15;
+  const truncateLabel = (name: string) =>
+    name.length > maxLabelLength ? `${name.slice(0, maxLabelLength)}...` : name;
+
+  useEffect(() => {
+    if (!open) {
+      setRingBinderExpanded(false);
+    }
+  }, [open]);
   return (
     <Dialog open={open} onOpenChange={onOpenChange} disableBackClose>
       {/* eslint-disable tailwindcss/classnames-order */}
@@ -603,17 +725,86 @@ function MobileNavigationDrawer({
                 if (b.key === 'login') return 1;
                 return 0;
               })
-              .map((item) => (
-              <Link
-                key={item.key}
-                href={item.href}
-                className="flex items-center gap-2 rounded-lg border border-transparent px-3 py-2 text-sm font-medium text-foreground transition hover:border-border/70 hover:bg-secondary/60"
-                onClick={() => onOpenChange(false)}
-              >
-                {renderNavIcon(item.icon)}
-                {item.label}
-              </Link>
-            ))}
+              .map((item) => {
+                if (item.key === 'ring-binder' && isAuthenticated) {
+                  return (
+                    <div key={item.key} className="space-y-1">
+                      <button
+                        type="button"
+                        className="flex w-full items-center justify-between gap-2 rounded-lg border border-transparent px-3 py-2 text-sm font-medium text-foreground transition hover:border-border/70 hover:bg-secondary/60"
+                        onClick={() => setRingBinderExpanded((prev) => !prev)}
+                        aria-expanded={ringBinderExpanded}
+                        aria-controls="ring-binder-submenu"
+                      >
+                        <span className="flex items-center gap-2">
+                          {renderNavIcon(item.icon)}
+                          {item.label}
+                        </span>
+                        <ChevronDown
+                          className={cn(
+                            'size-4 text-muted-foreground transition-transform',
+                            ringBinderExpanded ? 'rotate-180' : '',
+                          )}
+                          aria-hidden
+                        />
+                      </button>
+                      {ringBinderExpanded ? (
+                        <div
+                          id="ring-binder-submenu"
+                          className="rounded-lg border border-border/70 bg-muted/30 p-1"
+                        >
+                          <Link
+                            href="/dashboard/ring-binder"
+                            className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-foreground transition hover:bg-secondary/60"
+                            onClick={() => onOpenChange(false)}
+                          >
+                            {renderNavIcon('ringBinder')}
+                            {ringBinderManageLabel}
+                          </Link>
+                          {ringBinderLoading ? (
+                            <div className="px-3 py-2 text-sm text-muted-foreground">
+                              {ringBinderLoadingLabel}
+                            </div>
+                          ) : ringBinderError ? (
+                            <div className="px-3 py-2 text-sm text-muted-foreground">
+                              {ringBinderErrorLabel}
+                            </div>
+                          ) : ringBinderFolders.length > 0 ? (
+                            ringBinderFolders.map((folder) => (
+                              <Link
+                                key={folder.id}
+                                href={`/dashboard?ringFolderId=${encodeURIComponent(folder.id)}`}
+                                className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-foreground transition hover:bg-secondary/60"
+                                onClick={() => onOpenChange(false)}
+                                title={folder.name}
+                              >
+                                {renderNavIcon('ringBinder')}
+                                {truncateLabel(folder.name)}
+                              </Link>
+                            ))
+                          ) : (
+                            <div className="px-3 py-2 text-sm text-muted-foreground">
+                              {ringBinderEmptyLabel}
+                            </div>
+                          )}
+                        </div>
+                      ) : null}
+                    </div>
+                  );
+                }
+
+                return (
+                  <Link
+                    key={item.key}
+                    href={item.href}
+                    className="flex items-center gap-2 rounded-lg border border-transparent px-3 py-2 text-sm font-medium text-foreground transition hover:border-border/70 hover:bg-secondary/60"
+                    onClick={() => onOpenChange(false)}
+                  >
+                    {renderNavIcon(item.icon)}
+                    {item.label}
+                  </Link>
+                );
+              })}
             {isAuthenticated ? (
               <div className="pt-2">
                 <CodeSearch variant="mobile" onSuccess={() => onOpenChange(false)} />

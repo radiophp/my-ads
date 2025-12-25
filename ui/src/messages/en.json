@@ -758,6 +758,10 @@
           "title": "Divar filters",
           "description": "Inspect stored filter payloads per Divar category."
         },
+        "divarReports": {
+          "title": "Divar reports",
+          "description": "Analyze district price ranges for Divar listings."
+        },
         "postsToAnalyze": {
           "title": "Posts to analyze",
           "description": "Review Divar posts queued for normalization."
@@ -822,6 +826,53 @@
           "title": "Arka headers",
           "description": "Manage Arka API headers used to fetch phone numbers."
         }
+      }
+    },
+    "divarReports": {
+      "title": "Divar district price report",
+      "description": "Select a leaf category and date range to compare district price ranges.",
+      "filters": {
+        "search": "Category search",
+        "searchPlaceholder": "Search categories",
+        "category": "Category",
+        "categoryPlaceholder": "Select a leaf category",
+        "startDate": "Start date",
+        "endDate": "End date",
+        "minValue": "Minimum value",
+        "maxValue": "Maximum value",
+        "submit": "Generate report",
+        "loading": "Generating report..."
+      },
+      "summary": {
+        "category": "Category",
+        "range": "Date range",
+        "districts": "Districts",
+        "posts": "Posts",
+        "minValue": "Minimum value",
+        "maxValue": "Maximum value"
+      },
+      "table": {
+        "title": "District price ranges",
+        "description": "Values are calculated from posts within the selected date range. Values outside the min/max range are ignored.",
+        "district": "District",
+        "posts": "Posts",
+        "priceTotal": "Total price",
+        "pricePerSquare": "Price per square",
+        "rentAmount": "Rent",
+        "depositAmount": "Deposit",
+        "min": "Min",
+        "avg": "Avg",
+        "max": "Max"
+      },
+      "empty": "No rows found for the selected filters.",
+      "errors": {
+        "missingCategory": "Select a leaf category.",
+        "missingDates": "Select a start and end date.",
+        "invalidRange": "Start date must be before end date.",
+        "invalidMinValue": "Enter a valid minimum value.",
+        "invalidMaxValue": "Enter a valid maximum value.",
+        "invalidMaxRange": "Maximum value must be greater than minimum value.",
+        "fetch": "Unable to load the report right now."
       }
     },
     "featuredPosts": {
@@ -1914,7 +1965,7 @@
   },
   "ringBinder": {
     "badge": "Ring binder",
-    "title": "Ring binder folders",
+    "title": "Ring binders",
     "description": "Organize future leads by creating quick folders for each category or customer.",
     "form": {
       "title": "Create a folder",

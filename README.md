@@ -27,6 +27,7 @@ The **My Ads** project is a NestJS + Fastify backend that powers a classified ad
 - **Slides Module (`modules/slides`)** — Hero slides for the homepage with admin CRUD and ordering.
 - **Featured Posts Module (`modules/featured-posts`)** — Admin-curated posts for the homepage carousel (cached in Redis for 2 hours).
 - **SEO Settings Module (`modules/seo-settings`)** — Page-level metadata with admin updates (home, news list, blog list, about, dashboard, preview).
+- **Website Settings Module (`modules/website-settings`)** — Public-facing contact info, social links, and about-us content managed via admin.
 - **Post Codes & Search** — Every post has a numeric code (starts at 1000). Codes appear on cards, detail, print, share messages, and Telegram captions. Use the header code search to jump to a post (rate limited).
 
 ### Platform Services
@@ -103,6 +104,7 @@ The frontend pulls its env from the repo root `.env` (e.g., `NEXT_PUBLIC_API_BAS
 - Feed loading state shows 12 skeleton cards matching the post-card layout. If you change card styling, mirror updates in `ui/src/components/dashboard/divar-posts-feed.tsx` so skeletons stay in sync.
 - Public news pages are server-rendered at `/news` and `/news/[slug]` with a 5-minute revalidation window (`revalidate = 300`), and the header nav links to `/news`.
 - Public blog pages are server-rendered at `/blog` and `/blog/[slug]` with a 5-minute revalidation window (`revalidate = 300`), and the header nav links to `/blog`.
+- The login flow is hosted at `/login`; the homepage now focuses on previews (hero slides, KPIs, featured posts, and latest news/blog cards).
 - The homepage renders hero slides and featured posts from admin-managed sources (`/admin/slides`, `/admin/featured-posts`).
 - SEO settings are managed under `/admin/seo` and applied to public pages, including `/preview`.
 - The preview page lives at `/preview`, revalidates every 60 seconds, and accepts `city` / `district` query params (e.g., `/preview?city=karaj&district=azimiyeh`).
@@ -234,6 +236,11 @@ Need a one-off run for debugging? Use the single-shot scripts, each of which loa
 - `npm run divar:fetch-posts`
 - `npm run divar:analyze-posts`
 - `npm run divar:sync-media`
+- `npm run news:crawl:eghtesad`
+- `npm run news:crawl:khabaronline`
+- `npm run news:crawl:asriran`
+
+News crawlers are controlled by the **News Sources** admin list; deactivate a source to pause its crawl without code changes. Each crawler runs on a 15-minute schedule when cron is enabled.
 
 ### Phone number fetch worker (Divar)
 

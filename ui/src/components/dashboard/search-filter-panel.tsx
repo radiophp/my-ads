@@ -37,7 +37,7 @@ import {
   useGetProvincesQuery,
   useGetCitiesQuery,
   useGetDistrictsQuery,
-  useGetDivarCategoriesQuery,
+  useGetPublicDivarCategoriesQuery,
   useGetRingBinderFoldersQuery,
 } from '@/features/api/apiSlice';
 import {
@@ -154,7 +154,7 @@ export function DashboardSearchFilterPanel() {
     data: categories = [],
     isLoading: categoriesLoading,
     isFetching: categoriesFetching,
-  } = useGetDivarCategoriesQuery();
+  } = useGetPublicDivarCategoriesQuery();
 
   const {
     data: ringBinderData,

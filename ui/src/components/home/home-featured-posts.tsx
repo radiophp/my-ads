@@ -155,7 +155,7 @@ export function HomeFeaturedPosts({
     return (
       <section className="space-y-4">
         <div className="space-y-2">
-          <h2 className="text-2xl font-semibold text-foreground">{title}</h2>
+          <h2 className="text-lg font-semibold text-foreground">{title}</h2>
         </div>
         <p className="text-sm text-muted-foreground">{emptyLabel}</p>
       </section>
@@ -164,8 +164,8 @@ export function HomeFeaturedPosts({
 
   return (
     <section className="space-y-6 pb-10">
-      <div className="flex flex-col gap-4 sm:grid sm:grid-cols-[auto,1fr,auto] sm:items-center">
-        <div className="flex justify-center sm:justify-start">
+      <div className="grid grid-cols-[auto,1fr,auto] items-center gap-2 sm:gap-4">
+        <div className="flex justify-start">
           <button
             type="button"
             className={cn(
@@ -182,10 +182,12 @@ export function HomeFeaturedPosts({
             )}
           </button>
         </div>
-        <div className="space-y-2 text-center">
-          <h2 className="text-2xl font-semibold text-foreground">{title}</h2>
+        <div className="min-w-0 text-center">
+          <h2 className="truncate text-[13px] font-semibold leading-snug text-foreground sm:text-lg">
+            {title}
+          </h2>
         </div>
-        <div className="flex justify-center sm:justify-end">
+        <div className="flex justify-end">
           <button
             type="button"
             className={cn(

@@ -546,7 +546,7 @@ function MobileNavigationDrawer({
         className="left-auto right-0 top-0 h-dvh w-72 max-w-[85vw] translate-x-full translate-y-0 rounded-none border-0 bg-background p-0 text-foreground transition-transform duration-300 data-[state=open]:translate-x-0 data-[state=closed]:translate-x-full sm:hidden"
       >
         <DialogTitle className="sr-only">{menuTitle}</DialogTitle>
-        <div className="flex h-full flex-col border-l border-border/60">
+        <div className="flex h-full flex-col overflow-y-auto overscroll-contain border-l border-border/60">
           <div className="flex items-center justify-between border-b border-border/60 p-4">
             <p className="text-base font-semibold">{menuTitle}</p>
             <Button

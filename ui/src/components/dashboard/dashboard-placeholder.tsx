@@ -56,11 +56,17 @@ export function DashboardPlaceholder() {
   const { data: cities = [] } = useGetCitiesQuery(needsCities ? undefined : skipToken);
   const { data: districts = [] } = useGetDistrictsQuery(needsDistricts ? undefined : skipToken);
   const appliedLocationRef = useRef<string | null>(null);
+  const appliedRingFolderRef = useRef<string | null>(null);
 
   useEffect(() => {
     const ringFolderParam =
       searchParams.get('ringFolderId') ?? searchParams.get('ringBinderFolderId');
     if (ringFolderParam) {
+      if (appliedRingFolderRef.current === ringFolderParam) {
+        return;
+      }
+      appliedRingFolderRef.current = ringFolderParam;
+      dispatch(resetSearchFilter());
       dispatch(setRingBinderFolder(ringFolderParam));
     }
   }, [dispatch, searchParams]);

@@ -2,6 +2,9 @@ const STORAGE_HOSTS = new Set([
   'storage.mahanfile.com',
   'dev-storage.mahanfile.com',
   'mahan-storage.toncloud.observer',
+  'mahanfile.com',
+  'www.mahanfile.com',
+  'dev.mahanfile.com',
   'minio',
 ]);
 

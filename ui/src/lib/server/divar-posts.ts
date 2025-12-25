@@ -46,3 +46,43 @@ export async function fetchDivarPostForMetadata(
     return null;
   }
 }
+
+export async function fetchPreviewPosts(options: {
+  city?: string;
+  district?: string;
+  limit?: number;
+}): Promise<DivarPostSummary[]> {
+  const apiBaseUrl = getApiBaseUrl();
+  if (!apiBaseUrl) {
+    return [];
+  }
+
+  const params = new URLSearchParams();
+  if (options.city) {
+    params.set('city', options.city);
+  }
+  if (options.district) {
+    params.set('district', options.district);
+  }
+  if (options.limit) {
+    params.set('limit', String(options.limit));
+  }
+
+  const url = params.toString()
+    ? `${apiBaseUrl}/divar-posts/preview?${params.toString()}`
+    : `${apiBaseUrl}/divar-posts/preview`;
+
+  try {
+    const response = await fetch(url, {
+      headers: { Accept: 'application/json' },
+      next: { revalidate: 60 },
+    });
+    if (!response.ok) {
+      return [];
+    }
+    const data = (await response.json()) as DivarPostSummary[];
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+}

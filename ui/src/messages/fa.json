@@ -18,7 +18,8 @@
       "news": "اخبار",
       "blog": "وبلاگ",
       "about": "درباره ما",
-      "guides": "راهنماها"
+      "guides": "راهنماها",
+      "login": "ورود"
     },
     "docs": "مستندات",
     "languageLabel": "زبان",
@@ -696,7 +697,6 @@
       "printSummary": "خلاصه آگهی",
       "printAmenities": "امکانات",
       "printAttributes": "جزئیات",
-      "shareMessageTitleLabel": "عنوان",
       "shareMessageCategoryLabel": "دسته‌بندی",
       "shareMessageBusinessLabel": "نوع آگهی‌دهنده"
     }
@@ -922,7 +922,8 @@
         "newsList": "فهرست اخبار",
         "blogList": "فهرست وبلاگ",
         "about": "درباره ما",
-        "dashboard": "داشبورد"
+        "dashboard": "داشبورد",
+        "preview": "پیش‌نمایش آگهی‌ها"
       },
       "toast": {
         "savedTitle": "تنظیمات سئو ذخیره شد",
@@ -985,9 +986,9 @@
         "category": "دسته‌بندی",
         "source": "منبع",
         "tags": "برچسب‌ها",
-      "updated": "آخرین بروزرسانی",
-      "actions": "عملیات"
-    },
+        "updated": "آخرین بروزرسانی",
+        "actions": "عملیات"
+      },
       "fields": {
         "title": "عنوان",
         "titlePlaceholder": "عنوان خبر را بنویسید",
@@ -1492,24 +1493,24 @@
         "userId": "شناسه کاربر",
         "savedFilterId": "شناسه مجموعه فیلتر",
         "postId": "شناسه آگهی",
-      "message": "پیام (اختیاری)",
-      "messagePlaceholder": "اگر خالی بماند از عنوان/توضیح آگهی استفاده می‌شود",
-      "sendTelegram": "ارسال همزمان از طریق ربات تلگرام",
-      "sendTelegramHelper": "کاربر باید ربات را استارت کرده و شماره خود را ارسال کرده باشد."
-    },
+        "message": "پیام (اختیاری)",
+        "messagePlaceholder": "اگر خالی بماند از عنوان/توضیح آگهی استفاده می‌شود",
+        "sendTelegram": "ارسال همزمان از طریق ربات تلگرام",
+        "sendTelegramHelper": "کاربر باید ربات را استارت کرده و شماره خود را ارسال کرده باشد."
+      },
       "actions": {
         "send": "ارسال اعلان",
         "sending": "در حال ارسال…"
       },
       "toast": {
         "successTitle": "اعلان در صف قرار گرفت",
-    "successDescription": "شناسه اعلان: {id} • تلگرام: {tg}",
-    "telegramSent": "ارسال شد",
-    "telegramNotSent": "ارسال نشد",
-    "telegramSkipped": "ارسال تلگرام غیرفعال بود",
-    "errorTitle": "ارسال اعلان ناموفق بود",
-    "errorDescription": "شناسه‌ها را بررسی و دوباره تلاش کنید."
-  },
+        "successDescription": "شناسه اعلان: {id} • تلگرام: {tg}",
+        "telegramSent": "ارسال شد",
+        "telegramNotSent": "ارسال نشد",
+        "telegramSkipped": "ارسال تلگرام غیرفعال بود",
+        "errorTitle": "ارسال اعلان ناموفق بود",
+        "errorDescription": "شناسه‌ها را بررسی و دوباره تلاش کنید."
+      },
       "errors": {
         "missing": "فیلدهای لازم وارد نشده‌اند",
         "required": "شناسه کاربر، مجموعه فیلتر و آگهی را وارد کنید."
@@ -1919,6 +1920,30 @@
   "footer": {
     "privacy": "حریم خصوصی",
     "terms": "شرایط استفاده",
-    "copyright": "© {year} ماهان فایل"
+    "copyright": "© {year} ماهان فایل",
+    "defaultTitle": "ماهان فایل",
+    "defaultDescription": "تحلیل بازار، اخبار تخصصی و آگهی‌های املاک در یکجا.",
+    "linksTitle": "خبرها و مقالات",
+    "newsLink": "خبرها",
+    "blogLink": "مقالات",
+    "contactTitle": "راه‌های ارتباطی",
+    "contactEmpty": "اطلاعات تماس هنوز ثبت نشده است.",
+    "instagram": "اینستاگرام",
+    "telegramChannel": "کانال تلگرام",
+    "telegramBot": "ربات تلگرام",
+    "districtsTitle": "محله‌های تحت پوشش البرز",
+    "districtsEmpty": "محله‌ای یافت نشد.",
+    "allCitiesTab": "همه شهرها",
+    "otherCitiesTab": "سایر شهرها"
+  },
+  "preview": {
+    "title": "پیش‌نمایش آگهی‌ها",
+    "titleWithLocation": "پیش‌نمایش آگهی‌های {location}",
+    "description": "این صفحه فقط پیش‌نمایش است. برای مشاهده جزئیات آگهی‌ها و اعمال فیلترهای کامل وارد حساب کاربری شوید.",
+    "loginTitle": "برای ادامه وارد شوید",
+    "loginDescription": "مشاهده جزئیات و فیلتر دقیق آگهی‌ها فقط برای کاربران واردشده امکان‌پذیر است.",
+    "loginAction": "ورود به حساب",
+    "loginClose": "فعلاً نه",
+    "empty": "هیچ آگهی برای این محدوده پیدا نشد."
   }
 }

@@ -79,6 +79,7 @@ export type DivarPostSummary = {
   provinceName: string | null;
   categorySlug: string;
   categoryName?: string | null;
+  categoryParentName?: string | null;
   businessType: string | null;
   publishedAt: string | null;
   publishedAtJalali: string | null;

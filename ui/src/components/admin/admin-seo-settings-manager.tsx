@@ -19,7 +19,14 @@ type SeoDraft = {
   keywords: string;
 };
 
-const PAGE_KEYS: SeoPageKey[] = ['home', 'news-list', 'blog-list', 'about', 'dashboard'];
+const PAGE_KEYS: SeoPageKey[] = [
+  'home',
+  'news-list',
+  'blog-list',
+  'about',
+  'dashboard',
+  'preview',
+];
 
 const emptyDraft: SeoDraft = {
   title: '',
@@ -66,6 +73,7 @@ export function AdminSeoSettingsManager() {
       'blog-list': t('pages.blogList'),
       about: t('pages.about'),
       dashboard: t('pages.dashboard'),
+      preview: t('pages.preview'),
     }),
     [t],
   );

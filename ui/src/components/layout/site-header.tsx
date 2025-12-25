@@ -35,6 +35,7 @@ import {
   Newspaper,
   BookOpen,
   Info,
+  LogIn,
 } from 'lucide-react';
 import { useNotificationsSocket } from '@/features/notifications/useNotificationsSocket';
 import { CodeSearch } from '@/components/layout/code-search';
@@ -51,7 +52,8 @@ type NavIconKey =
   | 'news'
   | 'newsBlog'
   | 'blog'
-  | 'about';
+  | 'about'
+  | 'login';
 
 type NavItemConfig = {
   key: string;
@@ -73,6 +75,7 @@ const navIconComponents: Record<NavIconKey, typeof LayoutDashboard> = {
   newsBlog: Newspaper,
   blog: BookOpen,
   about: Info,
+  login: LogIn,
 };
 
 function renderNavIcon(icon: NavIconKey, className?: string) {
@@ -102,6 +105,7 @@ export function SiteHeader() {
 
   const isAuthenticated = Boolean(auth.accessToken);
   const showAuthNav = isHydrated && isAuthenticated;
+  const showLoginNav = isHydrated && !isAuthenticated;
   const showAdminNav = showAuthNav && auth.user?.role === 'ADMIN';
   const hasExistingInstall = isStandalone || hasRelatedInstall;
   const showInstallButton = !isStandalone;
@@ -200,6 +204,13 @@ export function SiteHeader() {
       href: '/about',
       visible: true,
       icon: 'about' as const,
+    },
+    {
+      key: 'login',
+      label: t('header.nav.login'),
+      href: '/login',
+      visible: showLoginNav,
+      icon: 'login' as const,
     },
   ];
 
@@ -315,6 +326,15 @@ export function SiteHeader() {
           ) : null}
           {showAuthNav ? <CodeSearch /> : null}
           <ThemeToggle />
+          {showLoginNav ? (
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground"
+            >
+              {renderNavIcon('login', 'hidden lg:block')}
+              {t('header.nav.login')}
+            </Link>
+          ) : null}
           {showAuthNav && auth.user ? (
             <UserMenu
               user={auth.user}
@@ -577,7 +597,13 @@ function MobileNavigationDrawer({
             </div>
           ) : null}
           <nav className="flex flex-col gap-2 p-4">
-            {navItems.filter((item) => item.visible).map((item) => (
+            {[...navItems.filter((item) => item.visible)]
+              .sort((a, b) => {
+                if (a.key === 'login') return -1;
+                if (b.key === 'login') return 1;
+                return 0;
+              })
+              .map((item) => (
               <Link
                 key={item.key}
                 href={item.href}

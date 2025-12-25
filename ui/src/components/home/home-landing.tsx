@@ -1,7 +1,6 @@
 import { headers } from 'next/headers';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { HomeCategoryKpis } from '@/components/home/home-category-kpis';
-import { HomeAuthPanel } from '@/components/home/home-auth-panel';
 import { HomeSlider } from '@/components/home/home-slider';
 import type { NewsItem, NewsListResponse } from '@/types/news';
 import type { BlogItem, BlogListResponse } from '@/types/blog';
@@ -144,23 +143,7 @@ export async function HomeLanding() {
           <HomeSlider slides={slides} locale={locale} appBase={appBase} />
         </div>
       ) : null}
-      <main className="grid w-full gap-10 py-20 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-start">
-        <section className="space-y-5">
-          <div className="inline-flex rounded-full border border-border/70 bg-muted px-3 py-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            {t('badge')}
-          </div>
-          <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">{t('title')}</h1>
-          <p className="text-lg text-muted-foreground sm:text-xl">{t('subtitle')}</p>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li>{t('bullets.otp')}</li>
-            <li>{t('bullets.dashboard')}</li>
-            <li>{t('bullets.localization')}</li>
-          </ul>
-        </section>
-        <section>
-          <HomeAuthPanel />
-        </section>
-      </main>
+      <main className="w-full py-12" />
       <HomeCategoryKpis />
       <section className="space-y-6 pb-16">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">

@@ -8,12 +8,16 @@ import { Toaster } from '@/components/ui/toaster';
 import { store } from '@/lib/store';
 import { AuthInitializer } from '@/components/auth/auth-initializer';
 import { PwaServiceWorker } from '@/components/pwa-service-worker';
+import { PushNotificationListener } from '@/components/notifications/push-notification-listener';
+import { PushSubscriptionSync } from '@/components/notifications/push-subscription-sync';
 
 export function Providers({ children }: PropsWithChildren) {
   return (
     <ReduxProvider store={store}>
       <AuthInitializer />
       <PwaServiceWorker />
+      <PushSubscriptionSync />
+      <PushNotificationListener />
       {children}
       <Toaster />
       <PwaInstallPrompt />

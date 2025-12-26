@@ -505,6 +505,14 @@
         "enabling": "در حال فعال‌سازی…",
         "enabledTitle": "پوش فعال شد",
         "enabledDescription": "حتی وقتی اپ بسته است اعلان دریافت می‌کنید.",
+        "permissionDenied": "اعلان‌ها در تنظیمات مرورگر مسدود شده‌اند.",
+        "status": {
+          "checking": "پوش: در حال بررسی…",
+          "active": "پوش: فعال",
+          "inactive": "پوش: فعال نشده",
+          "blocked": "پوش: مسدود",
+          "unsupported": "پوش: پشتیبانی نمی‌شود"
+        },
         "errorTitle": "فعال‌سازی پوش ناموفق بود",
         "errorDescription": "مجوزها را بررسی و دوباره تلاش کنید."
       },
@@ -1625,7 +1633,8 @@
       "fields": {
         "userId": "شناسه کاربر",
         "savedFilterId": "شناسه مجموعه فیلتر",
-        "postId": "شناسه آگهی",
+        "postCode": "کد آگهی",
+        "postCodePlaceholder": "مثلاً 355325",
         "message": "پیام (اختیاری)",
         "messagePlaceholder": "اگر خالی بماند از عنوان/توضیح آگهی استفاده می‌شود",
         "sendTelegram": "ارسال همزمان از طریق ربات تلگرام",
@@ -1639,6 +1648,7 @@
         "successTitle": "اعلان در صف قرار گرفت",
         "successDescription": "شناسه اعلان: {id} • تلگرام: {tg}",
         "telegramSent": "ارسال شد",
+        "telegramQueued": "در صف ارسال",
         "telegramNotSent": "ارسال نشد",
         "telegramSkipped": "ارسال تلگرام غیرفعال بود",
         "errorTitle": "ارسال اعلان ناموفق بود",
@@ -1646,7 +1656,7 @@
       },
       "errors": {
         "missing": "فیلدهای لازم وارد نشده‌اند",
-        "required": "شناسه کاربر، مجموعه فیلتر و آگهی را وارد کنید."
+        "required": "شناسه کاربر، مجموعه فیلتر و کد آگهی را وارد کنید."
       },
       "tips": {
         "title": "نکات",

@@ -505,6 +505,14 @@
         "enabling": "Enabling…",
         "enabledTitle": "Push enabled",
         "enabledDescription": "We’ll deliver alerts even when the app is closed.",
+        "permissionDenied": "Notifications are blocked in your browser settings.",
+        "status": {
+          "checking": "Push: checking…",
+          "active": "Push: active",
+          "inactive": "Push: not enabled",
+          "blocked": "Push: blocked",
+          "unsupported": "Push: unavailable"
+        },
         "errorTitle": "Push failed",
         "errorDescription": "Could not enable push. Check permissions and try again."
       },
@@ -1625,7 +1633,8 @@
       "fields": {
         "userId": "User ID",
         "savedFilterId": "Saved filter ID",
-        "postId": "Post ID",
+        "postCode": "Post code",
+        "postCodePlaceholder": "e.g. 355325",
         "message": "Message (optional)",
         "messagePlaceholder": "Fallback to post title/description if empty",
         "sendTelegram": "Also send via Telegram bot",
@@ -1639,6 +1648,7 @@
         "successTitle": "Notification enqueued",
         "successDescription": "Notification ID: {id} • Telegram: {tg}",
         "telegramSent": "sent",
+        "telegramQueued": "queued",
         "telegramNotSent": "not sent",
         "telegramSkipped": "skipped",
         "errorTitle": "Failed to send notification",
@@ -1646,7 +1656,7 @@
       },
       "errors": {
         "missing": "Missing required fields",
-        "required": "Enter user ID, saved filter ID, and post ID."
+        "required": "Enter user ID, saved filter ID, and post code."
       },
       "tips": {
         "title": "Tips",

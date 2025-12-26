@@ -243,11 +243,21 @@ class QueueServiceMock
 }
 
 class MetricsServiceMock
-  implements Pick<MetricsService, 'recordHealthCheck' | 'observeHttp' | 'incrementUsersCreated'>
+  implements
+    Pick<
+      MetricsService,
+      | 'recordHealthCheck'
+      | 'observeHttp'
+      | 'incrementUsersCreated'
+      | 'incrementNotificationRetries'
+      | 'recordQueueMetrics'
+    >
 {
   recordHealthCheck = jest.fn();
   observeHttp(): void {}
   incrementUsersCreated(): void {}
+  incrementNotificationRetries(): void {}
+  recordQueueMetrics(): void {}
 }
 
 describe('App E2E', () => {

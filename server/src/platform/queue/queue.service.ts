@@ -11,7 +11,7 @@ import type { ConfirmChannel, ConsumeMessage } from 'amqplib';
 import type { RabbitMQConfig } from '@app/platform/config/rabbitmq.config';
 import type { JsonValue } from '@app/common/types/json.type';
 
-export type QueueName = 'email' | 'notification';
+export type QueueName = 'email' | 'notification' | 'notification-telegram';
 
 @Injectable()
 export class QueueService {

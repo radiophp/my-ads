@@ -30,6 +30,10 @@ import { MetricsService } from './metrics.service';
       name: 'users_created_total',
       help: 'Total number of users created',
     }),
+    makeCounterProvider({
+      name: 'notification_retries_total',
+      help: 'Total number of notification retry schedules',
+    }),
     makeGaugeProvider({
       name: 'health_dependency_status',
       help: 'Health status of dependencies (1 = up, 0 = down)',
@@ -40,6 +44,16 @@ import { MetricsService } from './metrics.service';
       help: 'Health check latency in seconds',
       labelNames: ['component'],
       buckets: [0.05, 0.1, 0.2, 0.5, 1, 2, 5],
+    }),
+    makeGaugeProvider({
+      name: 'rabbitmq_queue_messages',
+      help: 'RabbitMQ queue message counts',
+      labelNames: ['queue', 'state'],
+    }),
+    makeGaugeProvider({
+      name: 'rabbitmq_queue_consumers',
+      help: 'RabbitMQ queue consumer count',
+      labelNames: ['queue'],
     }),
   ],
   exports: [MetricsService, HttpMetricsInterceptor],

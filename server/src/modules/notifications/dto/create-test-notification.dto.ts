@@ -1,6 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsString, IsOptional, IsUUID, Length, IsBoolean } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsUUID,
+  Length,
+  IsBoolean,
+  ValidateIf,
+  IsInt,
+  Min,
+} from 'class-validator';
 
 export class CreateTestNotificationDto {
   @ApiProperty({ description: 'Target user id', format: 'uuid' })
@@ -11,9 +20,26 @@ export class CreateTestNotificationDto {
   @IsUUID()
   savedFilterId!: string;
 
-  @ApiProperty({ description: 'Divar post id to attach to the notification', format: 'uuid' })
+  @ApiProperty({
+    required: false,
+    description: 'Divar post id to attach to the notification (UUID).',
+    format: 'uuid',
+  })
+  @ValidateIf((object) => !object.postCode)
   @IsUUID()
-  postId!: string;
+  postId?: string;
+
+  @ApiProperty({
+    required: false,
+    description: 'Divar post code to attach to the notification (numeric).',
+  })
+  @ValidateIf((object) => !object.postId)
+  @Transform(({ value }) =>
+    value === undefined || value === null || value === '' ? undefined : Number(value),
+  )
+  @IsInt()
+  @Min(1000)
+  postCode?: number;
 
   @ApiProperty({
     required: false,

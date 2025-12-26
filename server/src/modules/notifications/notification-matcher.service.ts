@@ -39,6 +39,7 @@ export class NotificationMatcherService {
       retryIntervalMs: 180000,
       maxDeliveryAttempts: 3,
       retentionDays: 3,
+      alwaysSendPush: true,
     };
     this.scanWindowMinutes = config.scanWindowMinutes;
     this.scanBatchSize = config.scanBatchSize;

@@ -7,10 +7,19 @@ import type { PushConfig } from '@app/platform/config/push.config';
 import { PrismaService } from '@app/platform/database/prisma.service';
 import type { RealtimeNotificationPayload } from './notification.types';
 
+export type PushDeliveryResult = {
+  delivered: boolean;
+  attempted: boolean;
+  reason?: 'disabled' | 'no_subscriptions' | 'send_error' | 'timeout';
+  error?: string;
+};
+
 @Injectable()
 export class PushNotificationService {
   private readonly logger = new Logger(PushNotificationService.name);
   private readonly enabled: boolean;
+  private readonly timeoutMs: number;
+  private readonly ttlSeconds = 3600;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -19,6 +28,7 @@ export class PushNotificationService {
     const cfg = configService.get<PushConfig>('push', { infer: true });
     if (cfg?.vapidPublicKey && cfg?.vapidPrivateKey) {
       this.enabled = true;
+      this.timeoutMs = cfg.timeoutMs;
       webPush.setVapidDetails(
         cfg.subject ?? 'mailto:admin@example.com',
         cfg.vapidPublicKey,
@@ -26,6 +36,7 @@ export class PushNotificationService {
       );
     } else {
       this.enabled = false;
+      this.timeoutMs = cfg?.timeoutMs ?? 8000;
     }
   }
 
@@ -56,13 +67,16 @@ export class PushNotificationService {
     await this.prisma.pushSubscription.delete({ where: { endpoint } }).catch(() => undefined);
   }
 
-  async sendToUser(userId: string, payload: RealtimeNotificationPayload): Promise<boolean> {
+  async sendToUser(
+    userId: string,
+    payload: RealtimeNotificationPayload,
+  ): Promise<PushDeliveryResult> {
     if (!this.enabled) {
-      return false;
+      return { delivered: false, attempted: false, reason: 'disabled' };
     }
     const subs = await this.prisma.pushSubscription.findMany({ where: { userId } });
     if (subs.length === 0) {
-      return false;
+      return { delivered: false, attempted: false, reason: 'no_subscriptions' };
     }
 
     const body = {
@@ -71,34 +85,75 @@ export class PushNotificationService {
         ? `${payload.filter.name}${payload.post.cityName ? ' • ' + payload.post.cityName : ''}`
         : (payload.post.cityName ?? 'New notification'),
       url: payload.post.permalink ?? `/dashboard/posts/${payload.post.id}`,
-      icon: payload.post.previewImageUrl ?? '/icons/icon-192x192.png',
+      icon: payload.post.previewImageUrl ?? '/fav/android-chrome-192x192.png',
+      badge: '/fav/favicon-32x32.png',
       tag: payload.id,
+      notificationId: payload.id,
     };
 
     let delivered = false;
+    let hadError = false;
+    let hadTimeout = false;
     await Promise.all(
       subs.map(async (sub) => {
         try {
-          await webPush.sendNotification(
-            {
-              endpoint: sub.endpoint,
-              keys: {
-                p256dh: sub.p256dh,
-                auth: sub.auth,
+          await this.withTimeout(
+            webPush.sendNotification(
+              {
+                endpoint: sub.endpoint,
+                keys: {
+                  p256dh: sub.p256dh,
+                  auth: sub.auth,
+                },
               },
-            },
-            JSON.stringify(body),
+              JSON.stringify(body),
+              {
+                TTL: this.ttlSeconds,
+                urgency: 'high',
+              },
+            ),
+            this.timeoutMs,
           );
           delivered = true;
         } catch (error) {
-          const message = (error as { statusCode?: number })?.statusCode;
-          if (message === 404 || message === 410) {
+          hadError = true;
+          if (error instanceof Error && error.message === 'push_timeout') {
+            hadTimeout = true;
+          }
+          const statusCode = (error as { statusCode?: number })?.statusCode;
+          if (statusCode === 404 || statusCode === 410) {
             await this.removeSubscription(sub.endpoint);
           }
           this.logger.warn(`Push delivery failed for user ${userId}: ${String(error)}`);
         }
       }),
     );
-    return delivered;
+    if (delivered) {
+      return { delivered: true, attempted: true };
+    }
+    if (hadTimeout) {
+      return { delivered: false, attempted: true, reason: 'timeout' };
+    }
+    if (hadError) {
+      return { delivered: false, attempted: true, reason: 'send_error' };
+    }
+    return { delivered: false, attempted: true, reason: 'send_error' };
+  }
+
+  private async withTimeout<T>(task: Promise<T>, timeoutMs: number): Promise<T> {
+    let timeout: NodeJS.Timeout | undefined;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeout = setTimeout(() => {
+        reject(new Error('push_timeout'));
+      }, timeoutMs);
+    });
+
+    try {
+      return await Promise.race([task, timeoutPromise]);
+    } finally {
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+    }
   }
 }

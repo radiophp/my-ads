@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Context, Markup, Telegraf, Telegram, session } from 'telegraf';
+import { Context, Markup, Telegraf, Telegram, session, Input } from 'telegraf';
+import type { InlineKeyboardMarkup } from '@telegraf/types';
 import { PrismaService } from '../../platform/database/prisma.service';
 
 type BotSession = { phone?: string };
@@ -13,11 +14,38 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
   private sender?: Telegram;
   private started = false;
   private phoneCache = new Map<number, string>();
+  private readonly sendTimeoutMs: number;
+  private readonly sendRetryAttempts: number;
+  private readonly sendRetryDelayMs: number;
+  private readonly appBaseUrl: string;
+  private readonly apiBaseUrl: string;
 
   constructor(
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
-  ) {}
+  ) {
+    this.sendTimeoutMs = this.toNumber(
+      this.configService.get<string>('TELEGRAM_SEND_TIMEOUT_MS'),
+      8000,
+    );
+    this.sendRetryAttempts = this.toNumber(
+      this.configService.get<string>('TELEGRAM_SEND_RETRY_ATTEMPTS'),
+      5,
+    );
+    this.sendRetryDelayMs = this.toNumber(
+      this.configService.get<string>('TELEGRAM_SEND_RETRY_DELAY_MS'),
+      5000,
+    );
+    this.appBaseUrl = this.normalizeBaseUrl(
+      this.configService.get<string>('NEXT_PUBLIC_APP_URL') ??
+        this.configService.get<string>('APP_PUBLIC_URL') ??
+        '',
+    );
+    this.apiBaseUrl = this.normalizeBaseUrl(
+      this.configService.get<string>('NEXT_PUBLIC_API_BASE_URL') ??
+        (this.appBaseUrl ? `${this.appBaseUrl}/api` : ''),
+    );
+  }
 
   onModuleInit(): void {
     // Optional auto-start when explicitly enabled to avoid running during normal HTTP boot.
@@ -112,6 +140,40 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     this.bot.hears('📂 نمایش فیلترهای ذخیره‌شده', (ctx: BotContext) =>
       this.handleSavedFilters(ctx),
     );
+    this.bot.action(/^zip:(.+)/, async (ctx: BotContext) => {
+      const data = (ctx.callbackQuery as any)?.data as string | undefined;
+      const postId = data?.slice(4).trim();
+      const callbackMessage = (ctx.callbackQuery as any)?.message;
+      const chatId = callbackMessage?.chat?.id ?? ctx.chat?.id;
+      const messageId = callbackMessage?.message_id as number | undefined;
+
+      if (!postId || !chatId) {
+        await ctx
+          .answerCbQuery('شناسه آگهی نامعتبر است.', { show_alert: true })
+          .catch(() => undefined);
+        return;
+      }
+
+      this.logger.log(
+        `Telegram ZIP requested for post ${postId} (chat ${chatId}, message ${messageId ?? 'n/a'}).`,
+      );
+
+      await ctx.answerCbQuery('در حال آماده‌سازی فایل…').catch(() => undefined);
+      await ctx.telegram.sendChatAction(chatId, 'upload_document').catch(() => undefined);
+
+      const ok = await this.sendPostPhotosZip({
+        chatId,
+        postId,
+        replyToMessageId: messageId,
+      });
+
+      if (!ok) {
+        await ctx.reply('امکان ارسال فایل زیپ وجود ندارد. دوباره تلاش کنید.');
+        this.logger.warn(`Telegram ZIP failed for post ${postId} (chat ${chatId}).`);
+      } else {
+        this.logger.log(`Telegram ZIP sent for post ${postId} (chat ${chatId}).`);
+      }
+    });
 
     this.bot.on('text', async (ctx: BotContext, next) => {
       // If we already have the phone, continue to other handlers (e.g., /filters).
@@ -338,22 +400,62 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       return false;
     }
 
-    // If phone is missing, optionally wait 2 minutes and retry once after refetch.
+    // If phone is missing, optionally wait 30 seconds and retry once after refetch.
     if (!post.phoneNumber && retryMissingPhone) {
-      await this.delay(120_000);
+      await this.delay(30_000);
       return this.sendPostInternal({ chatId, postId, retryMissingPhone: false });
     }
 
-    const caption = this.buildCaption(post, customMessage);
+    const dashboardUrl = this.buildDashboardPostUrl(post.id);
+    const caption = this.buildCaption(post, customMessage, dashboardUrl);
 
     const photos = (post.medias ?? [])
       .map((m) => m.localUrl || m.url || m.thumbnailUrl)
       .filter(Boolean) as string[];
+    const replyMarkup = this.buildPostMetaMarkup(
+      post.code,
+      dashboardUrl,
+      photos.length > 0 ? post.id : null,
+    );
+    const extra = {
+      link_preview_options: { is_disabled: true },
+      ...(replyMarkup ? { reply_markup: replyMarkup } : {}),
+    };
 
     // Split into batches of 10; only the last batch carries the caption on its first item.
     if (photos.length === 0) {
-      await this.sender!.sendMessage(chatId, caption || 'جزئیات آگهی');
-      return true;
+      try {
+        await this.sendWithRetry('sendMessage', () =>
+          this.sender!.sendMessage(chatId, caption || 'جزئیات آگهی', extra),
+        );
+        return true;
+      } catch (err) {
+        this.logger.error(
+          `Failed to send message for post ${postId} to chat ${chatId}: ${String(
+            (err as any)?.response?.description ?? (err as Error).message,
+          )}`,
+        );
+        return false;
+      }
+    }
+
+    if (photos.length === 1) {
+      try {
+        await this.sendWithRetry('sendPhoto', () =>
+          this.sender!.sendPhoto(chatId, photos[0], {
+            caption: caption || 'جزئیات آگهی',
+            reply_markup: replyMarkup,
+          }),
+        );
+        return true;
+      } catch (err) {
+        this.logger.error(
+          `Failed to send photo for post ${postId} to chat ${chatId}: ${String(
+            (err as any)?.response?.description ?? (err as Error).message,
+          )}`,
+        );
+        return false;
+      }
     }
 
     const batches: string[][] = [];
@@ -369,53 +471,196 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     }
 
     for (let b = 0; b < batches.length; b++) {
-      const isLastBatch = b === batches.length - 1;
-      const batch = batches[b].map((url, idx) => ({
+      const batch = batches[b].map((url) => ({
         type: 'photo',
         media: url,
-        caption: idx === 0 && isLastBatch ? caption : undefined,
+        caption: undefined,
       })) as any[];
 
-      let attempts = 0;
-      const maxAttempts = 3;
-      let sent = false;
-      while (attempts < maxAttempts) {
-        attempts += 1;
-        try {
-          this.logger.log(
-            `Sending post ${postId} batch ${b + 1}/${batches.length} to chat ${chatId} (attempt ${attempts})`,
-          );
-          await this.sender!.sendMediaGroup(chatId, batch);
-          sent = true;
-          break;
-        } catch (err) {
-          if (this.isRateLimitError(err) && attempts < maxAttempts) {
-            await this.delay(1_000);
-            continue;
-          }
-          const errMsg = `Failed to send batch ${b + 1}/${batches.length} for post ${postId} to chat ${chatId}: ${String(
-            (err as any)?.response?.description ?? (err as Error).message,
-          )}`;
-          this.logger.error(errMsg);
-          return false;
-        }
+      try {
+        await this.sendWithRetry(`sendMediaGroup(${b + 1}/${batches.length})`, () =>
+          this.sender!.sendMediaGroup(chatId, batch),
+        );
+      } catch (err) {
+        const errMsg = `Failed to send batch ${b + 1}/${batches.length} for post ${postId} to chat ${chatId}: ${String(
+          (err as any)?.response?.description ?? (err as Error).message,
+        )}`;
+        this.logger.error(errMsg);
+        return false;
       }
-      if (!sent) return false;
+    }
+
+    try {
+      await this.sendWithRetry('sendMessage', () =>
+        this.sender!.sendMessage(chatId, caption || 'جزئیات آگهی', extra),
+      );
+    } catch (err) {
+      this.logger.error(
+        `Failed to send caption message for post ${postId} to chat ${chatId}: ${String(
+          (err as any)?.response?.description ?? (err as Error).message,
+        )}`,
+      );
+      return false;
     }
 
     return true;
   }
 
-  private isRateLimitError(err: unknown): boolean {
-    const anyErr = err as any;
-    return Boolean(anyErr?.response?.error_code === 429);
+  private async sendPostPhotosZip(params: {
+    chatId: number | string;
+    postId: string;
+    replyToMessageId?: number;
+  }): Promise<boolean> {
+    await this.ensureSender();
+    if (!this.sender) {
+      this.logger.warn('Telegram sender is not available.');
+      return false;
+    }
+    const zipUrl = this.buildPostPhotosZipUrl(params.postId);
+    if (!zipUrl) {
+      this.logger.warn('API base URL is missing; cannot build photo ZIP URL.');
+      return false;
+    }
+
+    const extra = params.replyToMessageId
+      ? ({
+          reply_parameters: {
+            message_id: params.replyToMessageId,
+            allow_sending_without_reply: true,
+          },
+          reply_to_message_id: params.replyToMessageId,
+        } as any)
+      : undefined;
+
+    const filename = await this.buildZipFilename(params.postId);
+
+    try {
+      await this.sendWithRetry('sendDocument', () =>
+        this.sender!.sendDocument(params.chatId, Input.fromURLStream(zipUrl, filename), extra),
+      );
+      return true;
+    } catch (err) {
+      this.logger.error(
+        `Failed to send photo ZIP for post ${params.postId} to chat ${params.chatId}: ${String(
+          (err as any)?.response?.description ?? (err as Error).message,
+        )}`,
+      );
+      return false;
+    }
   }
 
   private async delay(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  private buildCaption(post: any, customMessage?: string): string {
+  private buildPostMetaMarkup(
+    code?: number | null,
+    url?: string | null,
+    postId?: string | null,
+  ): InlineKeyboardMarkup | undefined {
+    const rows: InlineKeyboardMarkup['inline_keyboard'] = [];
+    if (url) {
+      rows.push([{ text: 'مشاهده آگهی', url }]);
+    }
+    if (code) {
+      rows.push([{ text: 'کپی کد آگهی', copy_text: { text: String(code) } } as any]);
+    }
+    if (postId) {
+      rows.push([{ text: 'دانلود تصاویر (زیپ)', callback_data: `zip:${postId}` }]);
+    }
+    return rows.length ? { inline_keyboard: rows } : undefined;
+  }
+
+  private buildPostPhotosZipUrl(postId: string): string | null {
+    if (!this.apiBaseUrl) {
+      return null;
+    }
+    return `${this.apiBaseUrl}/divar-posts/${postId}/photos.zip`;
+  }
+
+  private async buildZipFilename(postId: string): Promise<string> {
+    const record = await this.prisma.divarPost.findUnique({
+      where: { id: postId },
+      select: { code: true, externalId: true },
+    });
+    const label =
+      record?.code && Number.isFinite(record.code)
+        ? String(record.code)
+        : (record?.externalId ?? postId);
+    return `${this.sanitizeFileName(label) || 'post'}-photos.zip`;
+  }
+
+  private sanitizeFileName(value: string | null | undefined): string {
+    if (!value) {
+      return '';
+    }
+    return value.replace(/[^a-zA-Z0-9-_]/g, '_');
+  }
+
+  private async withTimeout<T>(task: Promise<T>, timeoutMs: number, label: string): Promise<T> {
+    let timeout: NodeJS.Timeout | undefined;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeout = setTimeout(() => {
+        reject(new Error(`telegram_timeout:${label}`));
+      }, timeoutMs);
+    });
+
+    try {
+      return await Promise.race([task, timeoutPromise]);
+    } finally {
+      if (timeout) {
+        clearTimeout(timeout);
+      }
+    }
+  }
+
+  private async sendWithRetry<T>(label: string, task: () => Promise<T>): Promise<T> {
+    const maxAttempts = Math.max(1, this.sendRetryAttempts);
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      try {
+        if (attempt > 1) {
+          this.logger.warn(`Retrying Telegram ${label} (attempt ${attempt}/${maxAttempts}).`);
+        }
+        return await this.withTimeout(task(), this.sendTimeoutMs, label);
+      } catch (error) {
+        const message = (error as any)?.response?.description ?? (error as Error).message;
+        if (attempt >= maxAttempts) {
+          this.logger.error(`Telegram ${label} failed after ${attempt} attempts: ${message}`);
+          throw error;
+        }
+        const delayMs = this.resolveRetryDelayMs(error);
+        this.logger.warn(
+          `Telegram ${label} failed (attempt ${attempt}/${maxAttempts}): ${message}. Retrying in ${delayMs}ms.`,
+        );
+        await this.delay(delayMs);
+      }
+    }
+    throw new Error(`Telegram ${label} failed after ${maxAttempts} attempts`);
+  }
+
+  private resolveRetryDelayMs(error: unknown): number {
+    const retryAfter = (error as any)?.response?.parameters?.retry_after;
+    const retryAfterMs = typeof retryAfter === 'number' ? retryAfter * 1000 : 0;
+    return Math.max(this.sendRetryDelayMs, retryAfterMs);
+  }
+
+  private toNumber(value: string | undefined, fallback: number): number {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+  }
+
+  private normalizeBaseUrl(value: string): string {
+    return value.replace(/\/+$/, '').trim();
+  }
+
+  private buildDashboardPostUrl(postId: string): string | null {
+    if (!this.appBaseUrl) {
+      return null;
+    }
+    return `${this.appBaseUrl}/dashboard/posts/${postId}`;
+  }
+
+  private buildCaption(post: any, customMessage?: string, dashboardUrl?: string | null): string {
     const url =
       post.shareUrl ||
       post.permalink ||
@@ -426,6 +671,9 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     lines.push(`📌 ${title}`);
     if (post.code) {
       lines.push(`🆔 کد آگهی: ${post.code}`);
+    }
+    if (dashboardUrl) {
+      lines.push(`🔗 ${dashboardUrl}`);
     }
 
     if (post.cityName || post.districtName || post.provinceName) {

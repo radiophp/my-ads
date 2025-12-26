@@ -1,12 +1,17 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { NotificationStatus } from '@prisma/client';
+import {
+  NotificationStatus,
+  NotificationTelegramStatus,
+  NotificationChannelStatus,
+} from '@prisma/client';
 import { QueueService } from '@app/platform/queue/queue.service';
 import { registerConsumerWithRetry } from '@app/platform/queue/utils/register-consumer-with-retry.util';
 import { WebsocketGateway } from '@app/platform/websocket/websocket.gateway';
 import type { NotificationsConfig } from '@app/platform/config/notifications.config';
 import { NotificationsService } from './notifications.service';
 import { PushNotificationService } from './push-notification.service';
+import { TelegramNotificationQueueProcessor } from './telegram-notification-queue.processor';
 
 export type NotificationJob = {
   notificationId: string;
@@ -17,12 +22,14 @@ export class NotificationQueueProcessor implements OnModuleInit {
   private readonly logger = new Logger(NotificationQueueProcessor.name);
   private readonly retryIntervalMs: number;
   private readonly maxDeliveryAttempts: number;
+  private readonly alwaysSendPush: boolean;
 
   constructor(
     private readonly queueService: QueueService,
     private readonly notificationsService: NotificationsService,
     private readonly websocketGateway: WebsocketGateway,
     private readonly pushNotifications: PushNotificationService,
+    private readonly telegramQueue: TelegramNotificationQueueProcessor,
     configService: ConfigService,
   ) {
     const config = configService.get<NotificationsConfig>('notifications', { infer: true }) ?? {
@@ -31,9 +38,11 @@ export class NotificationQueueProcessor implements OnModuleInit {
       retryIntervalMs: 180000,
       maxDeliveryAttempts: 3,
       retentionDays: 3,
+      alwaysSendPush: true,
     };
     this.retryIntervalMs = config.retryIntervalMs;
     this.maxDeliveryAttempts = config.maxDeliveryAttempts;
+    this.alwaysSendPush = config.alwaysSendPush ?? true;
   }
 
   async onModuleInit(): Promise<void> {
@@ -81,26 +90,70 @@ export class NotificationQueueProcessor implements OnModuleInit {
       return;
     }
 
+    if (
+      notification.telegramStatus === NotificationTelegramStatus.SENT ||
+      notification.websocketStatus === NotificationChannelStatus.SENT ||
+      notification.pushStatus === NotificationChannelStatus.SENT
+    ) {
+      await this.notificationsService.markAsSent(notification.id);
+      this.logger.debug(`Notification ${notification.id} already delivered via another channel.`);
+      return;
+    }
+
     const payload = this.notificationsService.buildRealtimePayload(notification);
-    const delivered = this.websocketGateway.emitToUser(
+    const websocketDelivered = this.websocketGateway.emitToUser(
       notification.userId,
       'notifications:new',
       payload,
     );
+    await this.notificationsService.recordWebsocketAttempt(
+      notification.id,
+      websocketDelivered ? NotificationChannelStatus.SENT : NotificationChannelStatus.FAILED,
+      websocketDelivered ? null : 'not_connected',
+    );
+
+    let delivered = websocketDelivered;
+
+    const shouldAttemptPush = this.alwaysSendPush || !websocketDelivered;
+    if (!shouldAttemptPush) {
+      await this.notificationsService.recordPushAttempt(
+        notification.id,
+        NotificationChannelStatus.SKIPPED,
+        'websocket_delivered',
+        false,
+      );
+    } else {
+      const pushResult = await this.pushNotifications.sendToUser(notification.userId, payload);
+      const pushStatus = pushResult.delivered
+        ? NotificationChannelStatus.SENT
+        : pushResult.attempted
+          ? NotificationChannelStatus.FAILED
+          : NotificationChannelStatus.SKIPPED;
+      await this.notificationsService.recordPushAttempt(
+        notification.id,
+        pushStatus,
+        pushResult.error ?? pushResult.reason ?? null,
+        pushResult.attempted,
+      );
+      if (pushResult.delivered) {
+        delivered = true;
+        this.logger.debug(
+          `Delivered notification ${notification.id} via push to user ${notification.userId}.`,
+        );
+      }
+    }
+
+    if (notification.telegramStatus === NotificationTelegramStatus.PENDING) {
+      const queued = await this.notificationsService.markTelegramQueued(notification.id);
+      if (queued) {
+        await this.telegramQueue.enqueue(notification.id);
+      }
+    }
 
     if (delivered) {
       await this.notificationsService.markAsSent(notification.id);
       this.logger.debug(
         `Dispatched notification ${notification.id} to user ${notification.userId}.`,
-      );
-      return;
-    }
-
-    const pushDelivered = await this.pushNotifications.sendToUser(notification.userId, payload);
-    if (pushDelivered) {
-      await this.notificationsService.markAsSent(notification.id);
-      this.logger.debug(
-        `Delivered notification ${notification.id} via push to user ${notification.userId}.`,
       );
       return;
     }
@@ -118,9 +171,10 @@ export class NotificationQueueProcessor implements OnModuleInit {
 
     await this.notificationsService.scheduleRetry(
       notification,
-      'User is not connected to the websocket gateway.',
+      'Delivery pending: websocket offline and push not delivered.',
       this.retryIntervalMs,
       this.maxDeliveryAttempts,
+      0.2,
     );
     this.logger.debug(
       `Scheduled retry #${notification.attemptCount + 1} for notification ${notification.id}.`,

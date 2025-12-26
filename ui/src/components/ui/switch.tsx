@@ -12,15 +12,6 @@ export const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(function 
   { checked = false, onCheckedChange, className, disabled, dir, ...props },
   ref,
 ) {
-  const direction: 'ltr' | 'rtl' =
-    dir ??
-    (typeof document !== 'undefined' && document?.documentElement?.dir === 'rtl' ? 'rtl' : 'ltr');
-
-  const knobStyle: React.CSSProperties =
-    direction === 'rtl'
-      ? { right: checked ? '2px' : '18px' }
-      : { left: checked ? '18px' : '2px' };
-
   return (
     <button
       type="button"
@@ -41,12 +32,16 @@ export const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(function 
         className,
       )}
       {...props}
-      >
-        <span
-          aria-hidden
-          className="pointer-events-none absolute top-[2px] inline-block size-5 rounded-full bg-background shadow transition-all"
-          style={knobStyle}
-        />
-      </button>
+    >
+      <span
+        aria-hidden
+        data-state={checked ? 'checked' : 'unchecked'}
+        className={cn(
+          'pointer-events-none absolute top-[2px] inline-block size-5 rounded-full bg-background shadow transition-all',
+          'left-[2px] data-[state=checked]:left-[18px]',
+          'rtl:left-auto rtl:right-[2px] rtl:data-[state=checked]:right-[18px]',
+        )}
+      />
+    </button>
   );
 });

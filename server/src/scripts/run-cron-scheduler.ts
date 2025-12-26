@@ -2,6 +2,8 @@ import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '@app/app.module';
 
+process.env['ENABLE_CRON_JOBS'] = process.env['ENABLE_CRON_JOBS'] ?? 'true';
+
 async function bootstrap(): Promise<void> {
   const logger = new Logger('CronScheduler');
   const app = await NestFactory.createApplicationContext(AppModule, {

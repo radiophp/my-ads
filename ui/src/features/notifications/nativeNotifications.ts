@@ -1,8 +1,10 @@
 'use client';
 
 import type { NotificationItem } from '@/types/notifications';
+import { hasSeenNotification, markNotificationSeen } from './notificationDeduper';
 
-const FALLBACK_ICON = '/icons/icon-192x192.png';
+const FALLBACK_ICON = '/fav/android-chrome-192x192.png';
+const FALLBACK_BADGE = '/fav/favicon-32x32.png';
 
 export const canUseNativeNotifications = (): boolean =>
   typeof window !== 'undefined' && 'Notification' in window && 'serviceWorker' in navigator;
@@ -36,10 +38,19 @@ const buildNotificationData = (item: NotificationItem) => {
     item.post.permalink ??
     `${typeof window !== 'undefined' ? window.location.origin : ''}/dashboard/posts/${item.post.id}`;
 
-  return { title, body, url, icon: item.post.previewImageUrl ?? FALLBACK_ICON };
+  return {
+    title,
+    body,
+    url,
+    icon: item.post.previewImageUrl ?? FALLBACK_ICON,
+    badge: FALLBACK_BADGE,
+  };
 };
 
 export const showNativeNotificationIfPermitted = async (item: NotificationItem): Promise<void> => {
+  if (hasSeenNotification(item.id)) {
+    return;
+  }
   if (getNotificationPermission() !== 'granted') {
     return;
   }
@@ -47,18 +58,20 @@ export const showNativeNotificationIfPermitted = async (item: NotificationItem):
     return;
   }
 
-  const { title, body, url, icon } = buildNotificationData(item);
+  const { title, body, url, icon, badge } = buildNotificationData(item);
   const options: NotificationOptions = {
     body,
     icon,
-    data: { url },
+    badge,
     tag: item.id,
+    data: { url, notificationId: item.id },
   };
 
   try {
     const reg = await navigator.serviceWorker.ready;
     if (reg?.showNotification) {
       await reg.showNotification(title, options);
+      markNotificationSeen(item.id);
       return;
     }
   } catch {
@@ -66,7 +79,11 @@ export const showNativeNotificationIfPermitted = async (item: NotificationItem):
   }
 
   try {
-    new Notification(title, options);
+    const notification = new Notification(title, options);
+    notification.onclick = () => {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    };
+    markNotificationSeen(item.id);
   } catch {
     // silently ignore if browser blocks the call
   }

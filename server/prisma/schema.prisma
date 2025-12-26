@@ -39,8 +39,16 @@ enum NotificationStatus {
   FAILED
 }
 
+enum NotificationChannelStatus {
+  PENDING
+  SENT
+  FAILED
+  SKIPPED
+}
+
 enum NotificationTelegramStatus {
   PENDING
+  QUEUED
   SENT
   FAILED
   HAS_NOT_CONNECTED
@@ -214,7 +222,7 @@ model DivarPost {
   categoryId      String?
   category        DivarCategory?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   categorySlug    String
-  code            Int                @unique @db.Integer @default(dbgenerated("nextval('\"DivarPost_code_seq\"'::regclass)"))
+  code            Int                @unique @db.Integer @default(autoincrement())
   cat1            String?
   cat2            String?
   cat3            String?
@@ -455,7 +463,14 @@ model Notification {
   postId        String
   post          DivarPost          @relation(fields: [postId], references: [id], onDelete: Cascade)
   status        NotificationStatus @default(PENDING)
+  websocketStatus NotificationChannelStatus?
+  websocketAttemptCount Int        @default(0)
+  websocketError String?
+  pushStatus NotificationChannelStatus?
+  pushAttemptCount Int             @default(0)
+  pushError String?
   telegramStatus NotificationTelegramStatus?
+  telegramAttemptCount Int         @default(0)
   telegramError  String?
   message       String?
   payload       Json?

@@ -1,4 +1,5 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { NotificationTelegramStatus, NotificationStatus } from '@prisma/client';
 import { QueueService } from '@app/platform/queue/queue.service';
 import { registerConsumerWithRetry } from '@app/platform/queue/utils/register-consumer-with-retry.util';
@@ -17,9 +18,17 @@ export class TelegramNotificationQueueProcessor implements OnModuleInit {
     private readonly queueService: QueueService,
     private readonly notificationsService: NotificationsService,
     private readonly telegramBotService: TelegramBotService,
+    private readonly configService: ConfigService,
   ) {}
 
   async onModuleInit(): Promise<void> {
+    const token = this.configService.get<string>('TELEGRAM_BOT_TOKEN');
+    if (!token) {
+      this.logger.warn(
+        'TELEGRAM_BOT_TOKEN is not set; telegram notification consumer is disabled.',
+      );
+      return;
+    }
     const { maxAttempts, baseDelayMs } = this.queueService.getConsumerRetryOptions();
     await registerConsumerWithRetry<TelegramNotificationJob>(
       this.queueService,

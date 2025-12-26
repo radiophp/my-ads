@@ -1090,6 +1090,7 @@ export const apiSlice = createApi({
       query: (id) => ({
         url: `/saved-filters/${id}`,
         method: 'DELETE',
+        body: {},
       }),
       invalidatesTags: (result, error, id) => [
         { type: 'SavedFilters', id },

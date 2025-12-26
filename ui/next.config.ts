@@ -16,7 +16,8 @@ const envByMode: Record<string, string[]> = {
 const envFiles = [...baseEnvFiles, ...(envByMode[nodeEnv] ?? [])];
 
 envFiles.forEach((file) => {
-  loadEnv({ path: resolve(process.cwd(), file), override: true });
+  // Do not override build/runtime-provided envs (keeps production build args intact).
+  loadEnv({ path: resolve(process.cwd(), file), override: false });
 });
 
 const defaultPort = process.env.NEXT_UI_PORT ?? '6005';

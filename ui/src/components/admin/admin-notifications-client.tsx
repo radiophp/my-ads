@@ -13,16 +13,19 @@ import { Switch } from '@/components/ui/switch';
 export function AdminNotificationsClient() {
   const t = useTranslations('admin.notifications');
   const { toast } = useToast();
-  const [userId, setUserId] = useState('');
-  const [savedFilterId, setSavedFilterId] = useState('');
-  const [postId, setPostId] = useState('');
+  const [userId, setUserId] = useState('f0f990a1-c0e3-4369-849d-f2db8c198c8f');
+  const [savedFilterId, setSavedFilterId] = useState('14bcc6a9-01f6-4f55-8a4d-bb5b5e68393d');
+  const [postCode, setPostCode] = useState('355325');
   const [message, setMessage] = useState('');
   const [sendTelegram, setSendTelegram] = useState(false);
   const [sendTest, { isLoading }] = useSendTestNotificationMutation();
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!userId || !savedFilterId || !postId) {
+    const trimmedPostCode = postCode.trim();
+    const parsedPostCode = Number(trimmedPostCode);
+
+    if (!userId || !savedFilterId || !trimmedPostCode || !Number.isFinite(parsedPostCode)) {
       toast({
         title: t('errors.missing'),
         description: t('errors.required'),
@@ -34,7 +37,7 @@ export function AdminNotificationsClient() {
       const result = await sendTest({
         userId: userId.trim(),
         savedFilterId: savedFilterId.trim(),
-        postId: postId.trim(),
+        postCode: parsedPostCode,
         message: message.trim() || undefined,
         sendTelegram,
       }).unwrap();
@@ -45,7 +48,9 @@ export function AdminNotificationsClient() {
           tg: sendTelegram
             ? result.telegramSent
               ? t('toast.telegramSent')
-              : t('toast.telegramNotSent')
+              : result.telegramQueued
+                ? t('toast.telegramQueued')
+                : t('toast.telegramNotSent')
             : t('toast.telegramSkipped'),
         }),
       });
@@ -93,12 +98,15 @@ export function AdminNotificationsClient() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="post-id">{t('fields.postId')}</Label>
+          <Label htmlFor="post-code">{t('fields.postCode')}</Label>
           <Input
-            id="post-id"
-            value={postId}
-            onChange={(e) => setPostId(e.target.value)}
-            placeholder="UUID"
+            id="post-code"
+            type="number"
+            inputMode="numeric"
+            min={1000}
+            value={postCode}
+            onChange={(e) => setPostCode(e.target.value)}
+            placeholder={t('fields.postCodePlaceholder')}
             required
             autoComplete="off"
           />

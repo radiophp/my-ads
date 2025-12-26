@@ -24,6 +24,7 @@ export class NotificationMaintenanceService {
       retryIntervalMs: 180000,
       maxDeliveryAttempts: 3,
       retentionDays: 3,
+      alwaysSendPush: true,
     };
     this.retryBatchSize = config.scanBatchSize;
     this.retentionDays = config.retentionDays;

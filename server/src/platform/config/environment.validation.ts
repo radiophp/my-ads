@@ -131,7 +131,7 @@ export class EnvironmentVariables {
   @Transform(({ value }) => Number(value))
   @IsInt()
   @IsPositive()
-  RABBITMQ_PREFETCH: number = 10;
+  RABBITMQ_PREFETCH: number = 5;
 
   @Transform(({ value }) => Number(value))
   @IsInt()
@@ -156,6 +156,31 @@ export class EnvironmentVariables {
   @IsString()
   @IsNotEmpty()
   RABBITMQ_DLQ_SUFFIX: string = 'dead';
+
+  @IsOptional()
+  @IsString()
+  RABBITMQ_MANAGEMENT_URL?: string;
+
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  @Min(1)
+  @Max(65535)
+  RABBITMQ_MANAGEMENT_PORT?: number;
+
+  @IsOptional()
+  @IsString()
+  RABBITMQ_MANAGEMENT_USERNAME?: string;
+
+  @IsOptional()
+  @IsString()
+  RABBITMQ_MANAGEMENT_PASSWORD?: string;
+
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  @IsPositive()
+  RABBITMQ_MANAGEMENT_TIMEOUT_MS?: number;
 
   @IsString()
   @IsNotEmpty()
@@ -218,6 +243,18 @@ export class EnvironmentVariables {
   @IsOptional()
   @IsString()
   VAPID_PRIVATE_KEY?: string;
+
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  @IsPositive()
+  PUSH_NOTIFICATION_TIMEOUT_MS?: number;
+
+  @IsOptional()
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  @IsPositive()
+  TELEGRAM_SEND_TIMEOUT_MS?: number;
 
   @IsOptional()
   @IsString()
@@ -339,6 +376,14 @@ export class EnvironmentVariables {
   @IsInt()
   @IsPositive()
   NOTIFICATION_RETENTION_DAYS: number = 3;
+
+  @Transform(({ value }) => {
+    if (value === undefined) return true;
+    if (typeof value === 'string') return value === 'true';
+    return Boolean(value);
+  })
+  @IsBoolean()
+  NOTIFICATION_PUSH_ALWAYS: boolean = true;
 }
 
 export const validateEnvironment = (config: Record<string, unknown>): EnvironmentVariables => {

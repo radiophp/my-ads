@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Bell, RefreshCw } from 'lucide-react';
 
@@ -27,6 +27,7 @@ import { useToast } from '@/components/ui/use-toast';
 
 const PAGE_SIZE = 20;
 type NotificationsTranslator = ReturnType<typeof useTranslations<'dashboard.notificationsPage'>>;
+type PushStatus = 'checking' | 'active' | 'inactive' | 'blocked' | 'unsupported';
 
 export function NotificationsPanel() {
   const t = useTranslations('dashboard.notificationsPage');
@@ -38,6 +39,7 @@ export function NotificationsPanel() {
   const [permission, setPermission] = useState<NotificationPermission>(
     canUseNativeNotifications() ? getNotificationPermission() : 'denied',
   );
+  const [pushStatus, setPushStatus] = useState<PushStatus>('checking');
   const { subscribe: subscribePush, supported: pushSupported, isLoading: pushLoading } = usePushSubscription();
   const { toast } = useToast();
 
@@ -54,6 +56,42 @@ export function NotificationsPanel() {
     );
   }, [data, dispatch]);
 
+  const refreshPushStatus = useCallback(async () => {
+    if (!pushSupported) {
+      setPushStatus('unsupported');
+      return;
+    }
+
+    const currentPermission = getNotificationPermission();
+    setPermission(currentPermission);
+
+    if (currentPermission === 'denied') {
+      setPushStatus('blocked');
+      return;
+    }
+    if (currentPermission !== 'granted') {
+      setPushStatus('inactive');
+      return;
+    }
+
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const subscription = await reg.pushManager.getSubscription();
+      setPushStatus(subscription ? 'active' : 'inactive');
+    } catch {
+      setPushStatus('inactive');
+    }
+  }, [pushSupported]);
+
+  useEffect(() => {
+    const handleFocus = () => {
+      void refreshPushStatus();
+    };
+    handleFocus();
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [refreshPushStatus]);
+
   const handleRefresh = () => {
     refetch();
   };
@@ -61,11 +99,13 @@ export function NotificationsPanel() {
   const handleEnableDeviceNotifications = async () => {
     const result = await requestNotificationPermission();
     setPermission(result);
+    await refreshPushStatus();
   };
 
   const handleEnablePush = async () => {
     try {
       await subscribePush();
+      await refreshPushStatus();
       toast({ title: t('push.enabledTitle'), description: t('push.enabledDescription') });
     } catch (error) {
       toast({
@@ -101,6 +141,22 @@ export function NotificationsPanel() {
       ? t('realtime.online')
       : t('realtime.offline');
   }, [notificationsState.connected, t]);
+  const pushBadgeLabel = useMemo(() => t(`push.status.${pushStatus}`), [pushStatus, t]);
+  const pushBadgeColor = useMemo(() => {
+    if (pushStatus === 'active') {
+      return 'bg-emerald-500/10 text-emerald-500';
+    }
+    if (pushStatus === 'blocked') {
+      return 'bg-destructive/10 text-destructive';
+    }
+    if (pushStatus === 'unsupported') {
+      return 'bg-muted text-muted-foreground';
+    }
+    if (pushStatus === 'checking') {
+      return 'bg-muted text-muted-foreground';
+    }
+    return 'bg-amber-500/10 text-amber-600';
+  }, [pushStatus]);
 
   return (
     <div className="min-h-[70vh] w-full bg-background px-4 py-10 sm:px-6 lg:px-8">
@@ -134,6 +190,14 @@ export function NotificationsPanel() {
               </span>
               {connectionBadge}
             </span>
+            <span
+              className={cn(
+                'inline-flex items-center rounded-full px-3 py-1 text-xs font-medium',
+                pushBadgeColor,
+              )}
+            >
+              {pushBadgeLabel}
+            </span>
             {notificationsState.lastError ? (
               <span className="text-xs text-destructive">{t('realtime.error', { message: notificationsState.lastError })}</span>
             ) : null}
@@ -166,12 +230,15 @@ export function NotificationsPanel() {
                 type="button"
                 size="sm"
                 onClick={() => void handleEnablePush()}
-                disabled={pushLoading}
+                disabled={pushLoading || permission === 'denied'}
                 variant="secondary"
                 className="inline-flex items-center gap-2"
               >
                 {pushLoading ? t('push.enabling') : t('push.enable')}
               </Button>
+            ) : null}
+            {permission === 'denied' && canUseNativeNotifications() ? (
+              <p className="text-xs text-muted-foreground">{t('push.permissionDenied')}</p>
             ) : null}
           </div>
         </header>

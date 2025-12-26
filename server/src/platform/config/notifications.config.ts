@@ -6,6 +6,7 @@ export type NotificationsConfig = {
   retryIntervalMs: number;
   maxDeliveryAttempts: number;
   retentionDays: number;
+  alwaysSendPush: boolean;
 };
 
 const toNumber = (value: string | undefined, fallback: number): number => {
@@ -16,13 +17,21 @@ const toNumber = (value: string | undefined, fallback: number): number => {
   return fallback;
 };
 
+const toBoolean = (value: string | undefined, fallback: boolean): boolean => {
+  if (typeof value === 'undefined') {
+    return fallback;
+  }
+  return value === 'true' || value === '1';
+};
+
 export default registerAs(
   'notifications',
   (): NotificationsConfig => ({
     scanWindowMinutes: toNumber(process.env['NOTIFICATION_WINDOW_MINUTES'], 10),
     scanBatchSize: toNumber(process.env['NOTIFICATION_SCAN_BATCH_SIZE'], 50),
-    retryIntervalMs: toNumber(process.env['NOTIFICATION_RETRY_INTERVAL_MS'], 180000),
+    retryIntervalMs: toNumber(process.env['NOTIFICATION_RETRY_INTERVAL_MS'], 30000),
     maxDeliveryAttempts: toNumber(process.env['NOTIFICATION_MAX_ATTEMPTS'], 3),
     retentionDays: toNumber(process.env['NOTIFICATION_RETENTION_DAYS'], 3),
+    alwaysSendPush: toBoolean(process.env['NOTIFICATION_PUSH_ALWAYS'], true),
   }),
 );

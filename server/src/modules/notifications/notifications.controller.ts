@@ -19,8 +19,6 @@ import { CreateTestNotificationDto } from './dto/create-test-notification.dto';
 import { NotificationQueueProcessor } from './notification-queue.processor';
 import { CreatePushSubscriptionDto } from './dto/create-push-subscription.dto';
 import { PushNotificationService } from './push-notification.service';
-import { TelegramBotService } from '../telegram/telegram.service';
-import { NotificationTelegramStatus } from '@prisma/client';
 
 @Controller('notifications')
 @ApiTags('notifications')
@@ -30,7 +28,6 @@ export class NotificationsController {
     private readonly notificationsService: NotificationsService,
     private readonly notificationQueue: NotificationQueueProcessor,
     private readonly pushNotificationService: PushNotificationService,
-    private readonly telegramBotService: TelegramBotService,
   ) {}
 
   @Get()
@@ -62,48 +59,32 @@ export class NotificationsController {
       properties: {
         notificationId: { type: 'string', format: 'uuid' },
         status: { type: 'string' },
+        telegramQueued: { type: 'boolean' },
       },
     },
   })
-  async sendTestNotification(
-    @Body() dto: CreateTestNotificationDto,
-  ): Promise<{ notificationId: string; status: string; telegramSent?: boolean }> {
+  async sendTestNotification(@Body() dto: CreateTestNotificationDto): Promise<{
+    notificationId: string;
+    status: string;
+    telegramSent?: boolean;
+    telegramQueued?: boolean;
+  }> {
     const sendTelegram = dto.sendTelegram === true || (dto.sendTelegram as any) === 'true';
 
     const notification = await this.notificationsService.createTestNotification({
       ...dto,
       telegram: sendTelegram,
     });
-    await this.notificationQueue.enqueue(notification.id);
+    void this.notificationQueue.enqueue(notification.id).catch((error) => {
+      const message = error instanceof Error ? error.message : String(error);
+      Logger.warn(`Failed to enqueue notification ${notification.id}: ${message}`);
+    });
 
-    let telegramSent: boolean | undefined;
-    if (dto.sendTelegram) {
-      const result = await this.telegramBotService.sendPostToUser({
-        userId: dto.userId,
-        postId: dto.postId,
-        retryMissingPhone: false, // send immediately in test mode
-        customMessage: dto.message ?? undefined,
-      });
-      telegramSent = result.status === 'sent';
-      const statusForRecord =
-        result.status === 'sent'
-          ? NotificationTelegramStatus.SENT
-          : result.status === 'not_connected'
-            ? NotificationTelegramStatus.HAS_NOT_CONNECTED
-            : NotificationTelegramStatus.FAILED;
-      await this.notificationsService.updateTelegramStatus(notification.id, statusForRecord);
-      if (result.error) {
-        await this.notificationsService.updateTelegramError(notification.id, result.error);
-        Logger.warn(`Telegram send error: ${result.error}`);
-      } else {
-        await this.notificationsService.updateTelegramError(notification.id, '');
-      }
-    } else {
-      await this.notificationsService.updateTelegramStatus(notification.id, null);
-      await this.notificationsService.updateTelegramError(notification.id, '');
-    }
-
-    return { notificationId: notification.id, status: notification.status, telegramSent };
+    return {
+      notificationId: notification.id,
+      status: notification.status,
+      telegramQueued: sendTelegram,
+    };
   }
 
   @Post('push/subscribe')

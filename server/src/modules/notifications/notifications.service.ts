@@ -3,9 +3,11 @@ import {
   Prisma,
   NotificationStatus,
   NotificationTelegramStatus,
+  NotificationChannelStatus,
   type Notification,
 } from '@prisma/client';
 import { PrismaService } from '@app/platform/database/prisma.service';
+import { MetricsService } from '@app/platform/metrics/metrics.service';
 import type { DivarPostListItemDto } from '@app/modules/divar-posts/dto/divar-post.dto';
 import { NotificationDto, PaginatedNotificationsDto } from './dto/notification.dto';
 import type { StoredNotificationPayload, RealtimeNotificationPayload } from './notification.types';
@@ -42,12 +44,16 @@ type NotificationWithRelations = Notification & {
 export class NotificationsService {
   private readonly logger = new Logger(NotificationsService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly metricsService: MetricsService,
+  ) {}
 
   async createTestNotification(params: {
     userId: string;
     savedFilterId: string;
-    postId: string;
+    postId?: string;
+    postCode?: number;
     message?: string | null;
     telegram?: boolean | string;
   }): Promise<Notification> {
@@ -64,37 +70,69 @@ export class NotificationsService {
       throw new BadRequestException('Saved filter does not belong to the specified user');
     }
 
-    const post = await this.prisma.divarPost.findUnique({
-      where: { id: params.postId },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        priceTotal: true,
-        rentAmount: true,
-        depositAmount: true,
-        cityName: true,
-        districtName: true,
-        provinceName: true,
-        permalink: true,
-        publishedAt: true,
-        medias: {
-          orderBy: { position: 'asc' },
-          take: 1,
+    const post = params.postId
+      ? await this.prisma.divarPost.findUnique({
+          where: { id: params.postId },
           select: {
             id: true,
-            url: true,
-            thumbnailUrl: true,
-            localUrl: true,
-            localThumbnailUrl: true,
+            title: true,
+            description: true,
+            priceTotal: true,
+            rentAmount: true,
+            depositAmount: true,
+            cityName: true,
+            districtName: true,
+            provinceName: true,
+            permalink: true,
+            publishedAt: true,
+            medias: {
+              orderBy: { position: 'asc' },
+              take: 1,
+              select: {
+                id: true,
+                url: true,
+                thumbnailUrl: true,
+                localUrl: true,
+                localThumbnailUrl: true,
+              },
+            },
           },
-        },
-      },
-    });
+        })
+      : params.postCode
+        ? await this.prisma.divarPost.findUnique({
+            where: { code: params.postCode },
+            select: {
+              id: true,
+              title: true,
+              description: true,
+              priceTotal: true,
+              rentAmount: true,
+              depositAmount: true,
+              cityName: true,
+              districtName: true,
+              provinceName: true,
+              permalink: true,
+              publishedAt: true,
+              medias: {
+                orderBy: { position: 'asc' },
+                take: 1,
+                select: {
+                  id: true,
+                  url: true,
+                  thumbnailUrl: true,
+                  localUrl: true,
+                  localThumbnailUrl: true,
+                },
+              },
+            },
+          })
+        : null;
 
     if (!post) {
       throw new NotFoundException('Post not found');
     }
+
+    const postId = post.id;
 
     const payload = this.buildPayloadSnapshot(
       {
@@ -151,22 +189,92 @@ export class NotificationsService {
       { id: savedFilter.id, name: savedFilter.name ?? '' },
     );
 
+    const message = params.message ?? post.title ?? post.description ?? null;
+
+    const existing = await this.prisma.notification.findUnique({
+      where: {
+        userId_savedFilterId_postId: {
+          userId: params.userId,
+          savedFilterId: savedFilter.id,
+          postId,
+        },
+      },
+      select: { id: true },
+    });
+
+    if (existing) {
+      return await this.prisma.notification.update({
+        where: { id: existing.id },
+        data: {
+          message,
+          payload: payload as Prisma.InputJsonValue,
+          nextAttemptAt: new Date(),
+          status: NotificationStatus.PENDING,
+          attemptCount: 0,
+          sentAt: null,
+          failedAt: null,
+          websocketStatus: NotificationChannelStatus.PENDING,
+          websocketAttemptCount: 0,
+          websocketError: null,
+          pushStatus: NotificationChannelStatus.PENDING,
+          pushAttemptCount: 0,
+          pushError: null,
+          telegramStatus: sendTelegram ? NotificationTelegramStatus.PENDING : null,
+          telegramAttemptCount: 0,
+          telegramError: null,
+        },
+      });
+    }
+
     try {
       return await this.prisma.notification.create({
         data: {
           userId: params.userId,
           savedFilterId: savedFilter.id,
-          postId: post.id,
-          message: params.message ?? post.title ?? post.description ?? null,
+          postId,
+          message,
           payload: payload as Prisma.InputJsonValue,
           nextAttemptAt: new Date(),
+          websocketStatus: NotificationChannelStatus.PENDING,
+          websocketAttemptCount: 0,
+          websocketError: null,
+          pushStatus: NotificationChannelStatus.PENDING,
+          pushAttemptCount: 0,
+          pushError: null,
           telegramStatus: sendTelegram ? NotificationTelegramStatus.PENDING : null,
+          telegramAttemptCount: 0,
           telegramError: null,
         },
       });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-        throw new BadRequestException('A notification for this post and filter already exists');
+        return await this.prisma.notification.update({
+          where: {
+            userId_savedFilterId_postId: {
+              userId: params.userId,
+              savedFilterId: savedFilter.id,
+              postId,
+            },
+          },
+          data: {
+            message,
+            payload: payload as Prisma.InputJsonValue,
+            nextAttemptAt: new Date(),
+            status: NotificationStatus.PENDING,
+            attemptCount: 0,
+            sentAt: null,
+            failedAt: null,
+            websocketStatus: NotificationChannelStatus.PENDING,
+            websocketAttemptCount: 0,
+            websocketError: null,
+            pushStatus: NotificationChannelStatus.PENDING,
+            pushAttemptCount: 0,
+            pushError: null,
+            telegramStatus: sendTelegram ? NotificationTelegramStatus.PENDING : null,
+            telegramAttemptCount: 0,
+            telegramError: null,
+          },
+        });
       }
       throw error;
     }
@@ -215,7 +323,14 @@ export class NotificationsService {
           message: params.post.title ?? params.post.description ?? null,
           payload: snapshot as Prisma.InputJsonValue,
           nextAttemptAt: new Date(),
+          websocketStatus: NotificationChannelStatus.PENDING,
+          websocketAttemptCount: 0,
+          websocketError: null,
+          pushStatus: NotificationChannelStatus.PENDING,
+          pushAttemptCount: 0,
+          pushError: null,
           telegramStatus: NotificationTelegramStatus.PENDING,
+          telegramAttemptCount: 0,
           telegramError: null,
         },
       });
@@ -296,20 +411,34 @@ export class NotificationsService {
     reason: string,
     retryIntervalMs: number,
     maxAttempts: number,
+    jitterRatio = 0.2,
   ): Promise<void> {
     const nextAttempt = notification.attemptCount + 1;
     const hasAttemptsLeft = nextAttempt < maxAttempts;
+    const delayMs = hasAttemptsLeft ? this.computeJitteredDelay(retryIntervalMs, jitterRatio) : 0;
 
     await this.prisma.notification.update({
       where: { id: notification.id },
       data: {
         attemptCount: nextAttempt,
-        nextAttemptAt: hasAttemptsLeft ? new Date(Date.now() + retryIntervalMs) : new Date(),
+        nextAttemptAt: hasAttemptsLeft ? new Date(Date.now() + delayMs) : new Date(),
         status: hasAttemptsLeft ? NotificationStatus.PENDING : NotificationStatus.FAILED,
         ...(hasAttemptsLeft ? {} : { failedAt: new Date() }),
         message: reason,
       },
     });
+    this.metricsService.incrementNotificationRetries();
+  }
+
+  private computeJitteredDelay(baseMs: number, jitterRatio: number): number {
+    if (!Number.isFinite(baseMs) || baseMs <= 0) {
+      return 0;
+    }
+    const ratio = Math.min(Math.max(jitterRatio, 0), 1);
+    const jitter = baseMs * ratio;
+    const delta = (Math.random() * 2 - 1) * jitter;
+    const delay = Math.round(baseMs + delta);
+    return Math.max(0, delay);
   }
 
   async findDueNotifications(limit: number, now: Date): Promise<Notification[]> {
@@ -553,6 +682,67 @@ export class NotificationsService {
       data: {
         telegramStatus: status,
         telegramError: status === NotificationTelegramStatus.FAILED ? undefined : null,
+      },
+    });
+  }
+
+  async markTelegramQueued(notificationId: string): Promise<boolean> {
+    const result = await this.prisma.notification.updateMany({
+      where: {
+        id: notificationId,
+        telegramStatus: NotificationTelegramStatus.PENDING,
+      },
+      data: {
+        telegramStatus: NotificationTelegramStatus.QUEUED,
+        telegramError: null,
+      },
+    });
+    return result.count > 0;
+  }
+
+  async recordTelegramAttempt(
+    notificationId: string,
+    status: NotificationTelegramStatus,
+    error?: string | null,
+  ): Promise<void> {
+    await this.prisma.notification.update({
+      where: { id: notificationId },
+      data: {
+        telegramAttemptCount: { increment: 1 },
+        telegramStatus: status,
+        telegramError: error ?? null,
+      },
+    });
+  }
+
+  async recordWebsocketAttempt(
+    notificationId: string,
+    status: NotificationChannelStatus,
+    error?: string | null,
+    attempted = true,
+  ): Promise<void> {
+    await this.prisma.notification.update({
+      where: { id: notificationId },
+      data: {
+        websocketAttemptCount: attempted ? { increment: 1 } : undefined,
+        websocketStatus: status,
+        websocketError: error ?? null,
+      },
+    });
+  }
+
+  async recordPushAttempt(
+    notificationId: string,
+    status: NotificationChannelStatus,
+    error?: string | null,
+    attempted = true,
+  ): Promise<void> {
+    await this.prisma.notification.update({
+      where: { id: notificationId },
+      data: {
+        pushAttemptCount: attempted ? { increment: 1 } : undefined,
+        pushStatus: status,
+        pushError: error ?? null,
       },
     });
   }

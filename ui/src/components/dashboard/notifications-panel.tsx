@@ -75,8 +75,12 @@ export function NotificationsPanel() {
     }
 
     try {
-      const reg = await navigator.serviceWorker.ready;
-      const subscription = await reg.pushManager.getSubscription();
+      const registration = await navigator.serviceWorker.getRegistration();
+      if (!registration) {
+        setPushStatus('inactive');
+        return;
+      }
+      const subscription = await registration.pushManager.getSubscription();
       setPushStatus(subscription ? 'active' : 'inactive');
     } catch {
       setPushStatus('inactive');

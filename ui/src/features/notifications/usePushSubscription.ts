@@ -29,6 +29,14 @@ const toSubscriptionPayload = (subscription: PushSubscription) => {
   };
 };
 
+const ensureServiceWorker = async () => {
+  const registration = await navigator.serviceWorker.getRegistration();
+  if (registration) {
+    return registration;
+  }
+  return navigator.serviceWorker.register('/service-worker.js');
+};
+
 export function usePushSubscription() {
   const [registerSub, { isLoading }] = useRegisterPushSubscriptionMutation();
 
@@ -40,7 +48,8 @@ export function usePushSubscription() {
       if (Notification.permission !== 'granted') {
         return;
       }
-      const reg = await navigator.serviceWorker.ready;
+      const reg = await ensureServiceWorker();
+      await navigator.serviceWorker.ready;
       const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
       if (!vapidPublicKey) {
         throw new Error('VAPID public key is missing.');

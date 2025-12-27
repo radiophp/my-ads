@@ -3,6 +3,7 @@
 import { useCallback } from 'react';
 import { urlBase64ToUint8Array } from '@/lib/vapid';
 import { useRegisterPushSubscriptionMutation } from '@/features/api/apiSlice';
+import { registerServiceWorker } from '@/lib/service-worker';
 
 const canUsePush = (): boolean =>
   typeof window !== 'undefined' && 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window;
@@ -29,14 +30,6 @@ const toSubscriptionPayload = (subscription: PushSubscription) => {
   };
 };
 
-const ensureServiceWorker = async () => {
-  const registration = await navigator.serviceWorker.getRegistration();
-  if (registration) {
-    return registration;
-  }
-  return navigator.serviceWorker.register('/service-worker.js');
-};
-
 export function usePushSubscription() {
   const [registerSub, { isLoading }] = useRegisterPushSubscriptionMutation();
 
@@ -48,7 +41,10 @@ export function usePushSubscription() {
       if (Notification.permission !== 'granted') {
         return;
       }
-      const reg = await ensureServiceWorker();
+      const reg = await registerServiceWorker();
+      if (!reg) {
+        throw new Error('Service worker is not available.');
+      }
       await navigator.serviceWorker.ready;
       const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
       if (!vapidPublicKey) {

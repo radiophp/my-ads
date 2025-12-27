@@ -159,64 +159,66 @@ export async function HomeLanding() {
   const latestBlogs = await fetchLatestBlogs();
   const appBase = await resolveAppBase();
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-14 px-4">
+    <div className="flex w-full flex-col gap-14">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       {slides.length > 0 ? (
-        <div className="-mx-4">
+        <div className="w-full">
           <HomeSlider slides={slides} locale={locale} appBase={appBase} />
         </div>
       ) : null}
-      <HomeFeaturedPosts
-        posts={featuredPosts}
-        title={t('featuredPosts.title')}
-        description={t('featuredPosts.description')}
-        emptyLabel={t('featuredPosts.empty')}
-      />
-      <HomeCategoryKpis />
-      <section className="space-y-6 pb-16">
-        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-          <div className="space-y-2">
-            <h2 className="text-2xl font-semibold text-foreground">{t('news.title')}</h2>
-            <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">
-              {t('news.description')}
-            </p>
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-14 px-4">
+        <HomeFeaturedPosts
+          posts={featuredPosts}
+          title={t('featuredPosts.title')}
+          description={t('featuredPosts.description')}
+          emptyLabel={t('featuredPosts.empty')}
+        />
+        <HomeCategoryKpis />
+        <section className="space-y-6 pb-16">
+          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div className="space-y-2">
+              <h2 className="text-2xl font-semibold text-foreground">{t('news.title')}</h2>
+              <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">
+                {t('news.description')}
+              </p>
+            </div>
+            <Button asChild variant="outline">
+              <Link href="/news">{t('news.more')}</Link>
+            </Button>
           </div>
-          <Button asChild variant="outline">
-            <Link href="/news">{t('news.more')}</Link>
-          </Button>
-        </div>
-        {latestNews.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t('news.empty')}</p>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {latestNews.map((item) => (
-              <NewsCard key={item.id} item={item} locale={locale} appBase={appBase} />
-            ))}
+          {latestNews.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t('news.empty')}</p>
+          ) : (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {latestNews.map((item) => (
+                <NewsCard key={item.id} item={item} locale={locale} appBase={appBase} />
+              ))}
+            </div>
+          )}
+        </section>
+        <section className="space-y-6 pb-16">
+          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div className="space-y-2">
+              <h2 className="text-2xl font-semibold text-foreground">{t('blog.title')}</h2>
+              <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">
+                {t('blog.description')}
+              </p>
+            </div>
+            <Button asChild variant="outline">
+              <Link href="/blog">{t('blog.more')}</Link>
+            </Button>
           </div>
-        )}
-      </section>
-      <section className="space-y-6 pb-16">
-        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-          <div className="space-y-2">
-            <h2 className="text-2xl font-semibold text-foreground">{t('blog.title')}</h2>
-            <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">
-              {t('blog.description')}
-            </p>
-          </div>
-          <Button asChild variant="outline">
-            <Link href="/blog">{t('blog.more')}</Link>
-          </Button>
-        </div>
-        {latestBlogs.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t('blog.empty')}</p>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {latestBlogs.map((item) => (
-              <BlogCard key={item.id} item={item} locale={locale} appBase={appBase} />
-            ))}
-          </div>
-        )}
-      </section>
+          {latestBlogs.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{t('blog.empty')}</p>
+          ) : (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {latestBlogs.map((item) => (
+                <BlogCard key={item.id} item={item} locale={locale} appBase={appBase} />
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   );
 }

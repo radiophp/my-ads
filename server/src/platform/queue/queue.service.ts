@@ -119,7 +119,14 @@ export class QueueService {
             channel.ack(message);
           } catch (error) {
             this.logger.error(`Failed to process message from ${queueName}`, error as Error);
-            await this.handleProcessingFailure(channel, queueName, message);
+            try {
+              await this.handleProcessingFailure(channel, queueName, message);
+            } catch (handlerError) {
+              this.logger.error(
+                `Failed to handle processing failure for ${queueName}`,
+                handlerError as Error,
+              );
+            }
           }
         },
         { noAck: false },
@@ -182,7 +189,7 @@ export class QueueService {
         );
       }
 
-      channel.ack(message);
+      this.safeAck(channel, message, `requeue ${queueName}`);
       this.logger.warn(
         `Requeued message from ${queueName}; attempt ${nextAttempt}/${this.maxConsumerRetries}.`,
       );
@@ -191,7 +198,7 @@ export class QueueService {
         `Failed to requeue message for ${queueName}; message will be nacked.`,
         publishError as Error,
       );
-      channel.nack(message, false, false);
+      this.safeNack(channel, message, `requeue failure ${queueName}`);
     }
   }
 
@@ -230,11 +237,11 @@ export class QueueService {
 
       if (!published) {
         this.logger.error(`Dead-letter queue ${deadLetterQueue} is full; message will be nacked.`);
-        channel.nack(message, false, false);
+        this.safeNack(channel, message, `dead-letter full ${deadLetterQueue}`);
         return;
       }
 
-      channel.ack(message);
+      this.safeAck(channel, message, `dead-letter ${deadLetterQueue}`);
       this.logger.error(
         `Moved message from ${queueName} to ${deadLetterQueue} after ${attempts} attempts.`,
       );
@@ -243,7 +250,23 @@ export class QueueService {
         `Failed to publish to dead-letter queue ${deadLetterQueue}; message will be nacked.`,
         error as Error,
       );
+      this.safeNack(channel, message, `dead-letter failure ${deadLetterQueue}`);
+    }
+  }
+
+  private safeAck(channel: ConfirmChannel, message: ConsumeMessage, context: string): void {
+    try {
+      channel.ack(message);
+    } catch (error) {
+      this.logger.warn(`Failed to ack message during ${context}`, error as Error);
+    }
+  }
+
+  private safeNack(channel: ConfirmChannel, message: ConsumeMessage, context: string): void {
+    try {
       channel.nack(message, false, false);
+    } catch (error) {
+      this.logger.warn(`Failed to nack message during ${context}`, error as Error);
     }
   }
 }

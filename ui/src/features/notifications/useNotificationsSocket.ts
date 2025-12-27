@@ -16,6 +16,11 @@ import { showNativeNotificationIfPermitted } from './nativeNotifications';
 const SOCKET_PATH = '/socket.io';
 const WS_NAMESPACE = '/ws';
 
+export type NotificationsSocketOptions = {
+  onNotification?: (payload: NotificationItem) => void;
+  onError?: (message: string) => void;
+};
+
 const resolveWsOrigin = (): string => {
   const envBase = process.env.NEXT_PUBLIC_WS_BASE_URL ?? process.env.NEXT_PUBLIC_API_BASE_URL;
   if (envBase) {
@@ -32,10 +37,15 @@ const resolveWsOrigin = (): string => {
   return WS_NAMESPACE;
 };
 
-export function useNotificationsSocket(): void {
+export function useNotificationsSocket(options?: NotificationsSocketOptions): void {
   const dispatch = useAppDispatch();
   const token = useAppSelector((state) => state.auth.accessToken);
   const socketRef = useRef<Socket | null>(null);
+  const optionsRef = useRef<NotificationsSocketOptions | undefined>(options);
+
+  useEffect(() => {
+    optionsRef.current = options;
+  }, [options]);
 
   useEffect(() => {
     if (!token) {
@@ -66,14 +76,18 @@ export function useNotificationsSocket(): void {
       dispatch(setNotificationConnection(false));
     });
     socket.on('notifications:error', (payload: { message?: string }) => {
-      dispatch(setNotificationError(payload?.message ?? 'connection-error'));
+      const message = payload?.message ?? 'connection-error';
+      dispatch(setNotificationError(message));
+      optionsRef.current?.onError?.(message);
     });
     socket.on('connect_error', (error: Error) => {
       dispatch(setNotificationError(error.message));
+      optionsRef.current?.onError?.(error.message);
     });
     socket.on('notifications:new', (payload: NotificationItem) => {
       dispatch(addRealtimeNotification(payload));
       void showNativeNotificationIfPermitted(payload);
+      optionsRef.current?.onNotification?.(payload);
     });
 
     return () => {

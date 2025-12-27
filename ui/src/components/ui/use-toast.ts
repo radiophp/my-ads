@@ -14,6 +14,8 @@ type Toast = {
   title?: React.ReactNode;
   description?: React.ReactNode;
   action?: React.ReactNode;
+  className?: string;
+  onClick?: React.MouseEventHandler<HTMLElement>;
   variant?: 'default' | 'destructive';
 };
 

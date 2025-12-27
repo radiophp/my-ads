@@ -88,6 +88,7 @@ function renderNavIcon(icon: NavIconKey, className?: string) {
 export function SiteHeader() {
   const t = useTranslations();
   const pwaT = useTranslations('pwa');
+  const notificationsT = useTranslations('dashboard.notificationsPage');
   const router = useRouter();
   const dispatch = useAppDispatch();
   const auth = useAppSelector((state) => state.auth);
@@ -99,7 +100,48 @@ export function SiteHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
 
-  useNotificationsSocket();
+  useNotificationsSocket({
+    onNotification: (payload) => {
+      const detailHref = payload.post?.id
+        ? `/dashboard/posts/${payload.post.id}`
+        : '/dashboard/notifications';
+      const title = payload.post?.title ?? notificationsT('item.untitled');
+      const location = [payload.post?.districtName, payload.post?.cityName, payload.post?.provinceName]
+        .filter(Boolean)
+        .join('، ');
+      const thumbnailUrl = payload.post?.previewImageUrl ?? '/fav/android-chrome-192x192.png';
+      const descriptionItems: string[] = [];
+      if (payload.filter?.name) {
+        descriptionItems.push(notificationsT('item.savedFilter', { name: payload.filter.name }));
+      }
+      if (location) {
+        descriptionItems.push(location);
+      }
+      const description = (
+        <div className="flex items-center gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element -- preview can be a third-party URL */}
+          <img
+            src={thumbnailUrl}
+            alt=""
+            className="size-10 shrink-0 rounded-md border border-border/60 object-cover"
+            loading="lazy"
+          />
+          <div className="flex flex-col gap-1">
+            {descriptionItems.map((item, index) => (
+              <span key={`${payload.id}-meta-${index}`}>{item}</span>
+            ))}
+          </div>
+        </div>
+      );
+
+      toast({
+        title,
+        description,
+        onClick: () => router.push(detailHref),
+        className: 'cursor-pointer',
+      });
+    },
+  });
 
   useEffect(() => {
     setIsHydrated(true);

@@ -4,15 +4,15 @@ export default function manifest(): MetadataRoute.Manifest {
   const isDev = process.env.NODE_ENV === 'development';
   const appName = isDev ? 'ماهان فایل (توسعه)' : 'ماهان فایل';
   const appShortName = isDev ? 'ماهان فایل توسعه' : 'ماهان فایل';
+  const themeColor = isDev ? '#e7e9c4' : undefined;
 
-  return {
+  const manifest: MetadataRoute.Manifest = {
     name: appName,
     short_name: appShortName,
     description: 'مدیریت آگهی‌های ماهان فایل در هر زمان و هر مکان.',
     start_url: '/',
     display: 'standalone',
     background_color: '#464646',
-    theme_color: '#e7e9c4',
     lang: 'fa',
     categories: ['business', 'productivity'],
     orientation: 'portrait',
@@ -44,4 +44,8 @@ export default function manifest(): MetadataRoute.Manifest {
       },
     ],
   };
+  if (themeColor) {
+    manifest.theme_color = themeColor;
+  }
+  return manifest;
 }

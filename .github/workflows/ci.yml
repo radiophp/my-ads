@@ -292,6 +292,9 @@ jobs:
         with:
           context: server
           file: server/Dockerfile
+          build-args: |
+            NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL || 'https://mahanfile.com' }}
+            NEXT_PUBLIC_API_BASE_URL=${{ vars.NEXT_PUBLIC_API_BASE_URL || 'https://mahanfile.com/api' }}
           push: true
           tags: |
             ghcr.io/${{ steps.vars.outputs.owner }}/my-ads-api:${{ github.sha }}
@@ -422,8 +425,10 @@ jobs:
           VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT || vars.VAPID_SUBJECT }}
           NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${{ secrets.NEXT_PUBLIC_VAPID_PUBLIC_KEY || vars.NEXT_PUBLIC_VAPID_PUBLIC_KEY }}
           PUSH_NOTIFICATION_TIMEOUT_MS: ${{ vars.PUSH_NOTIFICATION_TIMEOUT_MS || secrets.PUSH_NOTIFICATION_TIMEOUT_MS }}
+          NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL || 'https://mahanfile.com' }}
+          NEXT_PUBLIC_API_BASE_URL: ${{ vars.NEXT_PUBLIC_API_BASE_URL || 'https://mahanfile.com/api' }}
         run: |
-          required_vars=(STACK_NAME GHCR_TOKEN POSTGRES_PASSWORD MINIO_ACCESS_KEY MINIO_SECRET_KEY JWT_ACCESS_TOKEN_SECRET JWT_REFRESH_TOKEN_SECRET RABBITMQ_PASSWORD TELEGRAM_BOT_TOKEN GRAFANA_ADMIN_PASSWORD GRAFANA_ADMIN_USER GRAFANA_ADMIN_EMAIL VAPID_PUBLIC_KEY VAPID_PRIVATE_KEY VAPID_SUBJECT NEXT_PUBLIC_VAPID_PUBLIC_KEY PUSH_NOTIFICATION_TIMEOUT_MS)
+          required_vars=(STACK_NAME GHCR_TOKEN POSTGRES_PASSWORD MINIO_ACCESS_KEY MINIO_SECRET_KEY JWT_ACCESS_TOKEN_SECRET JWT_REFRESH_TOKEN_SECRET RABBITMQ_PASSWORD TELEGRAM_BOT_TOKEN GRAFANA_ADMIN_PASSWORD GRAFANA_ADMIN_USER GRAFANA_ADMIN_EMAIL VAPID_PUBLIC_KEY VAPID_PRIVATE_KEY VAPID_SUBJECT NEXT_PUBLIC_VAPID_PUBLIC_KEY PUSH_NOTIFICATION_TIMEOUT_MS NEXT_PUBLIC_APP_URL NEXT_PUBLIC_API_BASE_URL)
           missing=0
           for name in "${required_vars[@]}"; do
             if [ -z "${!name}" ]; then
@@ -521,8 +526,8 @@ jobs:
           LOG_PRETTY: ${{ vars.LOG_PRETTY }}
           PRISMA_LOG_QUERIES: ${{ vars.PRISMA_LOG_QUERIES }}
           NEXT_UI_PORT: ${{ vars.NEXT_UI_PORT }}
-          NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
-          NEXT_PUBLIC_API_BASE_URL: ${{ vars.NEXT_PUBLIC_API_BASE_URL }}
+          NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL || 'https://mahanfile.com' }}
+          NEXT_PUBLIC_API_BASE_URL: ${{ vars.NEXT_PUBLIC_API_BASE_URL || 'https://mahanfile.com/api' }}
           TELEGRAM_BOT_REPLICAS: ${{ vars.TELEGRAM_BOT_REPLICAS || '1' }}
           API_REPLICAS: ${{ vars.API_REPLICAS }}
           API_CRON_REPLICAS: ${{ vars.API_CRON_REPLICAS }}

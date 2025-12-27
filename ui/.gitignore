@@ -30,6 +30,5 @@ playwright-report
 storybook-static
 
 # PWA
-public/service-worker.js
 public/workbox-*.js
 public/sw.js

@@ -81,6 +81,14 @@ body[data-pathname^='/dashboard'] [data-site-footer] {
   display: none;
 }
 
+html[data-pwa-splash='1'] #pwa-splash {
+  display: flex;
+}
+
+html[data-pwa-splash='1'] #app-shell {
+  visibility: hidden;
+}
+
 ::-webkit-scrollbar {
   width: 10px;
 }

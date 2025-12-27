@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 
@@ -22,6 +22,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 
 type Step = 'phone' | 'verify';
+const CODE_LENGTH = 4;
 
 const sanitizeIranLocalPhone = (input: string): string => {
   let digits = input.replace(/\D/g, '');
@@ -44,7 +45,7 @@ const toInternationalIranPhone = (digits: string): string => (digits ? `+98${dig
 
 const formatDisplayIranPhone = (digits: string): string => (digits ? `0${digits}` : '');
 
-const sanitizeCode = (input: string) => input.replace(/\D/g, '').slice(0, 6);
+const sanitizeCode = (input: string) => input.replace(/\D/g, '').slice(0, CODE_LENGTH);
 
 export function PhoneOtpLoginForm() {
   const t = useTranslations('landing.login');
@@ -57,12 +58,112 @@ export function PhoneOtpLoginForm() {
   const [code, setCode] = useState('');
   const [step, setStep] = useState<Step>('phone');
   const [lastRequestedPhoneLocal, setLastRequestedPhoneLocal] = useState<string | null>(null);
+  const phoneInputRef = useRef<HTMLInputElement>(null);
+  const codeInputRefs = useRef<Array<HTMLInputElement | null>>([]);
+  const codeRef = useRef(code);
 
   const [requestOtp, { isLoading: isRequesting }] = useRequestOtpMutation();
   const [verifyOtp, { isLoading: isVerifying }] = useVerifyOtpMutation();
 
   const isAuthenticated = useMemo(() => Boolean(auth.accessToken), [auth.accessToken]);
   const displayPhone = formatDisplayIranPhone(lastRequestedPhoneLocal ?? phone) || '+98';
+
+  useEffect(() => {
+    codeRef.current = code;
+  }, [code]);
+
+  useEffect(() => {
+    if (step === 'phone') {
+      phoneInputRef.current?.focus();
+    } else if (step === 'verify') {
+      const digits = Array.from({ length: CODE_LENGTH }, (_, index) => codeRef.current[index] ?? '');
+      const emptyIndex = digits.findIndex((digit) => !digit);
+      const targetIndex = emptyIndex === -1 ? CODE_LENGTH - 1 : emptyIndex;
+      codeInputRefs.current[targetIndex]?.focus();
+    }
+  }, [step]);
+
+  const handleCodeInput = useCallback(
+    (index: number) => (event: React.ChangeEvent<HTMLInputElement>) => {
+      const rawValue = event.target.value;
+      const value = rawValue.replace(/\D/g, '');
+      const nextIndex = Math.min(index + value.length, CODE_LENGTH - 1);
+
+      if (!value) {
+        setCode((prev) => {
+          const digits = Array.from(
+            { length: CODE_LENGTH },
+            (_, position) => prev[position] ?? '',
+          );
+          digits[index] = '';
+          return digits.join('');
+        });
+        return;
+      }
+
+      setCode((prev) => {
+        const digits = Array.from({ length: CODE_LENGTH }, (_, position) => prev[position] ?? '');
+        const incoming = value.split('');
+        let cursor = index;
+        for (const digit of incoming) {
+          if (cursor >= CODE_LENGTH) break;
+          digits[cursor] = digit;
+          cursor += 1;
+        }
+        return digits.join('');
+      });
+
+      codeInputRefs.current[nextIndex]?.focus();
+    },
+    [],
+  );
+
+  const handleCodeKeyDown = useCallback(
+    (index: number) => (event: React.KeyboardEvent<HTMLInputElement>) => {
+      if (event.key === 'Backspace') {
+        event.preventDefault();
+        setCode((prev) => {
+          const digits = Array.from({ length: CODE_LENGTH }, (_, position) => prev[position] ?? '');
+          if (digits[index]) {
+            digits[index] = '';
+            return digits.join('');
+          }
+          if (index > 0) {
+            digits[index - 1] = '';
+            codeInputRefs.current[index - 1]?.focus();
+          }
+          return digits.join('');
+        });
+        return;
+      }
+
+      if (event.key === 'ArrowLeft' && index > 0) {
+        event.preventDefault();
+        codeInputRefs.current[index - 1]?.focus();
+      }
+
+      if (event.key === 'ArrowRight' && index < CODE_LENGTH - 1) {
+        event.preventDefault();
+        codeInputRefs.current[index + 1]?.focus();
+      }
+    },
+    [],
+  );
+
+  const handleCodePaste = useCallback(
+    (event: React.ClipboardEvent<HTMLDivElement>) => {
+      const pasted = event.clipboardData.getData('text');
+      const digits = sanitizeCode(pasted);
+      if (!digits) {
+        return;
+      }
+      event.preventDefault();
+      setCode(digits);
+      const targetIndex = Math.min(digits.length, CODE_LENGTH - 1);
+      codeInputRefs.current[targetIndex]?.focus();
+    },
+    [],
+  );
 
   const handleRequestOtp = useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
@@ -111,7 +212,7 @@ export function PhoneOtpLoginForm() {
         return;
       }
 
-      if (!sanitizedCode || sanitizedCode.length < 4) {
+      if (!sanitizedCode || sanitizedCode.length < CODE_LENGTH) {
         toast({
           title: t('errors.invalidCode'),
           variant: 'destructive',
@@ -209,6 +310,7 @@ export function PhoneOtpLoginForm() {
                   required
                   dir="ltr"
                   className="pl-14 text-left"
+                  ref={phoneInputRef}
                 />
               </div>
               <p className="text-xs text-muted-foreground">{t('phoneHint')}</p>
@@ -230,19 +332,39 @@ export function PhoneOtpLoginForm() {
             </p>
             <div className="space-y-1.5">
               <Label htmlFor="code">{t('codeLabel')}</Label>
-              <Input
-                id="code"
-                name="code"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                placeholder={t('codePlaceholder')}
-                value={code}
-                onChange={(event) => setCode(sanitizeCode(event.target.value))}
-                disabled={isVerifying}
-                required
+              <div
+                className="flex items-center justify-center"
+                onPaste={handleCodePaste}
                 dir="ltr"
-                className="text-left tracking-[0.5em]"
-              />
+              >
+                {Array.from({ length: CODE_LENGTH }, (_, index) => {
+                  const digit = code[index] ?? '';
+                  return (
+                    <div key={`code-slot-${index}`} className="flex items-center">
+                      <Input
+                        id={index === 0 ? 'code' : undefined}
+                        name="code"
+                        type="password"
+                        inputMode="numeric"
+                        autoComplete={index === 0 ? 'one-time-code' : 'off'}
+                        aria-label={t('codeLabel')}
+                        value={digit}
+                        onChange={handleCodeInput(index)}
+                        onKeyDown={handleCodeKeyDown(index)}
+                        disabled={isVerifying}
+                        required
+                        className="size-12 p-0 text-center text-lg font-semibold"
+                        ref={(element) => {
+                          codeInputRefs.current[index] = element;
+                        }}
+                      />
+                      {index < CODE_LENGTH - 1 ? (
+                        <span className="mx-2 text-sm text-muted-foreground">-</span>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
               <button

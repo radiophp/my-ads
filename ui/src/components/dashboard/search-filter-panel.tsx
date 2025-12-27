@@ -968,7 +968,7 @@ export function DashboardSearchFilterPanel() {
           'lg:hidden',
           filterModalOpen
             ? 'hidden'
-            : 'pointer-events-none fixed bottom-4 left-4 z-40 drop-shadow-lg md:bottom-20 md:left-1/2 md:-translate-x-1/2 md:drop-shadow-2xl',
+            : 'pointer-events-none fixed bottom-[calc(4rem+1rem+env(safe-area-inset-bottom))] left-1/2 z-40 -translate-x-1/2 drop-shadow-lg md:bottom-20 md:drop-shadow-2xl',
         )}
       >
         <div className="pointer-events-auto flex flex-col gap-3 md:flex-row">
@@ -976,7 +976,8 @@ export function DashboardSearchFilterPanel() {
             type="button"
             variant={hasActiveFilters ? 'default' : 'secondary'}
             className={cn(
-              'rounded-full px-4 py-2',
+              'rounded-full px-4 py-2 ring-1 ring-white/30 backdrop-blur-xl backdrop-saturate-150',
+              hasActiveFilters ? 'bg-primary/75' : 'bg-secondary/75',
               hasActiveFilters ? 'shadow-lg' : 'shadow',
               'md:gap-4 md:px-14 md:py-7 md:text-xl',
             )}
@@ -2143,27 +2144,25 @@ export function DashboardSearchFilterPanel() {
                   <span>{t('applyFilters')}</span>
                 </span>
               </Button>
-              {modalHasPendingChanges ? (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="flex-1"
-                  disabled={!hasActiveFilters || saveLimitReached || isCreatingSavedFilter}
-                  onClick={() => setSaveDialogOpen(true)}
-                  title={
-                    !hasActiveFilters
-                      ? savedFiltersT('disabled.noFilters')
-                      : saveLimitReached
-                        ? savedFiltersT('disabled.limitReached')
-                        : undefined
-                  }
-                >
-                  <span className="flex items-center justify-center gap-2">
-                    <BookmarkPlus className="size-4" />
-                    <span>{savedFiltersT('saveButton')}</span>
-                  </span>
-                </Button>
-              ) : null}
+              <Button
+                type="button"
+                variant="secondary"
+                className="flex-1"
+                disabled={!hasActiveFilters || saveLimitReached || isCreatingSavedFilter}
+                onClick={() => setSaveDialogOpen(true)}
+                title={
+                  !hasActiveFilters
+                    ? savedFiltersT('disabled.noFilters')
+                    : saveLimitReached
+                      ? savedFiltersT('disabled.limitReached')
+                      : undefined
+                }
+              >
+                <span className="flex items-center justify-center gap-2">
+                  <BookmarkPlus className="size-4" />
+                  <span>{savedFiltersT('saveButton')}</span>
+                </span>
+              </Button>
             </div>
             <Button
               type="button"

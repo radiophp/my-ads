@@ -35,7 +35,7 @@ export function HomeSlider({ slides, locale, appBase }: HomeSliderProps) {
         loop={slides.length > 1}
         pagination={{ clickable: true }}
         dir={isRTL ? 'rtl' : 'ltr'}
-        className="overflow-hidden rounded-3xl"
+        className="overflow-hidden"
       >
         {slides.map((slide, index) => {
           const desktopImage = normalizeStorageUrl(slide.imageDesktopUrl, appBase ?? undefined);

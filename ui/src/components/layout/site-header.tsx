@@ -546,7 +546,7 @@ function MobileBottomNav({
     cn('size-5 transition-colors', active ? 'text-foreground' : 'text-muted-foreground');
 
   const nav = (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-background/90 backdrop-blur sm:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border/40 bg-background/75 backdrop-blur-xl backdrop-saturate-150 sm:hidden">
       <div
         className={cn(
           'grid h-16 items-center px-4 pb-[env(safe-area-inset-bottom)]',

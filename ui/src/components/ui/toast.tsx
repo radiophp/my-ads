@@ -41,7 +41,7 @@ const ToastViewport = React.forwardRef<
 ToastViewport.displayName = ToastPrimitives.Viewport.displayName;
 
 const toastVariants = cva(
-  'group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-none border-0 border-b border-border bg-muted/80 p-4 shadow-lg transition-all lg:rounded-xl lg:border lg:border-border lg:bg-background',
+  'group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-none border-0 border-b border-border bg-muted/80 p-4 shadow-lg transition-all touch-pan-y select-none lg:rounded-xl lg:border lg:border-border lg:bg-background',
   {
     variants: {
       variant: {
@@ -55,16 +55,124 @@ const toastVariants = cva(
   },
 );
 
+const SWIPE_ACTIVATE_PX = 12;
+const SWIPE_DISMISS_PX = 90;
+
+const isInteractiveTarget = (target: EventTarget | null): boolean => {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+  return Boolean(
+    target.closest('button, a, [role="button"], input, textarea, select, [toast-close], [data-toast-no-swipe]'),
+  );
+};
+
 const Toast = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Root>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> & VariantProps<typeof toastVariants>
->(({ className, variant, ...props }, ref) => (
-  <ToastPrimitives.Root
-    ref={ref}
-    className={cn(toastVariants({ variant }), className)}
-    {...props}
-  />
-));
+>(({ className, variant, onClick, onPointerDown, onPointerMove, onPointerUp, onPointerCancel, ...props }, ref) => {
+  const swipeState = React.useRef({
+    active: false,
+    swiping: false,
+    preventClick: false,
+    startX: 0,
+    startY: 0,
+  });
+  const [offsetX, setOffsetX] = React.useState(0);
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLLIElement>) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) {
+      onPointerDown?.(event);
+      return;
+    }
+    if (isInteractiveTarget(event.target)) {
+      onPointerDown?.(event);
+      return;
+    }
+    swipeState.current = {
+      active: true,
+      swiping: false,
+      preventClick: false,
+      startX: event.clientX,
+      startY: event.clientY,
+    };
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    onPointerDown?.(event);
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLLIElement>) => {
+    if (!swipeState.current.active) {
+      onPointerMove?.(event);
+      return;
+    }
+    const dx = event.clientX - swipeState.current.startX;
+    const dy = event.clientY - swipeState.current.startY;
+    if (!swipeState.current.swiping) {
+      if (Math.abs(dx) < SWIPE_ACTIVATE_PX) {
+        onPointerMove?.(event);
+        return;
+      }
+      if (Math.abs(dy) > Math.abs(dx)) {
+        swipeState.current.active = false;
+        swipeState.current.swiping = false;
+        swipeState.current.preventClick = false;
+        setOffsetX(0);
+        event.currentTarget.releasePointerCapture?.(event.pointerId);
+        onPointerMove?.(event);
+        return;
+      }
+      swipeState.current.swiping = true;
+      swipeState.current.preventClick = true;
+    }
+    if (swipeState.current.swiping) {
+      setOffsetX(dx);
+    }
+    onPointerMove?.(event);
+  };
+
+  const finishPointer = (event: React.PointerEvent<HTMLLIElement>) => {
+    if (!swipeState.current.active) {
+      onPointerUp?.(event);
+      onPointerCancel?.(event);
+      return;
+    }
+    const dx = event.clientX - swipeState.current.startX;
+    if (swipeState.current.swiping && Math.abs(dx) > SWIPE_DISMISS_PX) {
+      props.onOpenChange?.(false);
+    } else {
+      setOffsetX(0);
+    }
+    swipeState.current.active = false;
+    swipeState.current.swiping = false;
+    event.currentTarget.releasePointerCapture?.(event.pointerId);
+    onPointerUp?.(event);
+    onPointerCancel?.(event);
+  };
+
+  const handleClick = (event: React.MouseEvent<HTMLLIElement>) => {
+    if (swipeState.current.preventClick) {
+      swipeState.current.preventClick = false;
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+    onClick?.(event);
+  };
+
+  return (
+    <ToastPrimitives.Root
+      ref={ref}
+      className={cn(toastVariants({ variant }), className)}
+      style={offsetX ? { transform: `translateX(${offsetX}px)` } : undefined}
+      onClick={handleClick}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={finishPointer}
+      onPointerCancel={finishPointer}
+      {...props}
+    />
+  );
+});
 Toast.displayName = ToastPrimitives.Root.displayName;
 
 const ToastAction = ToastPrimitives.Action;

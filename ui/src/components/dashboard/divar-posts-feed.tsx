@@ -72,6 +72,7 @@ export function DivarPostsFeed(): JSX.Element {
   const categorySlug = categorySelection.slug;
   const categoryDepth = categorySelection.depth;
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const detailScrollRef = useRef<HTMLDivElement | null>(null);
   const selectedIndex = useMemo(
     () => (selectedPost ? posts.findIndex((post) => post.id === selectedPost.id) : -1),
     [posts, selectedPost],
@@ -254,6 +255,26 @@ export function DivarPostsFeed(): JSX.Element {
     setMapReady(!hasLocation);
   }, [selectedPost]);
 
+  const scrollDetailToTop = useCallback(() => {
+    const node = detailScrollRef.current;
+    if (!node) {
+      return;
+    }
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) {
+      node.scrollTop = 0;
+      return;
+    }
+    try {
+      node.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch {
+      node.scrollTop = 0;
+    }
+  }, []);
+
   const handleNavigateByOffset = useCallback(
     (offset: number) => {
       if (selectedIndex < 0) {
@@ -266,8 +287,9 @@ export function DivarPostsFeed(): JSX.Element {
       setMapReady(!hasLocationForPost(target));
       setSelectedPost(target);
       setDialogOpen(true);
+      scrollDetailToTop();
     },
-    [hasLocationForPost, posts, selectedIndex],
+    [hasLocationForPost, posts, scrollDetailToTop, selectedIndex],
   );
 
   const currencyFormatter = useMemo(
@@ -677,7 +699,7 @@ export function DivarPostsFeed(): JSX.Element {
                 </DialogHeader>
               </div>
 
-              <div className="flex-1 overflow-y-auto px-6 py-4 sm:p-0">
+              <div ref={detailScrollRef} className="flex-1 overflow-y-auto px-6 py-4 sm:p-0">
                 {detailData ? (
                   <PostDetailView
                     post={selectedPost}

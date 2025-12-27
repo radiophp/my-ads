@@ -10,11 +10,13 @@ import { AuthInitializer } from '@/components/auth/auth-initializer';
 import { PwaServiceWorker } from '@/components/pwa-service-worker';
 import { PushNotificationListener } from '@/components/notifications/push-notification-listener';
 import { PushSubscriptionSync } from '@/components/notifications/push-subscription-sync';
+import { PwaBackNavigation } from '@/components/pwa-back-navigation';
 
 export function Providers({ children }: PropsWithChildren) {
   return (
     <ReduxProvider store={store}>
       <AuthInitializer />
+      <PwaBackNavigation />
       <PwaServiceWorker />
       <PushSubscriptionSync />
       <PushNotificationListener />

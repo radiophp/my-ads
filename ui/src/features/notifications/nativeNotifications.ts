@@ -34,9 +34,7 @@ const buildNotificationData = (item: NotificationItem) => {
   }
   const body = parts.join(' • ') || 'Tap to view the ad details.';
 
-  const url =
-    item.post.permalink ??
-    `${typeof window !== 'undefined' ? window.location.origin : ''}/dashboard/posts/${item.post.id}`;
+  const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/dashboard/posts/${item.post.id}`;
 
   return {
     title,

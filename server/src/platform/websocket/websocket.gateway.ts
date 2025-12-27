@@ -51,21 +51,9 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
   }
 
   emitToUser(userId: string, event: string, payload: JsonValue): boolean {
+    this.server.to(this.buildUserRoom(userId)).emit(event, payload);
     const socketIds = this.socketsByUser.get(userId);
-    if (!socketIds || socketIds.size === 0) {
-      return false;
-    }
-
-    let delivered = false;
-    for (const socketId of socketIds) {
-      const socket = this.socketStore.get(socketId);
-      if (!socket) {
-        continue;
-      }
-      socket.emit(event, payload);
-      delivered = true;
-    }
-    return delivered;
+    return !!socketIds && socketIds.size > 0;
   }
 
   hasActiveConnection(userId: string): boolean {
@@ -107,6 +95,7 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
     const socketIds = this.socketsByUser.get(userId) ?? new Set<string>();
     socketIds.add(client.id);
     this.socketsByUser.set(userId, socketIds);
+    client.join(this.buildUserRoom(userId));
   }
 
   private unregisterClient(client: Socket): void {
@@ -115,6 +104,7 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
     if (!userId) {
       return;
     }
+    client.leave(this.buildUserRoom(userId));
     const socketIds = this.socketsByUser.get(userId);
     if (!socketIds) {
       return;
@@ -123,5 +113,9 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
     if (socketIds.size === 0) {
       this.socketsByUser.delete(userId);
     }
+  }
+
+  private buildUserRoom(userId: string): string {
+    return `user:${userId}`;
   }
 }

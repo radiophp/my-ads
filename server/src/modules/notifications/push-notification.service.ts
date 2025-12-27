@@ -79,12 +79,15 @@ export class PushNotificationService {
       return { delivered: false, attempted: false, reason: 'no_subscriptions' };
     }
 
+    const postUrl = payload.post?.id
+      ? `/dashboard/posts/${payload.post.id}`
+      : '/dashboard/notifications';
     const body = {
       title: payload.post.title ?? 'New matched ad',
       body: payload.filter?.name
         ? `${payload.filter.name}${payload.post.cityName ? ' • ' + payload.post.cityName : ''}`
         : (payload.post.cityName ?? 'New notification'),
-      url: payload.post.permalink ?? `/dashboard/posts/${payload.post.id}`,
+      url: postUrl,
       icon: payload.post.previewImageUrl ?? '/fav/android-chrome-192x192.png',
       badge: '/fav/favicon-32x32.png',
       tag: payload.id,

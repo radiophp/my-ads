@@ -29,12 +29,12 @@ if (!process.env.NEXT_UI_PORT) {
 }
 const defaultAppUrl =
   process.env.NODE_ENV === 'production'
-    ? 'https://mahan.toncloud.observer'
-    : `http://localhost:${defaultPort}`;
+    ? 'https://mahanfile.com'
+    : 'https://dev.mahanfile.com';
 const defaultApiBaseUrl =
   process.env.NODE_ENV === 'production'
-    ? 'https://mahan.toncloud.observer/api'
-    : 'http://localhost:6200/api';
+    ? 'https://mahanfile.com/api'
+    : 'https://dev.mahanfile.com/api';
 
 const mapTileBaseUrl =
   process.env.NEXT_PUBLIC_MAP_TILE_BASE_URL ??

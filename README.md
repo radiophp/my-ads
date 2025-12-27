@@ -441,6 +441,7 @@ All configuration is validated at startup (`platform/config/environment.validati
 | `DATABASE_URL` | — | PostgreSQL connection string (required). Must start with `postgres://` or `postgresql://`. |
 | `DATABASE_DIRECT_URL` | — | Optional direct connection string for Prisma migrations. |
 | `SHADOW_DATABASE_URL` | — | Optional URL for Prisma shadow database (migrations). |
+| `POSTGRES_MAX_CONNECTIONS` | `200` | Postgres `max_connections` override for the Swarm service (docker-compose-prod.yml). |
 | `REDIS_HOST` | `redis` | Primary Redis hostname. |
 | `REDIS_HOST_FALLBACK` | — | Overrides host when running outside containers (e.g., `host.docker.internal`). |
 | `REDIS_PORT` | `6202` | Redis TCP port. |

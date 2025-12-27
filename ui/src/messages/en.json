@@ -19,7 +19,8 @@
       "blog": "Blog",
       "about": "About",
       "guides": "Guides",
-      "login": "Sign in"
+      "login": "Sign in",
+      "other": "Other"
     },
     "docs": "Docs",
     "languageLabel": "Language",

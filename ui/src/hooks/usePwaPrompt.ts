@@ -9,6 +9,13 @@ export function usePwaPrompt() {
   const [hasRelatedInstall, setHasRelatedInstall] = React.useState(false);
 
   React.useEffect(() => {
+    const existingPrompt = (window as Window & { __pwaPromptEvent?: BeforeInstallPromptEvent | null })
+      .__pwaPromptEvent;
+    if (existingPrompt) {
+      setDeferredPrompt(existingPrompt);
+      setIsInstallable(true);
+    }
+
     const handler = (event: Event) => {
       event.preventDefault();
       setDeferredPrompt(event as BeforeInstallPromptEvent);
@@ -16,8 +23,27 @@ export function usePwaPrompt() {
     };
 
     window.addEventListener('beforeinstallprompt', handler);
+    const installableHandler = () => {
+      const storedPrompt = (
+        window as Window & { __pwaPromptEvent?: BeforeInstallPromptEvent | null }
+      ).__pwaPromptEvent;
+      if (storedPrompt) {
+        setDeferredPrompt(storedPrompt);
+        setIsInstallable(true);
+      }
+    };
+    const installedHandler = () => {
+      setDeferredPrompt(null);
+      setIsInstallable(false);
+    };
+    window.addEventListener('pwa:installable', installableHandler as EventListener);
+    window.addEventListener('pwa:installed', installedHandler as EventListener);
 
-    return () => window.removeEventListener('beforeinstallprompt', handler);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler);
+      window.removeEventListener('pwa:installable', installableHandler as EventListener);
+      window.removeEventListener('pwa:installed', installedHandler as EventListener);
+    };
   }, []);
 
   React.useEffect(() => {
@@ -84,11 +110,18 @@ export function usePwaPrompt() {
   }, []);
 
   const promptInstall = React.useCallback(async () => {
-    if (!deferredPrompt) return false;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
+    const storedPrompt =
+      deferredPrompt ??
+      (window as Window & { __pwaPromptEvent?: BeforeInstallPromptEvent | null }).__pwaPromptEvent ??
+      null;
+    if (!storedPrompt) return false;
+    storedPrompt.prompt();
+    const { outcome } = await storedPrompt.userChoice;
     setDeferredPrompt(null);
     setIsInstallable(false);
+    (
+      window as Window & { __pwaPromptEvent?: BeforeInstallPromptEvent | null }
+    ).__pwaPromptEvent = null;
     return outcome === 'accepted';
   }, [deferredPrompt]);
 

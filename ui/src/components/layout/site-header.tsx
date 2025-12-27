@@ -1,7 +1,8 @@
 'use client';
 import { useTranslations } from 'next-intl';
-import { useMemo, useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useMemo, useState, useEffect, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 
 import { UserMenu } from '@/components/layout/user-menu';
@@ -90,6 +91,7 @@ export function SiteHeader() {
   const pwaT = useTranslations('pwa');
   const notificationsT = useTranslations('dashboard.notificationsPage');
   const router = useRouter();
+  const pathname = usePathname();
   const dispatch = useAppDispatch();
   const auth = useAppSelector((state) => state.auth);
   const [logoutMutation, { isLoading: isLoggingOut }] = useLogoutMutation();
@@ -286,8 +288,8 @@ export function SiteHeader() {
   }, [auth.user?.profileImageUrl]);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur transition-colors">
-      <div className="flex h-16 w-full items-center justify-between px-4">
+    <header className="sticky top-0 z-40 border-b-0 bg-transparent backdrop-blur-0 transition-colors sm:border-b sm:border-border/60 sm:bg-background/80 sm:backdrop-blur">
+      <div className="hidden h-16 w-full items-center justify-between px-4 sm:flex">
         <div className="flex w-full items-center gap-3 sm:w-auto rtl:justify-between sm:rtl:justify-start">
           <button
             type="button"
@@ -440,7 +442,16 @@ export function SiteHeader() {
         ringBinderErrorLabel={t('ringBinder.list.error')}
         menuTitle={t('header.mobileMenuTitle')}
         closeLabel={t('header.mobileMenuClose')}
-        themeToggleLabel={t('header.themeToggle')}
+      />
+      <MobileBottomNav
+        pathname={pathname ?? ''}
+        isAuthenticated={showAuthNav}
+        homeLabel={t('header.nav.home')}
+        dashboardLabel={t('header.nav.dashboard')}
+        notificationsLabel={t('header.nav.notifications')}
+        loginLabel={t('header.nav.login')}
+        otherLabel={t('header.nav.other')}
+        onOpenMenu={() => setMobileMenuOpen(true)}
       />
       <ManualInstallDialog open={showManualInstall} onOpenChange={setShowManualInstall} />
       <InstalledNoticeDialog
@@ -493,6 +504,113 @@ function DesktopNavDropdown({ label, icon, items }: DesktopNavDropdownProps) {
       </div>
     </div>
   );
+}
+
+type MobileBottomNavProps = {
+  pathname: string;
+  isAuthenticated: boolean;
+  homeLabel: string;
+  dashboardLabel: string;
+  notificationsLabel: string;
+  loginLabel: string;
+  otherLabel: string;
+  onOpenMenu: () => void;
+};
+
+function MobileBottomNav({
+  pathname,
+  isAuthenticated,
+  homeLabel,
+  dashboardLabel,
+  notificationsLabel,
+  loginLabel,
+  otherLabel,
+  onOpenMenu,
+}: MobileBottomNavProps) {
+  const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null);
+
+  useLayoutEffect(() => {
+    setPortalRoot(document.body);
+  }, []);
+
+  const isHome = pathname === '/';
+  const isNotifications = pathname.startsWith('/dashboard/notifications');
+  const isDashboard = pathname.startsWith('/dashboard') && !isNotifications;
+  const isLogin = pathname.startsWith('/login');
+  const itemClass = (active: boolean) =>
+    cn(
+      'flex flex-col items-center justify-center gap-1 p-2 text-[11px] font-medium transition-colors',
+      active ? 'text-foreground' : 'text-muted-foreground',
+    );
+  const iconClass = (active: boolean) =>
+    cn('size-5 transition-colors', active ? 'text-foreground' : 'text-muted-foreground');
+
+  const nav = (
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border/60 bg-background/90 backdrop-blur sm:hidden">
+      <div
+        className={cn(
+          'grid h-16 items-center px-4 pb-[env(safe-area-inset-bottom)]',
+          isAuthenticated ? 'grid-cols-4' : 'grid-cols-3',
+        )}
+      >
+        <Link href="/" className={itemClass(isHome)} aria-current={isHome ? 'page' : undefined}>
+          <Image
+            src="/fav/favicon-32x32.png"
+            alt={homeLabel}
+            width={20}
+            height={20}
+            className={cn('size-5', isHome ? 'opacity-100' : 'opacity-70')}
+            priority={false}
+          />
+          <span>{homeLabel}</span>
+        </Link>
+        {isAuthenticated ? (
+          <>
+            <Link
+              href="/dashboard"
+              className={itemClass(isDashboard)}
+              aria-current={isDashboard ? 'page' : undefined}
+            >
+              <LayoutDashboard className={iconClass(isDashboard)} aria-hidden />
+              <span>{dashboardLabel}</span>
+            </Link>
+            <Link
+              href="/dashboard/notifications"
+              className={itemClass(isNotifications)}
+              aria-current={isNotifications ? 'page' : undefined}
+            >
+              <Bell className={iconClass(isNotifications)} aria-hidden />
+              <span>{notificationsLabel}</span>
+            </Link>
+          </>
+        ) : (
+          <Link
+            href="/login"
+            className={itemClass(isLogin)}
+            aria-current={isLogin ? 'page' : undefined}
+          >
+            <LogIn className={iconClass(isLogin)} aria-hidden />
+            <span>{loginLabel}</span>
+          </Link>
+        )}
+        <button
+          type="button"
+          onClick={onOpenMenu}
+          className={itemClass(false)}
+          aria-label={otherLabel}
+        >
+          <Menu className={iconClass(false)} aria-hidden />
+          <span>{otherLabel}</span>
+        </button>
+      </div>
+    </nav>
+  );
+
+  if (portalRoot) {
+    return createPortal(nav, portalRoot);
+  }
+
+  return nav;
 }
 
 type RingBinderNavDropdownProps = {
@@ -652,7 +770,6 @@ type MobileNavigationDrawerProps = {
   profileLabel: string;
   menuTitle: string;
   closeLabel: string;
-  themeToggleLabel: string;
   ringBinderFolders: RingBinderFolder[];
   ringBinderLoading: boolean;
   ringBinderError: boolean;
@@ -682,7 +799,6 @@ function MobileNavigationDrawer({
   profileLabel,
   menuTitle,
   closeLabel,
-  themeToggleLabel,
   ringBinderFolders,
   ringBinderLoading,
   ringBinderError,
@@ -691,7 +807,6 @@ function MobileNavigationDrawer({
   ringBinderEmptyLabel,
   ringBinderErrorLabel,
 }: MobileNavigationDrawerProps) {
-  const themeToggleRef = useRef<HTMLButtonElement>(null);
   const [ringBinderExpanded, setRingBinderExpanded] = useState(false);
   const maxLabelLength = 15;
   const truncateLabel = (name: string) =>
@@ -707,7 +822,7 @@ function MobileNavigationDrawer({
       {/* eslint-disable tailwindcss/classnames-order */}
       <DialogContent
         hideCloseButton
-        className="left-auto right-0 top-0 h-dvh w-72 max-w-[85vw] translate-x-full translate-y-0 rounded-none border-0 bg-background p-0 text-foreground transition-transform duration-300 data-[state=open]:translate-x-0 data-[state=closed]:translate-x-full sm:hidden"
+        className="left-auto right-0 top-0 h-dvh w-72 max-w-[85vw] translate-x-0 translate-y-0 rounded-none border-0 bg-background p-0 text-foreground sm:hidden data-[state=open]:animate-in data-[state=open]:slide-in-from-right data-[state=open]:duration-300 data-[state=open]:ease-out data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=closed]:duration-200 data-[state=closed]:ease-in"
       >
         <DialogTitle className="sr-only">{menuTitle}</DialogTitle>
         <div className="flex h-full flex-col overflow-y-auto overscroll-contain border-l border-border/60">
@@ -725,29 +840,32 @@ function MobileNavigationDrawer({
           </div>
           {isAuthenticated ? (
             <div className="border-b border-border/60 px-4 py-2">
-              <Link
-                href={profileHref}
-                className="flex items-center gap-3 rounded-lg px-2 py-1 transition hover:bg-secondary/60"
-                onClick={() => onOpenChange(false)}
-              >
-                {userAvatar ? (
-                  <Image
-                    src={userAvatar}
-                    alt={userName ?? profileLabel}
-                    width={40}
-                    height={40}
-                    className="size-10 rounded-full object-cover"
-                    unoptimized
-                  />
-                ) : (
-                  <div className="flex size-10 items-center justify-center rounded-full border border-border/70 bg-secondary/50 text-sm font-semibold text-foreground">
-                    {(userName ?? profileLabel).slice(0, 2).toUpperCase()}
-                  </div>
-                )}
-                <span className="text-sm font-semibold text-foreground">
-                  {userName ?? profileLabel}
-                </span>
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link
+                  href={profileHref}
+                  className="flex flex-1 items-center gap-3 rounded-lg px-2 py-1 transition hover:bg-secondary/60"
+                  onClick={() => onOpenChange(false)}
+                >
+                  {userAvatar ? (
+                    <Image
+                      src={userAvatar}
+                      alt={userName ?? profileLabel}
+                      width={40}
+                      height={40}
+                      className="size-10 rounded-full object-cover"
+                      unoptimized
+                    />
+                  ) : (
+                    <div className="flex size-10 items-center justify-center rounded-full border border-border/70 bg-secondary/50 text-sm font-semibold text-foreground">
+                      {(userName ?? profileLabel).slice(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                  <span className="text-sm font-semibold text-foreground">
+                    {userName ?? profileLabel}
+                  </span>
+                </Link>
+                <ThemeToggle className="shrink-0" />
+              </div>
               {isAdmin ? (
                 <Link
                   href={adminHref}
@@ -853,23 +971,7 @@ function MobileNavigationDrawer({
               </div>
             ) : null}
           </nav>
-          <div className="space-y-4 border-t border-border/60 p-4">
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => themeToggleRef.current?.click()}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
-                  themeToggleRef.current?.click();
-                }
-              }}
-              className="flex cursor-pointer items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <span>{themeToggleLabel}</span>
-              <ThemeToggle ref={themeToggleRef} />
-            </div>
-            <div className="border-t border-border/60 pt-3">
+          <div className="border-t border-border/60 p-4">
             {showInstallButton ? (
               <Button
                 className="w-full border-0 bg-primary/90 text-right text-primary-foreground hover:bg-primary"
@@ -885,7 +987,6 @@ function MobileNavigationDrawer({
                 </span>
               </Button>
             ) : null}
-            </div>
           </div>
           {isAuthenticated ? (
             <div className="mt-auto border-t border-border/60 p-4">

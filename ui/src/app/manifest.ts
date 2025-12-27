@@ -11,11 +11,15 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: appShortName,
     description: 'مدیریت آگهی‌های ماهان فایل در هر زمان و هر مکان.',
     start_url: '/',
+    scope: '/',
+    id: '/',
     display: 'standalone',
+    display_override: ['standalone', 'fullscreen'],
     background_color: '#464646',
     lang: 'fa',
     categories: ['business', 'productivity'],
     orientation: 'portrait',
+    prefer_related_applications: false,
     icons: [
       {
         src: '/fav/android-chrome-192x192.png',

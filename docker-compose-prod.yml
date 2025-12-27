@@ -16,6 +16,12 @@ x-deploy-defaults: &deploy_defaults
 services:
   postgres:
     image: postgres:16-alpine
+    command:
+      [
+        "postgres",
+        "-c",
+        "max_connections=${POSTGRES_MAX_CONNECTIONS:-200}"
+      ]
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}

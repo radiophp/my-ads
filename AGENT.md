@@ -5,6 +5,7 @@ This repository hosts the **My Ads** NestJS backend (`server/`). Key operational
 - **Environment management**
   - `.env` lives in the repository root. Local commands inside `/server` rely on `dotenv-cli` to load `../.env`.
   - Runtime configuration is validated in `src/platform/config/environment.validation.ts`; the README includes a full variable table.
+  - Swarm Postgres uses `POSTGRES_MAX_CONNECTIONS` (see `docker-compose-prod.yml`) to raise `max_connections`.
 
 - **Tooling & commands**
   - Install dependencies from `/server` with `npm install`; Husky hooks are enabled via `npm run prepare`.

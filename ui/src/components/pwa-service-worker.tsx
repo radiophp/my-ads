@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-
-const SW_PATH = '/service-worker.js';
+import { registerServiceWorker } from '@/lib/service-worker';
 
 const canRegisterSw = (): boolean => {
   if (typeof window === 'undefined') return false;
@@ -21,11 +20,7 @@ export function PwaServiceWorker() {
 
     const register = async () => {
       try {
-        const existing = await navigator.serviceWorker.getRegistration(SW_PATH);
-        if (existing) {
-          return;
-        }
-        await navigator.serviceWorker.register(SW_PATH);
+        await registerServiceWorker();
       } catch (error) {
         if (!cancelled) console.warn('Service worker registration failed', error);
       }

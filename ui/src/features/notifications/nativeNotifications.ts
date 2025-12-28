@@ -2,9 +2,20 @@
 
 import type { NotificationItem } from '@/types/notifications';
 import { hasSeenNotification, markNotificationSeen } from './notificationDeduper';
+import { registerServiceWorker } from '@/lib/service-worker';
 
 const FALLBACK_ICON = '/fav/android-chrome-192x192.png';
 const FALLBACK_BADGE = '/fav/favicon-32x32.png';
+type NotificationActionLike = {
+  action: string;
+  title: string;
+  icon?: string;
+};
+
+type NotificationOptionsWithActions = NotificationOptions & {
+  actions?: NotificationActionLike[];
+};
+
 
 export const canUseNativeNotifications = (): boolean =>
   typeof window !== 'undefined' && 'Notification' in window && 'serviceWorker' in navigator;
@@ -34,12 +45,15 @@ const buildNotificationData = (item: NotificationItem) => {
   }
   const body = parts.join(' • ') || 'Tap to view the ad details.';
 
-  const url = `${typeof window !== 'undefined' ? window.location.origin : ''}/dashboard/posts/${item.post.id}`;
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const url = `${origin}/dashboard/posts/${item.post.id}`;
+  const listUrl = `${origin}/dashboard/notifications`;
 
   return {
     title,
     body,
     url,
+    listUrl,
     icon: item.post.previewImageUrl ?? FALLBACK_ICON,
     badge: FALLBACK_BADGE,
   };
@@ -56,16 +70,17 @@ export const showNativeNotificationIfPermitted = async (item: NotificationItem):
     return;
   }
 
-  const { title, body, url, icon, badge } = buildNotificationData(item);
-  const options: NotificationOptions = {
+  const { title, body, url, listUrl, icon, badge } = buildNotificationData(item);
+  const options: NotificationOptionsWithActions = {
     body,
     icon,
     badge,
     tag: item.id,
-    data: { url, notificationId: item.id },
+    data: { url, listUrl, notificationId: item.id },
   };
 
   try {
+    await registerServiceWorker();
     const reg = await navigator.serviceWorker.ready;
     if (reg?.showNotification) {
       await reg.showNotification(title, options);
@@ -77,7 +92,14 @@ export const showNativeNotificationIfPermitted = async (item: NotificationItem):
   }
 
   try {
-    const notification = new Notification(title, options);
+    const fallbackOptions: NotificationOptions = {
+      body,
+      icon,
+      badge,
+      tag: item.id,
+      data: { url, listUrl, notificationId: item.id },
+    };
+    const notification = new Notification(title, fallbackOptions);
     notification.onclick = () => {
       window.open(url, '_blank', 'noopener,noreferrer');
     };

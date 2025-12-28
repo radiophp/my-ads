@@ -2,7 +2,10 @@
 
 import { useCallback } from 'react';
 import { urlBase64ToUint8Array } from '@/lib/vapid';
-import { useRegisterPushSubscriptionMutation } from '@/features/api/apiSlice';
+import {
+  useRegisterPushSubscriptionMutation,
+  useUnregisterPushSubscriptionMutation,
+} from '@/features/api/apiSlice';
 import { registerServiceWorker } from '@/lib/service-worker';
 
 const canUsePush = (): boolean =>
@@ -31,7 +34,8 @@ const toSubscriptionPayload = (subscription: PushSubscription) => {
 };
 
 export function usePushSubscription() {
-  const [registerSub, { isLoading }] = useRegisterPushSubscriptionMutation();
+  const [registerSub, { isLoading: isSubscribing }] = useRegisterPushSubscriptionMutation();
+  const [unregisterSub, { isLoading: isUnsubscribing }] = useUnregisterPushSubscriptionMutation();
 
   const syncSubscription = useCallback(
     async (options?: { force?: boolean }) => {
@@ -84,5 +88,34 @@ export function usePushSubscription() {
     await syncSubscription({ force: true });
   }, [syncSubscription]);
 
-  return { subscribe, syncSubscription, isLoading, supported: canUsePush() };
+  const unsubscribe = useCallback(async () => {
+    if (!canUsePush()) {
+      throw new Error('Push is not supported in this browser.');
+    }
+    const reg = await registerServiceWorker();
+    if (!reg) {
+      return;
+    }
+    await navigator.serviceWorker.ready;
+    const existing = await reg.pushManager.getSubscription();
+    if (!existing) {
+      return;
+    }
+    const endpoint = existing.endpoint;
+    try {
+      await existing.unsubscribe();
+    } catch {
+      // ignore unsubscribe failures
+    }
+    await unregisterSub({ endpoint }).unwrap();
+  }, [unregisterSub]);
+
+  return {
+    subscribe,
+    unsubscribe,
+    syncSubscription,
+    isSubscribing,
+    isUnsubscribing,
+    supported: canUsePush(),
+  };
 }

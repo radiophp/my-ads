@@ -487,6 +487,7 @@
     },
     "notificationsPage": {
       "badge": "Realtime alerts",
+      "heading": "Notifications",
       "title": "Saved filter alerts",
       "description": "Stay on top of new Divar posts that match your saved filter sets.",
       "refresh": "Refresh list",
@@ -494,18 +495,52 @@
       "loadMore": "Load more",
       "loadingMore": "Loading…",
       "enableDeviceNotifications": "Enable device notifications",
+      "filter": {
+        "label": "Filter by saved set",
+        "all": "All filters"
+      },
+      "readFilter": {
+        "label": "Filter by read status",
+        "all": "All statuses",
+        "read": "Read",
+        "unread": "Unread"
+      },
+      "retentionNotice": {
+        "title": "Retention policy",
+        "body": "Notifications older than 30 days are removed automatically. Save posts to your ring binder to keep them and find them later with filters—only notifications are removed, not posts."
+      },
       "emptyTitle": "No notifications yet",
       "emptyDescription": "Enable notifications for a saved filter set and you’ll see new matches here.",
       "realtime": {
         "online": "Realtime updates active",
         "offline": "Realtime connection paused",
-        "error": "Realtime error: {message}"
+        "error": "Realtime error: {message}",
+        "enable": "Enable realtime alerts",
+        "disable": "Disable realtime alerts"
+      },
+      "all": {
+        "enable": "Enable notifications",
+        "disable": "Disable notifications",
+        "updating": "Update",
+        "enabledTitle": "Notifications enabled",
+        "enabledDescription": "Realtime and push alerts are enabled on this device.",
+        "enabledPartialDescription": "Realtime alerts are enabled, but push could not be activated.",
+        "disabledTitle": "Notifications disabled",
+        "disabledDescription": "Realtime and push alerts are disabled on this device.",
+        "confirmDisableTitle": "Disable notifications?",
+        "confirmDisableDescription": "You will stop receiving realtime and push notifications on this device.",
+        "confirmDisableAction": "Disable notifications",
+        "confirmDisableCancel": "Cancel"
       },
       "push": {
         "enable": "Enable push notifications",
         "enabling": "Enabling…",
+        "disable": "Disable push notifications",
+        "disabling": "Disabling…",
         "enabledTitle": "Push enabled",
         "enabledDescription": "We’ll deliver alerts even when the app is closed.",
+        "disabledTitle": "Push disabled",
+        "disabledDescription": "Push notifications are disabled on this device.",
         "permissionDenied": "Notifications are blocked in your browser settings.",
         "status": {
           "checking": "Push: checking…",
@@ -520,7 +555,8 @@
       "status": {
         "pending": "Waiting to deliver",
         "sent": "Delivered",
-        "failed": "Delivery failed"
+        "failed": "Delivery failed",
+        "read": "Read"
       },
       "item": {
         "savedFilter": "Filter: {name}",

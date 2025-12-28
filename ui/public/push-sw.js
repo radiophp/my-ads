@@ -6,6 +6,8 @@ const DEFAULT_BODY = 'New alert available.';
 const DEFAULT_ICON = '/fav/android-chrome-192x192.png';
 const DEFAULT_BADGE = '/fav/favicon-32x32.png';
 const DEFAULT_URL = '/dashboard/notifications';
+const VIEW_ACTIONS = new Set(['view', 'view-ad']);
+const LIST_ACTIONS = new Set(['list', 'view-notifications']);
 
 const resolveUrl = (targetUrl) => {
   try {
@@ -31,14 +33,17 @@ self.addEventListener('push', (event) => {
       const title = payload.title || DEFAULT_TITLE;
       const body = payload.body || DEFAULT_BODY;
       const targetUrl = resolveUrl(payload.url);
+      const listUrl = resolveUrl(payload.listUrl || DEFAULT_URL);
       const options = {
         body,
         icon: payload.icon || DEFAULT_ICON,
         badge: payload.badge || DEFAULT_BADGE,
         tag: payload.tag || notificationId || undefined,
         renotify: false,
+        actions: [],
         data: {
           url: targetUrl,
+          listUrl,
           notificationId,
         },
       };
@@ -63,21 +68,43 @@ self.addEventListener('push', (event) => {
 });
 
 self.addEventListener('notificationclick', (event) => {
-  const targetUrl = resolveUrl(event.notification?.data?.url);
+  const data = event.notification?.data || {};
+  const action = event.action || '';
+  let targetUrl = resolveUrl(data.url);
+
+  if (action) {
+    if (VIEW_ACTIONS.has(action)) {
+      targetUrl = resolveUrl(data.url);
+    } else if (LIST_ACTIONS.has(action)) {
+      targetUrl = resolveUrl(data.listUrl || DEFAULT_URL);
+    } else {
+      targetUrl = resolveUrl(data.listUrl || DEFAULT_URL);
+    }
+  }
+
   event.notification.close();
 
   event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+    (async () => {
+      const clientList = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
       for (const client of clientList) {
         if (client.url === targetUrl && 'focus' in client) {
           return client.focus();
         }
+      }
+      for (const client of clientList) {
         if ('navigate' in client) {
-          client.navigate(targetUrl);
-          return client.focus();
+          try {
+            const navigated = await client.navigate(targetUrl);
+            if (navigated && 'focus' in navigated) {
+              return navigated.focus();
+            }
+          } catch {
+            // Fall back to opening a new window below.
+          }
         }
       }
       return self.clients.openWindow ? self.clients.openWindow(targetUrl) : undefined;
-    }),
+    })(),
   );
 });

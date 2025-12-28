@@ -34,6 +34,7 @@ import {
   FolderKanban,
   Bookmark,
   Bell,
+  BellOff,
   ShieldCheck,
   Newspaper,
   BookOpen,
@@ -41,6 +42,8 @@ import {
   LogIn,
 } from 'lucide-react';
 import { useNotificationsSocket } from '@/features/notifications/useNotificationsSocket';
+import { useNotificationPreferences } from '@/features/notifications/useNotificationPreferences';
+import { usePushSubscription } from '@/features/notifications/usePushSubscription';
 import { CodeSearch } from '@/components/layout/code-search';
 import { cn } from '@/lib/utils';
 
@@ -101,8 +104,83 @@ export function SiteHeader() {
   const [showInstalledNotice, setShowInstalledNotice] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [disableConfirmOpen, setDisableConfirmOpen] = useState(false);
+  const {
+    realtimeEnabled,
+    pushEnabled,
+    setPushEnabled,
+    setRealtimeEnabled,
+  } = useNotificationPreferences();
+  const {
+    subscribe: subscribePush,
+    unsubscribe: unsubscribePush,
+    supported: pushSupported,
+    isSubscribing: pushSubscribing,
+    isUnsubscribing: pushUnsubscribing,
+  } = usePushSubscription();
+  const notificationsEnabled = realtimeEnabled && (!pushSupported || pushEnabled);
+  const notificationBusy = pushSubscribing || pushUnsubscribing;
+  const notificationLabel = notificationsEnabled
+    ? notificationsT('all.disable')
+    : notificationsT('all.enable');
+  const notificationButtonClass = cn(
+    'rounded-full transition-colors',
+    notificationsEnabled
+      ? 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20'
+      : 'bg-amber-500/10 text-amber-600 hover:bg-amber-500/20',
+  );
+
+  const handleEnableNotifications = async () => {
+    if (!auth.accessToken || notificationBusy) {
+      return;
+    }
+    if (notificationsEnabled) {
+      return;
+    }
+    setRealtimeEnabled(true);
+    if (!pushSupported) {
+      setPushEnabled(false);
+      return;
+    }
+    try {
+      await subscribePush();
+      setPushEnabled(true);
+    } catch (error) {
+      setPushEnabled(false);
+      toast({
+        title: notificationsT('push.errorTitle'),
+        description: notificationsT('push.errorDescription'),
+        variant: 'destructive',
+      });
+      console.error(error);
+    }
+  };
+
+  const handleDisableNotifications = async () => {
+    if (!auth.accessToken || notificationBusy) {
+      return;
+    }
+    setRealtimeEnabled(false);
+    setPushEnabled(false);
+    if (pushSupported) {
+      try {
+        await unsubscribePush();
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  };
+
+  const handleToggleNotifications = async () => {
+    if (notificationsEnabled) {
+      setDisableConfirmOpen(true);
+      return;
+    }
+    await handleEnableNotifications();
+  };
 
   useNotificationsSocket({
+    enabled: realtimeEnabled,
     onNotification: (payload) => {
       const detailHref = payload.post?.id
         ? `/dashboard/posts/${payload.post.id}`
@@ -390,6 +468,24 @@ export function SiteHeader() {
             </Button>
           ) : null}
           {showAuthNav ? <CodeSearch /> : null}
+          {showAuthNav ? (
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              className={notificationButtonClass}
+              onClick={() => void handleToggleNotifications()}
+              aria-label={notificationLabel}
+              title={notificationLabel}
+              disabled={notificationBusy}
+            >
+              {notificationsEnabled ? (
+                <Bell className="size-4" aria-hidden />
+              ) : (
+                <BellOff className="size-4" aria-hidden />
+              )}
+            </Button>
+          ) : null}
           <ThemeToggle />
           {showLoginNav ? (
             <Link
@@ -442,6 +538,11 @@ export function SiteHeader() {
         ringBinderErrorLabel={t('ringBinder.list.error')}
         menuTitle={t('header.mobileMenuTitle')}
         closeLabel={t('header.mobileMenuClose')}
+        notificationsEnabled={notificationsEnabled}
+        notificationBusy={notificationBusy}
+        notificationLabel={notificationLabel}
+        notificationButtonClass={notificationButtonClass}
+        onToggleNotifications={handleToggleNotifications}
       />
       <MobileBottomNav
         pathname={pathname ?? ''}
@@ -463,6 +564,38 @@ export function SiteHeader() {
           }
         }}
       />
+      <Dialog open={disableConfirmOpen} onOpenChange={setDisableConfirmOpen}>
+        <DialogContent className="max-w-sm" hideCloseButton>
+          <DialogHeader className="text-right sm:text-right">
+            <DialogTitle className="text-right">
+              {notificationsT('all.confirmDisableTitle')}
+            </DialogTitle>
+            <DialogDescription className="text-right">
+              {notificationsT('all.confirmDisableDescription')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDisableConfirmOpen(false)}
+            >
+              {notificationsT('all.confirmDisableCancel')}
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={async () => {
+                await handleDisableNotifications();
+                setDisableConfirmOpen(false);
+              }}
+              disabled={notificationBusy}
+            >
+              {notificationsT('all.confirmDisableAction')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </header>
   );
 }
@@ -777,6 +910,11 @@ type MobileNavigationDrawerProps = {
   ringBinderLoadingLabel: string;
   ringBinderEmptyLabel: string;
   ringBinderErrorLabel: string;
+  notificationsEnabled: boolean;
+  notificationBusy: boolean;
+  notificationLabel: string;
+  notificationButtonClass: string;
+  onToggleNotifications: () => void;
 };
 
 function MobileNavigationDrawer({
@@ -806,6 +944,11 @@ function MobileNavigationDrawer({
   ringBinderLoadingLabel,
   ringBinderEmptyLabel,
   ringBinderErrorLabel,
+  notificationsEnabled,
+  notificationBusy,
+  notificationLabel,
+  notificationButtonClass,
+  onToggleNotifications,
 }: MobileNavigationDrawerProps) {
   const [ringBinderExpanded, setRingBinderExpanded] = useState(false);
   const maxLabelLength = 15;
@@ -864,7 +1007,25 @@ function MobileNavigationDrawer({
                     {userName ?? profileLabel}
                   </span>
                 </Link>
-                <ThemeToggle className="shrink-0" />
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className={notificationButtonClass}
+                    onClick={() => void onToggleNotifications()}
+                    aria-label={notificationLabel}
+                    title={notificationLabel}
+                    disabled={notificationBusy}
+                  >
+                    {notificationsEnabled ? (
+                      <Bell className="size-4" aria-hidden />
+                    ) : (
+                      <BellOff className="size-4" aria-hidden />
+                    )}
+                  </Button>
+                  <ThemeToggle className="shrink-0" />
+                </div>
               </div>
               {isAdmin ? (
                 <Link

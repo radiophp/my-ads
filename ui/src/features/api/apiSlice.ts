@@ -205,6 +205,13 @@ export const apiSlice = createApi({
         body,
       }),
     }),
+    unregisterPushSubscription: builder.mutation<{ ok: true }, { endpoint: string }>({
+      query: (body) => ({
+        url: '/notifications/push/unsubscribe',
+        method: 'POST',
+        body,
+      }),
+    }),
     requestOtp: builder.mutation<SuccessResponse, { phone: string }>({
       query: (body) => ({
         url: '/auth/request-otp',
@@ -1122,6 +1129,13 @@ export const apiSlice = createApi({
             ]
           : [{ type: 'Notifications' as const, id: 'LIST' }],
     }),
+    markNotificationRead: builder.mutation<{ ok: true }, { notificationId: string }>({
+      query: (body) => ({
+        url: '/notifications/read',
+        method: 'POST',
+        body,
+      }),
+    }),
   }),
 });
 
@@ -1230,9 +1244,11 @@ export const {
   useUpdateSavedFilterMutation,
   useDeleteSavedFilterMutation,
   useGetNotificationsQuery,
+  useMarkNotificationReadMutation,
   useLazyGetNotificationsQuery,
   useSendTestNotificationMutation,
   useRegisterPushSubscriptionMutation,
+  useUnregisterPushSubscriptionMutation,
 } = apiSlice;
 
 type UpdateCurrentUserPayload = Partial<{

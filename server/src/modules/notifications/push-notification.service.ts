@@ -67,6 +67,10 @@ export class PushNotificationService {
     await this.prisma.pushSubscription.delete({ where: { endpoint } }).catch(() => undefined);
   }
 
+  async removeSubscriptionForUser(userId: string, endpoint: string): Promise<void> {
+    await this.prisma.pushSubscription.deleteMany({ where: { userId, endpoint } });
+  }
+
   async sendToUser(
     userId: string,
     payload: RealtimeNotificationPayload,

@@ -16,8 +16,10 @@ import { Roles, Role } from '@app/common/decorators/roles.decorator';
 import { NotificationsService } from './notifications.service';
 import { PaginatedNotificationsDto } from './dto/notification.dto';
 import { CreateTestNotificationDto } from './dto/create-test-notification.dto';
+import { MarkNotificationReadDto } from './dto/mark-notification-read.dto';
 import { NotificationQueueProcessor } from './notification-queue.processor';
 import { CreatePushSubscriptionDto } from './dto/create-push-subscription.dto';
+import { RemovePushSubscriptionDto } from './dto/remove-push-subscription.dto';
 import { PushNotificationService } from './push-notification.service';
 
 @Controller('notifications')
@@ -87,6 +89,20 @@ export class NotificationsController {
     };
   }
 
+  @Post('read')
+  @ApiOperation({ summary: 'Mark a notification as read for the current user.' })
+  async markRead(
+    @Req() request: { user?: { sub?: string } },
+    @Body() dto: MarkNotificationReadDto,
+  ): Promise<{ ok: true }> {
+    const userId = request.user?.sub;
+    if (!userId) {
+      throw new UnauthorizedException();
+    }
+    await this.notificationsService.markNotificationRead(userId, dto.notificationId);
+    return { ok: true };
+  }
+
   @Post('push/subscribe')
   @ApiOperation({ summary: 'Register a web push subscription (requires auth).' })
   async subscribePush(
@@ -102,6 +118,20 @@ export class NotificationsController {
       p256dh: dto.p256dh,
       auth: dto.auth,
     });
+    return { ok: true };
+  }
+
+  @Post('push/unsubscribe')
+  @ApiOperation({ summary: 'Remove a web push subscription (requires auth).' })
+  async unsubscribePush(
+    @Req() request: { user?: { sub?: string } },
+    @Body() dto: RemovePushSubscriptionDto,
+  ): Promise<{ ok: true }> {
+    const userId = request.user?.sub;
+    if (!userId) {
+      throw new UnauthorizedException();
+    }
+    await this.pushNotificationService.removeSubscriptionForUser(userId, dto.endpoint);
     return { ok: true };
   }
 }

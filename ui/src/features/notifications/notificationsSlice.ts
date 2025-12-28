@@ -53,6 +53,15 @@ export const notificationsSlice = createSlice({
     addRealtimeNotification(state, action: PayloadAction<NotificationItem>) {
       state.items = dedupeNotifications([action.payload, ...state.items]);
     },
+    markNotificationRead(
+      state,
+      action: PayloadAction<{ id: string; readAt?: string | null }>,
+    ) {
+      const target = state.items.find((item) => item.id === action.payload.id);
+      if (target) {
+        target.readAt = action.payload.readAt ?? target.readAt ?? null;
+      }
+    },
     setNotificationConnection(state, action: PayloadAction<boolean>) {
       state.connected = action.payload;
     },
@@ -69,6 +78,7 @@ export const {
   replaceNotifications,
   appendNotifications,
   addRealtimeNotification,
+  markNotificationRead,
   setNotificationConnection,
   setNotificationError,
   resetNotifications,

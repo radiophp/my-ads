@@ -14,6 +14,9 @@ class NotificationPostDto {
   id!: string;
 
   @ApiProperty({ nullable: true })
+  code!: number | null;
+
+  @ApiProperty({ nullable: true })
   title!: string | null;
 
   @ApiProperty({ nullable: true })
@@ -27,6 +30,12 @@ class NotificationPostDto {
 
   @ApiProperty({ nullable: true })
   depositAmount!: number | null;
+
+  @ApiProperty({ nullable: true })
+  pricePerSquare!: number | null;
+
+  @ApiProperty({ nullable: true })
+  area!: number | null;
 
   @ApiProperty({ nullable: true })
   cityName!: string | null;
@@ -68,6 +77,9 @@ export class NotificationDto {
 
   @ApiProperty({ nullable: true })
   failedAt!: Date | null;
+
+  @ApiProperty({ nullable: true })
+  readAt!: Date | null;
 
   @ApiProperty()
   createdAt!: Date;

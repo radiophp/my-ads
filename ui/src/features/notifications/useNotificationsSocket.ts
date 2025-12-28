@@ -19,6 +19,7 @@ const WS_NAMESPACE = '/ws';
 export type NotificationsSocketOptions = {
   onNotification?: (payload: NotificationItem) => void;
   onError?: (message: string) => void;
+  enabled?: boolean;
 };
 
 const resolveWsOrigin = (): string => {
@@ -42,18 +43,22 @@ export function useNotificationsSocket(options?: NotificationsSocketOptions): vo
   const token = useAppSelector((state) => state.auth.accessToken);
   const socketRef = useRef<Socket | null>(null);
   const optionsRef = useRef<NotificationsSocketOptions | undefined>(options);
+  const enabled = options?.enabled ?? true;
 
   useEffect(() => {
     optionsRef.current = options;
   }, [options]);
 
   useEffect(() => {
-    if (!token) {
+    if (!token || !enabled) {
       dispatch(setNotificationConnection(false));
-      dispatch(resetNotifications());
+      dispatch(setNotificationError(null));
       if (socketRef.current) {
         socketRef.current.disconnect();
         socketRef.current = null;
+      }
+      if (!token) {
+        dispatch(resetNotifications());
       }
       return;
     }
@@ -99,5 +104,5 @@ export function useNotificationsSocket(options?: NotificationsSocketOptions): vo
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [dispatch, token]);
+  }, [dispatch, enabled, token]);
 }

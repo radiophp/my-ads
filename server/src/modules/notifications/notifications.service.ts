@@ -17,11 +17,14 @@ const NOTIFICATION_PAGE_LIMIT = 50;
 type NotificationWithRelations = Notification & {
   post: {
     id: string;
+    code: number;
     title: string | null;
     description: string | null;
     priceTotal: Prisma.Decimal | number | null;
     rentAmount: Prisma.Decimal | number | null;
     depositAmount: Prisma.Decimal | number | null;
+    pricePerSquare: Prisma.Decimal | number | null;
+    area: Prisma.Decimal | number | null;
     cityName: string | null;
     districtName: string | null;
     provinceName: string | null;
@@ -75,11 +78,14 @@ export class NotificationsService {
           where: { id: params.postId },
           select: {
             id: true,
+            code: true,
             title: true,
             description: true,
             priceTotal: true,
             rentAmount: true,
             depositAmount: true,
+            pricePerSquare: true,
+            area: true,
             cityName: true,
             districtName: true,
             provinceName: true,
@@ -103,11 +109,14 @@ export class NotificationsService {
             where: { code: params.postCode },
             select: {
               id: true,
+              code: true,
               title: true,
               description: true,
               priceTotal: true,
               rentAmount: true,
               depositAmount: true,
+              pricePerSquare: true,
+              area: true,
               cityName: true,
               districtName: true,
               provinceName: true,
@@ -137,6 +146,7 @@ export class NotificationsService {
     const payload = this.buildPayloadSnapshot(
       {
         id: post.id,
+        code: post.code,
         externalId: '',
         title: post.title ?? null,
         description: post.description ?? null,
@@ -147,8 +157,8 @@ export class NotificationsService {
         dailyRateWeekend: null,
         dailyRateHoliday: null,
         extraPersonFee: null,
-        pricePerSquare: null,
-        area: null,
+        pricePerSquare: this.castDecimal(post.pricePerSquare),
+        area: this.castDecimal(post.area),
         areaLabel: null,
         landArea: null,
         landAreaLabel: null,
@@ -303,6 +313,20 @@ export class NotificationsService {
     };
   }
 
+  async markNotificationRead(userId: string, notificationId: string): Promise<boolean> {
+    const result = await this.prisma.notification.updateMany({
+      where: {
+        id: notificationId,
+        userId,
+        readAt: null,
+      },
+      data: {
+        readAt: new Date(),
+      },
+    });
+    return result.count > 0;
+  }
+
   async createNotificationFromMatch(params: {
     userId: string;
     savedFilterId: string;
@@ -352,11 +376,14 @@ export class NotificationsService {
         post: {
           select: {
             id: true,
+            code: true,
             title: true,
             description: true,
             priceTotal: true,
             rentAmount: true,
             depositAmount: true,
+            pricePerSquare: true,
+            area: true,
             cityName: true,
             districtName: true,
             provinceName: true,
@@ -495,11 +522,14 @@ export class NotificationsService {
     const fallbackPost = record.post
       ? {
           id: record.post.id,
+          code: record.post.code ?? null,
           title: record.post.title ?? null,
           description: record.post.description ?? null,
           priceTotal: this.castDecimal(record.post.priceTotal),
           rentAmount: this.castDecimal(record.post.rentAmount),
           depositAmount: this.castDecimal(record.post.depositAmount),
+          pricePerSquare: this.castDecimal(record.post.pricePerSquare),
+          area: this.castDecimal(record.post.area),
           cityName: record.post.cityName ?? null,
           districtName: record.post.districtName ?? null,
           provinceName: record.post.provinceName ?? null,
@@ -509,11 +539,14 @@ export class NotificationsService {
         }
       : {
           id: record.postId,
+          code: null,
           title: null,
           description: null,
           priceTotal: null,
           rentAmount: null,
           depositAmount: null,
+          pricePerSquare: null,
+          area: null,
           cityName: null,
           districtName: null,
           provinceName: null,
@@ -530,6 +563,7 @@ export class NotificationsService {
       message: record.message ?? null,
       createdAt: record.createdAt.toISOString(),
       sentAt: record.sentAt ? record.sentAt.toISOString() : null,
+      readAt: record.readAt ? record.readAt.toISOString() : null,
       filter: payload.filter,
       post: payload.post,
     };
@@ -543,11 +577,14 @@ export class NotificationsService {
       filter,
       post: {
         id: post.id,
+        code: post.code ?? null,
         title: post.title ?? null,
         description: post.description ?? null,
         priceTotal: post.priceTotal ?? null,
         rentAmount: post.rentAmount ?? null,
         depositAmount: post.depositAmount ?? null,
+        pricePerSquare: post.pricePerSquare ?? null,
+        area: post.area ?? null,
         cityName: post.cityName ?? null,
         districtName: post.districtName ?? null,
         provinceName: post.provinceName ?? null,
@@ -605,11 +642,14 @@ export class NotificationsService {
           typeof (post as Prisma.JsonObject)['id'] === 'string'
             ? ((post as Prisma.JsonObject)['id'] as string)
             : '',
+        code: this.parseNullableNumber(post, 'code'),
         title: this.parseNullableString(post, 'title'),
         description: this.parseNullableString(post, 'description'),
         priceTotal: this.parseNullableNumber(post, 'priceTotal'),
         rentAmount: this.parseNullableNumber(post, 'rentAmount'),
         depositAmount: this.parseNullableNumber(post, 'depositAmount'),
+        pricePerSquare: this.parseNullableNumber(post, 'pricePerSquare'),
+        area: this.parseNullableNumber(post, 'area'),
         cityName: this.parseNullableString(post, 'cityName'),
         districtName: this.parseNullableString(post, 'districtName'),
         provinceName: this.parseNullableString(post, 'provinceName'),
@@ -653,6 +693,7 @@ export class NotificationsService {
       message: record.message ?? null,
       sentAt: record.sentAt,
       failedAt: record.failedAt,
+      readAt: record.readAt ?? null,
       createdAt: record.createdAt,
       attemptCount: record.attemptCount,
       filter: snapshot?.filter ?? { id: record.savedFilterId, name: '' },
@@ -660,12 +701,15 @@ export class NotificationsService {
         snapshot?.post ??
         ({
           id: record.postId,
+          code: null,
           title: null,
           displayTitle: null,
           description: null,
           priceTotal: null,
           rentAmount: null,
           depositAmount: null,
+          pricePerSquare: null,
+          area: null,
           cityName: null,
           districtName: null,
           provinceName: null,

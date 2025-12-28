@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import type { JSX, KeyboardEvent, MouseEvent } from 'react';
+import type { JSX, KeyboardEvent, MouseEvent, ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { Camera, Clock3, MapPin, Image as ImageIcon, Phone } from 'lucide-react';
 import Link from 'next/link';
@@ -18,6 +18,7 @@ type PostCardProps = {
   href?: string | null;
   showCategoryBreadcrumb?: boolean;
   showPostCode?: boolean;
+  headerBadges?: ReactNode;
 };
 
 export function PostCard({
@@ -30,6 +31,7 @@ export function PostCard({
   href,
   showCategoryBreadcrumb,
   showPostCode = true,
+  headerBadges,
 }: PostCardProps): JSX.Element {
   const [imageFailed, setImageFailed] = useState(false);
   const [imageLoading, setImageLoading] = useState<boolean>(Boolean(post.imageUrl));
@@ -60,6 +62,7 @@ export function PostCard({
     categoryParent && categoryChild && categoryParent !== categoryChild
       ? `${categoryParent} > ${categoryChild}`
       : categoryChild ?? categoryParent;
+  const hasLeftBadges = Boolean(businessBadge || headerBadges);
 
   const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
     if (!onSelect) {
@@ -94,11 +97,16 @@ export function PostCard({
       <div className="flex flex-col gap-3">
         <div className="-mx-4 -mt-4 overflow-hidden rounded-t-xl">
           <div className="relative">
-            {businessBadge ? (
-              <span className="pointer-events-none absolute left-3 top-3 z-10 inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5 text-xs font-medium text-white">
-                {businessBadge.icon}
-                {businessBadge.label}
-              </span>
+            {hasLeftBadges ? (
+              <div className="pointer-events-none absolute left-3 top-3 z-10 flex flex-col gap-1">
+                {businessBadge ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-black/70 px-2 py-0.5 text-xs font-medium text-white">
+                    {businessBadge.icon}
+                    {businessBadge.label}
+                  </span>
+                ) : null}
+                {headerBadges}
+              </div>
             ) : null}
             {post.hasContactInfo ? (
               <span

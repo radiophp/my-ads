@@ -701,27 +701,45 @@ export function DivarPostsFeed(): JSX.Element {
 
               <div ref={detailScrollRef} className="flex-1 overflow-y-auto px-6 py-4 sm:p-0">
                 {detailData ? (
-                  <PostDetailView
-                    post={selectedPost}
-                    t={t}
-                    isRTL={isRTL}
-                    businessBadge={selectedBusinessBadge}
-                    cityDistrict={selectedCityDistrict}
-                    publishedDisplay={selectedPublishedDisplay}
-                    hasDownloadableMedia={hasDownloadableMedia}
-                    onRequestDownload={handleOpenDownloadDialog}
-                    detailData={detailData}
-                    onShareWhatsapp={sharePayload ? handleShareWhatsapp : undefined}
-                    onShareTelegram={sharePayload ? handleShareTelegram : undefined}
-                    smsHref={sharePayload?.smsHref ?? null}
-                    onCopyLink={sharePayload ? handleCopyLink : undefined}
-                    copyLinkLabel={t('copyLink')}
-                    onRequestContactInfo={handleFetchContactInfo}
-                    contactInfo={contactInfo}
-                    contactLoading={contactLoading}
-                    onMapReady={() => setMapReady(true)}
-                    mapWrapperClassName="lg:px-4"
-                  />
+                  <>
+                    <PostDetailView
+                      post={selectedPost}
+                      t={t}
+                      isRTL={isRTL}
+                      businessBadge={selectedBusinessBadge}
+                      cityDistrict={selectedCityDistrict}
+                      publishedDisplay={selectedPublishedDisplay}
+                      hasDownloadableMedia={hasDownloadableMedia}
+                      onRequestDownload={handleOpenDownloadDialog}
+                      detailData={detailData}
+                      onShareWhatsapp={sharePayload ? handleShareWhatsapp : undefined}
+                      onShareTelegram={sharePayload ? handleShareTelegram : undefined}
+                      smsHref={sharePayload?.smsHref ?? null}
+                      onCopyLink={sharePayload ? handleCopyLink : undefined}
+                      copyLinkLabel={t('copyLink')}
+                      onRequestContactInfo={handleFetchContactInfo}
+                      contactInfo={contactInfo}
+                      contactLoading={contactLoading}
+                      onMapReady={() => setMapReady(true)}
+                      mapWrapperClassName="lg:px-4"
+                    />
+                    <div className={cn('mt-6 flex', isRTL ? 'justify-start' : 'justify-end')}>
+                      <Button asChild variant="link" className="h-auto p-0 text-sm">
+                        <a
+                          href={
+                            selectedPost.permalink ??
+                            `https://divar.ir/v/${selectedPost.externalId}`
+                          }
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center gap-2"
+                        >
+                          {t('openOnDivar')}
+                          <ExternalLink className="size-4" aria-hidden />
+                        </a>
+                      </Button>
+                    </div>
+                  </>
                 ) : null}
               </div>
 
@@ -780,19 +798,6 @@ export function DivarPostsFeed(): JSX.Element {
                       onClick={() => closeDialog(false)}
                     >
                       {t('close')}
-                    </Button>
-                    <Button asChild className="min-w-[140px] flex-1 sm:flex-none">
-                      <a
-                        href={
-                          selectedPost.permalink ?? `https://divar.ir/v/${selectedPost.externalId}`
-                        }
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center justify-center gap-2"
-                      >
-                        {t('openOnDivar')}
-                        <ExternalLink className="size-4" aria-hidden />
-                      </a>
                     </Button>
                   </div>
                 </div>

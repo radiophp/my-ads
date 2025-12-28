@@ -5,11 +5,14 @@ export type NotificationFilterSnapshot = {
 
 export type NotificationPostSnapshot = {
   id: string;
+  code: number | null;
   title: string | null;
   description: string | null;
   priceTotal: number | null;
   rentAmount: number | null;
   depositAmount: number | null;
+  pricePerSquare: number | null;
+  area: number | null;
   cityName: string | null;
   districtName: string | null;
   provinceName: string | null;
@@ -29,6 +32,7 @@ export type RealtimeNotificationPayload = {
   message: string | null;
   createdAt: string;
   sentAt: string | null;
+  readAt: string | null;
   filter: NotificationFilterSnapshot;
   post: NotificationPostSnapshot;
 };

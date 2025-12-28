@@ -128,7 +128,6 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const dir = locale === 'fa' ? 'rtl' : 'ltr';
   const requestHeaders = await headers();
   const pathname = requestHeaders.get('x-pathname') ?? '';
-  const hideFooter = pathname.startsWith('/admin') || pathname.startsWith('/dashboard');
 
   return (
     <html
@@ -168,7 +167,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
               <main className="min-h-0 flex-1 pb-[calc(4rem+env(safe-area-inset-bottom))] sm:pb-0">
                 {children}
               </main>
-              {hideFooter ? null : <Footer />}
+              <Footer />
             </div>
           </Providers>
         </NextIntlClientProvider>

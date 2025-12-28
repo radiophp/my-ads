@@ -18,7 +18,11 @@ import {
 import { toast } from '@/components/ui/use-toast';
 import { usePwaPrompt } from '@/hooks/usePwaPrompt';
 import { Link } from '@/i18n/routing';
-import { useGetRingBinderFoldersQuery, useLogoutMutation } from '@/features/api/apiSlice';
+import {
+  useGetNotificationsQuery,
+  useGetRingBinderFoldersQuery,
+  useLogoutMutation,
+} from '@/features/api/apiSlice';
 import { clearAuth } from '@/features/auth/authSlice';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import type { RingBinderFolder } from '@/types/ring-binder';
@@ -44,6 +48,7 @@ import {
 import { useNotificationsSocket } from '@/features/notifications/useNotificationsSocket';
 import { useNotificationPreferences } from '@/features/notifications/useNotificationPreferences';
 import { usePushSubscription } from '@/features/notifications/usePushSubscription';
+import { selectLatestNotificationTimestamp } from '@/features/notifications/notificationsSlice';
 import { CodeSearch } from '@/components/layout/code-search';
 import { cn } from '@/lib/utils';
 
@@ -97,6 +102,49 @@ export function SiteHeader() {
   const pathname = usePathname();
   const dispatch = useAppDispatch();
   const auth = useAppSelector((state) => state.auth);
+  const latestFromStore = useAppSelector((state) =>
+    state.auth.accessToken ? selectLatestNotificationTimestamp(state) : null,
+  );
+  const { data: latestNotificationData } = useGetNotificationsQuery(
+    { limit: 1 },
+    { skip: !auth.accessToken },
+  );
+  const latestFromApi = useMemo(() => {
+    const raw = latestNotificationData?.items?.[0]?.createdAt;
+    if (!raw) {
+      return null;
+    }
+    const parsed = Date.parse(raw);
+    return Number.isNaN(parsed) ? null : parsed;
+  }, [latestNotificationData]);
+  const latestNotificationAt = useMemo(() => {
+    if (latestFromStore && latestFromApi) {
+      return Math.max(latestFromStore, latestFromApi);
+    }
+    return latestFromStore ?? latestFromApi ?? null;
+  }, [latestFromApi, latestFromStore]);
+  const [notificationClock, setNotificationClock] = useState(() => Date.now());
+  const FOUR_HOURS_MS = 4 * 60 * 60 * 1000;
+  const hasRecentNotifications =
+    typeof latestNotificationAt === 'number' &&
+    notificationClock - latestNotificationAt < FOUR_HOURS_MS;
+
+  useEffect(() => {
+    if (!latestNotificationAt) {
+      return;
+    }
+    const now = Date.now();
+    setNotificationClock(now);
+    const expiresAt = latestNotificationAt + FOUR_HOURS_MS;
+    const delay = expiresAt - now;
+    if (delay <= 0) {
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      setNotificationClock(Date.now());
+    }, delay);
+    return () => window.clearTimeout(timer);
+  }, [latestNotificationAt, FOUR_HOURS_MS]);
   const [logoutMutation, { isLoading: isLoggingOut }] = useLogoutMutation();
   const { isInstallable, promptInstall, isStandalone, hasRelatedInstall } = usePwaPrompt();
   const [isPromptingInstall, setIsPromptingInstall] = useState(false);
@@ -334,7 +382,7 @@ export function SiteHeader() {
       key: 'about',
       label: t('header.nav.about'),
       href: '/about',
-      visible: true,
+      visible: false,
       icon: 'about' as const,
     },
     {
@@ -383,7 +431,15 @@ export function SiteHeader() {
               alt={t('header.brand')}
               width={1000}
               height={357}
-              className="h-9 w-auto shrink-0 sm:h-12"
+              className="hidden h-9 w-auto shrink-0 sm:h-12 lg:block"
+              priority
+            />
+            <Image
+              src="/fav/android-chrome-192x192.png"
+              alt={t('header.brand')}
+              width={192}
+              height={192}
+              className="hidden size-10 shrink-0 sm:block lg:hidden"
               priority
             />
             <span className="sr-only">{t('header.brand')}</span>
@@ -418,22 +474,30 @@ export function SiteHeader() {
               />
             )}
             {showAuthNav && (
-              <DesktopNavDropdown
-                label={t('header.nav.filters')}
-                icon="filters"
-                items={[
-                  {
-                    href: '/dashboard/saved-filters',
-                    label: t('header.nav.savedFilters'),
-                    icon: 'savedFilters',
-                  },
-                  {
-                    href: '/dashboard/notifications',
-                    label: t('header.nav.notifications'),
-                    icon: 'notifications',
-                  },
-                ]}
-              />
+              <Link
+                href="/dashboard/saved-filters"
+                className="items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
+              >
+                {renderNavIcon('savedFilters', 'hidden lg:block')}
+                {t('header.nav.savedFilters')}
+              </Link>
+            )}
+            {showAuthNav && (
+              <Link
+                href="/dashboard/notifications"
+                className="items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
+              >
+                <span className="relative inline-flex items-center justify-center">
+                  {renderNavIcon('notifications', 'hidden lg:block')}
+                  {hasRecentNotifications && (
+                    <span
+                      className="absolute -right-1 -top-1 size-2 rounded-full bg-destructive shadow"
+                      aria-hidden
+                    />
+                  )}
+                </span>
+                {t('header.nav.notifications')}
+              </Link>
             )}
             <DesktopNavDropdown
               label={t('header.nav.newsBlog')}
@@ -443,13 +507,7 @@ export function SiteHeader() {
                 { href: '/blog', label: t('header.nav.blog'), icon: 'blog' },
               ]}
             />
-            <Link
-              href="/about"
-              className="hidden items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground lg:inline-flex"
-            >
-              {renderNavIcon('about', 'hidden lg:block')}
-              {t('header.nav.about')}
-            </Link>
+            {null}
           </nav>
         </div>
         <div className="hidden items-center gap-2 sm:flex">
@@ -468,25 +526,7 @@ export function SiteHeader() {
             </Button>
           ) : null}
           {showAuthNav ? <CodeSearch /> : null}
-          {showAuthNav ? (
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              className={notificationButtonClass}
-              onClick={() => void handleToggleNotifications()}
-              aria-label={notificationLabel}
-              title={notificationLabel}
-              disabled={notificationBusy}
-            >
-              {notificationsEnabled ? (
-                <Bell className="size-4" aria-hidden />
-              ) : (
-                <BellOff className="size-4" aria-hidden />
-              )}
-            </Button>
-          ) : null}
-          <ThemeToggle />
+          {showLoginNav ? <ThemeToggle /> : null}
           {showLoginNav ? (
             <Link
               href="/login"
@@ -507,6 +547,11 @@ export function SiteHeader() {
               isAdmin={showAdminNav}
               adminLabel={t('header.nav.admin')}
               adminHref="/admin"
+              notificationsEnabled={notificationsEnabled}
+              notificationBusy={notificationBusy}
+              notificationLabel={notificationLabel}
+              notificationButtonClass={notificationButtonClass}
+              onToggleNotifications={handleToggleNotifications}
             />
           ) : null}
         </div>
@@ -553,6 +598,7 @@ export function SiteHeader() {
         loginLabel={t('header.nav.login')}
         otherLabel={t('header.nav.other')}
         onOpenMenu={() => setMobileMenuOpen(true)}
+        hasRecentNotifications={hasRecentNotifications}
       />
       <ManualInstallDialog open={showManualInstall} onOpenChange={setShowManualInstall} />
       <InstalledNoticeDialog
@@ -648,6 +694,7 @@ type MobileBottomNavProps = {
   loginLabel: string;
   otherLabel: string;
   onOpenMenu: () => void;
+  hasRecentNotifications: boolean;
 };
 
 function MobileBottomNav({
@@ -659,6 +706,7 @@ function MobileBottomNav({
   loginLabel,
   otherLabel,
   onOpenMenu,
+  hasRecentNotifications,
 }: MobileBottomNavProps) {
   const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null);
 
@@ -712,7 +760,15 @@ function MobileBottomNav({
               className={itemClass(isNotifications)}
               aria-current={isNotifications ? 'page' : undefined}
             >
-              <Bell className={iconClass(isNotifications)} aria-hidden />
+              <span className="relative inline-flex items-center justify-center">
+                <Bell className={iconClass(isNotifications)} aria-hidden />
+                {hasRecentNotifications && (
+                  <span
+                    className="absolute -right-1 -top-1 size-2 rounded-full bg-destructive shadow"
+                    aria-hidden
+                  />
+                )}
+              </span>
               <span>{notificationsLabel}</span>
             </Link>
           </>

@@ -114,7 +114,7 @@ function FooterIntro({
   return (
     <div className="space-y-3">
       <p className="text-base font-semibold text-foreground">{title}</p>
-      <p className="text-sm text-muted-foreground">{description}</p>
+      <p className="text-xs leading-[1.9] text-muted-foreground">{description}</p>
     </div>
   );
 }
@@ -123,7 +123,7 @@ function FooterLinks({ t }: { t: FooterTranslations }) {
   return (
     <div className="space-y-3">
       <p className="text-base font-semibold text-foreground">{t('linksTitle')}</p>
-      <ul className="space-y-2 text-sm">
+      <ul className="space-y-2 text-xs leading-loose">
         <li>
           <Link href="/news" className="cursor-pointer transition hover:text-foreground">
             {t('newsLink')}
@@ -132,6 +132,11 @@ function FooterLinks({ t }: { t: FooterTranslations }) {
         <li>
           <Link href="/blog" className="cursor-pointer transition hover:text-foreground">
             {t('blogLink')}
+          </Link>
+        </li>
+        <li>
+          <Link href="/about" className="cursor-pointer transition hover:text-foreground">
+            {t('aboutLink')}
           </Link>
         </li>
       </ul>
@@ -157,7 +162,7 @@ function FooterContact({
   return (
     <div className="space-y-3">
       <p className="text-base font-semibold text-foreground">{t('contactTitle')}</p>
-      <div className="space-y-2 text-sm">
+      <div className="space-y-2 text-xs leading-loose">
         {phoneContacts.length > 0 ? (
           <div className="space-y-1">
             {phoneContacts.map((contact) => (
@@ -175,13 +180,13 @@ function FooterContact({
           <p className="text-muted-foreground">{t('contactEmpty')}</p>
         )}
         {address ? (
-          <div className="flex items-start gap-2 text-sm text-muted-foreground">
+          <div className="flex items-start gap-2 text-xs leading-loose text-muted-foreground">
             <MapPin className="mt-0.5 size-4 text-muted-foreground" aria-hidden />
             <span>{address}</span>
           </div>
         ) : null}
         {(instagramUrl || telegramChannelUrl || telegramBotUrl) ? (
-          <div className="flex flex-wrap items-center gap-3 pt-2 text-sm">
+          <div className="flex flex-wrap items-center gap-3 pt-2 text-xs leading-loose">
             {instagramUrl ? (
               <a
                 href={instagramUrl}

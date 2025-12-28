@@ -1,9 +1,11 @@
+/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import type { JSX } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, ExternalLink, Loader2 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
+import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -43,6 +45,7 @@ const SHARE_EMOJI_ICONS: ShareIconMap = {
 
 export function DivarPostsFeed(): JSX.Element {
   const t = useTranslations('dashboard.posts');
+  const headerT = useTranslations('header');
   const locale = useLocale();
   const isRTL = ['fa', 'ar', 'he'].includes(locale);
   const { toast } = useToast();
@@ -684,17 +687,42 @@ export function DivarPostsFeed(): JSX.Element {
           {selectedPost ? (
             <div className="flex h-full flex-col overflow-hidden">
               <div className="border-b border-border px-6 py-4 sm:hidden">
-                <p
-                  className={`break-words text-base font-semibold ${isRTL ? 'text-right' : 'text-center'}`}
+                <div
+                  className={cn(
+                    'flex w-full items-start gap-2 break-words text-sm font-semibold',
+                    isRTL ? 'justify-start text-right' : 'justify-center text-center',
+                  )}
                   dir={isRTL ? 'rtl' : 'ltr'}
                 >
-                  {selectedPost.title ?? t('untitled', { externalId: selectedPost.externalId })}
-                </p>
+                  <img
+                    src="/fav/android-chrome-192x192.png"
+                    alt={headerT('brand')}
+                    className="mt-0.5 size-6 shrink-0"
+                  />
+                  <span className={cn('break-words', isRTL && 'text-right')}>
+                    {selectedPost.title ?? t('untitled', { externalId: selectedPost.externalId })}
+                  </span>
+                </div>
               </div>
               <div className="hidden p-0 sm:block">
                 <DialogHeader>
-                  <DialogTitle className="mb-4 flex flex-wrap items-center gap-2 break-words">
-                    {selectedPost.title ?? t('untitled', { externalId: selectedPost.externalId })}
+                  <DialogTitle
+                    className={cn(
+                      'mb-4 flex w-full flex-wrap items-start gap-2 break-words text-base lg:text-lg',
+                      isRTL ? 'justify-start text-right' : 'justify-start',
+                    )}
+                    dir={isRTL ? 'rtl' : 'ltr'}
+                  >
+                    <Image
+                      src="/fav/android-chrome-192x192.png"
+                      alt={headerT('brand')}
+                      width={24}
+                      height={24}
+                      className="mt-0.5 size-6 shrink-0"
+                    />
+                    <span className={cn('break-words', isRTL && 'text-right')}>
+                      {selectedPost.title ?? t('untitled', { externalId: selectedPost.externalId })}
+                    </span>
                   </DialogTitle>
                 </DialogHeader>
               </div>

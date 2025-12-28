@@ -3,12 +3,14 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocale } from 'next-intl';
-import { LogOut, Settings, UserRound } from 'lucide-react';
+import { Bell, BellOff, LogOut, Settings, UserRound } from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Link } from '@/i18n/routing';
 import type { AuthenticatedUser } from '@/types/auth';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 type UserMenuProps = {
   user: AuthenticatedUser;
@@ -20,6 +22,11 @@ type UserMenuProps = {
   isAdmin: boolean;
   adminLabel: string;
   adminHref: string;
+  notificationsEnabled: boolean;
+  notificationBusy: boolean;
+  notificationLabel: string;
+  notificationButtonClass: string;
+  onToggleNotifications: () => void;
 };
 
 export function UserMenu({
@@ -32,8 +39,14 @@ export function UserMenu({
   isAdmin,
   adminLabel,
   adminHref,
+  notificationsEnabled,
+  notificationBusy,
+  notificationLabel,
+  notificationButtonClass,
+  onToggleNotifications,
 }: UserMenuProps) {
   const [open, setOpen] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const isRtl = useLocale() === 'fa';
@@ -42,6 +55,10 @@ export function UserMenu({
     const url = user.profileImageUrl?.trim();
     return url && url.length > 0 ? url : null;
   }, [user.profileImageUrl]);
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [profileImage]);
 
   const displayName = useMemo(() => {
     const firstName = user.firstName?.trim();
@@ -104,25 +121,22 @@ export function UserMenu({
         type="button"
         onClick={handleToggle}
         className={cn(
-          'flex items-center gap-2 rounded-full border border-border/70 bg-secondary/70 px-2.5 py-1.5 text-sm font-medium text-foreground transition-colors',
+          'flex items-center rounded-full border border-border/70 bg-secondary/70 p-1.5 text-sm font-medium text-foreground transition-colors',
           'hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed',
         )}
         aria-haspopup="menu"
         aria-expanded={open}
         disabled={isLoggingOut}
       >
-        <div className="flex items-center gap-2">
-          <Avatar className="size-9">
-            {profileImage ? (
-              <AvatarImage src={profileImage} alt={displayName} />
-            ) : (
-              <AvatarFallback>
-                <UserRound className="size-4" aria-hidden />
-              </AvatarFallback>
-            )}
-          </Avatar>
-          <span className="hidden max-w-[160px] truncate lg:inline-flex">{displayName}</span>
-        </div>
+        <Avatar className="size-9">
+          {profileImage && !avatarError ? (
+            <AvatarImage src={profileImage} alt={displayName} onError={() => setAvatarError(true)} />
+          ) : (
+            <AvatarFallback>
+              <UserRound className="size-4" aria-hidden />
+            </AvatarFallback>
+          )}
+        </Avatar>
       </button>
       {open ? (
         <div
@@ -172,6 +186,25 @@ export function UserMenu({
             <LogOut className="size-4" aria-hidden />
             <span>{logoutLabel}</span>
           </button>
+          <div className="flex items-center justify-end gap-2 px-3 py-2">
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              className={notificationButtonClass}
+              onClick={() => void onToggleNotifications()}
+              aria-label={notificationLabel}
+              title={notificationLabel}
+              disabled={notificationBusy}
+            >
+              {notificationsEnabled ? (
+                <Bell className="size-4" aria-hidden />
+              ) : (
+                <BellOff className="size-4" aria-hidden />
+              )}
+            </Button>
+            <ThemeToggle className="size-9" />
+          </div>
         </div>
       ) : null}
     </div>

@@ -109,6 +109,8 @@ The frontend pulls its env from the repo root `.env` (e.g., `NEXT_PUBLIC_API_BAS
 - SEO settings are managed under `/admin/seo` and applied to public pages, including `/preview`.
 - The preview page lives at `/preview`, revalidates every 60 seconds, and accepts `city` / `district` query params (e.g., `/preview?city=karaj&district=azimiyeh`).
 - Storage URLs should be same-origin: set `MINIO_PUBLIC_ENDPOINT` to the app host (e.g., `dev.mahanfile.com` / `mahanfile.com`) and `MINIO_PUBLIC_PATH=/storage`. Public objects then resolve as `https://<app>/storage/<bucket>/<key>` (no storage subdomain).
+- Post detail media uses Swiper for the main carousel + fullscreen lightbox with zoom and mouse wheel support (`ui/src/components/dashboard/divar-posts/post-media-carousel.tsx`).
+- The footer is always rendered; hide it on `/admin` and `/dashboard` via `body[data-pathname]` CSS in `ui/src/app/globals.css` to avoid missing footer on client navigation.
 
 ### 5. Test Suite
 

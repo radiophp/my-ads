@@ -48,6 +48,13 @@
       "genericError": "Unable to find the post. Please try again."
     }
   },
+  "breadcrumbs": {
+    "details": "Details",
+    "new": "New",
+    "posts": "Posts",
+    "preview": "Preview",
+    "offline": "Offline"
+  },
   "landing": {
     "title": "Welcome to Mahan File",
     "subtitle": "Build and manage your classifieds experience with a modern, localized interface.",

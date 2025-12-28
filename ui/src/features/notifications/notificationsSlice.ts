@@ -1,5 +1,6 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { createSelector, createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { NotificationItem } from '@/types/notifications';
+import type { RootState } from '@/lib/store';
 
 export type NotificationsState = {
   items: NotificationItem[];
@@ -85,3 +86,22 @@ export const {
 } = notificationsSlice.actions;
 
 export default notificationsSlice.reducer;
+
+export const selectHasUnreadNotifications = createSelector(
+  (state: RootState) => state.notifications.items,
+  (items) => items.some((item) => !item.readAt),
+);
+
+export const selectLatestNotificationTimestamp = createSelector(
+  (state: RootState) => state.notifications.items,
+  (items) => {
+    let latest = 0;
+    for (const item of items) {
+      const timestamp = Date.parse(item.createdAt);
+      if (!Number.isNaN(timestamp) && timestamp > latest) {
+        latest = timestamp;
+      }
+    }
+    return latest > 0 ? latest : null;
+  },
+);

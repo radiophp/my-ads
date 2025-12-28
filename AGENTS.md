@@ -12,6 +12,8 @@
 - Public news pages live in `ui/src/app/news` (SSR, `revalidate = 300`) and are linked in the header nav.
 - Public blog pages live in `ui/src/app/blog` (SSR, `revalidate = 300`) and are linked in the header nav.
 - The login page lives at `/login`; the homepage surfaces previews (slides, KPIs, featured posts, news/blog cards).
+- Post detail media now uses Swiper for the main carousel + fullscreen lightbox, including zoom and mouse wheel; update `ui/src/components/dashboard/divar-posts/post-media-carousel.tsx` when changing media UX.
+- The footer always renders; hide it on `/admin` and `/dashboard` via `body[data-pathname]` CSS in `ui/src/app/globals.css` to avoid client navigation races.
 
 ## Build, Test, and Development Commands
 - `npm run start:dev` boots Nest + Fastify with hot reload, loading `.env` from the repo root.

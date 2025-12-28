@@ -13,6 +13,7 @@ import {
   Bookmark,
   BookmarkCheck,
   Pencil,
+  Download,
   Share2,
   Phone,
   Copy,
@@ -107,7 +108,9 @@ export function PostDetailView({
   const isMutatingNote = isSavingInlineNote || isDeletingInlineNote;
   const actionButtonClass = cn(
     'flex flex-1 basis-0 items-center gap-1 rounded-none px-2 py-1 text-xs',
-    isRTL ? 'first:rounded-r-md last:rounded-l-md' : 'first:rounded-l-md last:rounded-r-md',
+    isRTL
+      ? 'first:rounded-r-md last:rounded-l-md'
+      : 'first:rounded-l-md last:rounded-r-md',
   );
   useEffect(() => {
     if (!isSaved && savedDialogOpen) {
@@ -457,110 +460,146 @@ export function PostDetailView({
     <div className="space-y-8 overflow-x-hidden">
       <div className="flex min-w-0 flex-col gap-6 lg:flex-row">
         <div className="order-2 flex min-w-0 flex-1 flex-col gap-6 lg:order-1">
-          <div className="flex w-full flex-wrap gap-0">
-            {onShareWhatsapp || onShareTelegram || smsHref || onCopyLink ? (
-              <>
+          <div className="flex w-full flex-col gap-2">
+          <div
+            className={cn(
+              'flex w-full flex-wrap gap-0 divide-x divide-border/40',
+              isRTL && 'divide-x-reverse',
+            )}
+          >
+              {onShareWhatsapp || onShareTelegram || smsHref || onCopyLink ? (
+                <>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    className={actionButtonClass}
+                    onClick={() => setShareDialogOpen(true)}
+                  >
+                    <Share2 className="size-3.5" aria-hidden="true" />
+                    <span>{t('sharePost')}</span>
+                  </Button>
+                  <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
+                    <DialogContent className="max-w-sm" hideCloseButton={false}>
+                      <DialogHeader>
+                        <DialogTitle>{t('sharePost')}</DialogTitle>
+                      </DialogHeader>
+                      <div className="flex flex-col gap-3">
+                        {onShareWhatsapp ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="flex items-center gap-2"
+                            onClick={() => {
+                              onShareWhatsapp();
+                              setShareDialogOpen(false);
+                            }}
+                          >
+                            <FaWhatsapp className="text-green-600" />
+                            <span>{t('shareWhatsApp')}</span>
+                          </Button>
+                        ) : null}
+                        {onShareTelegram ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="flex items-center gap-2"
+                            onClick={() => {
+                              onShareTelegram();
+                              setShareDialogOpen(false);
+                            }}
+                          >
+                            <FaTelegramPlane className="text-sky-500" />
+                            <span>{t('shareTelegram')}</span>
+                          </Button>
+                        ) : null}
+                        {smsHref ? (
+                          <Button
+                            asChild
+                            variant="outline"
+                            className="flex items-center gap-2 sm:hidden"
+                          >
+                            <a href={smsHref} onClick={() => setShareDialogOpen(false)}>
+                              <FaSms className="text-primary" />
+                              <span>{t('shareSms')}</span>
+                            </a>
+                          </Button>
+                        ) : null}
+                        {onCopyLink ? (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="flex items-center gap-2"
+                            onClick={() => {
+                              onCopyLink();
+                              setShareDialogOpen(false);
+                            }}
+                          >
+                            <FaRegCopy />
+                            <span>{copyLinkLabel ?? t('copyLink')}</span>
+                          </Button>
+                        ) : null}
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </>
+              ) : null}
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                className={actionButtonClass}
+                onClick={onRequestContactInfo}
+                disabled={!onRequestContactInfo || contactLoading}
+              >
+                {contactLoading ? (
+                <Loader2 className="size-3.5 animate-spin" />
+                ) : (
+                <Phone className="size-3.5" />
+                )}
+                <span>{t('contactInfo.button')}</span>
+              </Button>
+              {hasDownloadableMedia ? (
                 <Button
                   type="button"
                   variant="secondary"
                   size="sm"
                   className={actionButtonClass}
-                  onClick={() => setShareDialogOpen(true)}
+                  onClick={onRequestDownload}
                 >
-                  <Share2 className="size-3.5 [@media(max-width:393px)]:hidden" aria-hidden="true" />
-                  <span>{t('sharePost')}</span>
+                  <Download className="size-3.5" aria-hidden="true" />
+                  <span>{t('downloadPhotos')}</span>
                 </Button>
-                <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
-                  <DialogContent className="max-w-sm" hideCloseButton={false}>
-                    <DialogHeader>
-                      <DialogTitle>{t('sharePost')}</DialogTitle>
-                    </DialogHeader>
-                    <div className="flex flex-col gap-3">
-                      {onShareWhatsapp ? (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="flex items-center gap-2"
-                          onClick={() => {
-                            onShareWhatsapp();
-                            setShareDialogOpen(false);
-                          }}
-                        >
-                          <FaWhatsapp className="text-green-600" />
-                          <span>{t('shareWhatsApp')}</span>
-                        </Button>
-                      ) : null}
-                      {onShareTelegram ? (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="flex items-center gap-2"
-                          onClick={() => {
-                            onShareTelegram();
-                            setShareDialogOpen(false);
-                          }}
-                        >
-                          <FaTelegramPlane className="text-sky-500" />
-                          <span>{t('shareTelegram')}</span>
-                        </Button>
-                      ) : null}
-                      {smsHref ? (
-                        <Button
-                          asChild
-                          variant="outline"
-                          className="flex items-center gap-2 sm:hidden"
-                        >
-                          <a href={smsHref} onClick={() => setShareDialogOpen(false)}>
-                            <FaSms className="text-primary" />
-                            <span>{t('shareSms')}</span>
-                          </a>
-                        </Button>
-                      ) : null}
-                      {onCopyLink ? (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="flex items-center gap-2"
-                          onClick={() => {
-                            onCopyLink();
-                            setShareDialogOpen(false);
-                          }}
-                        >
-                          <FaRegCopy />
-                          <span>{copyLinkLabel ?? t('copyLink')}</span>
-                        </Button>
-                      ) : null}
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </>
-            ) : null}
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              className={actionButtonClass}
-              onClick={handlePrint}
-            >
-              <Printer className="size-3.5 [@media(max-width:393px)]:hidden" aria-hidden="true" />
-              <span>{t('print')}</span>
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              className={actionButtonClass}
-              onClick={onRequestContactInfo}
-              disabled={!onRequestContactInfo || contactLoading}
-            >
-              {contactLoading ? (
-                <Loader2 className="size-3.5 animate-spin [@media(max-width:393px)]:hidden" />
-              ) : (
-                <Phone className="size-3.5 [@media(max-width:393px)]:hidden" />
+              ) : null}
+            </div>
+            <div
+              className={cn(
+                'flex w-full flex-wrap gap-0 divide-x divide-border/40',
+                isRTL && 'divide-x-reverse',
               )}
-              <span>{t('contactInfo.button')}</span>
-            </Button>
-            {!noteContent && !isEditingNote ? (
+            >
+              <Button
+                type="button"
+                variant={isSaved ? 'outline' : 'secondary'}
+                size="sm"
+                className={cn(
+                  actionButtonClass,
+                  isSaved && 'border-emerald-500 text-emerald-600 hover:bg-emerald-50',
+                )}
+                onClick={handleSaveButtonClick}
+              >
+                {isSaved ? (
+                  <>
+                    <BookmarkCheck className="size-3.5" />
+                    <span>{t('saveToFolder')}</span>
+                  </>
+                ) : (
+                  <>
+                    <Bookmark className="size-3.5" />
+                    <span>{t('saveToFolder')}</span>
+                  </>
+                )}
+              </Button>
               <Button
                 type="button"
                 variant="secondary"
@@ -568,32 +607,20 @@ export function PostDetailView({
                 onClick={handleStartNoteEdit}
                 className={actionButtonClass}
               >
-                <Pencil className="size-3.5 [@media(max-width:393px)]:hidden" aria-hidden="true" />
+                <Pencil className="size-3.5" aria-hidden="true" />
                 <span>{t('noteSection.buttonLabel')}</span>
               </Button>
-            ) : null}
-            <Button
-              type="button"
-              variant={isSaved ? 'outline' : 'secondary'}
-              size="sm"
-              className={cn(
-                actionButtonClass,
-                isSaved && 'border-emerald-500 text-emerald-600 hover:bg-emerald-50',
-              )}
-              onClick={handleSaveButtonClick}
-            >
-              {isSaved ? (
-                <>
-                  <BookmarkCheck className="size-3.5 [@media(max-width:393px)]:hidden" />
-                  <span>{t('saveToFolder')}</span>
-                </>
-              ) : (
-                <>
-                  <Bookmark className="size-3.5 [@media(max-width:393px)]:hidden" />
-                  <span>{t('saveToFolder')}</span>
-                </>
-              )}
-            </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                className={actionButtonClass}
+                onClick={handlePrint}
+              >
+                <Printer className="size-3.5" aria-hidden="true" />
+                <span>{t('print')}</span>
+              </Button>
+            </div>
           </div>
           <div className="hidden flex-wrap items-center gap-2 lg:flex">
             <button
@@ -799,8 +826,6 @@ export function PostDetailView({
             isRTL={isRTL}
             businessBadge={businessBadge}
             cityDistrict={cityDistrict}
-            hasDownloadableMedia={hasDownloadableMedia}
-            onRequestDownload={onRequestDownload}
             t={t}
           />
           {hasLocation ? (

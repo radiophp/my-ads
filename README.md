@@ -330,6 +330,8 @@ npm run dev            # start Next.js on http://localhost:6005
 
 The helper script `scripts/run-next.mjs` standardises the dev port (`NEXT_UI_PORT=6005`) and disables Turbopack for now. Environment variables are loaded from the repository root so the UI can share `.env` files with the backend.
 
+RTK Query is split into a shared base slice at `ui/src/features/api/baseApi.ts` and per-domain endpoint modules under `ui/src/features/api/endpoints/`. Keep imports pointing at `ui/src/features/api/apiSlice.ts`, which re-exports the base slice and all hooks.
+
 ### 2. Linting & Typechecking
 
 ```bash

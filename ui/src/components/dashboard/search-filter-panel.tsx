@@ -11,7 +11,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Eraser,
-  Filter,
   Folder,
   X,
 } from 'lucide-react';
@@ -620,6 +619,26 @@ export function DashboardSearchFilterPanel() {
     if (typeof window === 'undefined') {
       return;
     }
+    const handleOpen = () => setFilterModalOpen(true);
+    window.addEventListener('dashboard:open-filters', handleOpen);
+    return () => window.removeEventListener('dashboard:open-filters', handleOpen);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+    window.dispatchEvent(
+      new CustomEvent('dashboard:filter-modal', {
+        detail: { open: filterModalOpen },
+      }),
+    );
+  }, [filterModalOpen]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
     const media = window.matchMedia('(min-width: 1024px)');
     const handleChange = () => setIsDesktop(media.matches);
     handleChange();
@@ -963,42 +982,6 @@ export function DashboardSearchFilterPanel() {
 
   return (
     <>
-      <div
-        className={cn(
-          'lg:hidden',
-          filterModalOpen
-            ? 'hidden'
-            : 'pointer-events-none fixed bottom-[calc(4rem+1rem+env(safe-area-inset-bottom))] left-1/2 z-40 -translate-x-1/2 drop-shadow-lg md:bottom-20 md:drop-shadow-2xl',
-        )}
-      >
-        <div className="pointer-events-auto flex flex-col gap-3 md:flex-row">
-          <Button
-            type="button"
-            variant={hasActiveFilters ? 'default' : 'secondary'}
-            className={cn(
-              'rounded-full px-4 py-2 ring-1 ring-white/30 backdrop-blur-xl backdrop-saturate-150',
-              hasActiveFilters ? 'bg-primary/75' : 'bg-secondary/75',
-              hasActiveFilters ? 'shadow-lg' : 'shadow',
-              'md:gap-4 md:px-14 md:py-7 md:text-xl',
-            )}
-            onClick={() => setFilterModalOpen(true)}
-          >
-            <span className="flex items-center justify-center gap-2">
-              {isRTL ? (
-                <>
-                  <span>{hasActiveFilters ? t('editFilters') : t('title')}</span>
-                  <Filter className="size-4" />
-                </>
-              ) : (
-                <>
-                  <Filter className="size-4" />
-                  <span>{hasActiveFilters ? t('editFilters') : t('title')}</span>
-                </>
-              )}
-            </span>
-          </Button>
-        </div>
-      </div>
       {filterModalOpen ? (
         <button
           type="button"

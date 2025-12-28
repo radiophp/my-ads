@@ -1010,6 +1010,9 @@ function MobileNavigationDrawer({
   const maxLabelLength = 15;
   const truncateLabel = (name: string) =>
     name.length > maxLabelLength ? `${name.slice(0, maxLabelLength)}...` : name;
+  const filteredNavItems = navItems.filter(
+    (item) => item.key !== 'home' && item.key !== 'dashboard',
+  );
 
   useEffect(() => {
     if (!open) {
@@ -1096,7 +1099,7 @@ function MobileNavigationDrawer({
             </div>
           ) : null}
           <nav className="flex flex-col gap-2 p-4">
-            {[...navItems.filter((item) => item.visible)]
+            {[...filteredNavItems.filter((item) => item.visible)]
               .sort((a, b) => {
                 if (a.key === 'login') return -1;
                 if (b.key === 'login') return 1;

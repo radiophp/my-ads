@@ -160,6 +160,8 @@ services:
       dockerfile: Dockerfile
     env_file:
       - ./.env
+    environment:
+      NOTIFICATION_QUEUE_CONSUMER_ENABLED: 'false'
     depends_on:
       - postgres
       - redis

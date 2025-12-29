@@ -19,6 +19,7 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
   private readonly logger = new Logger(WebsocketGateway.name);
   private readonly socketsByUser = new Map<string, Set<string>>();
   private readonly socketStore = new Map<string, Socket>();
+  private warnedAboutMissingServer = false;
 
   constructor(private readonly authService: AuthService) {}
 
@@ -47,10 +48,18 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
   }
 
   broadcast(event: string, data: JsonValue): void {
+    if (!this.server) {
+      this.warnMissingServer();
+      return;
+    }
     this.server.emit(event, data);
   }
 
   emitToUser(userId: string, event: string, payload: JsonValue): boolean {
+    if (!this.server) {
+      this.warnMissingServer();
+      return false;
+    }
     this.server.to(this.buildUserRoom(userId)).emit(event, payload);
     const socketIds = this.socketsByUser.get(userId);
     return !!socketIds && socketIds.size > 0;
@@ -117,5 +126,13 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
 
   private buildUserRoom(userId: string): string {
     return `user:${userId}`;
+  }
+
+  private warnMissingServer(): void {
+    if (this.warnedAboutMissingServer) {
+      return;
+    }
+    this.warnedAboutMissingServer = true;
+    this.logger.warn('Websocket server is not initialized; skipping websocket delivery.');
   }
 }

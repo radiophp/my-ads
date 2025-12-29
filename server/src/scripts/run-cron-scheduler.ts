@@ -3,6 +3,8 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from '@app/app.module';
 
 process.env['ENABLE_CRON_JOBS'] = process.env['ENABLE_CRON_JOBS'] ?? 'true';
+process.env['NOTIFICATION_QUEUE_CONSUMER_ENABLED'] =
+  process.env['NOTIFICATION_QUEUE_CONSUMER_ENABLED'] ?? 'false';
 
 async function bootstrap(): Promise<void> {
   const logger = new Logger('CronScheduler');

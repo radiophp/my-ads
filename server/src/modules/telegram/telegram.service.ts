@@ -475,10 +475,11 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     const photos = (post.medias ?? [])
       .map((m) => m.localUrl || m.url || m.thumbnailUrl)
       .filter(Boolean) as string[];
+    const limitedPhotos = photos.slice(0, 10);
     const replyMarkup = this.buildPostMetaMarkup(
       post.code,
       dashboardUrl,
-      photos.length > 0 ? post.id : null,
+      limitedPhotos.length > 0 ? post.id : null,
     );
     const extra = {
       link_preview_options: { is_disabled: true },
@@ -486,7 +487,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     };
 
     // Split into batches of 10; only the last batch carries the caption on its first item.
-    if (photos.length === 0) {
+    if (limitedPhotos.length === 0) {
       try {
         await this.sendWithRetry(
           'sendMessage',
@@ -504,12 +505,12 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
-    if (photos.length === 1) {
+    if (limitedPhotos.length === 1) {
       try {
         await this.sendWithRetry(
           'sendPhoto',
           () =>
-            this.sender!.sendPhoto(chatId, photos[0], {
+            this.sender!.sendPhoto(chatId, limitedPhotos[0], {
               caption: caption || 'جزئیات آگهی',
               reply_markup: replyMarkup,
             }),
@@ -526,17 +527,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
-    const batches: string[][] = [];
-    if (photos.length <= 10) {
-      batches.push(photos);
-    } else {
-      const lastBatch = photos.slice(-10);
-      const prefix = photos.slice(0, photos.length - 10);
-      for (let i = 0; i < prefix.length; i += 10) {
-        batches.push(prefix.slice(i, i + 10));
-      }
-      batches.push(lastBatch);
-    }
+    const batches: string[][] = [limitedPhotos];
 
     for (let b = 0; b < batches.length; b++) {
       const batch = batches[b].map((url) => ({

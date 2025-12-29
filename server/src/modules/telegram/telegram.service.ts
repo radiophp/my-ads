@@ -246,13 +246,21 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
         await bot.launch();
         return;
       } catch (error) {
-        if (!this.isPollingConflict(error)) {
-          throw error;
+        if (this.isPollingConflict(error)) {
+          this.logger.warn(
+            `Telegram polling conflict detected; retrying in ${this.pollingRetryDelayMs}ms.`,
+          );
+          await this.delay(this.pollingRetryDelayMs);
+          continue;
         }
-        this.logger.warn(
-          `Telegram polling conflict detected; retrying in ${this.pollingRetryDelayMs}ms.`,
-        );
-        await this.delay(this.pollingRetryDelayMs);
+        if (this.isTransientNetworkError(error)) {
+          this.logger.warn(
+            `Telegram launch network error; retrying in ${this.pollingRetryDelayMs}ms.`,
+          );
+          await this.delay(this.pollingRetryDelayMs);
+          continue;
+        }
+        throw error;
       }
     }
   }
@@ -263,6 +271,25 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     return (
       response?.error_code === 409 &&
       response?.description?.toLowerCase().includes('getupdates') === true
+    );
+  }
+
+  private isTransientNetworkError(error: unknown): boolean {
+    const errorCode =
+      (error as { code?: string; errno?: string })?.code ??
+      (error as { code?: string; errno?: string })?.errno ??
+      (error as { cause?: { code?: string } })?.cause?.code;
+    if (errorCode) {
+      return ['ECONNRESET', 'ECONNREFUSED', 'ETIMEDOUT', 'EAI_AGAIN', 'ENOTFOUND'].includes(
+        errorCode,
+      );
+    }
+    const message = (error as Error)?.message?.toLowerCase() ?? '';
+    return (
+      message.includes('econnreset') ||
+      message.includes('timeout') ||
+      message.includes('temporarily') ||
+      message.includes('network')
     );
   }
 

@@ -8,6 +8,7 @@ import type { BlogItem } from '@/types/blog';
 import { normalizeStorageHtml, normalizeStorageUrl } from '@/lib/storage';
 import { Link } from '@/i18n/routing';
 import { BlogCard } from '@/components/blog/blog-card';
+import { Breadcrumbs } from '@/components/layout/breadcrumbs';
 
 export const revalidate = 300;
 
@@ -212,6 +213,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
         <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
           {item.title}
         </h1>
+        <Breadcrumbs force className="px-0 pt-2 sm:pt-3" />
         {item.shortText && <p className="text-base text-muted-foreground">{item.shortText}</p>}
       </header>
 

@@ -67,7 +67,6 @@ import { DesktopRegionSelectors } from './desktop-region-selectors';
 
 const DEFAULT_SAVED_FILTER_LIMIT = 5;
 const DEFAULT_PROVINCE_NAME_FA = 'البرز';
-
 type SelectionIndicatorProps = {
   type: 'radio' | 'checkbox';
   checked: boolean;
@@ -160,7 +159,7 @@ export function DashboardSearchFilterPanel() {
     isLoading: ringBinderLoading,
     isFetching: ringBinderFetching,
   } = useGetRingBinderFoldersQuery();
-  const ringBinderFolders = ringBinderData?.folders ?? [];
+  const ringBinderFolders = useMemo(() => ringBinderData?.folders ?? [], [ringBinderData]);
 
   const { toast } = useToast();
   const {
@@ -913,6 +912,7 @@ export function DashboardSearchFilterPanel() {
     noteFilter,
   ]);
 
+
   const currentFilterState = useMemo<SearchFilterState>(
     () => ({
       provinceId,
@@ -1027,10 +1027,10 @@ export function DashboardSearchFilterPanel() {
                   <Eraser className="size-4" />
                   {t('clear')}
                 </Button>
-	              </div>
-	              <div className="-mx-4" dir={isRTL ? 'rtl' : 'ltr'}>
-	                {(() => {
-	                  const tabs = [
+              </div>
+              <div className="-mx-4" dir={isRTL ? 'rtl' : 'ltr'}>
+                {(() => {
+                  const tabs = [
 	                    {
 	                      key: 'main' as const,
 	                      label: t('tabs.main'),

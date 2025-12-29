@@ -406,6 +406,18 @@
           "filter_floors_count": "Number of floors",
           "filter_unit_per_floor": "Units per floor",
           "filter_rent": "Rent",
+          "price": "Price",
+          "size": "Size",
+          "price_per_square": "Price per area",
+          "rent": "Rent",
+          "credit": "Deposit",
+          "floor": "Floor",
+          "floors_count": "Number of floors",
+          "unit_per_floor": "Units per floor",
+          "building-age": "Building age",
+          "land_area": "Land area",
+          "person_capacity": "Capacity",
+          "daily_rent": "Daily rent",
           "business-type": "Seller type",
           "addon_service_tags": "Add-ons",
           "building_direction": "Building direction",
@@ -423,6 +435,8 @@
           "balcony": "Balcony",
           "rebuilt": "Renovated",
           "has-photo": "Has photos",
+          "has-video": "Has video",
+          "has_video": "Has video",
           "bizzDeed": "Commercial deed"
         },
         "fieldLabel": "Field: {key}",
@@ -434,6 +448,9 @@
           "from": "Min",
           "to": "Max"
         }
+      },
+      "badges": {
+        "enabled": "On"
       }
     },
     "savedFiltersPage": {

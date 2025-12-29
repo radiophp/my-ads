@@ -406,6 +406,18 @@
           "filter_floors_count": "تعداد طبقات",
           "filter_unit_per_floor": "واحد در هر طبقه",
           "filter_rent": "اجاره",
+          "price": "قیمت",
+          "size": "متراژ",
+          "price_per_square": "قیمت بر مساحت",
+          "rent": "اجاره",
+          "credit": "ودیعه",
+          "floor": "طبقه",
+          "floors_count": "تعداد طبقات",
+          "unit_per_floor": "واحد در هر طبقه",
+          "building-age": "سن بنا",
+          "land_area": "متراژ زمین",
+          "person_capacity": "ظرفیت نفر",
+          "daily_rent": "اجاره روزانه",
           "business-type": "آگهی‌دهنده",
           "addon_service_tags": "افزونه‌ها",
           "building_direction": "جهت ساختمان",
@@ -423,6 +435,8 @@
           "balcony": "بالکن",
           "rebuilt": "بازسازی شده",
           "has-photo": "دارای عکس",
+          "has-video": "ویدیو‌دار",
+          "has_video": "ویدیو‌دار",
           "bizzDeed": "سند اداری"
         },
         "fieldLabel": "شناسه فیلتر: {key}",
@@ -434,6 +448,9 @@
           "from": "از",
           "to": "تا"
         }
+      },
+      "badges": {
+        "enabled": "فعال"
       }
     },
     "savedFiltersPage": {

@@ -33,6 +33,7 @@
 - Feed loading uses 12 skeleton cards styled the same as post cards; when changing card layout, mirror changes in the skeleton (ui/src/components/dashboard/divar-posts-feed.tsx).
 - Post codes are numeric (starting at 1000), stored in DB, shown in cards/detail/print/share, and searchable via the header code search (rate-limited).
 - Storage public URLs are same-origin `/storage/<bucket>/<key>` (no storage subdomain). UI normalizes legacy storage hosts to `/storage`.
+- Divar category filter labels may arrive as raw keys or prefixed widget labels; keep `dashboard.filters.categoryFilters.widgetLabels` in `ui/src/messages/{locale}.json` populated with both `filter_*` and raw keys so badges stay localized.
 - Map tiles: TileServer-GL service added (dev port `${MAP_TILES_PORT:-7235}`, prod `${MAP_TILES_PORT:-8235}`) expecting `maps/iran.mbtiles` or `${MAP_TILES_PATH:-/var/lib/my-ads/maps}/iran.mbtiles`.
   - Fetch prebuilt tiles: `MBTILES_URL=... ./scripts/sync-tiles.sh` (honors `MAP_TILES_PATH`). Use in CI before compose/stack deploy.
   - Build Iran locally (full labels): `OMT_POSTGRES_PORT=<free_port> MIN_ZOOM=0 MAX_ZOOM=14 ./scripts/build-iran-tiles.sh` (long-running). Restart tileserver after build.

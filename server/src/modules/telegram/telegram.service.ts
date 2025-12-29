@@ -19,6 +19,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
   private readonly sendRetryAttempts: number;
   private readonly sendRetryDelayMs: number;
   private readonly sendRateLimitPerSecond: number;
+  private readonly pollingRetryDelayMs: number;
   private readonly appBaseUrl: string;
   private readonly apiBaseUrl: string;
   private sendRateLimitChain: Promise<void> = Promise.resolve();
@@ -44,6 +45,10 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     this.sendRateLimitPerSecond = this.toNumber(
       this.configService.get<string>('TELEGRAM_SEND_RATE_LIMIT_PER_SEC'),
       30,
+    );
+    this.pollingRetryDelayMs = this.toNumber(
+      this.configService.get<string>('TELEGRAM_POLLING_RETRY_DELAY_MS'),
+      60_000,
     );
     this.appBaseUrl = this.normalizeBaseUrl(
       this.configService.get<string>('NEXT_PUBLIC_APP_URL') ??
@@ -202,7 +207,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
         return;
       });
 
-      await this.bot.launch();
+      await this.launchWithRetry();
       this.started = true;
       this.logger.log('Telegram bot started (polling).');
     } finally {
@@ -215,6 +220,37 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       await this.bot.stop();
       this.logger.log('Telegram bot stopped.');
     }
+  }
+
+  private async launchWithRetry(): Promise<void> {
+    const bot = this.bot;
+    if (!bot) {
+      throw new Error('Telegram bot is not initialized.');
+    }
+
+    while (true) {
+      try {
+        await bot.launch();
+        return;
+      } catch (error) {
+        if (!this.isPollingConflict(error)) {
+          throw error;
+        }
+        this.logger.warn(
+          `Telegram polling conflict detected; retrying in ${this.pollingRetryDelayMs}ms.`,
+        );
+        await this.delay(this.pollingRetryDelayMs);
+      }
+    }
+  }
+
+  private isPollingConflict(error: unknown): boolean {
+    const response = (error as { response?: { error_code?: number; description?: string } })
+      ?.response;
+    return (
+      response?.error_code === 409 &&
+      response?.description?.toLowerCase().includes('getupdates') === true
+    );
   }
 
   private async handleSavedFilters(ctx: BotContext): Promise<void> {

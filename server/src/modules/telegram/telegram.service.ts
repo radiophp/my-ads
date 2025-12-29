@@ -6,6 +6,12 @@ import { PrismaService } from '../../platform/database/prisma.service';
 
 type BotSession = { phone?: string };
 type BotContext = Context & { session?: BotSession };
+type TelegramSendOptions = {
+  cost?: number;
+  chatId?: string | number;
+  timeoutMs?: number;
+  perChatCost?: number;
+};
 
 @Injectable()
 export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
@@ -19,12 +25,15 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
   private readonly sendRetryAttempts: number;
   private readonly sendRetryDelayMs: number;
   private readonly sendRateLimitPerSecond: number;
+  private readonly sendPerChatLimitPerSecond: number;
   private readonly pollingRetryDelayMs: number;
   private readonly appBaseUrl: string;
   private readonly apiBaseUrl: string;
   private sendRateLimitChain: Promise<void> = Promise.resolve();
   private sendRateLimitTimestamps: number[] = [];
   private sendRateLimitUntil = 0;
+  private sendPerChatChains = new Map<string, Promise<void>>();
+  private sendPerChatTimestamps = new Map<string, number[]>();
 
   constructor(
     private readonly configService: ConfigService,
@@ -45,6 +54,10 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     this.sendRateLimitPerSecond = this.toNumber(
       this.configService.get<string>('TELEGRAM_SEND_RATE_LIMIT_PER_SEC'),
       30,
+    );
+    this.sendPerChatLimitPerSecond = this.toNumber(
+      this.configService.get<string>('TELEGRAM_SEND_PER_CHAT_LIMIT_PER_SEC'),
+      1,
     );
     this.pollingRetryDelayMs = this.toNumber(
       this.configService.get<string>('TELEGRAM_POLLING_RETRY_DELAY_MS'),
@@ -475,8 +488,10 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     // Split into batches of 10; only the last batch carries the caption on its first item.
     if (photos.length === 0) {
       try {
-        await this.sendWithRetry('sendMessage', () =>
-          this.sender!.sendMessage(chatId, caption || 'جزئیات آگهی', extra),
+        await this.sendWithRetry(
+          'sendMessage',
+          () => this.sender!.sendMessage(chatId, caption || 'جزئیات آگهی', extra),
+          { chatId },
         );
         return true;
       } catch (err) {
@@ -491,11 +506,14 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
 
     if (photos.length === 1) {
       try {
-        await this.sendWithRetry('sendPhoto', () =>
-          this.sender!.sendPhoto(chatId, photos[0], {
-            caption: caption || 'جزئیات آگهی',
-            reply_markup: replyMarkup,
-          }),
+        await this.sendWithRetry(
+          'sendPhoto',
+          () =>
+            this.sender!.sendPhoto(chatId, photos[0], {
+              caption: caption || 'جزئیات آگهی',
+              reply_markup: replyMarkup,
+            }),
+          { chatId },
         );
         return true;
       } catch (err) {
@@ -531,7 +549,12 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
         await this.sendWithRetry(
           `sendMediaGroup(${b + 1}/${batches.length})`,
           () => this.sender!.sendMediaGroup(chatId, batch),
-          batch.length,
+          {
+            chatId,
+            cost: batch.length,
+            timeoutMs: this.mediaGroupTimeoutMs(batch.length),
+            perChatCost: 1,
+          },
         );
       } catch (err) {
         const errMsg = `Failed to send batch ${b + 1}/${batches.length} for post ${postId} to chat ${chatId}: ${String(
@@ -543,8 +566,10 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     }
 
     try {
-      await this.sendWithRetry('sendMessage', () =>
-        this.sender!.sendMessage(chatId, caption || 'جزئیات آگهی', extra),
+      await this.sendWithRetry(
+        'sendMessage',
+        () => this.sender!.sendMessage(chatId, caption || 'جزئیات آگهی', extra),
+        { chatId },
       );
     } catch (err) {
       this.logger.error(
@@ -587,8 +612,11 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     const filename = await this.buildZipFilename(params.postId);
 
     try {
-      await this.sendWithRetry('sendDocument', () =>
-        this.sender!.sendDocument(params.chatId, Input.fromURLStream(zipUrl, filename), extra),
+      await this.sendWithRetry(
+        'sendDocument',
+        () =>
+          this.sender!.sendDocument(params.chatId, Input.fromURLStream(zipUrl, filename), extra),
+        { chatId: params.chatId },
       );
       return true;
     } catch (err) {
@@ -666,15 +694,24 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private async sendWithRetry<T>(label: string, task: () => Promise<T>, cost = 1): Promise<T> {
+  private async sendWithRetry<T>(
+    label: string,
+    task: () => Promise<T>,
+    options: TelegramSendOptions = {},
+  ): Promise<T> {
     const maxAttempts = Math.max(1, this.sendRetryAttempts);
+    const cost = options.cost ?? 1;
+    const timeoutMs = options.timeoutMs ?? this.sendTimeoutMs;
     for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
       try {
         if (attempt > 1) {
           this.logger.warn(`Retrying Telegram ${label} (attempt ${attempt}/${maxAttempts}).`);
         }
+        if (options.chatId) {
+          await this.throttleChat(options.chatId, options.perChatCost ?? 1);
+        }
         await this.throttleSend(cost);
-        return await this.withTimeout(task(), this.sendTimeoutMs, label);
+        return await this.withTimeout(task(), timeoutMs, label);
       } catch (error) {
         const message = (error as any)?.response?.description ?? (error as Error).message;
         if (attempt >= maxAttempts) {
@@ -697,6 +734,21 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       this.waitForRateLimitSlot(normalizedCost),
     );
     await this.sendRateLimitChain;
+  }
+
+  private async throttleChat(chatId: string | number, cost: number): Promise<void> {
+    const normalizedCost = this.normalizeCost(cost, this.sendPerChatLimitPerSecond);
+    const key = String(chatId);
+    const previous = this.sendPerChatChains.get(key) ?? Promise.resolve();
+    const current = previous.then(() => this.waitForChatRateLimitSlot(key, normalizedCost));
+    this.sendPerChatChains.set(key, current);
+    try {
+      await current;
+    } finally {
+      if (this.sendPerChatChains.get(key) === current) {
+        this.sendPerChatChains.delete(key);
+      }
+    }
   }
 
   private async waitForRateLimitSlot(cost: number): Promise<void> {
@@ -722,6 +774,27 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  private async waitForChatRateLimitSlot(chatId: string, cost: number): Promise<void> {
+    const limit = Math.max(1, this.sendPerChatLimitPerSecond);
+    const windowMs = 1000;
+    while (true) {
+      const now = Date.now();
+      const timestamps = this.sendPerChatTimestamps.get(chatId) ?? [];
+      const recent = timestamps.filter((ts) => now - ts < windowMs);
+      if (recent.length + cost <= limit) {
+        for (let i = 0; i < cost; i += 1) {
+          recent.push(now);
+        }
+        this.sendPerChatTimestamps.set(chatId, recent);
+        return;
+      }
+      this.sendPerChatTimestamps.set(chatId, recent);
+      const oldest = recent[0];
+      const waitMs = Math.max(0, windowMs - (now - oldest));
+      await this.delay(waitMs);
+    }
+  }
+
   private resolveRetryDelayMs(error: unknown): number {
     const retryAfter = (error as any)?.response?.parameters?.retry_after;
     const retryAfterMs = typeof retryAfter === 'number' ? retryAfter * 1000 : 0;
@@ -732,6 +805,15 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       }
     }
     return Math.max(this.sendRetryDelayMs, retryAfterMs);
+  }
+
+  private normalizeCost(cost: number, limit: number): number {
+    return Math.max(1, Math.min(Math.floor(cost), Math.max(1, limit)));
+  }
+
+  private mediaGroupTimeoutMs(batchSize: number): number {
+    const extra = Math.max(1, batchSize) * 1000;
+    return this.sendTimeoutMs + extra;
   }
 
   private toNumber(value: string | undefined, fallback: number): number {

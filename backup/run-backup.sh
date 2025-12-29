@@ -3,7 +3,7 @@ set -euo pipefail
 
 STANZA="${PGBACKREST_STANZA:-my-ads}"
 CIPHER_PASS="Ghader"
-BACKUP_BUCKET="DB_BACKUP"
+BACKUP_BUCKET="db-backup"
 REPO_PATH="${PGBACKREST_REPO1_PATH:-/pgbackrest}"
 REPO_PATH="${REPO_PATH#/}"
 

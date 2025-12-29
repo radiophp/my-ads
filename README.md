@@ -207,10 +207,10 @@ WHERE status = 'COMPLETED';
 
 ### Automated pgBackRest backups (production)
 
-Production runs a `pgbackrest-backup` service on a daily schedule (defaults to `02:00` Asia/Tehran). It creates/ensures a private MinIO bucket named `DB_BACKUP`, stores encrypted, bundled backups, and delivers the bundle parts via Telegram.
+Production runs a `pgbackrest-backup` service on a daily schedule (defaults to `02:00` Asia/Tehran). It creates/ensures a private MinIO bucket named `db-backup`, stores encrypted, bundled backups, and delivers the bundle parts via Telegram.
 
 - Schedule + timezone: `BACKUP_CRON` (`0 2 * * *`) and `BACKUP_TZ` (`Asia/Tehran`).
-- Repo details: bucket `DB_BACKUP`, prefix `/pgbackrest`, bundle size `1GiB`, zstd compression level `9`.
+- Repo details: bucket `db-backup`, prefix `/pgbackrest`, bundle size `1GiB`, zstd compression level `9`.
 - Encryption: AES-256-CBC with fixed passphrase `Ghader`.
 - Retention: 30 days for full + archive (configured via pgBackRest retention).
 - Telegram delivery: `BACKUP_TELEGRAM_PHONES` (defaults to `+989038923989,+989195043739`). Each recipient must start the bot so a `TelegramUserLink` exists.

@@ -39,7 +39,7 @@
   - Build Iran locally (full labels): `OMT_POSTGRES_PORT=<free_port> MIN_ZOOM=0 MAX_ZOOM=14 ./scripts/build-iran-tiles.sh` (long-running). Restart tileserver after build.
   - Default UI uses same-origin tiles: `NEXT_PUBLIC_MAP_TILE_BASE_URL=/map` -> `/map/styles/basic-preview/style.json` and `/map/styles/basic-preview/{z}/{x}/{y}.(pbf|png)`. If switching to dedicated map domains, update env + Caddy accordingly and proxy `/map`, `/data`, `/fonts` to the tileserver.
 - DB backup/restore: dev Postgres on `6201` (`postgres/postgres`); prod published `6301` -> internal `5432` (`mahan_admin/zQ5gG7k3S9nK2bFw`). Backup example: `PGPASSWORD=postgres pg_dump -Fc -h host.docker.internal -p 6201 -U postgres -d my_ads -f /tmp/dev-backup.dump`. Restore to prod: `PGPASSWORD=zQ5gG7k3S9nK2bFw pg_restore --clean --if-exists --no-owner --no-acl -h host.docker.internal -p 6301 -U mahan_admin -d mahan_file /tmp/dev-backup.dump`. Keep compose target port 5432 and published port 6301 aligned.
-- Automated backups: `pgbackrest-backup` writes to MinIO bucket `DB_BACKUP` with AES-256-CBC (pass `Ghader`), bundle size `1GiB`, 30-day retention, and Telegram delivery to `BACKUP_TELEGRAM_PHONES` recipients (must `/start` the bot).
+- Automated backups: `pgbackrest-backup` writes to MinIO bucket `db-backup` with AES-256-CBC (pass `Ghader`), bundle size `1GiB`, 30-day retention, and Telegram delivery to `BACKUP_TELEGRAM_PHONES` recipients (must `/start` the bot).
 - News crawlers: Eghtesad, Khabaronline, and Asriran crawlers run every 15 minutes when cron is enabled. One-off runs: `npm run news:crawl:eghtesad`, `npm run news:crawl:khabaronline`, `npm run news:crawl:asriran`. Use the News Sources admin list to enable/disable each feed.
 
 ## Testing Guidelines

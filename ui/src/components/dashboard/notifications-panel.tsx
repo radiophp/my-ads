@@ -439,7 +439,7 @@ export function NotificationsPanel() {
 
   return (
     <div className="min-h-[70vh] w-full bg-background px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
+      <div className="flex w-full flex-col gap-6">
         <header className="bg-card/50 rounded-2xl border border-border/60 p-4 sm:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className={cn('flex flex-col gap-2', isRTL ? 'text-right' : 'text-left')}>
@@ -594,7 +594,7 @@ export function NotificationsPanel() {
         ) : filteredItems.length === 0 ? (
           <EmptyState title={t('emptyTitle')} description={t('emptyDescription')} />
         ) : (
-          <div className="grid w-full auto-rows-fr grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid w-full auto-rows-fr grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
             {filteredItems.map((notification) => (
               <NotificationCard
                 key={notification.id}

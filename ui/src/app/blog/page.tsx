@@ -6,6 +6,7 @@ import { Link } from '@/i18n/routing';
 import { Button } from '@/components/ui/button';
 import { BlogCard } from '@/components/blog/blog-card';
 import { buildSeoMetadata } from '@/lib/server/seo';
+import { Breadcrumbs } from '@/components/layout/breadcrumbs';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -120,9 +121,7 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
         <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
           {t('title')}
         </h1>
-        <p className="max-w-2xl text-base text-muted-foreground sm:text-lg">
-          {t('description')}
-        </p>
+        <Breadcrumbs force className="px-0 pt-0" />
       </header>
 
       {hasError && (

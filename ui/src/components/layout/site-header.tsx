@@ -499,15 +499,29 @@ export function SiteHeader() {
                 {t('header.nav.notifications')}
               </Link>
             )}
-            <DesktopNavDropdown
-              label={t('header.nav.newsBlog')}
-              icon="newsBlog"
-              items={[
-                { href: '/news', label: t('header.nav.news'), icon: 'news' },
-                { href: '/blog', label: t('header.nav.blog'), icon: 'blog' },
-              ]}
-            />
-            {null}
+            <Link
+              href="/news"
+              className="items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
+            >
+              {renderNavIcon('news', 'hidden lg:block')}
+              {t('header.nav.news')}
+            </Link>
+            <Link
+              href="/blog"
+              className="items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
+            >
+              {renderNavIcon('blog', 'hidden lg:block')}
+              {t('header.nav.blog')}
+            </Link>
+            {showLoginNav ? (
+              <Link
+                href="/about"
+                className="items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
+              >
+                {renderNavIcon('about', 'hidden lg:block')}
+                {t('header.nav.about')}
+              </Link>
+            ) : null}
           </nav>
         </div>
         <div className="hidden items-center gap-2 sm:flex">
@@ -643,45 +657,6 @@ export function SiteHeader() {
         </DialogContent>
       </Dialog>
     </header>
-  );
-}
-
-type DesktopNavDropdownProps = {
-  label: string;
-  icon: NavIconKey;
-  items: Array<{
-    href: string;
-    label: string;
-    icon: NavIconKey;
-  }>;
-};
-
-function DesktopNavDropdown({ label, icon, items }: DesktopNavDropdownProps) {
-  return (
-    <div className="group relative">
-      <button
-        type="button"
-        className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground"
-        aria-haspopup="menu"
-      >
-        {renderNavIcon(icon, 'hidden lg:block')}
-        {label}
-      </button>
-      <div className="absolute start-0 top-full z-50 hidden w-max min-w-48 border border-border/70 bg-background p-2 shadow-lg group-focus-within:block group-hover:block">
-        <div className="flex flex-col divide-y divide-border/70">
-          {items.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-center gap-2 whitespace-nowrap px-3 py-2 text-sm text-foreground transition-colors hover:bg-secondary/60"
-            >
-              {renderNavIcon(item.icon, 'hidden lg:block')}
-              {item.label}
-            </Link>
-          ))}
-        </div>
-      </div>
-    </div>
   );
 }
 

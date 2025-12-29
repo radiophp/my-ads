@@ -314,6 +314,12 @@ WORKER_ID=worker-2 npm run phone-fetch:worker
 
 The customer-facing UI lives in `ui/` and is built with **Next.js 16**, **React 19**, and `next-intl` for localisation.
 
+### Localization notes
+
+- UI messages live in `ui/src/messages/{locale}.json`.
+- Divar category filter widgets can return raw keys (for example `size`, `price_per_square`, `has-video`) or prefixed keys (for example `dashboard.filters.categoryFilters.widgetLabels.size`).
+- Keep `dashboard.filters.categoryFilters.widgetLabels` populated with both `filter_*` and raw keys so filter badges and chips stay localized; missing keys will render as the raw key string.
+
 ### Prerequisites
 
 - Node.js **22.x** (matches the CI environment)

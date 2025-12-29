@@ -26,6 +26,7 @@ import { getBusinessTypeBadge } from '@/components/dashboard/divar-posts/busines
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { BASE_CATEGORY_SLUG } from '@/lib/divar-categories';
+import { ActiveFilterBadges } from '@/components/dashboard/active-filter-badges';
 
 type ShareIconMap = {
   title: string;
@@ -625,6 +626,7 @@ export function DivarPostsFeed(): JSX.Element {
   return (
     <Card className="flex size-full flex-col overflow-hidden border-0 shadow-sm">
       <CardContent className="w-full min-w-0 flex-1 space-y-4 overflow-y-auto p-4">
+        <ActiveFilterBadges className="pb-2" />
         {initializing ? (
           <div className="grid w-full auto-rows-fr grid-cols-1 gap-4 sm:grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
             {Array.from({ length: 12 }).map((_, index) => (

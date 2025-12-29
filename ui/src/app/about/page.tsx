@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server';
 
 import { buildSeoMetadata } from '@/lib/server/seo';
 import { fetchWebsiteSettings } from '@/lib/server/website-settings';
+import { Breadcrumbs } from '@/components/layout/breadcrumbs';
 
 export async function generateMetadata() {
   const t = await getTranslations('about');
@@ -32,6 +33,7 @@ export default async function AboutPage() {
         <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
           {t('title')}
         </h1>
+        <Breadcrumbs force className="px-0 pt-0" />
         <p className="max-w-2xl text-base text-muted-foreground sm:text-lg">{t('description')}</p>
       </header>
       <div className="whitespace-pre-line rounded-2xl border border-border/70 bg-muted/30 p-6 text-base leading-8 text-foreground">

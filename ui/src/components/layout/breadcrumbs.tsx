@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { useEffect, useMemo, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { usePathname } from 'next/navigation';
 
@@ -10,13 +11,18 @@ import { cn } from '@/lib/utils';
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+type BreadcrumbsProps = {
+  className?: string;
+  force?: boolean;
+};
+
 function formatSegment(segment: string) {
   return segment
     .replace(/[-_]+/g, ' ')
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-export function Breadcrumbs() {
+export function Breadcrumbs({ className, force = false }: BreadcrumbsProps) {
   const pathname = usePathname() ?? '';
   const locale = useLocale();
   const isRTL = locale === 'fa';
@@ -24,13 +30,54 @@ export function Breadcrumbs() {
   const adminT = useTranslations('admin.dashboard.cards');
   const profileT = useTranslations('profile');
   const breadcrumbT = useTranslations('breadcrumbs');
-
-  if (pathname === '/' || pathname === '') {
-    return null;
-  }
+  const [detailCategoryLabel, setDetailCategoryLabel] = useState<string | null>(null);
+  const [detailSection, setDetailSection] = useState<'news' | 'blog' | null>(null);
 
   const cleanPath = pathname.split('?')[0]?.split('#')[0] ?? pathname;
-  const segments = cleanPath.split('/').filter(Boolean);
+  const segments = useMemo(() => cleanPath.split('/').filter(Boolean), [cleanPath]);
+  const isDashboardPath = segments[0] === 'dashboard';
+  const isAdminPath = segments[0] === 'admin';
+
+  useEffect(() => {
+    if (segments.length !== 2) {
+      setDetailCategoryLabel(null);
+      setDetailSection(null);
+      return;
+    }
+    const [section, slug] = segments as [string, string];
+    if (section !== 'news' && section !== 'blog') {
+      setDetailCategoryLabel(null);
+      setDetailSection(null);
+      return;
+    }
+    if (!slug) {
+      setDetailCategoryLabel(null);
+      setDetailSection(null);
+      return;
+    }
+    setDetailSection(section);
+    setDetailCategoryLabel(null);
+    const controller = new AbortController();
+    const apiBaseRaw = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
+    const apiBase = apiBaseRaw.replace(/\/$/, '');
+    const url = apiBase
+      ? `${apiBase}/${section}/${encodeURIComponent(slug)}`
+      : `/api/${section}/${encodeURIComponent(slug)}`;
+    fetch(url, { signal: controller.signal })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        const name = data?.category?.name;
+        if (typeof name === 'string' && name.trim().length > 0) {
+          setDetailCategoryLabel(name.trim());
+        }
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setDetailCategoryLabel(null);
+        }
+      });
+    return () => controller.abort();
+  }, [segments]);
 
   const baseLabels: Record<string, string> = {
     dashboard: navT('dashboard'),
@@ -96,6 +143,13 @@ export function Breadcrumbs() {
       return adminT('blogSources.title');
     }
 
+    if (!isAdminPath && parent === 'news' && detailSection === 'news') {
+      return detailCategoryLabel ?? breadcrumbT('details');
+    }
+    if (!isAdminPath && parent === 'blog' && detailSection === 'blog') {
+      return detailCategoryLabel ?? breadcrumbT('details');
+    }
+
     if (parent === 'admin' && adminLabels[segment]) {
       return adminLabels[segment];
     }
@@ -113,12 +167,34 @@ export function Breadcrumbs() {
     return { href, label };
   });
 
+  const shouldHide =
+    pathname === '/' ||
+    pathname === '' ||
+    segments.length === 0 ||
+    (!force &&
+      (segments.length === 1 &&
+        (segments[0] === 'news' ||
+          segments[0] === 'blog' ||
+          segments[0] === 'login' ||
+          segments[0] === 'preview' ||
+          segments[0] === 'about'))) ||
+    (!force &&
+      !isAdminPath &&
+      (segments[0] === 'news' || segments[0] === 'blog') &&
+      segments.length >= 2);
+
+  if (shouldHide) {
+    return null;
+  }
+
   return (
     <nav
       aria-label="Breadcrumb"
       className={cn(
-        'mx-auto w-full max-w-6xl px-4 pt-4 text-sm text-muted-foreground sm:pt-6',
+        'mx-auto w-full px-4 pt-4 text-sm text-muted-foreground sm:pt-6',
+        isDashboardPath || isAdminPath ? 'max-w-none' : 'max-w-6xl',
         isRTL ? 'text-right' : 'text-left',
+        className,
       )}
     >
       <ol

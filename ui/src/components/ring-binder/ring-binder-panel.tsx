@@ -124,7 +124,7 @@ export function RingBinderPanel() {
 
   return (
     <div className="w-full px-4 py-6 sm:px-6 sm:py-10">
-      <div className="mx-auto flex w-full max-w-4xl flex-col gap-6">
+      <div className="flex w-full flex-col gap-6">
         <div className="space-y-2">
           <div>
             <h1 className="mt-2 text-2xl font-semibold text-foreground sm:text-3xl">

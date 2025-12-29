@@ -13,6 +13,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
   private bot?: Telegraf<BotContext>;
   private sender?: Telegram;
   private started = false;
+  private starting = false;
   private phoneCache = new Map<number, string>();
   private readonly sendTimeoutMs: number;
   private readonly sendRetryAttempts: number;
@@ -64,144 +65,149 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
   }
 
   async start(): Promise<void> {
-    if (this.started) {
+    if (this.started || this.starting) {
       return;
     }
+    this.starting = true;
 
-    const token = this.configService.get<string>('TELEGRAM_BOT_TOKEN');
-    if (!token) {
-      this.logger.warn('TELEGRAM_BOT_TOKEN is not set; telegram bot not started.');
-      return;
-    }
-
-    // Sender can be used independently of polling to avoid 409 conflicts.
-    this.sender = new Telegram(token);
-
-    this.bot = new Telegraf<BotContext>(token);
-    this.bot.use(session());
-    this.bot.use(async (ctx, next) => {
-      const telegramId = ctx.from?.id;
-      if (telegramId && ctx.session && !ctx.session.phone) {
-        const cached = this.phoneCache.get(telegramId);
-        if (cached) {
-          ctx.session.phone = cached;
-        }
+    try {
+      const token = this.configService.get<string>('TELEGRAM_BOT_TOKEN');
+      if (!token) {
+        this.logger.warn('TELEGRAM_BOT_TOKEN is not set; telegram bot not started.');
+        return;
       }
-      return next();
-    });
 
-    this.bot.start(async (ctx: BotContext) => {
-      await ctx.reply(
-        'سلام! 👋 لطفاً با دکمه زیر شماره تماس خود را ارسال کنید.',
-        Markup.keyboard([Markup.button.contactRequest('📱 ارسال شماره تماس')])
-          .oneTime()
-          .resize(),
-      );
-    });
+      // Sender can be used independently of polling to avoid 409 conflicts.
+      this.sender = new Telegram(token);
 
-    this.bot.on('contact', async (ctx: BotContext) => {
-      const msg: any = ctx.message as any;
-      const phone = msg?.contact?.phone_number as string | undefined;
-      const contactUserId = msg?.contact?.user_id as number | undefined;
-      const senderId = ctx.from?.id;
-      const chatId = ctx.chat?.id;
+      this.bot = new Telegraf<BotContext>(token);
+      this.bot.use(session());
+      this.bot.use(async (ctx, next) => {
+        const telegramId = ctx.from?.id;
+        if (telegramId && ctx.session && !ctx.session.phone) {
+          const cached = this.phoneCache.get(telegramId);
+          if (cached) {
+            ctx.session.phone = cached;
+          }
+        }
+        return next();
+      });
 
-      // Accept only the sender's own number to avoid spoofed contacts.
-      if (contactUserId && senderId && contactUserId !== senderId) {
+      this.bot.start(async (ctx: BotContext) => {
         await ctx.reply(
-          'لطفاً شماره خودتان را ارسال کنید (نه شماره شخص دیگر). روی «📱 ارسال شماره تماس» بزنید.',
+          'سلام! 👋 لطفاً با دکمه زیر شماره تماس خود را ارسال کنید.',
+          Markup.keyboard([Markup.button.contactRequest('📱 ارسال شماره تماس')])
+            .oneTime()
+            .resize(),
+        );
+      });
+
+      this.bot.on('contact', async (ctx: BotContext) => {
+        const msg: any = ctx.message as any;
+        const phone = msg?.contact?.phone_number as string | undefined;
+        const contactUserId = msg?.contact?.user_id as number | undefined;
+        const senderId = ctx.from?.id;
+        const chatId = ctx.chat?.id;
+
+        // Accept only the sender's own number to avoid spoofed contacts.
+        if (contactUserId && senderId && contactUserId !== senderId) {
+          await ctx.reply(
+            'لطفاً شماره خودتان را ارسال کنید (نه شماره شخص دیگر). روی «📱 ارسال شماره تماس» بزنید.',
+            Markup.keyboard([Markup.button.contactRequest('📱 ارسال شماره تماس')])
+              .oneTime()
+              .resize(),
+          );
+          return;
+        }
+
+        if (phone) {
+          if (ctx.session) {
+            (ctx.session as any).phone = phone;
+          }
+          if (contactUserId) {
+            this.phoneCache.set(contactUserId, phone);
+          }
+
+          if (chatId) {
+            void this.saveTelegramLink({
+              telegramId: String(contactUserId ?? senderId ?? chatId),
+              chatId: String(chatId),
+              phone,
+            });
+          }
+
+          await ctx.reply(
+            `ممنون! شماره شما دریافت شد: ${phone}`,
+            Markup.keyboard([['📂 نمایش فیلترهای ذخیره‌شده']]).resize(),
+          );
+
+          return;
+        } else {
+          await ctx.reply('خطا در خواندن شماره. لطفاً دوباره تلاش کنید.');
+        }
+      });
+
+      this.bot.command('filters', (ctx: BotContext) => this.handleSavedFilters(ctx));
+      this.bot.hears('📂 نمایش فیلترهای ذخیره‌شده', (ctx: BotContext) =>
+        this.handleSavedFilters(ctx),
+      );
+      this.bot.action(/^zip:(.+)/, async (ctx: BotContext) => {
+        const data = (ctx.callbackQuery as any)?.data as string | undefined;
+        const postId = data?.slice(4).trim();
+        const callbackMessage = (ctx.callbackQuery as any)?.message;
+        const chatId = callbackMessage?.chat?.id ?? ctx.chat?.id;
+        const messageId = callbackMessage?.message_id as number | undefined;
+
+        if (!postId || !chatId) {
+          await ctx
+            .answerCbQuery('شناسه آگهی نامعتبر است.', { show_alert: true })
+            .catch(() => undefined);
+          return;
+        }
+
+        this.logger.log(
+          `Telegram ZIP requested for post ${postId} (chat ${chatId}, message ${messageId ?? 'n/a'}).`,
+        );
+
+        await ctx.answerCbQuery('در حال آماده‌سازی فایل…').catch(() => undefined);
+        await ctx.telegram.sendChatAction(chatId, 'upload_document').catch(() => undefined);
+
+        const ok = await this.sendPostPhotosZip({
+          chatId,
+          postId,
+          replyToMessageId: messageId,
+        });
+
+        if (!ok) {
+          await ctx.reply('امکان ارسال فایل زیپ وجود ندارد. دوباره تلاش کنید.');
+          this.logger.warn(`Telegram ZIP failed for post ${postId} (chat ${chatId}).`);
+        } else {
+          this.logger.log(`Telegram ZIP sent for post ${postId} (chat ${chatId}).`);
+        }
+      });
+
+      this.bot.on('text', async (ctx: BotContext, next) => {
+        // If we already have the phone, continue to other handlers (e.g., /filters).
+        if (await this.getPhone(ctx)) {
+          return next();
+        }
+
+        // Otherwise remind to share contact.
+        await ctx.reply(
+          'لطفاً روی «📱 ارسال شماره تماس» بزنید تا شماره شما دریافت شود.',
           Markup.keyboard([Markup.button.contactRequest('📱 ارسال شماره تماس')])
             .oneTime()
             .resize(),
         );
         return;
-      }
-
-      if (phone) {
-        if (ctx.session) {
-          (ctx.session as any).phone = phone;
-        }
-        if (contactUserId) {
-          this.phoneCache.set(contactUserId, phone);
-        }
-
-        if (chatId) {
-          void this.saveTelegramLink({
-            telegramId: String(contactUserId ?? senderId ?? chatId),
-            chatId: String(chatId),
-            phone,
-          });
-        }
-
-        await ctx.reply(
-          `ممنون! شماره شما دریافت شد: ${phone}`,
-          Markup.keyboard([['📂 نمایش فیلترهای ذخیره‌شده']]).resize(),
-        );
-
-        return;
-      } else {
-        await ctx.reply('خطا در خواندن شماره. لطفاً دوباره تلاش کنید.');
-      }
-    });
-
-    this.bot.command('filters', (ctx: BotContext) => this.handleSavedFilters(ctx));
-    this.bot.hears('📂 نمایش فیلترهای ذخیره‌شده', (ctx: BotContext) =>
-      this.handleSavedFilters(ctx),
-    );
-    this.bot.action(/^zip:(.+)/, async (ctx: BotContext) => {
-      const data = (ctx.callbackQuery as any)?.data as string | undefined;
-      const postId = data?.slice(4).trim();
-      const callbackMessage = (ctx.callbackQuery as any)?.message;
-      const chatId = callbackMessage?.chat?.id ?? ctx.chat?.id;
-      const messageId = callbackMessage?.message_id as number | undefined;
-
-      if (!postId || !chatId) {
-        await ctx
-          .answerCbQuery('شناسه آگهی نامعتبر است.', { show_alert: true })
-          .catch(() => undefined);
-        return;
-      }
-
-      this.logger.log(
-        `Telegram ZIP requested for post ${postId} (chat ${chatId}, message ${messageId ?? 'n/a'}).`,
-      );
-
-      await ctx.answerCbQuery('در حال آماده‌سازی فایل…').catch(() => undefined);
-      await ctx.telegram.sendChatAction(chatId, 'upload_document').catch(() => undefined);
-
-      const ok = await this.sendPostPhotosZip({
-        chatId,
-        postId,
-        replyToMessageId: messageId,
       });
 
-      if (!ok) {
-        await ctx.reply('امکان ارسال فایل زیپ وجود ندارد. دوباره تلاش کنید.');
-        this.logger.warn(`Telegram ZIP failed for post ${postId} (chat ${chatId}).`);
-      } else {
-        this.logger.log(`Telegram ZIP sent for post ${postId} (chat ${chatId}).`);
-      }
-    });
-
-    this.bot.on('text', async (ctx: BotContext, next) => {
-      // If we already have the phone, continue to other handlers (e.g., /filters).
-      if (await this.getPhone(ctx)) {
-        return next();
-      }
-
-      // Otherwise remind to share contact.
-      await ctx.reply(
-        'لطفاً روی «📱 ارسال شماره تماس» بزنید تا شماره شما دریافت شود.',
-        Markup.keyboard([Markup.button.contactRequest('📱 ارسال شماره تماس')])
-          .oneTime()
-          .resize(),
-      );
-      return;
-    });
-
-    await this.bot.launch();
-    this.started = true;
-    this.logger.log('Telegram bot started (polling).');
+      await this.bot.launch();
+      this.started = true;
+      this.logger.log('Telegram bot started (polling).');
+    } finally {
+      this.starting = false;
+    }
   }
 
   async onModuleDestroy(): Promise<void> {

@@ -17,8 +17,12 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
   private readonly sendTimeoutMs: number;
   private readonly sendRetryAttempts: number;
   private readonly sendRetryDelayMs: number;
+  private readonly sendRateLimitPerSecond: number;
   private readonly appBaseUrl: string;
   private readonly apiBaseUrl: string;
+  private sendRateLimitChain: Promise<void> = Promise.resolve();
+  private sendRateLimitTimestamps: number[] = [];
+  private sendRateLimitUntil = 0;
 
   constructor(
     private readonly configService: ConfigService,
@@ -35,6 +39,10 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     this.sendRetryDelayMs = this.toNumber(
       this.configService.get<string>('TELEGRAM_SEND_RETRY_DELAY_MS'),
       5000,
+    );
+    this.sendRateLimitPerSecond = this.toNumber(
+      this.configService.get<string>('TELEGRAM_SEND_RATE_LIMIT_PER_SEC'),
+      30,
     );
     this.appBaseUrl = this.normalizeBaseUrl(
       this.configService.get<string>('NEXT_PUBLIC_APP_URL') ??
@@ -478,8 +486,10 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       })) as any[];
 
       try {
-        await this.sendWithRetry(`sendMediaGroup(${b + 1}/${batches.length})`, () =>
-          this.sender!.sendMediaGroup(chatId, batch),
+        await this.sendWithRetry(
+          `sendMediaGroup(${b + 1}/${batches.length})`,
+          () => this.sender!.sendMediaGroup(chatId, batch),
+          batch.length,
         );
       } catch (err) {
         const errMsg = `Failed to send batch ${b + 1}/${batches.length} for post ${postId} to chat ${chatId}: ${String(
@@ -614,13 +624,14 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private async sendWithRetry<T>(label: string, task: () => Promise<T>): Promise<T> {
+  private async sendWithRetry<T>(label: string, task: () => Promise<T>, cost = 1): Promise<T> {
     const maxAttempts = Math.max(1, this.sendRetryAttempts);
     for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
       try {
         if (attempt > 1) {
           this.logger.warn(`Retrying Telegram ${label} (attempt ${attempt}/${maxAttempts}).`);
         }
+        await this.throttleSend(cost);
         return await this.withTimeout(task(), this.sendTimeoutMs, label);
       } catch (error) {
         const message = (error as any)?.response?.description ?? (error as Error).message;
@@ -638,9 +649,46 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     throw new Error(`Telegram ${label} failed after ${maxAttempts} attempts`);
   }
 
+  private async throttleSend(cost: number): Promise<void> {
+    const normalizedCost = Math.max(1, Math.min(Math.floor(cost), this.sendRateLimitPerSecond));
+    this.sendRateLimitChain = this.sendRateLimitChain.then(() =>
+      this.waitForRateLimitSlot(normalizedCost),
+    );
+    await this.sendRateLimitChain;
+  }
+
+  private async waitForRateLimitSlot(cost: number): Promise<void> {
+    const windowMs = 1000;
+    while (true) {
+      const now = Date.now();
+      if (now < this.sendRateLimitUntil) {
+        await this.delay(this.sendRateLimitUntil - now);
+        continue;
+      }
+      this.sendRateLimitTimestamps = this.sendRateLimitTimestamps.filter(
+        (ts) => now - ts < windowMs,
+      );
+      if (this.sendRateLimitTimestamps.length + cost <= this.sendRateLimitPerSecond) {
+        for (let i = 0; i < cost; i += 1) {
+          this.sendRateLimitTimestamps.push(now);
+        }
+        return;
+      }
+      const oldest = this.sendRateLimitTimestamps[0];
+      const waitMs = Math.max(0, windowMs - (now - oldest));
+      await this.delay(waitMs);
+    }
+  }
+
   private resolveRetryDelayMs(error: unknown): number {
     const retryAfter = (error as any)?.response?.parameters?.retry_after;
     const retryAfterMs = typeof retryAfter === 'number' ? retryAfter * 1000 : 0;
+    if (retryAfterMs > 0) {
+      const until = Date.now() + retryAfterMs;
+      if (until > this.sendRateLimitUntil) {
+        this.sendRateLimitUntil = until;
+      }
+    }
     return Math.max(this.sendRetryDelayMs, retryAfterMs);
   }
 

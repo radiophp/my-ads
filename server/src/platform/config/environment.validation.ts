@@ -384,6 +384,14 @@ export class EnvironmentVariables {
   })
   @IsBoolean()
   NOTIFICATION_PUSH_ALWAYS: boolean = true;
+
+  @Transform(({ value }) => {
+    if (value === undefined) return true;
+    if (typeof value === 'string') return value === 'true';
+    return Boolean(value);
+  })
+  @IsBoolean()
+  NOTIFICATION_QUEUE_CONSUMER_ENABLED: boolean = true;
 }
 
 export const validateEnvironment = (config: Record<string, unknown>): EnvironmentVariables => {

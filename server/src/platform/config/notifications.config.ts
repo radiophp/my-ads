@@ -7,6 +7,7 @@ export type NotificationsConfig = {
   maxDeliveryAttempts: number;
   retentionDays: number;
   alwaysSendPush: boolean;
+  queueConsumerEnabled: boolean;
 };
 
 const toNumber = (value: string | undefined, fallback: number): number => {
@@ -33,5 +34,6 @@ export default registerAs(
     maxDeliveryAttempts: toNumber(process.env['NOTIFICATION_MAX_ATTEMPTS'], 3),
     retentionDays: toNumber(process.env['NOTIFICATION_RETENTION_DAYS'], 3),
     alwaysSendPush: toBoolean(process.env['NOTIFICATION_PUSH_ALWAYS'], true),
+    queueConsumerEnabled: toBoolean(process.env['NOTIFICATION_QUEUE_CONSUMER_ENABLED'], true),
   }),
 );

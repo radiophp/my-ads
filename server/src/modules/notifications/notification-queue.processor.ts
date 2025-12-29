@@ -23,6 +23,7 @@ export class NotificationQueueProcessor implements OnModuleInit {
   private readonly retryIntervalMs: number;
   private readonly maxDeliveryAttempts: number;
   private readonly alwaysSendPush: boolean;
+  private readonly queueConsumerEnabled: boolean;
 
   constructor(
     private readonly queueService: QueueService,
@@ -43,9 +44,14 @@ export class NotificationQueueProcessor implements OnModuleInit {
     this.retryIntervalMs = config.retryIntervalMs;
     this.maxDeliveryAttempts = config.maxDeliveryAttempts;
     this.alwaysSendPush = config.alwaysSendPush ?? true;
+    this.queueConsumerEnabled = config.queueConsumerEnabled ?? true;
   }
 
   async onModuleInit(): Promise<void> {
+    if (!this.queueConsumerEnabled) {
+      this.logger.warn('Notification queue consumer is disabled; skipping registration.');
+      return;
+    }
     const { maxAttempts, baseDelayMs } = this.queueService.getConsumerRetryOptions();
     await registerConsumerWithRetry<NotificationJob>(
       this.queueService,

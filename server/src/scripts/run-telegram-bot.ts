@@ -3,6 +3,9 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../app.module';
 import { TelegramBotService } from '../modules/telegram/telegram.service';
 
+process.env['NOTIFICATION_QUEUE_CONSUMER_ENABLED'] =
+  process.env['NOTIFICATION_QUEUE_CONSUMER_ENABLED'] ?? 'false';
+
 async function bootstrap() {
   const app = await NestFactory.createApplicationContext(AppModule, {
     logger: ['log', 'error', 'warn'],

@@ -162,6 +162,7 @@ services:
       - ./.env
     environment:
       NOTIFICATION_QUEUE_CONSUMER_ENABLED: 'false'
+      RABBITMQ_PREFETCH: ${TELEGRAM_BOT_PREFETCH:-1}
     depends_on:
       - postgres
       - redis

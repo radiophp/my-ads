@@ -588,3 +588,9 @@ jobs:
           GRAFANA_PORT: ${{ vars.GRAFANA_PORT || '6323' }}
           LOKI_PORT: ${{ vars.LOKI_PORT || '6319' }}
         run: docker stack deploy -c docker-compose-prod.yml "$STACK_NAME" --with-registry-auth
+
+      - name: Force update cron/bot/ui services
+        run: |
+          docker service update --force "${STACK_NAME}_api-cron"
+          docker service update --force "${STACK_NAME}_telegram-bot"
+          docker service update --force "${STACK_NAME}_ui"

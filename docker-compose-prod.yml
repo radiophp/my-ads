@@ -16,17 +16,47 @@ x-deploy-defaults: &deploy_defaults
 services:
   postgres:
     image: postgres:16-alpine
+    entrypoint:
+      - /usr/local/bin/pgbackrest-entrypoint.sh
     command:
       [
         "postgres",
         "-c",
-        "max_connections=${POSTGRES_MAX_CONNECTIONS:-200}"
+        "max_connections=${POSTGRES_MAX_CONNECTIONS:-200}",
+        "-c",
+        "archive_mode=on",
+        "-c",
+        "archive_timeout=60",
+        "-c",
+        "archive_command=pgbackrest --stanza=${PGBACKREST_STANZA:-my-ads} --repo1-cipher-type=aes-256-cbc --repo1-cipher-pass=Ghader archive-push %p"
       ]
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD not set}
       PGPORT: ${POSTGRES_INTERNAL_PORT}
+      PGBACKREST_STANZA: ${PGBACKREST_STANZA:-my-ads}
+      PGBACKREST_PG1_PATH: /var/lib/postgresql/data
+      PGBACKREST_PG1_PORT: ${POSTGRES_INTERNAL_PORT}
+      PGBACKREST_PG1_SOCKET_PATH: /var/run/postgresql
+      PGBACKREST_PG1_USER: ${POSTGRES_USER}
+      PGBACKREST_REPO1_TYPE: s3
+      PGBACKREST_REPO1_PATH: /pgbackrest
+      PGBACKREST_REPO1_S3_BUCKET: DB_BACKUP
+      PGBACKREST_REPO1_S3_ENDPOINT: ${MINIO_ENDPOINT}:${MINIO_PORT}
+      PGBACKREST_REPO1_S3_REGION: ${MINIO_REGION}
+      PGBACKREST_REPO1_S3_KEY: ${MINIO_ACCESS_KEY:?MINIO_ACCESS_KEY not set}
+      PGBACKREST_REPO1_S3_KEY_SECRET: ${MINIO_SECRET_KEY:?MINIO_SECRET_KEY not set}
+      PGBACKREST_REPO1_S3_URI_STYLE: path
+      PGBACKREST_REPO1_S3_VERIFY_TLS: ${PGBACKREST_REPO1_S3_VERIFY_TLS:-n}
+      PGBACKREST_REPO1_BUNDLE: y
+      PGBACKREST_REPO1_BUNDLE_SIZE: 1GiB
+      PGBACKREST_REPO1_COMPRESS_TYPE: zst
+      PGBACKREST_REPO1_COMPRESS_LEVEL: 9
+      PGBACKREST_REPO1_RETENTION_FULL_TYPE: time
+      PGBACKREST_REPO1_RETENTION_FULL: 30
+      PGBACKREST_REPO1_RETENTION_ARCHIVE_TYPE: time
+      PGBACKREST_REPO1_RETENTION_ARCHIVE: 30
     ports:
       - target: ${POSTGRES_INTERNAL_PORT}
         published: ${POSTGRES_PUBLISHED_PORT}
@@ -34,6 +64,63 @@ services:
         mode: host
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - postgres_socket:/var/run/postgresql
+      - ./scripts/pgbackrest/postgres-entrypoint.sh:/usr/local/bin/pgbackrest-entrypoint.sh:ro
+    networks:
+      - app_net
+    deploy:
+      <<: *deploy_defaults
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+
+  pgbackrest-backup:
+    image: ghcr.io/radiophp/my-ads-backup:latest
+    environment:
+      TZ: ${BACKUP_TZ:-Asia/Tehran}
+      BACKUP_CRON: ${BACKUP_CRON:-0 2 * * *}
+      BACKUP_TELEGRAM_PHONES: ${BACKUP_TELEGRAM_PHONES:-+989038923989,+989195043739}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:?TELEGRAM_BOT_TOKEN not set}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: ${POSTGRES_INTERNAL_PORT}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD not set}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+      MINIO_PORT: ${MINIO_PORT}
+      MINIO_USE_SSL: ${MINIO_USE_SSL}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:?MINIO_ACCESS_KEY not set}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:?MINIO_SECRET_KEY not set}
+      MINIO_REGION: ${MINIO_REGION}
+      PGBACKREST_STANZA: ${PGBACKREST_STANZA:-my-ads}
+      PGBACKREST_PG1_PATH: /var/lib/postgresql/data
+      PGBACKREST_PG1_PORT: ${POSTGRES_INTERNAL_PORT}
+      PGBACKREST_PG1_SOCKET_PATH: /var/run/postgresql
+      PGBACKREST_PG1_USER: ${POSTGRES_USER}
+      PGBACKREST_REPO1_TYPE: s3
+      PGBACKREST_REPO1_PATH: /pgbackrest
+      PGBACKREST_REPO1_S3_BUCKET: DB_BACKUP
+      PGBACKREST_REPO1_S3_ENDPOINT: ${MINIO_ENDPOINT}:${MINIO_PORT}
+      PGBACKREST_REPO1_S3_REGION: ${MINIO_REGION}
+      PGBACKREST_REPO1_S3_KEY: ${MINIO_ACCESS_KEY:?MINIO_ACCESS_KEY not set}
+      PGBACKREST_REPO1_S3_KEY_SECRET: ${MINIO_SECRET_KEY:?MINIO_SECRET_KEY not set}
+      PGBACKREST_REPO1_S3_URI_STYLE: path
+      PGBACKREST_REPO1_S3_VERIFY_TLS: ${PGBACKREST_REPO1_S3_VERIFY_TLS:-n}
+      PGBACKREST_REPO1_BUNDLE: y
+      PGBACKREST_REPO1_BUNDLE_SIZE: 1GiB
+      PGBACKREST_REPO1_COMPRESS_TYPE: zst
+      PGBACKREST_REPO1_COMPRESS_LEVEL: 9
+      PGBACKREST_REPO1_RETENTION_FULL_TYPE: time
+      PGBACKREST_REPO1_RETENTION_FULL: 30
+      PGBACKREST_REPO1_RETENTION_ARCHIVE_TYPE: time
+      PGBACKREST_REPO1_RETENTION_ARCHIVE: 30
+    volumes:
+      - postgres_data:/var/lib/postgresql/data:ro
+      - postgres_socket:/var/run/postgresql
+    depends_on:
+      - postgres
+      - minio
     networks:
       - app_net
     deploy:
@@ -510,6 +597,7 @@ networks:
 
 volumes:
   postgres_data:
+  postgres_socket:
   minio_data:
   loki_data:
   tempo_data:

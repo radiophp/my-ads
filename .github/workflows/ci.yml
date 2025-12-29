@@ -300,6 +300,44 @@ jobs:
             ghcr.io/${{ steps.vars.outputs.owner }}/my-ads-api:${{ github.sha }}
             ghcr.io/${{ steps.vars.outputs.owner }}/my-ads-api:latest
 
+  publish-backup-image:
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'pull_request' && github.base_ref == 'main' && github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    needs:
+      - server-build
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Derive image namespace
+        id: vars
+        run: echo "owner=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push backup image
+        uses: docker/build-push-action@v6
+        with:
+          context: backup
+          file: backup/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ steps.vars.outputs.owner }}/my-ads-backup:${{ github.sha }}
+            ghcr.io/${{ steps.vars.outputs.owner }}/my-ads-backup:latest
+
   publish-ui-image:
     if: |
       always() &&
@@ -366,6 +404,7 @@ jobs:
       - x64
     needs:
       - publish-api-image
+      - publish-backup-image
       - publish-ui-image
     if: |
       always() &&
@@ -374,6 +413,7 @@ jobs:
         (github.event_name == 'pull_request' && github.base_ref == 'main' && github.event.pull_request.head.repo.full_name == github.repository)
       ) &&
       (needs.publish-api-image.result == 'success' || needs.publish-api-image.result == 'skipped') &&
+      (needs.publish-backup-image.result == 'success' || needs.publish-backup-image.result == 'skipped') &&
       (needs.publish-ui-image.result == 'success' || needs.publish-ui-image.result == 'skipped')
     permissions:
       contents: read
@@ -457,6 +497,7 @@ jobs:
       - name: Pull latest images
         run: |
           docker pull ghcr.io/radiophp/my-ads-api:latest
+          docker pull ghcr.io/radiophp/my-ads-backup:latest
           docker pull ghcr.io/radiophp/my-ads-ui:latest
 
       - name: Deploy stack
@@ -510,6 +551,11 @@ jobs:
           MINIO_PUBLIC_ENDPOINT: ${{ vars.MINIO_PUBLIC_ENDPOINT }}
           MINIO_PUBLIC_PORT: ${{ vars.MINIO_PUBLIC_PORT }}
           MINIO_PUBLIC_USE_SSL: ${{ vars.MINIO_PUBLIC_USE_SSL }}
+          BACKUP_TZ: ${{ vars.BACKUP_TZ || 'Asia/Tehran' }}
+          BACKUP_CRON: ${{ vars.BACKUP_CRON || '0 2 * * *' }}
+          BACKUP_TELEGRAM_PHONES: ${{ vars.BACKUP_TELEGRAM_PHONES || '+989038923989,+989195043739' }}
+          PGBACKREST_STANZA: ${{ vars.PGBACKREST_STANZA || 'my-ads' }}
+          PGBACKREST_REPO1_S3_VERIFY_TLS: ${{ vars.PGBACKREST_REPO1_S3_VERIFY_TLS || 'n' }}
           CORS_ORIGIN: ${{ vars.CORS_ORIGIN }}
           RATE_LIMIT_TTL: ${{ vars.RATE_LIMIT_TTL }}
           RATE_LIMIT_MAX: ${{ vars.RATE_LIMIT_MAX }}

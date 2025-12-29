@@ -205,6 +205,18 @@ SET "lastFetchedAt" = now(), "updatedAt" = now()
 WHERE status = 'COMPLETED';
 ```
 
+### Automated pgBackRest backups (production)
+
+Production runs a `pgbackrest-backup` service on a daily schedule (defaults to `02:00` Asia/Tehran). It creates/ensures a private MinIO bucket named `DB_BACKUP`, stores encrypted, bundled backups, and delivers the bundle parts via Telegram.
+
+- Schedule + timezone: `BACKUP_CRON` (`0 2 * * *`) and `BACKUP_TZ` (`Asia/Tehran`).
+- Repo details: bucket `DB_BACKUP`, prefix `/pgbackrest`, bundle size `1GiB`, zstd compression level `9`.
+- Encryption: AES-256-CBC with fixed passphrase `Ghader`.
+- Retention: 30 days for full + archive (configured via pgBackRest retention).
+- Telegram delivery: `BACKUP_TELEGRAM_PHONES` (defaults to `+989038923989,+989195043739`). Each recipient must start the bot so a `TelegramUserLink` exists.
+
+You can override the stanza name via `PGBACKREST_STANZA` and TLS verification via `PGBACKREST_REPO1_S3_VERIFY_TLS`.
+
 ### Monitoring (Grafana / Prometheus / Loki / Tempo)
 - Grafana: `monitoring.mahanfile.com` (or `localhost:6323` with `GRAFANA_PORT` default). Admin credentials come from `GF_SECURITY_ADMIN_USER` / `GF_SECURITY_ADMIN_PASSWORD` secrets.
 - Data sources:
@@ -483,6 +495,11 @@ All configuration is validated at startup (`platform/config/environment.validati
 | `MINIO_SECRET_KEY` | `minioadmin` | Object storage secret. |
 | `MINIO_BUCKET` | `upload` | Default bucket created on boot. |
 | `MINIO_REGION` | — | Optional bucket region. |
+| `BACKUP_TZ` | `Asia/Tehran` | Timezone for pgBackRest backup scheduling. |
+| `BACKUP_CRON` | `0 2 * * *` | Cron schedule for pgBackRest backups (runs in `pgbackrest-backup`). |
+| `BACKUP_TELEGRAM_PHONES` | `+989038923989,+989195043739` | Comma-separated phone numbers to receive backup files via Telegram. |
+| `PGBACKREST_STANZA` | `my-ads` | Stanza name used by pgBackRest. |
+| `PGBACKREST_REPO1_S3_VERIFY_TLS` | `n` | Whether pgBackRest verifies TLS when talking to MinIO/S3. |
 | `OTEL_ENABLED` | `false` | Enable OpenTelemetry tracing (`true/false`). |
 | `OTEL_SERVICE_NAME` | `my-ads-api` | Service name reported to OTLP exporters. |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | — | OTLP HTTP endpoint for traces. |

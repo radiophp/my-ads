@@ -20,17 +20,17 @@ scrape_configs:
       # drop very old log lines so Loki won't reject them
       - drop:
           older_than: 24h
-      # drop anything outside our stack explicitly
-      - match:
-          selector: '{compose_service!~"^my-ads.*"}'
-          action: drop
     relabel_configs:
       - source_labels: ['__meta_docker_container_name']
         regex: '/(.*)'
         target_label: container
       - source_labels: ['__meta_docker_container_id']
         target_label: container_id
+      - source_labels: ['__meta_docker_container_label_com_docker_swarm_service_name']
+        regex: '(.+)'
+        target_label: compose_service
       - source_labels: ['__meta_docker_container_label_com_docker_compose_service']
+        regex: '(.+)'
         target_label: compose_service
       - target_label: job
         replacement: my-ads

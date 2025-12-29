@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
 import axios from 'axios';
 import { XMLParser } from 'fast-xml-parser';
@@ -36,6 +37,7 @@ const SOURCE_MARKER_SUFFIX = ' -->';
 @Injectable()
 export class KhabarCrawlerService {
   private readonly logger = new Logger(KhabarCrawlerService.name);
+  private readonly schedulerEnabled: boolean;
   private readonly parser = new XMLParser({
     ignoreAttributes: false,
     attributeNamePrefix: '@_',
@@ -45,12 +47,20 @@ export class KhabarCrawlerService {
   private readonly processedGuids = new Set<string>();
 
   constructor(
+    private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
     private readonly storage: StorageService,
-  ) {}
+  ) {
+    this.schedulerEnabled =
+      this.configService.get<boolean>('scheduler.enabled', { infer: true }) ?? false;
+  }
 
   @Cron('*/15 * * * *')
   async crawlFeed() {
+    if (!this.schedulerEnabled) {
+      this.logger.warn('Skipping Khabaronline crawl because scheduler is disabled.');
+      return;
+    }
     const startedAt = new Date();
     this.logger.log('Khabaronline housing crawl started.');
 

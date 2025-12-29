@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
@@ -41,16 +42,25 @@ const SOURCE_MARKER_SUFFIX = ' -->';
 @Injectable()
 export class AsriranCrawlerService {
   private readonly logger = new Logger(AsriranCrawlerService.name);
+  private readonly schedulerEnabled: boolean;
   private readonly processedIds = new Set<number>();
   private lastRunAt = new Date(0);
 
   constructor(
+    private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
     private readonly storage: StorageService,
-  ) {}
+  ) {
+    this.schedulerEnabled =
+      this.configService.get<boolean>('scheduler.enabled', { infer: true }) ?? false;
+  }
 
   @Cron('*/15 * * * *')
   async crawlTags() {
+    if (!this.schedulerEnabled) {
+      this.logger.warn('Skipping Asriran crawl because scheduler is disabled.');
+      return;
+    }
     const startedAt = new Date();
     this.logger.log('Asriran housing crawl started.');
 

@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
 import axios from 'axios';
 import { PrismaService } from '@app/platform/database/prisma.service';
@@ -38,16 +39,25 @@ const SOURCE_MARKER_SUFFIX = ' -->';
 @Injectable()
 export class NewsCrawlerService {
   private readonly logger = new Logger(NewsCrawlerService.name);
+  private readonly schedulerEnabled: boolean;
   private lastRunAt = new Date(0);
   private lastSeenId = 0;
 
   constructor(
+    private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
     private readonly storage: StorageService,
-  ) {}
+  ) {
+    this.schedulerEnabled =
+      this.configService.get<boolean>('scheduler.enabled', { infer: true }) ?? false;
+  }
 
   @Cron('*/15 * * * *')
   async crawlFeed() {
+    if (!this.schedulerEnabled) {
+      this.logger.warn('Skipping Eghtesad Online crawl because scheduler is disabled.');
+      return;
+    }
     const startedAt = new Date();
     this.logger.log('Eghtesad Online housing crawl started.');
 

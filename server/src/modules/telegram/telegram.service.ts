@@ -27,6 +27,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
   private readonly sendRateLimitPerSecond: number;
   private readonly sendPerChatLimitPerSecond: number;
   private readonly pollingRetryDelayMs: number;
+  private readonly sendPhotos: boolean;
   private readonly appBaseUrl: string;
   private readonly apiBaseUrl: string;
   private sendRateLimitChain: Promise<void> = Promise.resolve();
@@ -63,6 +64,7 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
       this.configService.get<string>('TELEGRAM_POLLING_RETRY_DELAY_MS'),
       60_000,
     );
+    this.sendPhotos = this.configService.get<string>('TELEGRAM_SEND_PHOTOS') === 'true';
     this.appBaseUrl = this.normalizeBaseUrl(
       this.configService.get<string>('NEXT_PUBLIC_APP_URL') ??
         this.configService.get<string>('APP_PUBLIC_URL') ??
@@ -502,11 +504,11 @@ export class TelegramBotService implements OnModuleInit, OnModuleDestroy {
     const photos = (post.medias ?? [])
       .map((m) => m.localUrl || m.url || m.thumbnailUrl)
       .filter(Boolean) as string[];
-    const limitedPhotos = photos.slice(0, 10);
+    const limitedPhotos = this.sendPhotos ? photos.slice(0, 10) : [];
     const replyMarkup = this.buildPostMetaMarkup(
       post.code,
       dashboardUrl,
-      limitedPhotos.length > 0 ? post.id : null,
+      photos.length > 0 ? post.id : null,
     );
     const extra = {
       link_preview_options: { is_disabled: true },

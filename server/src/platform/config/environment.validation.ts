@@ -256,6 +256,10 @@ export class EnvironmentVariables {
   @IsPositive()
   TELEGRAM_SEND_TIMEOUT_MS?: number;
 
+  @Transform(({ value }) => (typeof value === 'string' ? value === 'true' : Boolean(value)))
+  @IsBoolean()
+  TELEGRAM_SEND_PHOTOS: boolean = false;
+
   @IsOptional()
   @IsString()
   VAPID_SUBJECT?: string;

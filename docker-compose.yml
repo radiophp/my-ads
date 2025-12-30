@@ -163,6 +163,7 @@ services:
     environment:
       NOTIFICATION_QUEUE_CONSUMER_ENABLED: 'false'
       RABBITMQ_PREFETCH: ${TELEGRAM_BOT_PREFETCH:-1}
+      TELEGRAM_SEND_PHOTOS: ${TELEGRAM_SEND_PHOTOS:-false}
     depends_on:
       - postgres
       - redis

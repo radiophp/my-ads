@@ -20,6 +20,8 @@ import {
   Star,
   Search,
   Settings,
+  TicketPercent,
+  UserPlus,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -50,6 +52,18 @@ export function AdminDashboard() {
       icon: <Boxes className="size-8 text-primary" aria-hidden />,
       title: t('cards.packages.title'),
       countKey: 'packages',
+    },
+    discountCodes: {
+      href: '/admin/discount-codes',
+      icon: <TicketPercent className="size-8 text-primary" aria-hidden />,
+      title: t('cards.discountCodes.title'),
+      countKey: 'discountCodes',
+    },
+    inviteCodes: {
+      href: '/admin/invite-codes',
+      icon: <UserPlus className="size-8 text-primary" aria-hidden />,
+      title: t('cards.inviteCodes.title'),
+      countKey: 'inviteCodes',
     },
     provinces: {
       href: '/admin/provinces',
@@ -186,6 +200,11 @@ export function AdminDashboard() {
 
   const sections: DashboardSection[] = [
     {
+      title: t('sections.core.title'),
+      description: t('sections.core.description'),
+      items: [items.packages, items.discountCodes, items.inviteCodes],
+    },
+    {
       title: t('sections.content.title'),
       description: t('sections.content.description'),
       items: [
@@ -202,11 +221,6 @@ export function AdminDashboard() {
         items.seoSettings,
         items.websiteSettings,
       ],
-    },
-    {
-      title: t('sections.core.title'),
-      description: t('sections.core.description'),
-      items: [items.packages],
     },
     {
       title: t('sections.locations.title'),

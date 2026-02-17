@@ -214,8 +214,9 @@ Production runs a `pgbackrest-backup` service on a daily schedule (defaults to `
 - Encryption: AES-256-CBC with fixed passphrase `Ghader`.
 - Retention: 30 days for full + archive (configured via pgBackRest retention).
 - Telegram delivery: `BACKUP_TELEGRAM_PHONES` (defaults to `+989038923989,+989195043739`). Each recipient must start the bot so a `TelegramUserLink` exists.
+- S3 endpoint: pgBackRest expects an HTTPS S3 endpoint; set `PGBACKREST_REPO1_S3_ENDPOINT` (for example `storage.mahanfile.com:443`).
 
-You can override the stanza name via `PGBACKREST_STANZA` and TLS verification via `PGBACKREST_REPO1_S3_VERIFY_TLS`.
+You can override the stanza name via `PGBACKREST_STANZA`, S3 endpoint via `PGBACKREST_REPO1_S3_ENDPOINT`, and TLS verification via `PGBACKREST_REPO1_S3_VERIFY_TLS`.
 
 ### Monitoring (Grafana / Prometheus / Loki / Tempo)
 - Grafana: `monitoring.mahanfile.com` (or `localhost:6323` with `GRAFANA_PORT` default). Admin credentials come from `GF_SECURITY_ADMIN_USER` / `GF_SECURITY_ADMIN_PASSWORD` secrets.
@@ -499,6 +500,7 @@ All configuration is validated at startup (`platform/config/environment.validati
 | `BACKUP_CRON` | `0 2 * * *` | Cron schedule for pgBackRest backups (runs in `pgbackrest-backup`). |
 | `BACKUP_TELEGRAM_PHONES` | `+989038923989,+989195043739` | Comma-separated phone numbers to receive backup files via Telegram. |
 | `PGBACKREST_STANZA` | `my-ads` | Stanza name used by pgBackRest. |
+| `PGBACKREST_REPO1_S3_ENDPOINT` | `storage.mahanfile.com:443` | HTTPS S3 endpoint used by pgBackRest repository access. |
 | `PGBACKREST_REPO1_S3_VERIFY_TLS` | `n` | Whether pgBackRest verifies TLS when talking to MinIO/S3. |
 | `OTEL_ENABLED` | `false` | Enable OpenTelemetry tracing (`true/false`). |
 | `OTEL_SERVICE_NAME` | `my-ads-api` | Service name reported to OTLP exporters. |

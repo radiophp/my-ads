@@ -41,6 +41,10 @@ export const packageSchemaFactory = (t: (key: string) => string) =>
         .number()
         .int(t('validation.savedFiltersInteger'))
         .min(1, t('validation.savedFiltersMin')),
+      allowDiscountCodes: z.boolean(),
+      allowInviteCodes: z.boolean(),
+      isTrial: z.boolean(),
+      trialOncePerUser: z.boolean(),
       actualPrice: z.coerce.number().min(0, t('validation.actualPriceMin')),
       discountedPrice: z.coerce.number().min(0, t('validation.discountedPriceMin')),
     })
@@ -65,6 +69,10 @@ export const createPackageDefaultValues: PackageFormValues = {
   freeDays: 0,
   includedUsers: 1,
   savedFiltersLimit: 5,
+  allowDiscountCodes: true,
+  allowInviteCodes: true,
+  isTrial: false,
+  trialOncePerUser: true,
   actualPrice: 0,
   discountedPrice: 0,
 };

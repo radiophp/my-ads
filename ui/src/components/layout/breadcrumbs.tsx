@@ -97,6 +97,8 @@ export function Breadcrumbs({ className, force = false }: BreadcrumbsProps) {
 
   const adminLabels: Record<string, string> = {
     packages: adminT('packages.title'),
+    'discount-codes': adminT('discountCodes.title'),
+    'invite-codes': adminT('inviteCodes.title'),
     provinces: adminT('provinces.title'),
     cities: adminT('cities.title'),
     districts: adminT('districts.title'),

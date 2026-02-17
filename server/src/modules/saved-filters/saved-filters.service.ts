@@ -10,6 +10,7 @@ import { CreateSavedFilterDto } from './dto/create-saved-filter.dto';
 import { UpdateSavedFilterDto } from './dto/update-saved-filter.dto';
 import { SavedFilterDto } from './dto/saved-filter.dto';
 import { type SavedFilterPayload, normalizeSavedFilterPayload } from './saved-filter-payload.util';
+import { SubscriptionsService } from '@app/modules/subscriptions/subscriptions.service';
 
 export const DEFAULT_MAX_SAVED_FILTERS = 5;
 
@@ -17,7 +18,10 @@ export const DEFAULT_MAX_SAVED_FILTERS = 5;
 export class SavedFiltersService {
   private readonly defaultLimit: number;
 
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly subscriptionsService: SubscriptionsService,
+  ) {
     const parsed = Number.parseInt(process.env['SAVED_FILTERS_DEFAULT_LIMIT'] ?? '', 10);
     this.defaultLimit = Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_MAX_SAVED_FILTERS;
   }
@@ -157,7 +161,10 @@ export class SavedFiltersService {
     if (!userId) {
       return this.defaultLimit;
     }
-    // Placeholder for future credit-package aware logic.
+    const subscription = await this.subscriptionsService.getActiveSubscription(userId);
+    if (subscription?.package?.savedFiltersLimit) {
+      return subscription.package.savedFiltersLimit;
+    }
     return this.defaultLimit;
   }
 }

@@ -44,6 +44,10 @@ export class PackagesService {
         freeDays: dto.freeDays,
         includedUsers: dto.includedUsers,
         savedFiltersLimit: dto.savedFiltersLimit ?? undefined,
+        allowDiscountCodes: dto.allowDiscountCodes ?? undefined,
+        allowInviteCodes: dto.allowInviteCodes ?? undefined,
+        isTrial: dto.isTrial ?? undefined,
+        trialOncePerUser: dto.trialOncePerUser ?? undefined,
         actualPrice: new Prisma.Decimal(dto.actualPrice),
         discountedPrice: new Prisma.Decimal(dto.discountedPrice),
         isActive: dto.isActive ?? true,
@@ -84,6 +88,16 @@ export class PackagesService {
         ...(typeof dto.includedUsers === 'number' ? { includedUsers: dto.includedUsers } : {}),
         ...(typeof dto.savedFiltersLimit === 'number'
           ? { savedFiltersLimit: dto.savedFiltersLimit }
+          : {}),
+        ...(typeof dto.allowDiscountCodes === 'boolean'
+          ? { allowDiscountCodes: dto.allowDiscountCodes }
+          : {}),
+        ...(typeof dto.allowInviteCodes === 'boolean'
+          ? { allowInviteCodes: dto.allowInviteCodes }
+          : {}),
+        ...(typeof dto.isTrial === 'boolean' ? { isTrial: dto.isTrial } : {}),
+        ...(typeof dto.trialOncePerUser === 'boolean'
+          ? { trialOncePerUser: dto.trialOncePerUser }
           : {}),
         ...(typeof dto.actualPrice === 'number'
           ? { actualPrice: new Prisma.Decimal(dto.actualPrice) }

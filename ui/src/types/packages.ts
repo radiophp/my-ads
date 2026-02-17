@@ -7,6 +7,10 @@ export type SubscriptionPackage = {
   freeDays: number;
   includedUsers: number;
   savedFiltersLimit: number;
+  allowDiscountCodes: boolean;
+  allowInviteCodes: boolean;
+  isTrial: boolean;
+  trialOncePerUser: boolean;
   actualPrice: string;
   discountedPrice: string;
   isActive: boolean;
@@ -22,6 +26,10 @@ export type CreatePackagePayload = {
   freeDays: number;
   includedUsers: number;
   savedFiltersLimit?: number;
+  allowDiscountCodes?: boolean;
+  allowInviteCodes?: boolean;
+  isTrial?: boolean;
+  trialOncePerUser?: boolean;
   actualPrice: number;
   discountedPrice: number;
   isActive?: boolean;

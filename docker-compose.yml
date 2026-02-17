@@ -23,6 +23,8 @@ services:
       PGBACKREST_PG1_USER: postgres
       PGBACKREST_REPO1_TYPE: s3
       PGBACKREST_REPO1_PATH: /pgbackrest
+      PGBACKREST_REPO1_CIPHER_TYPE: aes-256-cbc
+      PGBACKREST_REPO1_CIPHER_PASS: Ghader
       PGBACKREST_REPO1_S3_BUCKET: db-backup
       PGBACKREST_REPO1_S3_ENDPOINT: minio:${MINIO_PORT:-6204}
       PGBACKREST_REPO1_S3_REGION: ${MINIO_REGION:-us-east-1}
@@ -36,7 +38,7 @@ services:
       PGBACKREST_REPO1_COMPRESS_LEVEL: 9
       PGBACKREST_REPO1_RETENTION_FULL_TYPE: time
       PGBACKREST_REPO1_RETENTION_FULL: 30
-      PGBACKREST_REPO1_RETENTION_ARCHIVE_TYPE: time
+      PGBACKREST_REPO1_RETENTION_ARCHIVE_TYPE: full
       PGBACKREST_REPO1_RETENTION_ARCHIVE: 30
     ports:
       - '${POSTGRES_PORT:-6201}:${POSTGRES_PORT:-6201}'
@@ -50,7 +52,7 @@ services:
         "-c",
         "archive_timeout=60",
         "-c",
-        "archive_command=pgbackrest --stanza=${PGBACKREST_STANZA:-my-ads} --repo1-cipher-type=aes-256-cbc --repo1-cipher-pass=Ghader archive-push %p"
+        "archive_command=pgbackrest --stanza=${PGBACKREST_STANZA:-my-ads} archive-push %p"
       ]
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -204,6 +206,8 @@ services:
       PGBACKREST_PG1_USER: ${POSTGRES_USER:-postgres}
       PGBACKREST_REPO1_TYPE: s3
       PGBACKREST_REPO1_PATH: /pgbackrest
+      PGBACKREST_REPO1_CIPHER_TYPE: aes-256-cbc
+      PGBACKREST_REPO1_CIPHER_PASS: Ghader
       PGBACKREST_REPO1_S3_BUCKET: db-backup
       PGBACKREST_REPO1_S3_ENDPOINT: minio:${MINIO_PORT:-6204}
       PGBACKREST_REPO1_S3_REGION: ${MINIO_REGION:-us-east-1}
@@ -217,11 +221,12 @@ services:
       PGBACKREST_REPO1_COMPRESS_LEVEL: 9
       PGBACKREST_REPO1_RETENTION_FULL_TYPE: time
       PGBACKREST_REPO1_RETENTION_FULL: 30
-      PGBACKREST_REPO1_RETENTION_ARCHIVE_TYPE: time
+      PGBACKREST_REPO1_RETENTION_ARCHIVE_TYPE: full
       PGBACKREST_REPO1_RETENTION_ARCHIVE: 30
     volumes:
       - postgres_data:/var/lib/postgresql/data:ro
       - postgres_socket:/var/run/postgresql
+      - ./backup/run-backup.sh:/opt/backup/run-backup.sh:ro
     depends_on:
       - postgres
       - minio

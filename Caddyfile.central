@@ -412,7 +412,7 @@ storage.mahanfile.com {
 		output stdout
 		format json
 	}
-	redir https://mahanfile.com/storage{uri} 301
+	reverse_proxy http://host.docker.internal:6304
 }
 
 ############ ng v2ray #########

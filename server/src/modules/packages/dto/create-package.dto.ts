@@ -69,4 +69,36 @@ export class CreatePackageDto {
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
+
+  @Transform(({ value }) =>
+    value === '' || typeof value === 'undefined' || value === null ? undefined : value,
+  )
+  @Type(() => Boolean)
+  @IsBoolean()
+  @IsOptional()
+  allowDiscountCodes?: boolean;
+
+  @Transform(({ value }) =>
+    value === '' || typeof value === 'undefined' || value === null ? undefined : value,
+  )
+  @Type(() => Boolean)
+  @IsBoolean()
+  @IsOptional()
+  allowInviteCodes?: boolean;
+
+  @Transform(({ value }) =>
+    value === '' || typeof value === 'undefined' || value === null ? undefined : value,
+  )
+  @Type(() => Boolean)
+  @IsBoolean()
+  @IsOptional()
+  isTrial?: boolean;
+
+  @Transform(({ value }) =>
+    value === '' || typeof value === 'undefined' || value === null ? undefined : value,
+  )
+  @Type(() => Boolean)
+  @IsBoolean()
+  @IsOptional()
+  trialOncePerUser?: boolean;
 }

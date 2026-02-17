@@ -4,6 +4,8 @@ import { PostAnalysisStatus } from '@prisma/client';
 
 export type AdminEntityCounts = {
   packages: number;
+  discountCodes: number;
+  inviteCodes: number;
   provinces: number;
   cities: number;
   districts: number;
@@ -34,6 +36,8 @@ export class AdminPanelService {
   async getEntityCounts(): Promise<AdminEntityCounts> {
     const [
       packages,
+      discountCodes,
+      inviteCodes,
       provinces,
       cities,
       districts,
@@ -57,6 +61,8 @@ export class AdminPanelService {
       websiteSettings,
     ] = await Promise.all([
       this.prisma.subscriptionPackage.count(),
+      this.prisma.discountCode.count(),
+      this.prisma.inviteCode.count(),
       this.prisma.province.count(),
       this.prisma.city.count(),
       this.prisma.district.count(),
@@ -84,6 +90,8 @@ export class AdminPanelService {
 
     return {
       packages,
+      discountCodes,
+      inviteCodes,
       provinces,
       cities,
       districts,

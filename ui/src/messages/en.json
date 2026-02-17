@@ -808,6 +808,14 @@
           "title": "Subscription packages",
           "description": "Create and update the subscription offers available to users."
         },
+        "discountCodes": {
+          "title": "Discount codes",
+          "description": "Define promo codes with fixed or percentage discounts."
+        },
+        "inviteCodes": {
+          "title": "Invite codes",
+          "description": "Manage invite codes and bonus-day limits."
+        },
         "provinces": {
           "title": "Provinces",
           "description": "Review province records and verify their slugs."
@@ -1912,6 +1920,14 @@
           "freeDays": "Bonus days",
           "includedUsers": "Included users",
           "savedFiltersLimit": "Saved filters limit",
+          "allowDiscountCodes": "Allow discount codes",
+          "allowDiscountCodesHint": "Lets this package accept discount codes at checkout.",
+          "allowInviteCodes": "Allow invite codes",
+          "allowInviteCodesHint": "Lets this package accept invite codes for bonus days.",
+          "isTrial": "Trial package",
+          "isTrialHint": "Mark this package as a trial offer.",
+          "trialOncePerUser": "Trial once per user",
+          "trialOncePerUserHint": "Prevents users from activating this trial more than once.",
           "actualPrice": "List price",
           "discountedPrice": "Discounted price"
         },
@@ -1991,6 +2007,159 @@
         "updateDescription": "Adjust the package settings and pricing.",
         "backToList": "Back to packages",
         "loading": "Loading package…",
+        "reset": "Reset form"
+      }
+    },
+    "discountCodes": {
+      "form": {
+        "title": "Create a discount code",
+        "description": "Define promo codes for subscription checkouts.",
+        "fields": {
+          "code": "Code",
+          "description": "Description",
+          "type": "Discount type",
+          "typePercent": "Percent",
+          "typeFixed": "Fixed amount",
+          "value": "Discount value",
+          "maxRedemptions": "Max redemptions",
+          "maxRedemptionsPerUser": "Max per user",
+          "validFrom": "Valid from",
+          "validTo": "Valid to",
+          "package": "Package",
+          "packagePlaceholder": "All packages",
+          "isActive": "Active",
+          "isActiveHint": "Inactive codes cannot be redeemed."
+        },
+        "createSubmit": "Save code",
+        "updateSubmit": "Update code",
+        "cancel": "Cancel"
+      },
+      "table": {
+        "title": "Discount codes",
+        "description": "Create and manage promo codes applied to subscription purchases.",
+        "searchLabel": "Search",
+        "searchPlaceholder": "Search codes…",
+        "searchEmpty": "No codes match your search.",
+        "columns": {
+          "code": "Code",
+          "type": "Type",
+          "value": "Value",
+          "package": "Package",
+          "validity": "Validity",
+          "status": "Status",
+          "actions": "Actions"
+        },
+        "add": "Add code",
+        "loading": "Loading codes…",
+        "empty": "No discount codes defined yet. Create the first code above.",
+        "actions": {
+          "edit": "Edit",
+          "activate": "Activate",
+          "deactivate": "Deactivate"
+        },
+        "types": {
+          "percent": "Percent",
+          "fixed": "Fixed"
+        },
+        "anyPackage": "All packages",
+        "validityAny": "Always",
+        "validityOpen": "Open",
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "toast": {
+        "createdTitle": "Discount code created",
+        "createdDescription": "The discount code is now available.",
+        "updatedTitle": "Discount code updated",
+        "updatedDescription": "Changes saved successfully.",
+        "errorTitle": "Something went wrong",
+        "errorDescription": "We couldn't complete that action. Try again."
+      },
+      "validation": {
+        "codeRequired": "Enter a code.",
+        "codeMax": "Code is too long.",
+        "descriptionMax": "Description is too long.",
+        "valueMin": "Discount value cannot be negative.",
+        "percentMax": "Percent discount cannot exceed 100.",
+        "maxRedemptionsMin": "Max redemptions must be at least 1.",
+        "maxRedemptionsPerUserMin": "Max per user must be at least 1.",
+        "maxPerUserMax": "Max per user cannot exceed max redemptions.",
+        "dateRange": "Valid to must be after valid from."
+      },
+      "editor": {
+        "createTitle": "Create discount code",
+        "createDescription": "Set the promo code details and activation rules.",
+        "updateTitle": "Edit discount code",
+        "updateDescription": "Adjust the discount settings and validity.",
+        "backToList": "Back to discount codes",
+        "loading": "Loading discount code…",
+        "reset": "Reset form"
+      }
+    },
+    "inviteCodes": {
+      "form": {
+        "title": "Create invite code",
+        "description": "Define invite codes that grant bonus days.",
+        "fields": {
+          "code": "Code",
+          "inviterUserId": "Inviter user",
+          "inviterPlaceholder": "Select a user",
+          "bonusDays": "Bonus days",
+          "monthlyInviteLimit": "Monthly invite limit",
+          "isActive": "Active",
+          "isActiveHint": "Inactive codes cannot be redeemed."
+        },
+        "createSubmit": "Save code",
+        "updateSubmit": "Update code",
+        "cancel": "Cancel"
+      },
+      "table": {
+        "title": "Invite codes",
+        "description": "Manage invite codes and monthly invite limits.",
+        "searchLabel": "Search",
+        "searchPlaceholder": "Search invite codes…",
+        "searchEmpty": "No invite codes match your search.",
+        "columns": {
+          "code": "Code",
+          "inviter": "Inviter",
+          "bonusDays": "Bonus days",
+          "monthlyInviteLimit": "Monthly limit",
+          "status": "Status",
+          "actions": "Actions"
+        },
+        "add": "Add code",
+        "loading": "Loading codes…",
+        "empty": "No invite codes defined yet. Create the first code above.",
+        "actions": {
+          "edit": "Edit",
+          "activate": "Activate",
+          "deactivate": "Deactivate"
+        },
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "toast": {
+        "createdTitle": "Invite code created",
+        "createdDescription": "The invite code is now available.",
+        "updatedTitle": "Invite code updated",
+        "updatedDescription": "Changes saved successfully.",
+        "errorTitle": "Something went wrong",
+        "errorDescription": "We couldn't complete that action. Try again."
+      },
+      "validation": {
+        "codeRequired": "Enter a code.",
+        "codeMax": "Code is too long.",
+        "inviterRequired": "Select a user.",
+        "bonusDaysMin": "Bonus days cannot be negative.",
+        "monthlyInviteLimitMin": "Monthly limit cannot be negative."
+      },
+      "editor": {
+        "createTitle": "Create invite code",
+        "createDescription": "Set the inviter and bonus-day rules.",
+        "updateTitle": "Edit invite code",
+        "updateDescription": "Adjust invite code settings.",
+        "backToList": "Back to invite codes",
+        "loading": "Loading invite code…",
         "reset": "Reset form"
       }
     }

@@ -28,7 +28,7 @@ services:
         "-c",
         "archive_timeout=60",
         "-c",
-        "archive_command=pgbackrest --stanza=${PGBACKREST_STANZA:-my-ads} --repo1-cipher-type=aes-256-cbc --repo1-cipher-pass=Ghader archive-push %p"
+        "archive_command=pgbackrest --stanza=${PGBACKREST_STANZA:-my-ads} archive-push %p"
       ]
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
@@ -42,8 +42,10 @@ services:
       PGBACKREST_PG1_USER: ${POSTGRES_USER}
       PGBACKREST_REPO1_TYPE: s3
       PGBACKREST_REPO1_PATH: /pgbackrest
+      PGBACKREST_REPO1_CIPHER_TYPE: aes-256-cbc
+      PGBACKREST_REPO1_CIPHER_PASS: Ghader
       PGBACKREST_REPO1_S3_BUCKET: db-backup
-      PGBACKREST_REPO1_S3_ENDPOINT: ${MINIO_ENDPOINT}:${MINIO_PORT}
+      PGBACKREST_REPO1_S3_ENDPOINT: ${PGBACKREST_REPO1_S3_ENDPOINT:-storage.mahanfile.com:443}
       PGBACKREST_REPO1_S3_REGION: ${MINIO_REGION}
       PGBACKREST_REPO1_S3_KEY: ${MINIO_ACCESS_KEY:?MINIO_ACCESS_KEY not set}
       PGBACKREST_REPO1_S3_KEY_SECRET: ${MINIO_SECRET_KEY:?MINIO_SECRET_KEY not set}
@@ -55,7 +57,7 @@ services:
       PGBACKREST_REPO1_COMPRESS_LEVEL: 9
       PGBACKREST_REPO1_RETENTION_FULL_TYPE: time
       PGBACKREST_REPO1_RETENTION_FULL: 30
-      PGBACKREST_REPO1_RETENTION_ARCHIVE_TYPE: time
+      PGBACKREST_REPO1_RETENTION_ARCHIVE_TYPE: full
       PGBACKREST_REPO1_RETENTION_ARCHIVE: 30
     ports:
       - target: ${POSTGRES_INTERNAL_PORT}
@@ -66,6 +68,8 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - postgres_socket:/var/run/postgresql
       - ./scripts/pgbackrest/postgres-entrypoint.sh:/usr/local/bin/pgbackrest-entrypoint.sh:ro
+    extra_hosts:
+      - 'storage.mahanfile.com:host-gateway'
     networks:
       - app_net
     deploy:
@@ -103,8 +107,10 @@ services:
       PGBACKREST_PG1_USER: ${POSTGRES_USER}
       PGBACKREST_REPO1_TYPE: s3
       PGBACKREST_REPO1_PATH: /pgbackrest
+      PGBACKREST_REPO1_CIPHER_TYPE: aes-256-cbc
+      PGBACKREST_REPO1_CIPHER_PASS: Ghader
       PGBACKREST_REPO1_S3_BUCKET: db-backup
-      PGBACKREST_REPO1_S3_ENDPOINT: ${MINIO_ENDPOINT}:${MINIO_PORT}
+      PGBACKREST_REPO1_S3_ENDPOINT: ${PGBACKREST_REPO1_S3_ENDPOINT:-storage.mahanfile.com:443}
       PGBACKREST_REPO1_S3_REGION: ${MINIO_REGION}
       PGBACKREST_REPO1_S3_KEY: ${MINIO_ACCESS_KEY:?MINIO_ACCESS_KEY not set}
       PGBACKREST_REPO1_S3_KEY_SECRET: ${MINIO_SECRET_KEY:?MINIO_SECRET_KEY not set}
@@ -116,11 +122,14 @@ services:
       PGBACKREST_REPO1_COMPRESS_LEVEL: 9
       PGBACKREST_REPO1_RETENTION_FULL_TYPE: time
       PGBACKREST_REPO1_RETENTION_FULL: 30
-      PGBACKREST_REPO1_RETENTION_ARCHIVE_TYPE: time
+      PGBACKREST_REPO1_RETENTION_ARCHIVE_TYPE: full
       PGBACKREST_REPO1_RETENTION_ARCHIVE: 30
     volumes:
       - postgres_data:/var/lib/postgresql/data:ro
       - postgres_socket:/var/run/postgresql
+      - ./backup/run-backup.sh:/opt/backup/run-backup.sh:ro
+    extra_hosts:
+      - 'storage.mahanfile.com:host-gateway'
     depends_on:
       - postgres
       - minio

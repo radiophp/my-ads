@@ -808,6 +808,14 @@
           "title": "پکیج‌های اشتراک",
           "description": "پیشنهادهای اشتراک در دسترس کاربران را ایجاد و به‌روزرسانی کنید."
         },
+        "discountCodes": {
+          "title": "کدهای تخفیف",
+          "description": "کدهای تخفیف درصدی یا مبلغی را مدیریت کنید."
+        },
+        "inviteCodes": {
+          "title": "کدهای دعوت",
+          "description": "کدهای دعوت و سقف روزهای هدیه را تنظیم کنید."
+        },
         "provinces": {
           "title": "استان‌ها",
           "description": "فهرست استان‌ها و اسلاگ هرکدام را بررسی کنید."
@@ -1912,6 +1920,14 @@
           "freeDays": "روزهای هدیه",
           "includedUsers": "تعداد کاربران مشمول",
           "savedFiltersLimit": "حداکثر فیلترهای ذخیره‌شده",
+          "allowDiscountCodes": "اجازه استفاده از کد تخفیف",
+          "allowDiscountCodesHint": "این پکیج امکان استفاده از کد تخفیف را دارد.",
+          "allowInviteCodes": "اجازه استفاده از کد دعوت",
+          "allowInviteCodesHint": "این پکیج امکان استفاده از کد دعوت و دریافت روز هدیه را دارد.",
+          "isTrial": "پکیج آزمایشی",
+          "isTrialHint": "این پکیج را به‌عنوان نسخه آزمایشی علامت بزنید.",
+          "trialOncePerUser": "آزمایشی فقط یک‌بار",
+          "trialOncePerUserHint": "هر کاربر فقط یک‌بار می‌تواند این آزمایش را فعال کند.",
           "actualPrice": "قیمت اصلی",
           "discountedPrice": "قیمت با تخفیف"
         },
@@ -1991,6 +2007,159 @@
         "updateDescription": "تنظیمات و قیمت پکیج را اصلاح کنید.",
         "backToList": "بازگشت به فهرست پکیج‌ها",
         "loading": "در حال بارگذاری پکیج…",
+        "reset": "بازنشانی فرم"
+      }
+    },
+    "discountCodes": {
+      "form": {
+        "title": "ایجاد کد تخفیف",
+        "description": "کدهای تخفیف برای خرید پکیج تعریف کنید.",
+        "fields": {
+          "code": "کد",
+          "description": "توضیحات",
+          "type": "نوع تخفیف",
+          "typePercent": "درصدی",
+          "typeFixed": "مبلغ ثابت",
+          "value": "مقدار تخفیف",
+          "maxRedemptions": "حداکثر استفاده",
+          "maxRedemptionsPerUser": "حداکثر برای هر کاربر",
+          "validFrom": "شروع اعتبار",
+          "validTo": "پایان اعتبار",
+          "package": "پکیج",
+          "packagePlaceholder": "همه پکیج‌ها",
+          "isActive": "فعال",
+          "isActiveHint": "کد غیرفعال قابل استفاده نیست."
+        },
+        "createSubmit": "ثبت کد",
+        "updateSubmit": "به‌روزرسانی کد",
+        "cancel": "انصراف"
+      },
+      "table": {
+        "title": "کدهای تخفیف",
+        "description": "کدهای تخفیف قابل استفاده برای خرید پکیج را مدیریت کنید.",
+        "searchLabel": "جستجو",
+        "searchPlaceholder": "جستجوی کد…",
+        "searchEmpty": "کدی مطابق جستجو پیدا نشد.",
+        "columns": {
+          "code": "کد",
+          "type": "نوع",
+          "value": "مقدار",
+          "package": "پکیج",
+          "validity": "اعتبار",
+          "status": "وضعیت",
+          "actions": "عملیات"
+        },
+        "add": "افزودن کد",
+        "loading": "در حال بارگذاری کدها…",
+        "empty": "هنوز کد تخفیفی تعریف نشده است. اولین کد را از بالا ایجاد کنید.",
+        "actions": {
+          "edit": "ویرایش",
+          "activate": "فعال‌سازی",
+          "deactivate": "غیرفعال‌سازی"
+        },
+        "types": {
+          "percent": "درصدی",
+          "fixed": "مبلغ ثابت"
+        },
+        "anyPackage": "همه پکیج‌ها",
+        "validityAny": "همیشگی",
+        "validityOpen": "بدون تاریخ",
+        "active": "فعال",
+        "inactive": "غیرفعال"
+      },
+      "toast": {
+        "createdTitle": "کد تخفیف ایجاد شد",
+        "createdDescription": "کد تخفیف اکنون فعال است.",
+        "updatedTitle": "کد تخفیف به‌روزرسانی شد",
+        "updatedDescription": "تغییرات با موفقیت ذخیره شد.",
+        "errorTitle": "خطا رخ داد",
+        "errorDescription": "امکان انجام عملیات نبود. دوباره تلاش کنید."
+      },
+      "validation": {
+        "codeRequired": "کد را وارد کنید.",
+        "codeMax": "کد بیش از حد طولانی است.",
+        "descriptionMax": "توضیحات بیش از حد طولانی است.",
+        "valueMin": "مقدار تخفیف نمی‌تواند منفی باشد.",
+        "percentMax": "تخفیف درصدی نمی‌تواند بیش از ۱۰۰ باشد.",
+        "maxRedemptionsMin": "حداکثر استفاده باید حداقل ۱ باشد.",
+        "maxRedemptionsPerUserMin": "حداکثر برای هر کاربر باید حداقل ۱ باشد.",
+        "maxPerUserMax": "حداکثر برای هر کاربر نمی‌تواند بیشتر از حداکثر استفاده باشد.",
+        "dateRange": "پایان اعتبار باید بعد از شروع اعتبار باشد."
+      },
+      "editor": {
+        "createTitle": "ایجاد کد تخفیف",
+        "createDescription": "جزئیات کد تخفیف و قوانین فعال‌سازی را مشخص کنید.",
+        "updateTitle": "ویرایش کد تخفیف",
+        "updateDescription": "تنظیمات و اعتبار کد تخفیف را اصلاح کنید.",
+        "backToList": "بازگشت به کدهای تخفیف",
+        "loading": "در حال بارگذاری کد تخفیف…",
+        "reset": "بازنشانی فرم"
+      }
+    },
+    "inviteCodes": {
+      "form": {
+        "title": "ایجاد کد دعوت",
+        "description": "کدهای دعوت برای دریافت روز هدیه تعریف کنید.",
+        "fields": {
+          "code": "کد",
+          "inviterUserId": "کاربر دعوت‌کننده",
+          "inviterPlaceholder": "انتخاب کاربر",
+          "bonusDays": "روز هدیه",
+          "monthlyInviteLimit": "سقف ماهانه دعوت",
+          "isActive": "فعال",
+          "isActiveHint": "کد غیرفعال قابل استفاده نیست."
+        },
+        "createSubmit": "ثبت کد",
+        "updateSubmit": "به‌روزرسانی کد",
+        "cancel": "انصراف"
+      },
+      "table": {
+        "title": "کدهای دعوت",
+        "description": "کدهای دعوت و سقف دعوت ماهانه را مدیریت کنید.",
+        "searchLabel": "جستجو",
+        "searchPlaceholder": "جستجوی کد دعوت…",
+        "searchEmpty": "کدی مطابق جستجو پیدا نشد.",
+        "columns": {
+          "code": "کد",
+          "inviter": "دعوت‌کننده",
+          "bonusDays": "روز هدیه",
+          "monthlyInviteLimit": "سقف ماهانه",
+          "status": "وضعیت",
+          "actions": "عملیات"
+        },
+        "add": "افزودن کد",
+        "loading": "در حال بارگذاری کدها…",
+        "empty": "هنوز کد دعوتی تعریف نشده است. اولین کد را از بالا ایجاد کنید.",
+        "actions": {
+          "edit": "ویرایش",
+          "activate": "فعال‌سازی",
+          "deactivate": "غیرفعال‌سازی"
+        },
+        "active": "فعال",
+        "inactive": "غیرفعال"
+      },
+      "toast": {
+        "createdTitle": "کد دعوت ایجاد شد",
+        "createdDescription": "کد دعوت اکنون فعال است.",
+        "updatedTitle": "کد دعوت به‌روزرسانی شد",
+        "updatedDescription": "تغییرات با موفقیت ذخیره شد.",
+        "errorTitle": "خطا رخ داد",
+        "errorDescription": "امکان انجام عملیات نبود. دوباره تلاش کنید."
+      },
+      "validation": {
+        "codeRequired": "کد را وارد کنید.",
+        "codeMax": "کد بیش از حد طولانی است.",
+        "inviterRequired": "یک کاربر انتخاب کنید.",
+        "bonusDaysMin": "روز هدیه نمی‌تواند منفی باشد.",
+        "monthlyInviteLimitMin": "سقف ماهانه نمی‌تواند منفی باشد."
+      },
+      "editor": {
+        "createTitle": "ایجاد کد دعوت",
+        "createDescription": "دعوت‌کننده و قوانین روز هدیه را مشخص کنید.",
+        "updateTitle": "ویرایش کد دعوت",
+        "updateDescription": "تنظیمات کد دعوت را اصلاح کنید.",
+        "backToList": "بازگشت به کدهای دعوت",
+        "loading": "در حال بارگذاری کد دعوت…",
         "reset": "بازنشانی فرم"
       }
     }

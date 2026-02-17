@@ -1,5 +1,7 @@
 export type AdminDashboardStats = {
   packages: number;
+  discountCodes: number;
+  inviteCodes: number;
   provinces: number;
   cities: number;
   districts: number;

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -15,6 +16,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import type { PackageFormValues } from '@/components/admin/package-form-defs';
 
 export type PackageFormTexts = {
@@ -24,6 +26,14 @@ export type PackageFormTexts = {
   freeDays: string;
   includedUsers: string;
   savedFiltersLimit: string;
+  allowDiscountCodes: string;
+  allowDiscountCodesHint: string;
+  allowInviteCodes: string;
+  allowInviteCodesHint: string;
+  isTrial: string;
+  isTrialHint: string;
+  trialOncePerUser: string;
+  trialOncePerUserHint: string;
   actualPrice: string;
   discountedPrice: string;
   submit: string;
@@ -47,6 +57,8 @@ export function PackageForm({
   submitIcon,
   secondaryAction,
 }: PackageFormProps) {
+  const isTrial = form.watch('isTrial');
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
@@ -178,6 +190,78 @@ export function PackageForm({
                   />
                 </FormControl>
                 <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <FormField
+            control={form.control}
+            name="allowDiscountCodes"
+            render={({ field }) => (
+              <FormItem className="flex items-center justify-between rounded-lg border border-border/60 p-4">
+                <div className="space-y-1">
+                  <FormLabel>{texts.allowDiscountCodes}</FormLabel>
+                  <FormDescription>{texts.allowDiscountCodesHint}</FormDescription>
+                </div>
+                <FormControl>
+                  <Switch checked={field.value} onCheckedChange={field.onChange} />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="allowInviteCodes"
+            render={({ field }) => (
+              <FormItem className="flex items-center justify-between rounded-lg border border-border/60 p-4">
+                <div className="space-y-1">
+                  <FormLabel>{texts.allowInviteCodes}</FormLabel>
+                  <FormDescription>{texts.allowInviteCodesHint}</FormDescription>
+                </div>
+                <FormControl>
+                  <Switch checked={field.value} onCheckedChange={field.onChange} />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <FormField
+            control={form.control}
+            name="isTrial"
+            render={({ field }) => (
+              <FormItem className="flex items-center justify-between rounded-lg border border-border/60 p-4">
+                <div className="space-y-1">
+                  <FormLabel>{texts.isTrial}</FormLabel>
+                  <FormDescription>{texts.isTrialHint}</FormDescription>
+                </div>
+                <FormControl>
+                  <Switch checked={field.value} onCheckedChange={field.onChange} />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="trialOncePerUser"
+            render={({ field }) => (
+              <FormItem className="flex items-center justify-between rounded-lg border border-border/60 p-4">
+                <div className="space-y-1">
+                  <FormLabel>{texts.trialOncePerUser}</FormLabel>
+                  <FormDescription>{texts.trialOncePerUserHint}</FormDescription>
+                </div>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    disabled={!isTrial}
+                  />
+                </FormControl>
               </FormItem>
             )}
           />

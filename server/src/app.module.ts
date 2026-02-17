@@ -51,6 +51,9 @@ import { SlidesModule } from './modules/slides/slides.module';
 import { SeoSettingsModule } from './modules/seo-settings/seo-settings.module';
 import { WebsiteSettingsModule } from './modules/website-settings/website-settings.module';
 import { FeaturedPostsModule } from './modules/featured-posts/featured-posts.module';
+import { DiscountCodesModule } from './modules/discount-codes/discount-codes.module';
+import { InviteCodesModule } from './modules/invite-codes/invite-codes.module';
+import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 
 @Module({
   imports: [
@@ -118,6 +121,9 @@ import { FeaturedPostsModule } from './modules/featured-posts/featured-posts.mod
     SeoSettingsModule,
     WebsiteSettingsModule,
     FeaturedPostsModule,
+    DiscountCodesModule,
+    InviteCodesModule,
+    SubscriptionsModule,
   ],
 })
 export class AppModule {}

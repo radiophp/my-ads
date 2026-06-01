@@ -311,26 +311,26 @@ services:
         ipv4_address: 172.30.0.9
 
   tempo:
-    image: grafana/tempo:2.4.1
-    restart: unless-stopped
-    command: ["-config.file=/etc/tempo.yaml"]
-    volumes:
-      - ./observability/tempo.yaml:/etc/tempo.yaml:ro
-      - tempo_data:/var/tempo
-    ports:
-      - '${TEMPO_PORT:-6209}:${TEMPO_PORT:-6209}'
-    expose:
-      - '${TEMPO_GRPC_PORT:-6212}'
-    environment:
-      TEMPO_PORT: ${TEMPO_PORT:-6209}
-      TEMPO_GRPC_PORT: ${TEMPO_GRPC_PORT:-6212}
-    profiles:
-      - observability
-      - full
-    <<: *default-extra-hosts
-    networks:
-      app_net:
-        ipv4_address: 172.30.0.10
+     image: grafana/tempo:2.4.1
+     restart: unless-stopped
+     command: ["-config.file=/etc/tempo.yaml"]
+     volumes:
+       - ./observability/tempo.yaml:/etc/tempo.yaml:ro
+       - tempo_data:/var/tempo
+     ports:
+       - '${TEMPO_PORT:-6209}:${TEMPO_PORT:-6209}'
+     expose:
+       - '${TEMPO_GRPC_PORT:-6212}'
+     environment:
+       TEMPO_PORT: ${TEMPO_PORT:-6209}
+       TEMPO_GRPC_PORT: ${TEMPO_GRPC_PORT:-6212}
+     profiles:
+       - observability
+       - full
+     <<: *default-extra-hosts
+     networks:
+       app_net:
+         ipv4_address: 172.30.0.10
 
   prometheus:
     image: prom/prometheus:v2.49.1
@@ -358,42 +358,85 @@ services:
         ipv4_address: 172.30.0.11
 
   grafana:
-    image: grafana/grafana:10.4.1
-    restart: unless-stopped
-    environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin
-      GF_FEATURE_TOGGLES_ENABLE: traceqlEditor
-      GF_SERVER_HTTP_PORT: ${GRAFANA_PORT:-6211}
-      GF_PATHS_PROVISIONING: /etc/grafana/provisioning
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./observability/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
-      - ./observability/grafana/provisioning/dashboards:/var/lib/grafana/dashboards
-    depends_on:
-      - loki
-      - prometheus
-      - tempo
-    ports:
-      - '${GRAFANA_PORT:-6211}:${GRAFANA_PORT:-6211}'
-    profiles:
-      - observability
-      - full
-    <<: *default-extra-hosts
-    networks:
-      app_net:
-        ipv4_address: 172.30.0.12
+     image: grafana/grafana:10.4.1
+     restart: unless-stopped
+     environment:
+       GF_SECURITY_ADMIN_USER: admin
+       GF_SECURITY_ADMIN_PASSWORD: admin
+       GF_FEATURE_TOGGLES_ENABLE: traceqlEditor
+       GF_SERVER_HTTP_PORT: ${GRAFANA_PORT:-6211}
+       GF_PATHS_PROVISIONING: /etc/grafana/provisioning
+     volumes:
+       - grafana_data:/var/lib/grafana
+       - ./observability/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+       - ./observability/grafana/provisioning/dashboards:/var/lib/grafana/dashboards
+     depends_on:
+       - loki
+       - prometheus
+       - tempo
+     ports:
+       - '${GRAFANA_PORT:-6211}:${GRAFANA_PORT:-6211}'
+     profiles:
+       - observability
+       - full
+     <<: *default-extra-hosts
+     networks:
+       app_net:
+         ipv4_address: 172.30.0.12
+
+  ui:
+     build:
+       context: ./ui
+       dockerfile: Dockerfile
+     env_file:
+       - ./.env
+     ports:
+       - '${NEXT_UI_PORT:-6005}:${NEXT_UI_PORT:-6005}'
+     command: ["npm", "run", "start:prod"]
+     volumes:
+       - ./ui:/app
+       - /app/node_modules
+     <<: *default-extra-hosts
+     networks:
+       app_net:
+         ipv4_address: 172.30.0.14
+     profiles:
+       - full
+
+  caddy:
+     image: ghcr.io/caddybuilds/caddy-cloudflare:alpine
+     restart: unless-stopped
+     ports:
+       - "80:80"
+       - "443:443"
+     env_file:
+       - ./.env
+     volumes:
+       - ./Caddyfile.central:/etc/caddy/Caddyfile:ro
+       - caddy_data:/data
+       - caddy_config:/config
+     depends_on:
+       - minio
+     profiles:
+       - minimal
+       - full
+     <<: *default-extra-hosts
+     networks:
+       app_net:
+         ipv4_address: 172.30.0.15
 
 volumes:
-  postgres_data:
-  postgres_socket:
-  minio_data:
-  loki_data:
-  tempo_data:
-  prometheus_data:
-  grafana_data:
-  promtail_positions:
-  rabbitmq_data:
+   postgres_data:
+   postgres_socket:
+   minio_data:
+   loki_data:
+   tempo_data:
+   prometheus_data:
+   grafana_data:
+   promtail_positions:
+   rabbitmq_data:
+   caddy_data:
+   caddy_config:
 
 networks:
   app_net:

@@ -44,6 +44,7 @@ import pushConfig from './platform/config/push.config';
 import { AdminDivarSessionsModule } from './modules/admin-divar-sessions/admin-divar-sessions.module';
 import { PhoneFetchModule } from './modules/phone-fetch/phone-fetch.module';
 import { ArkaModule } from './modules/arka/arka.module';
+import { MelkradarModule } from './modules/melkradar/melkradar.module';
 import { TelegramModule } from './modules/telegram/telegram.module';
 import { NewsModule } from './modules/news/news.module';
 import { BlogModule } from './modules/blog/blog.module';
@@ -114,6 +115,7 @@ import { SubscriptionsModule } from './modules/subscriptions/subscriptions.modul
     AdminDivarSessionsModule,
     PhoneFetchModule,
     ArkaModule,
+    MelkradarModule,
     TelegramModule,
     NewsModule,
     BlogModule,

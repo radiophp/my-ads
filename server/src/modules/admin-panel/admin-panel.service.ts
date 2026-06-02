@@ -15,6 +15,7 @@ export type AdminEntityCounts = {
   notifications: number;
   adminDivarSessions: number;
   adminArkaSessions: number;
+  adminMelkradarSessions: number;
   news: number;
   newsCategories: number;
   newsTags: number;
@@ -47,6 +48,7 @@ export class AdminPanelService {
       notifications,
       adminDivarSessions,
       adminArkaSessions,
+      adminMelkradarSessions,
       news,
       newsCategories,
       newsTags,
@@ -74,6 +76,7 @@ export class AdminPanelService {
       this.prisma.notification.count(),
       this.prisma.adminDivarSession.count(),
       this.prisma.adminArkaSession.count(),
+      this.prisma.adminMelkradarSession.count(),
       this.prisma.news.count(),
       this.prisma.newsCategory.count(),
       this.prisma.newsTag.count(),
@@ -101,6 +104,7 @@ export class AdminPanelService {
       notifications,
       adminDivarSessions,
       adminArkaSessions,
+      adminMelkradarSessions,
       news,
       newsCategories,
       newsTags,

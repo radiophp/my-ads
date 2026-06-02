@@ -109,6 +109,7 @@ export const apiSlice = createApi({
     'Notifications',
     'AdminDivarSessions',
     'AdminArkaSessions',
+    'AdminMelkradarSessions',
     'AdminNews',
     'AdminNewsCategories',
     'AdminNewsTags',

@@ -108,6 +108,7 @@ export function Breadcrumbs({ className, force = false }: BreadcrumbsProps) {
     'divar-posts': adminT('postsToAnalyze.title'),
     'divar-sessions': adminT('divarSessions.title'),
     'arka-sessions': adminT('arkaSessions.title'),
+    'melkradar-sessions': adminT('melkradarSessions.title'),
     news: adminT('news.title'),
     blog: adminT('blog.title'),
     slides: adminT('slides.title'),

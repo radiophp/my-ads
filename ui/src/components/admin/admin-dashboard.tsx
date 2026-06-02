@@ -22,6 +22,7 @@ import {
   Settings,
   TicketPercent,
   UserPlus,
+  Radar,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -196,6 +197,12 @@ export function AdminDashboard() {
       title: t('cards.arkaSessions.title'),
       countKey: 'adminArkaSessions',
     },
+    melkradarSessions: {
+      href: '/admin/melkradar-sessions',
+      icon: <Radar className="size-8 text-primary" aria-hidden />,
+      title: t('cards.melkradarSessions.title'),
+      countKey: 'adminMelkradarSessions',
+    },
   } satisfies Record<string, DashboardNavItem>;
 
   const sections: DashboardSection[] = [
@@ -241,7 +248,7 @@ export function AdminDashboard() {
     {
       title: t('sections.integrations.title'),
       description: t('sections.integrations.description'),
-      items: [items.notifications, items.arkaSessions],
+      items: [items.notifications, items.arkaSessions, items.melkradarSessions],
     },
   ];
 

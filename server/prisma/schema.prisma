@@ -642,6 +642,21 @@ model BusinessPhoneCache {
   titleFetchedAt DateTime?
 }
 
+model AdminMelkradarSession {
+  id         String   @id @default(uuid())
+  label      String   @default("default")
+  headersRaw String
+  headers    Json
+  active     Boolean  @default(true)
+  locked     Boolean  @default(false)
+  lastError  String?
+  lastErrorAt DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([active, locked])
+}
+
 model AdminArkaSession {
   id         String   @id @default(uuid())
   label      String   @default("default")

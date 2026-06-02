@@ -2,6 +2,7 @@ import { apiSlice } from '../baseApi';
 
 import type { AdminArkaSession } from '@/types/admin-arka-session';
 import type { AdminDivarSession } from '@/types/admin-divar-session';
+import type { AdminMelkradarSession } from '@/types/admin-melkradar-session';
 
 const adminSessionsApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
@@ -83,6 +84,45 @@ const adminSessionsApi = apiSlice.injectEndpoints({
         'AdminStats',
       ],
     }),
+    getAdminMelkradarSessions: builder.query<AdminMelkradarSession[], void>({
+      query: () => '/admin/melkradar-sessions',
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map((session) => ({
+                type: 'AdminMelkradarSessions' as const,
+                id: session.id,
+              })),
+              { type: 'AdminMelkradarSessions' as const, id: 'LIST' },
+            ]
+          : [{ type: 'AdminMelkradarSessions' as const, id: 'LIST' }],
+    }),
+    createAdminMelkradarSession: builder.mutation<
+      AdminMelkradarSession,
+      { label?: string; headersRaw: string; active?: boolean; locked?: boolean }
+    >({
+      query: (body) => ({
+        url: '/admin/melkradar-sessions',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [{ type: 'AdminMelkradarSessions', id: 'LIST' }, 'AdminStats'],
+    }),
+    updateAdminMelkradarSession: builder.mutation<
+      AdminMelkradarSession,
+      { id: string; body: Partial<Pick<AdminMelkradarSession, 'label' | 'headersRaw' | 'active' | 'locked'>> }
+    >({
+      query: ({ id, body }) => ({
+        url: `/admin/melkradar-sessions/${id}`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: (result, error, arg) => [
+        { type: 'AdminMelkradarSessions', id: 'LIST' },
+        { type: 'AdminMelkradarSessions', id: arg.id },
+        'AdminStats',
+      ],
+    }),
   }),
 });
 
@@ -93,4 +133,7 @@ export const {
   useGetAdminDivarSessionsQuery,
   useCreateAdminDivarSessionMutation,
   useUpdateAdminDivarSessionMutation,
+  useGetAdminMelkradarSessionsQuery,
+  useCreateAdminMelkradarSessionMutation,
+  useUpdateAdminMelkradarSessionMutation,
 } = adminSessionsApi;

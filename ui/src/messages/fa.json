@@ -903,6 +903,10 @@
         "arkaSessions": {
           "title": "هدرهای آرکا",
           "description": "هدرهای API آرکا برای دریافت شماره‌ها را مدیریت کنید."
+        },
+        "melkradarSessions": {
+          "title": "هدرهای ملک رادار",
+          "description": "هدرهای API ملک رادار برای دریافت اطلاعات ملک را مدیریت کنید."
         }
       }
     },
@@ -1635,6 +1639,63 @@
         "missingDescription": "حداقل یک هدر وارد کنید.",
         "createdTitle": "هدر ذخیره شد",
         "createdDescription": "هدرهای آرکا ثبت شد.",
+        "updatedTitle": "هدر به‌روزرسانی شد",
+        "updatedDescription": "تغییرات ذخیره شد.",
+        "errorTitle": "خطا در ذخیره",
+        "errorDescription": "امکان ذخیره هدر نبود. دوباره تلاش کنید."
+      }
+    },
+    "melkradarSessions": {
+      "title": "هدرهای API ملک رادار",
+      "description": "هدرهای مورد نیاز برای فراخوانی API ملک رادار را ذخیره و به‌روزرسانی کنید.",
+      "actions": {
+        "add": "افزودن هدر",
+        "edit": "ویرایش",
+        "refresh": "تازه‌سازی",
+        "save": "ذخیره",
+        "cancel": "انصراف",
+        "enable": "فعال‌سازی",
+        "disable": "غیرفعال‌سازی"
+      },
+      "fields": {
+        "label": "برچسب",
+        "headers": "هدرها (هر خط یک هدر، مثلا «Authorization: Bearer …»)",
+        "active": "فعال",
+        "locked": "قفل"
+      },
+      "placeholders": {
+        "label": "مثلا اصلی",
+        "headers": "Authorization: Bearer ...\nUser-Agent: ...\nContent-Type: application/json"
+      },
+      "columns": {
+        "label": "برچسب",
+        "active": "فعال",
+        "locked": "قفل",
+        "updated": "به‌روزرسانی",
+        "actions": "اقدام‌ها",
+        "status": "وضعیت"
+      },
+      "status": {
+        "active": "فعال",
+        "inactive": "غیرفعال",
+        "locked": "قفل",
+        "unlocked": "باز",
+        "ok": "بدون خطا",
+        "error": "خطا"
+      },
+      "dialog": {
+        "addTitle": "افزودن هدرهای ملک رادار",
+        "addDescription": "هدرهای لازم برای درخواست‌های API ملک رادار را وارد کنید.",
+        "editTitle": "ویرایش هدرهای ملک رادار",
+        "editDescription": "هدرها، برچسب یا وضعیت را تغییر دهید."
+      },
+      "loading": "در حال بارگذاری هدرها…",
+      "empty": "هدر ملک رادار ثبت نشده است.",
+      "toast": {
+        "missingTitle": "هدر لازم است",
+        "missingDescription": "حداقل یک هدر وارد کنید.",
+        "createdTitle": "هدر ذخیره شد",
+        "createdDescription": "هدرهای ملک رادار ثبت شد.",
         "updatedTitle": "هدر به‌روزرسانی شد",
         "updatedDescription": "تغییرات ذخیره شد.",
         "errorTitle": "خطا در ذخیره",

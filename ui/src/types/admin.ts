@@ -11,6 +11,7 @@ export type AdminDashboardStats = {
   notifications: number;
   adminDivarSessions: number;
   adminArkaSessions: number;
+  adminMelkradarSessions: number;
   news: number;
   newsCategories: number;
   newsTags: number;

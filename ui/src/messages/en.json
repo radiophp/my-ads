@@ -903,6 +903,10 @@
         "arkaSessions": {
           "title": "Arka headers",
           "description": "Manage Arka API headers used to fetch phone numbers."
+        },
+        "melkradarSessions": {
+          "title": "MelkRadar headers",
+          "description": "Manage MelkRadar API headers used to fetch property data."
         }
       }
     },
@@ -1635,6 +1639,63 @@
         "missingDescription": "Please paste at least one header line.",
         "createdTitle": "Headers saved",
         "createdDescription": "Arka headers created.",
+        "updatedTitle": "Headers updated",
+        "updatedDescription": "Changes saved.",
+        "errorTitle": "Save failed",
+        "errorDescription": "Could not save headers. Try again."
+      }
+    },
+    "melkradarSessions": {
+      "title": "MelkRadar API headers",
+      "description": "Store and update the headers required to call the MelkRadar API for property data.",
+      "actions": {
+        "add": "Add headers",
+        "edit": "Edit",
+        "refresh": "Refresh",
+        "save": "Save",
+        "cancel": "Cancel",
+        "enable": "Enable",
+        "disable": "Disable"
+      },
+      "fields": {
+        "label": "Label",
+        "headers": "Headers (one per line, e.g. \"Authorization: Bearer …\")",
+        "active": "Active",
+        "locked": "Locked"
+      },
+      "placeholders": {
+        "label": "e.g. Primary",
+        "headers": "Authorization: Bearer ...\nUser-Agent: ...\nContent-Type: application/json"
+      },
+      "columns": {
+        "label": "Label",
+        "active": "Active",
+        "locked": "Locked",
+        "updated": "Updated at",
+        "actions": "Actions",
+        "status": "Status"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive",
+        "locked": "Locked",
+        "unlocked": "Unlocked",
+        "ok": "OK",
+        "error": "Error"
+      },
+      "dialog": {
+        "addTitle": "Add MelkRadar headers",
+        "addDescription": "Paste the required HTTP headers for MelkRadar API requests.",
+        "editTitle": "Edit MelkRadar headers",
+        "editDescription": "Update headers, label, or activation flags."
+      },
+      "loading": "Loading headers…",
+      "empty": "No MelkRadar header sets yet.",
+      "toast": {
+        "missingTitle": "Headers required",
+        "missingDescription": "Please paste at least one header line.",
+        "createdTitle": "Headers saved",
+        "createdDescription": "MelkRadar headers created.",
         "updatedTitle": "Headers updated",
         "updatedDescription": "Changes saved.",
         "errorTitle": "Save failed",

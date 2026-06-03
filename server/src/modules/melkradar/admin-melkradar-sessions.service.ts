@@ -91,4 +91,11 @@ export class AdminMelkradarSessionsService {
       },
     });
   }
+
+  async getActiveSession(): Promise<AdminMelkradarSession | null> {
+    return this.prisma.adminMelkradarSession.findFirst({
+      where: { active: true, locked: false },
+      orderBy: { updatedAt: 'desc' },
+    });
+  }
 }

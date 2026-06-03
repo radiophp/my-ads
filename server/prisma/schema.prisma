@@ -657,6 +657,104 @@ model AdminMelkradarSession {
   @@index([active, locked])
 }
 
+model AdminMelkradarArchive {
+  id                   String   @id @default(uuid())
+  archiveFolderId      String   @unique
+  title                String
+  persianSeason        String
+  persianYear          String
+  persianCityZoneTitle String
+  count                Int
+  quarter              String
+  cityZoneCode         String?
+  year                 String?
+  isShared             Boolean?
+  folderOwnerId        String?
+  folderOwnerName      String?
+  price                Decimal?
+  syncStatus           String   @default("PENDING")
+  lastPageFetched      Int      @default(0)
+  lastFetchedAt        DateTime?
+  lastError            String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([syncStatus])
+}
+
+model AdminMelkradarPost {
+  id                    String   @id @default(uuid())
+  archiveFolderId       String
+  externalId            String
+  source                String
+
+  melkradarId           String?
+  url                   String?
+  contactPhone          String?
+  radarCode             String?
+
+  sellTotalPrice        Decimal?
+  rentMonthlyPrice      Decimal?
+  rentMortgagePrice     Decimal?
+  sellUnitPrice         Decimal?
+  priceTypeStr          String?
+
+  adverTypeTitle        String?
+  estateTypeTitle       String?
+  estateTypeGroupTitle  String?
+  advertType            String?
+
+  areaSize              Float?
+  bedroomCount          Int?
+  summary               String?
+  description           String?
+
+  latitude              Float?
+  longitude             Float?
+  isExactLocation       Boolean?
+  cityAreaId            String?
+  cityAreaTitle         String?
+  cityAreaGroupTitle    String?
+
+  hasParking            Int?
+  hasElevator           Int?
+  hasWarehouse          Int?
+  hasBalcony            Int?
+
+  floorNumber           Int?
+  floorNumberStr        String?
+  builtDate             String?
+  calculatedBuildingAge Int?
+  isRenovatedByAI       Boolean?
+  deedTypeByAI          String?
+  directionByAI         String?
+  unitsPerFloorByAI     Int?
+  totalFloorsByAI       Int?
+  phaseByAI             Int?
+  isLightingGoodByAI    Boolean?
+
+  isActive              Boolean?
+
+  adverDateTime         DateTime?
+  analysisDateTime      DateTime?
+  realtorAnalyzeDateTime DateTime?
+
+  vendorImageUrls       Json?
+  adverImageUrls        Json?
+  imageCount            Int?
+
+  rawPayload            Json?
+
+  analyzed              Boolean  @default(false)
+
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@unique([source, externalId])
+  @@index([archiveFolderId])
+  @@index([source, externalId])
+}
+
 model AdminArkaSession {
   id         String   @id @default(uuid())
   label      String   @default("default")

@@ -647,6 +647,37 @@ run: |
 
 ---
 
+## Divar Post Crawler Pipeline
+
+The system includes a **5-stage crawling pipeline** that fetches, parses, and stores classified adverts from Divar.ir. Each stage is a standalone command and can run independently:
+
+| Command | Stage | Purpose |
+|---|---|---|
+| `npm run divar:harvest-posts` | 1 — Harvest | Search Divar by category × location, enqueue post tokens |
+| `npm run divar:fetch-posts` | 2 — Fetch | Fetch raw JSON detail for each token from Divar API |
+| `npm run divar:analyze-posts` | 3 — Analyze | Parse raw JSON → normalized `DivarPost` record in DB |
+| `npm run divar:sync-media` | 4 — Media Sync | Download CDN images to local MinIO storage |
+
+All stages share a common cron schedule (default: `every 10 seconds`) activated via `ENABLE_CRON_JOBS=true`.
+
+The **analyze stage** is the core transformation engine — it converts Divar's protobuf-style widget payload into a universal `ParsedDivarPost` intermediate representation, then persists it to the `DivarPost` table. This same IR is the extension point for adding crawlers from other sources.
+
+See [doc/divar-crawler-pipeline.md](doc/divar-crawler-pipeline.md) for complete documentation including data structures, parser widget mappings, Persian text normalization, and extension guides.
+
+## MelkRadar Crawler Pipeline
+
+The MelkRadar pipeline fetches pre-enriched adverts from the MelkRadar dashboard (aggregates Divar + Sheypoor). Unlike the Divar pipeline, data arrives already parsed with phone numbers and prices included.
+
+| Command | Stage | Purpose |
+|---|---|---|
+| `npm run melkradar:get-archives` | 1 — Get Archives | Fetch archive folder list and store in `AdminMelkradarArchive` table |
+
+An active MelkRadar session (`AdminMelkradarSession`) is required — create one in the admin panel with cookies from the browser.
+
+See [doc/melkradar-crawler.md](doc/melkradar-crawler.md) for complete documentation including API response fields, data model, and comparison with the Divar pipeline.
+
+---
+
 ## License
 
 MIT © contributors to the My Ads project.

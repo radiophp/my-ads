@@ -730,7 +730,7 @@ model AdminMelkradarPost {
   directionByAI         String?
   unitsPerFloorByAI     Int?
   totalFloorsByAI       Int?
-  phaseByAI             Int?
+  phaseByAI             String?
   isLightingGoodByAI    Boolean?
 
   isActive              Boolean?

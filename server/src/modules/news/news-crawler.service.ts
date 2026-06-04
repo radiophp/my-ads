@@ -22,6 +22,9 @@ const BASE_URL = 'https://www.eghtesadonline.com';
 const SECTION_PATH = '/fa/services/8/84';
 const AJAX_PATH = '/fa/ajax/services/8/84';
 const MAX_PAGES = 8;
+const TAG_URLS = ['/fa/tags/3775'];
+const TAG_NAME = 'قیمت-مسکن';
+const MAX_TAG_PAGES = 2;
 const ARTICLE_ID_PATTERN = /\/fa\/news\/(\d+)/;
 const DATE_JSON_PATTERN = /"datePublished"\s*:\s*"([^"]+)"/;
 const OG_IMAGE_PATTERN = /<meta[^>]+property="og:image"[^>]+content="([^"]+)"/i;
@@ -139,6 +142,8 @@ export class NewsCrawlerService {
 
   private async fetchSectionItems(): Promise<ParsedItem[]> {
     const items: ParsedItem[] = [];
+
+    // Main section listing
     for (let page = 1; page <= MAX_PAGES; page += 1) {
       const url = page === 1 ? `${BASE_URL}${SECTION_PATH}` : `${BASE_URL}${AJAX_PATH}/${page}`;
       const response = await axios.get<string>(url, { responseType: 'text' });
@@ -152,6 +157,28 @@ export class NewsCrawlerService {
         break;
       }
     }
+
+    // Tag listing pages (e.g., قیمت-مسکن)
+    for (const tagPath of TAG_URLS) {
+      for (let page = 1; page <= MAX_TAG_PAGES; page += 1) {
+        const url = `${BASE_URL}${tagPath}/${page}/${TAG_NAME}`;
+        const response = await axios.get<string>(url, { responseType: 'text' });
+        const pageItems = this.parseSection(response.data);
+        if (pageItems.length === 0) {
+          break;
+        }
+        const before = items.length;
+        for (const item of pageItems) {
+          if (!items.some((existing) => existing.id === item.id)) {
+            items.push(item);
+          }
+        }
+        if (items.length === before) {
+          break;
+        }
+      }
+    }
+
     return items;
   }
 

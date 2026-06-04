@@ -41,6 +41,9 @@ const resolveAppBase = async (): Promise<string> => {
   return '';
 };
 
+const fetchOptions: RequestInit =
+  process.env.NODE_ENV === 'development' ? {} : { next: { revalidate: 600 } };
+
 const fetchLatestNews = async (): Promise<NewsItem[]> => {
   const apiBase = await resolveApiBase();
   if (!apiBase) {
@@ -48,9 +51,7 @@ const fetchLatestNews = async (): Promise<NewsItem[]> => {
   }
 
   try {
-    const response = await fetch(`${apiBase}/news?page=1&pageSize=6`, {
-      next: { revalidate: 600 },
-    });
+    const response = await fetch(`${apiBase}/news?page=1&pageSize=6`, fetchOptions);
     if (!response.ok) {
       return [];
     }
@@ -68,9 +69,7 @@ const fetchLatestBlogs = async (): Promise<BlogItem[]> => {
   }
 
   try {
-    const response = await fetch(`${apiBase}/blog?page=1&pageSize=6`, {
-      next: { revalidate: 600 },
-    });
+    const response = await fetch(`${apiBase}/blog?page=1&pageSize=6`, fetchOptions);
     if (!response.ok) {
       return [];
     }
@@ -88,9 +87,7 @@ const fetchSlides = async (): Promise<Slide[]> => {
   }
 
   try {
-    const response = await fetch(`${apiBase}/slides`, {
-      next: { revalidate: 600 },
-    });
+    const response = await fetch(`${apiBase}/slides`, fetchOptions);
     if (!response.ok) {
       return [];
     }
@@ -108,9 +105,7 @@ const fetchFeaturedPosts = async (): Promise<FeaturedPostsResponse> => {
   }
 
   try {
-    const response = await fetch(`${apiBase}/featured-posts`, {
-      next: { revalidate: 600 },
-    });
+    const response = await fetch(`${apiBase}/featured-posts`, fetchOptions);
     if (!response.ok) {
       return [];
     }

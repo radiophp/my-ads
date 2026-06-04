@@ -32,6 +32,9 @@ export const normalizeStorageUrl = (
   try {
     const parsed = new URL(value);
     if (STORAGE_HOSTS.has(parsed.hostname)) {
+      if (parsed.pathname.startsWith('/storage/')) {
+        return appBase ? `${normalizeBase(appBase)}${parsed.pathname}` : parsed.pathname;
+      }
       return `${buildStorageBase(appBase)}${parsed.pathname}`;
     }
     return value;

@@ -1,0 +1,10 @@
+protocol: http2
+
+ingress:
+  - hostname: dev.mahanfile.com
+    service: https://caddy:443
+    originRequest:
+      noTLSVerify: true
+      originServerName: dev.mahanfile.com
+
+  - service: http_status:404

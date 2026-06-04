@@ -425,6 +425,43 @@ services:
        app_net:
          ipv4_address: 172.30.0.15
 
+  dnsproxy:
+    image: coredns/coredns:latest
+    restart: unless-stopped
+    command: ["-conf", "/Corefile"]
+    volumes:
+      - ./cloudflare/Corefile:/Corefile:ro
+    networks:
+      app_net:
+        ipv4_address: 172.30.0.21
+    profiles:
+      - minimal
+      - full
+      - cloudflared
+    <<: *default-extra-hosts
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    depends_on:
+      - dnsproxy
+    dns:
+      - 172.30.0.21
+    extra_hosts:
+      - "caddy:172.30.0.15"
+    command: ["tunnel", "--no-prechecks", "--config", "/etc/cloudflared/config.yml", "run", "mahanfile-dev"]
+    environment:
+      TUNNEL_CREDENTIALS: /etc/cloudflared/22572a06-d47b-4f2b-a26a-578e5a3f0b6b.json
+      TZ: Asia/Tehran
+    volumes:
+      - ./cloudflare/development:/etc/cloudflared
+    profiles:
+      - cloudflared
+    <<: *default-extra-hosts
+    networks:
+      app_net:
+        ipv4_address: 172.30.0.20
+
 volumes:
    postgres_data:
    postgres_socket:

@@ -12,7 +12,9 @@ async function bootstrap(): Promise<void> {
   try {
     const service = app.get(MelkradarPostService);
     const result = await service.fetchAllArchives();
-    logger.log(`Fetch complete — ${result.totalFetched} posts, ${result.archivesCompleted} archives done`);
+    logger.log(
+      `Fetch complete — ${result.totalFetched} posts, ${result.archivesCompleted} archives done`,
+    );
   } catch (error) {
     logger.error('Failed to fetch Melkradar posts', error instanceof Error ? error.stack : error);
     process.exitCode = 1;

@@ -14,7 +14,10 @@ async function bootstrap(): Promise<void> {
     const result = await service.fetchAndStoreArchives();
     logger.log(`Archives sync complete — ${result.stored} new, ${result.skipped} updated`);
   } catch (error) {
-    logger.error('Failed to fetch Melkradar archives', error instanceof Error ? error.stack : error);
+    logger.error(
+      'Failed to fetch Melkradar archives',
+      error instanceof Error ? error.stack : error,
+    );
     process.exitCode = 1;
   } finally {
     await app.close();

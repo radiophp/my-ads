@@ -10,3 +10,7 @@ npm-debug.log
 yarn-error.log
 server/src/shell/list_json/
 maps/*.mbtiles
+tmp/
+server/tmp/
+/backup/*.dump
+/backup/*.sql

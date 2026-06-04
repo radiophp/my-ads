@@ -28,6 +28,7 @@ type WebsiteSettingRecord = {
   instagramUrl: string | null;
   telegramChannelUrl: string | null;
   telegramBotUrl: string | null;
+  baleBotUrl: string | null;
   aboutDescription: string | null;
   address: string | null;
   updatedAt: Date;
@@ -39,6 +40,7 @@ export type WebsiteSettingsItem = {
   instagramUrl: string | null;
   telegramChannelUrl: string | null;
   telegramBotUrl: string | null;
+  baleBotUrl: string | null;
   aboutDescription: string | null;
   address: string | null;
   updatedAt?: Date;
@@ -101,6 +103,7 @@ export class WebsiteSettingsService {
       instagramUrl: record?.instagramUrl ?? null,
       telegramChannelUrl: record?.telegramChannelUrl ?? null,
       telegramBotUrl: record?.telegramBotUrl ?? null,
+      baleBotUrl: record?.baleBotUrl ?? null,
       aboutDescription: record?.aboutDescription ?? null,
       address: record?.address ?? null,
       updatedAt: record?.updatedAt,
@@ -177,6 +180,7 @@ export class WebsiteSettingsService {
           instagramUrl: normalizeValue(dto.instagramUrl),
           telegramChannelUrl: normalizeValue(dto.telegramChannelUrl),
           telegramBotUrl: normalizeValue(dto.telegramBotUrl),
+          baleBotUrl: normalizeValue(dto.baleBotUrl),
           aboutDescription: normalizeValue(dto.aboutDescription),
           address: normalizeValue(dto.address),
         },
@@ -185,6 +189,7 @@ export class WebsiteSettingsService {
           instagramUrl: normalizeValue(dto.instagramUrl),
           telegramChannelUrl: normalizeValue(dto.telegramChannelUrl),
           telegramBotUrl: normalizeValue(dto.telegramBotUrl),
+          baleBotUrl: normalizeValue(dto.baleBotUrl),
           aboutDescription: normalizeValue(dto.aboutDescription),
           address: normalizeValue(dto.address),
         },

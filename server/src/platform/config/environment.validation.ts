@@ -261,6 +261,16 @@ export class EnvironmentVariables {
   TELEGRAM_SEND_PHOTOS: boolean = false;
 
   @IsOptional()
+  @Transform(({ value }) => Number(value))
+  @IsInt()
+  @IsPositive()
+  BALE_SEND_TIMEOUT_MS?: number;
+
+  @Transform(({ value }) => (typeof value === 'string' ? value === 'true' : Boolean(value)))
+  @IsBoolean()
+  BALE_SEND_PHOTOS: boolean = false;
+
+  @IsOptional()
   @IsString()
   VAPID_SUBJECT?: string;
 

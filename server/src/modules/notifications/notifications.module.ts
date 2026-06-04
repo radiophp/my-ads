@@ -9,11 +9,13 @@ import { NotificationsController } from './notifications.controller';
 import { NotificationsService } from './notifications.service';
 import { NotificationQueueProcessor } from './notification-queue.processor';
 import { TelegramNotificationQueueProcessor } from './telegram-notification-queue.processor';
+import { BaleNotificationQueueProcessor } from './bale-notification-queue.processor';
 import { NotificationMatcherService } from './notification-matcher.service';
 import { NotificationMaintenanceService } from './notification-maintenance.service';
 import { NotificationQueueMonitorService } from './notification-queue-monitor.service';
 import { PushNotificationService } from './push-notification.service';
 import { TelegramModule } from '../telegram/telegram.module';
+import { BaleModule } from '../bale/bale.module';
 
 @Module({
   imports: [
@@ -24,12 +26,14 @@ import { TelegramModule } from '../telegram/telegram.module';
     MetricsModule,
     DivarPostsModule,
     TelegramModule,
+    BaleModule,
   ],
   controllers: [NotificationsController],
   providers: [
     NotificationsService,
     NotificationQueueProcessor,
     TelegramNotificationQueueProcessor,
+    BaleNotificationQueueProcessor,
     NotificationMatcherService,
     NotificationMaintenanceService,
     NotificationQueueMonitorService,

@@ -9,6 +9,7 @@ export type WebsiteSettings = {
   instagramUrl: string | null;
   telegramChannelUrl: string | null;
   telegramBotUrl: string | null;
+  baleBotUrl: string | null;
   aboutDescription: string | null;
   address: string | null;
   updatedAt?: string;

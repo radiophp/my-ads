@@ -1166,6 +1166,8 @@
         "telegramChannelPlaceholder": "https://t.me/your-channel",
         "telegramBot": "بات تلگرام",
         "telegramBotPlaceholder": "https://t.me/your-bot",
+        "baleBot": "بات بله",
+        "baleBotPlaceholder": "https://ble.ir/your-bot",
         "aboutDescription": "توضیح درباره ما",
         "aboutDescriptionPlaceholder": "توضیحات صفحه درباره ما را بنویسید",
         "address": "آدرس",
@@ -1769,7 +1771,9 @@
         "message": "پیام (اختیاری)",
         "messagePlaceholder": "اگر خالی بماند از عنوان/توضیح آگهی استفاده می‌شود",
         "sendTelegram": "ارسال همزمان از طریق ربات تلگرام",
-        "sendTelegramHelper": "کاربر باید ربات را استارت کرده و شماره خود را ارسال کرده باشد."
+        "sendTelegramHelper": "کاربر باید ربات را استارت کرده و شماره خود را ارسال کرده باشد.",
+        "sendBale": "ارسال همزمان از طریق ربات بله",
+        "sendBaleHelper": "کاربر باید ربات را استارت کرده و شماره خود را ارسال کرده باشد."
       },
       "actions": {
         "send": "ارسال اعلان",
@@ -1777,11 +1781,14 @@
       },
       "toast": {
         "successTitle": "اعلان در صف قرار گرفت",
-        "successDescription": "شناسه اعلان: {id} • تلگرام: {tg}",
+        "successDescription": "شناسه اعلان: {id} • تلگرام: {tg} • بله: {ba}",
         "telegramSent": "ارسال شد",
         "telegramQueued": "در صف ارسال",
         "telegramNotSent": "ارسال نشد",
         "telegramSkipped": "ارسال تلگرام غیرفعال بود",
+        "baleQueued": "در صف ارسال",
+        "baleNotSent": "ارسال نشد",
+        "baleSkipped": "ارسال بله غیرفعال بود",
         "errorTitle": "ارسال اعلان ناموفق بود",
         "errorDescription": "شناسه‌ها را بررسی و دوباره تلاش کنید."
       },
@@ -2367,6 +2374,7 @@
     "instagram": "اینستاگرام",
     "telegramChannel": "کانال تلگرام",
     "telegramBot": "ربات تلگرام",
+    "baleBot": "ربات بله",
     "districtsTitle": "محله‌های تحت پوشش البرز",
     "districtsEmpty": "محله‌ای یافت نشد.",
     "allCitiesTab": "همه شهرها",

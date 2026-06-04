@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import {
   NotificationStatus,
   NotificationTelegramStatus,
+  NotificationBaleStatus,
   NotificationChannelStatus,
 } from '@prisma/client';
 import { QueueService } from '@app/platform/queue/queue.service';
@@ -12,6 +13,7 @@ import type { NotificationsConfig } from '@app/platform/config/notifications.con
 import { NotificationsService } from './notifications.service';
 import { PushNotificationService } from './push-notification.service';
 import { TelegramNotificationQueueProcessor } from './telegram-notification-queue.processor';
+import { BaleNotificationQueueProcessor } from './bale-notification-queue.processor';
 
 export type NotificationJob = {
   notificationId: string;
@@ -31,6 +33,7 @@ export class NotificationQueueProcessor implements OnModuleInit {
     private readonly websocketGateway: WebsocketGateway,
     private readonly pushNotifications: PushNotificationService,
     private readonly telegramQueue: TelegramNotificationQueueProcessor,
+    private readonly baleQueue: BaleNotificationQueueProcessor,
     configService: ConfigService,
   ) {
     const config = configService.get<NotificationsConfig>('notifications', { infer: true }) ?? {
@@ -153,6 +156,13 @@ export class NotificationQueueProcessor implements OnModuleInit {
       const queued = await this.notificationsService.markTelegramQueued(notification.id);
       if (queued) {
         await this.telegramQueue.enqueue(notification.id);
+      }
+    }
+
+    if (notification.baleStatus === NotificationBaleStatus.PENDING) {
+      const queued = await this.notificationsService.markBaleQueued(notification.id);
+      if (queued) {
+        await this.baleQueue.enqueue(notification.id);
       }
     }
 

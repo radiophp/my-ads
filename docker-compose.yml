@@ -179,6 +179,29 @@ services:
     profiles:
       - full
 
+  bale-bot:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    env_file:
+      - ./.env
+    environment:
+      NOTIFICATION_QUEUE_CONSUMER_ENABLED: 'false'
+      RABBITMQ_PREFETCH: ${BALE_BOT_PREFETCH:-1}
+      BALE_SEND_PHOTOS: ${BALE_SEND_PHOTOS:-false}
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    command: ["npm", "run", "bale:bot"]
+    restart: unless-stopped
+    <<: *default-extra-hosts
+    networks:
+      app_net:
+        ipv4_address: 172.30.0.17
+    profiles:
+      - full
+
   pgbackrest-backup:
     build:
       context: ./backup

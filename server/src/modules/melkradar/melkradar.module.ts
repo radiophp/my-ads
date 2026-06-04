@@ -4,11 +4,22 @@ import { AdminMelkradarSessionsController } from './admin-melkradar-sessions.con
 import { AdminMelkradarSessionsService } from './admin-melkradar-sessions.service';
 import { MelkradarArchiveService } from './melkradar-archive.service';
 import { MelkradarPostService } from './melkradar-post.service';
+import { MelkradarToDivarService } from './melkradar-to-divar.service';
 
 @Module({
   imports: [PrismaModule],
   controllers: [AdminMelkradarSessionsController],
-  providers: [AdminMelkradarSessionsService, MelkradarArchiveService, MelkradarPostService],
-  exports: [AdminMelkradarSessionsService, MelkradarArchiveService, MelkradarPostService],
+  providers: [
+    AdminMelkradarSessionsService,
+    MelkradarArchiveService,
+    MelkradarPostService,
+    MelkradarToDivarService,
+  ],
+  exports: [
+    AdminMelkradarSessionsService,
+    MelkradarArchiveService,
+    MelkradarPostService,
+    MelkradarToDivarService,
+  ],
 })
 export class MelkradarModule {}

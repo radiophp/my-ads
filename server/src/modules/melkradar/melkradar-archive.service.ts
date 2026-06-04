@@ -52,7 +52,8 @@ export class MelkradarArchiveService {
       {},
       {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:151.0) Gecko/20100101 Firefox/151.0',
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:151.0) Gecko/20100101 Firefox/151.0',
           Accept: 'application/json;q=0.9, */*;q=0.1',
           'Content-Type': 'application/json;IEEE754Compatible=true',
           Referer: 'https://realtorpanel.melkradar.com/radar-adver/adver-my-archive',

@@ -59,4 +59,14 @@ export class CreateTestNotificationDto {
   @IsBoolean()
   @Transform(({ value }) => value === true || value === 'true')
   sendTelegram?: boolean;
+
+  @ApiProperty({
+    required: false,
+    description: 'Also send via Bale bot if the user has started the bot and shared contact.',
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => value === true || value === 'true')
+  sendBale?: boolean;
 }

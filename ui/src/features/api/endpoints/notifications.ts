@@ -22,7 +22,7 @@ const notificationsApi = apiSlice.injectEndpoints({
       }),
     }),
     sendTestNotification: builder.mutation<
-      { notificationId: string; status: string; telegramSent?: boolean; telegramQueued?: boolean },
+      { notificationId: string; status: string; telegramSent?: boolean; telegramQueued?: boolean; baleQueued?: boolean },
       {
         userId: string;
         savedFilterId: string;
@@ -30,6 +30,7 @@ const notificationsApi = apiSlice.injectEndpoints({
         postCode?: number;
         message?: string;
         sendTelegram?: boolean;
+        sendBale?: boolean;
       }
     >({
       query: (body) => ({

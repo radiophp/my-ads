@@ -1166,6 +1166,8 @@
         "telegramChannelPlaceholder": "https://t.me/your-channel",
         "telegramBot": "Telegram bot",
         "telegramBotPlaceholder": "https://t.me/your-bot",
+        "baleBot": "Bale bot",
+        "baleBotPlaceholder": "https://ble.ir/your-bot",
         "aboutDescription": "About description",
         "aboutDescriptionPlaceholder": "Write the about page description",
         "address": "Address",
@@ -1769,7 +1771,9 @@
         "message": "Message (optional)",
         "messagePlaceholder": "Fallback to post title/description if empty",
         "sendTelegram": "Also send via Telegram bot",
-        "sendTelegramHelper": "User must have started the bot and shared their contact."
+        "sendTelegramHelper": "User must have started the bot and shared their contact.",
+        "sendBale": "Also send via Bale bot",
+        "sendBaleHelper": "User must have started the bot and shared their contact."
       },
       "actions": {
         "send": "Send notification",
@@ -1777,11 +1781,14 @@
       },
       "toast": {
         "successTitle": "Notification enqueued",
-        "successDescription": "Notification ID: {id} • Telegram: {tg}",
+        "successDescription": "Notification ID: {id} • Telegram: {tg} • Bale: {ba}",
         "telegramSent": "sent",
         "telegramQueued": "queued",
         "telegramNotSent": "not sent",
         "telegramSkipped": "skipped",
+        "baleQueued": "queued",
+        "baleNotSent": "not sent",
+        "baleSkipped": "skipped",
         "errorTitle": "Failed to send notification",
         "errorDescription": "Please check the IDs and try again."
       },
@@ -2367,6 +2374,7 @@
     "instagram": "Instagram",
     "telegramChannel": "Telegram channel",
     "telegramBot": "Telegram bot",
+    "baleBot": "Bale bot",
     "districtsTitle": "Covered districts in Alborz",
     "districtsEmpty": "No districts found.",
     "allCitiesTab": "All cities",

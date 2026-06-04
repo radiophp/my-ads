@@ -54,6 +54,14 @@ enum NotificationTelegramStatus {
   HAS_NOT_CONNECTED
 }
 
+enum NotificationBaleStatus {
+  PENDING
+  QUEUED
+  SENT
+  FAILED
+  HAS_NOT_CONNECTED
+}
+
 enum PhoneFetchStatus {
   PENDING
   IN_PROGRESS
@@ -98,6 +106,7 @@ model User {
   notifications      Notification[]
   pushSubscriptions  PushSubscription[]
   telegramLinks      TelegramUserLink[]
+  baleLinks          BaleUserLink[]
   inviteCodes        InviteCode[]
   inviteRedemptions  InviteCodeRedemption[]
   discountRedemptions DiscountCodeRedemption[]
@@ -384,6 +393,19 @@ model TelegramUserLink {
   @@index([userId])
 }
 
+model BaleUserLink {
+  baleId    String   @id
+  chatId    String
+  phone     String
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([phone])
+  @@index([userId])
+}
+
 model SubscriptionPackage {
   id              String   @id @default(uuid())
   title           String
@@ -590,6 +612,9 @@ model Notification {
   telegramStatus NotificationTelegramStatus?
   telegramAttemptCount Int         @default(0)
   telegramError  String?
+  baleStatus NotificationBaleStatus?
+  baleAttemptCount Int             @default(0)
+  baleError  String?
   message       String?
   payload       Json?
   attemptCount  Int                @default(0)
@@ -972,6 +997,7 @@ model WebsiteSetting {
   instagramUrl        String?
   telegramChannelUrl  String?
   telegramBotUrl      String?
+  baleBotUrl           String?
   aboutDescription    String?
   address             String?
   createdAt           DateTime @default(now())

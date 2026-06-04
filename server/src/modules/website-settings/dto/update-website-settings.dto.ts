@@ -22,6 +22,10 @@ export class UpdateWebsiteSettingsDto {
   telegramBotUrl?: string;
 
   @IsOptional()
+  @IsUrl()
+  baleBotUrl?: string;
+
+  @IsOptional()
   @IsString()
   aboutDescription?: string;
 

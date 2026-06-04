@@ -18,6 +18,7 @@ export function AdminNotificationsClient() {
   const [postCode, setPostCode] = useState('355325');
   const [message, setMessage] = useState('');
   const [sendTelegram, setSendTelegram] = useState(false);
+  const [sendBale, setSendBale] = useState(false);
   const [sendTest, { isLoading }] = useSendTestNotificationMutation();
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -40,6 +41,7 @@ export function AdminNotificationsClient() {
         postCode: parsedPostCode,
         message: message.trim() || undefined,
         sendTelegram,
+        sendBale,
       }).unwrap();
       toast({
         title: t('toast.successTitle'),
@@ -52,6 +54,11 @@ export function AdminNotificationsClient() {
                 ? t('toast.telegramQueued')
                 : t('toast.telegramNotSent')
             : t('toast.telegramSkipped'),
+          ba: sendBale
+            ? result.baleQueued
+              ? t('toast.baleQueued')
+              : t('toast.baleNotSent')
+            : t('toast.baleSkipped'),
         }),
       });
     } catch (error) {
@@ -133,6 +140,20 @@ export function AdminNotificationsClient() {
             checked={sendTelegram}
             onCheckedChange={setSendTelegram}
             aria-label={t('fields.sendTelegram')}
+          />
+        </div>
+        <div className="flex items-center justify-between rounded-md border border-border/60 bg-muted/20 px-3 py-2">
+          <div className="space-y-1">
+            <Label htmlFor="send-bale" className="text-sm font-medium">
+              {t('fields.sendBale')}
+            </Label>
+            <p className="text-xs text-muted-foreground">{t('fields.sendBaleHelper')}</p>
+          </div>
+          <Switch
+            id="send-bale"
+            checked={sendBale}
+            onCheckedChange={setSendBale}
+            aria-label={t('fields.sendBale')}
           />
         </div>
         <div className="flex justify-end gap-3">

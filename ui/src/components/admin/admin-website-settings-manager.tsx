@@ -21,6 +21,7 @@ type WebsiteSettingsDraft = {
   instagramUrl: string;
   telegramChannelUrl: string;
   telegramBotUrl: string;
+  baleBotUrl: string;
   aboutDescription: string;
   address: string;
 };
@@ -56,6 +57,7 @@ export function AdminWebsiteSettingsManager() {
     instagramUrl: '',
     telegramChannelUrl: '',
     telegramBotUrl: '',
+    baleBotUrl: '',
     aboutDescription: '',
     address: '',
   }));
@@ -67,6 +69,7 @@ export function AdminWebsiteSettingsManager() {
       instagramUrl: data.instagramUrl ?? '',
       telegramChannelUrl: data.telegramChannelUrl ?? '',
       telegramBotUrl: data.telegramBotUrl ?? '',
+      baleBotUrl: data.baleBotUrl ?? '',
       aboutDescription: data.aboutDescription ?? '',
       address: data.address ?? '',
     });
@@ -87,6 +90,7 @@ export function AdminWebsiteSettingsManager() {
       instagramUrl: normalizeField(draft.instagramUrl),
       telegramChannelUrl: normalizeField(draft.telegramChannelUrl),
       telegramBotUrl: normalizeField(draft.telegramBotUrl),
+      baleBotUrl: normalizeField(draft.baleBotUrl),
       aboutDescription: normalizeField(draft.aboutDescription),
       address: normalizeField(draft.address),
     }),
@@ -208,6 +212,22 @@ export function AdminWebsiteSettingsManager() {
                     }))
                   }
                   placeholder={t('fields.telegramBotPlaceholder')}
+                  dir="ltr"
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-xs font-medium text-muted-foreground">
+                  {t('fields.baleBot')}
+                </label>
+                <Input
+                  value={draft.baleBotUrl ?? ''}
+                  onChange={(event) =>
+                    setDraft((current) => ({
+                      ...current,
+                      baleBotUrl: event.target.value,
+                    }))
+                  }
+                  placeholder={t('fields.baleBotPlaceholder')}
                   dir="ltr"
                 />
               </div>

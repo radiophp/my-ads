@@ -3,6 +3,7 @@ import {
   Prisma,
   NotificationStatus,
   NotificationTelegramStatus,
+  NotificationBaleStatus,
   NotificationChannelStatus,
   type Notification,
 } from '@prisma/client';
@@ -59,8 +60,10 @@ export class NotificationsService {
     postCode?: number;
     message?: string | null;
     telegram?: boolean | string;
+    bale?: boolean | string;
   }): Promise<Notification> {
     const sendTelegram = params.telegram === true || params.telegram === 'true';
+    const sendBale = params.bale === true || params.bale === 'true';
 
     const savedFilter = await this.prisma.savedFilter.findUnique({
       where: { id: params.savedFilterId },
@@ -232,6 +235,9 @@ export class NotificationsService {
           telegramStatus: sendTelegram ? NotificationTelegramStatus.PENDING : null,
           telegramAttemptCount: 0,
           telegramError: null,
+          baleStatus: sendBale ? NotificationBaleStatus.PENDING : null,
+          baleAttemptCount: 0,
+          baleError: null,
         },
       });
     }
@@ -254,6 +260,9 @@ export class NotificationsService {
           telegramStatus: sendTelegram ? NotificationTelegramStatus.PENDING : null,
           telegramAttemptCount: 0,
           telegramError: null,
+          baleStatus: sendBale ? NotificationBaleStatus.PENDING : null,
+          baleAttemptCount: 0,
+          baleError: null,
         },
       });
     } catch (error) {
@@ -283,6 +292,9 @@ export class NotificationsService {
             telegramStatus: sendTelegram ? NotificationTelegramStatus.PENDING : null,
             telegramAttemptCount: 0,
             telegramError: null,
+            baleStatus: sendBale ? NotificationBaleStatus.PENDING : null,
+            baleAttemptCount: 0,
+            baleError: null,
           },
         });
       }
@@ -356,6 +368,9 @@ export class NotificationsService {
           telegramStatus: NotificationTelegramStatus.PENDING,
           telegramAttemptCount: 0,
           telegramError: null,
+          baleStatus: NotificationBaleStatus.PENDING,
+          baleAttemptCount: 0,
+          baleError: null,
         },
       });
     } catch (error) {
@@ -744,6 +759,20 @@ export class NotificationsService {
     return result.count > 0;
   }
 
+  async markBaleQueued(notificationId: string): Promise<boolean> {
+    const result = await this.prisma.notification.updateMany({
+      where: {
+        id: notificationId,
+        baleStatus: NotificationBaleStatus.PENDING,
+      },
+      data: {
+        baleStatus: NotificationBaleStatus.QUEUED,
+        baleError: null,
+      },
+    });
+    return result.count > 0;
+  }
+
   async recordTelegramAttempt(
     notificationId: string,
     status: NotificationTelegramStatus,
@@ -755,6 +784,21 @@ export class NotificationsService {
         telegramAttemptCount: { increment: 1 },
         telegramStatus: status,
         telegramError: error ?? null,
+      },
+    });
+  }
+
+  async recordBaleAttempt(
+    notificationId: string,
+    status: NotificationBaleStatus,
+    error?: string | null,
+  ): Promise<void> {
+    await this.prisma.notification.update({
+      where: { id: notificationId },
+      data: {
+        baleAttemptCount: { increment: 1 },
+        baleStatus: status,
+        baleError: error ?? null,
       },
     });
   }

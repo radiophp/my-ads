@@ -46,6 +46,7 @@ import { PhoneFetchModule } from './modules/phone-fetch/phone-fetch.module';
 import { ArkaModule } from './modules/arka/arka.module';
 import { MelkradarModule } from './modules/melkradar/melkradar.module';
 import { TelegramModule } from './modules/telegram/telegram.module';
+import { BaleModule } from './modules/bale/bale.module';
 import { NewsModule } from './modules/news/news.module';
 import { BlogModule } from './modules/blog/blog.module';
 import { SlidesModule } from './modules/slides/slides.module';
@@ -117,6 +118,7 @@ import { SubscriptionsModule } from './modules/subscriptions/subscriptions.modul
     ArkaModule,
     MelkradarModule,
     TelegramModule,
+    BaleModule,
     NewsModule,
     BlogModule,
     SlidesModule,

@@ -70,12 +70,15 @@ export class NotificationsController {
     status: string;
     telegramSent?: boolean;
     telegramQueued?: boolean;
+    baleQueued?: boolean;
   }> {
     const sendTelegram = dto.sendTelegram === true || (dto.sendTelegram as any) === 'true';
+    const sendBale = dto.sendBale === true || (dto.sendBale as any) === 'true';
 
     const notification = await this.notificationsService.createTestNotification({
       ...dto,
       telegram: sendTelegram,
+      bale: sendBale,
     });
     void this.notificationQueue.enqueue(notification.id).catch((error) => {
       const message = error instanceof Error ? error.message : String(error);
@@ -86,6 +89,7 @@ export class NotificationsController {
       notificationId: notification.id,
       status: notification.status,
       telegramQueued: sendTelegram,
+      baleQueued: sendBale,
     };
   }
 

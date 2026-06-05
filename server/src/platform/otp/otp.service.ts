@@ -39,16 +39,17 @@ export class OtpService {
     }
   }
 
+  async generateAndStoreOtp(phone: string): Promise<string> {
+    const code = this.generateCode(4);
+    const ttlMs = (this.config.ttlSeconds ?? 300) * 1000;
+    const cacheKey = this.buildCacheKey(phone);
+    await this.redisService.pSetEx(cacheKey, ttlMs, await hashPassword(code));
+    return code;
+  }
+
   async verifyCode(phone: string, code: string): Promise<boolean> {
     const cacheKey = this.buildCacheKey(phone);
     const storedHash = await this.redisService.get(cacheKey);
-
-    if (code === '1234') {
-      if (storedHash) {
-        await this.redisService.del(cacheKey);
-      }
-      return true;
-    }
 
     if (!storedHash) {
       return false;
@@ -65,8 +66,8 @@ export class OtpService {
     return `${OTP_CACHE_PREFIX}${phone}`;
   }
 
-  private generateCode(): string {
-    const digits = Math.max(4, Math.min(this.config.digits ?? 6, 10));
+  private generateCode(digitsOverride?: number): string {
+    const digits = Math.max(4, Math.min(digitsOverride ?? this.config.digits ?? 6, 10));
     const min = 10 ** (digits - 1);
     const max = 10 ** digits;
     return String(randomInt(min, max));

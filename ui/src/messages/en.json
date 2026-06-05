@@ -85,10 +85,17 @@
       "alreadySignedIn": "You are already signed in",
       "signedInDescription": "Head to your dashboard to manage your ads and profile.",
       "dashboardCta": "Go to dashboard",
+      "baleRequired": "You must join our Bale bot to sign in.",
+      "baleRequiredDescription": "Your phone is not registered with our Bale bot. Please join and share your contact number.",
+      "openBaleBot": "Open Bale Bot",
+      "enterToWebsite": "Enter website",
+      "checkBale": "We sent a verification code to you on Bale.",
+      "baleLoginError": "Your phone is not yet registered with our Bale bot. Please join first.",
+      "baleLoginSuccess": "Signed in successfully!",
       "errors": {
         "invalidPhone": "Enter a valid phone number.",
         "invalidCode": "Enter the 4-digit code.",
-        "requestFailed": "We couldn’t send the code. Try again in a moment.",
+        "requestFailed": "We couldn't send the code. Try again in a moment.",
         "verifyFailed": "The code is invalid or expired. Try again."
       }
     },

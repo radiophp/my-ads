@@ -13,12 +13,20 @@ type UpdateCurrentUserPayload = Partial<{
 
 const authApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    requestOtp: builder.mutation<SuccessResponse, { phone: string }>({
+    requestOtp: builder.mutation<SuccessResponse, { phone: string; deviceInfo?: string }>({
       query: (body) => ({
         url: '/auth/request-otp',
         method: 'POST',
         body,
       }),
+    }),
+    baleLogin: builder.mutation<AuthResponse, { phone: string }>({
+      query: (body) => ({
+        url: '/auth/bale-login',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['User'],
     }),
     verifyOtp: builder.mutation<AuthResponse, { phone: string; code: string }>({
       query: (body) => ({
@@ -53,6 +61,7 @@ const authApi = apiSlice.injectEndpoints({
 
 export const {
   useRequestOtpMutation,
+  useBaleLoginMutation,
   useVerifyOtpMutation,
   useGetCurrentUserQuery,
   useLogoutMutation,

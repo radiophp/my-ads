@@ -1,16 +1,31 @@
-import { Body, Controller, Get, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  NotFoundException,
+  Patch,
+  Post,
+  Query,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { Request } from 'express';
+import type { FastifyReply } from 'fastify';
+import * as QRCode from 'qrcode';
 import { AuthService } from './auth.service';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { RequestOtpDto } from './dto/request-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { BaleLoginDto } from './dto/bale-login.dto';
 import { RateLimit } from '@app/common/decorators/rate-limit.decorator';
 import { RateLimitGuard } from '@app/common/guards/rate-limit/rate-limit.guard';
 import { RefreshJwtGuard } from './guards/refresh-jwt.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Public } from '@app/common/decorators/public.decorator';
 import { UsersService } from '@app/modules/users/users.service';
+import { PrismaService } from '@app/platform/database/prisma.service';
 import {
   ApiBearerAuth,
   ApiOkResponse,
@@ -24,6 +39,10 @@ import { SuccessResponseDto } from './dto/otp-success-response.dto';
 import { CurrentUserDto } from './dto/current-user.dto';
 import { UpdateCurrentUserDto } from './dto/update-current-user.dto';
 
+const QR_CACHE_TTL_MS = 300_000;
+
+const qrCache = new Map<string, { buffer: Buffer; expiresAt: number }>();
+
 @Controller('auth')
 @UseGuards(RateLimitGuard)
 @ApiTags('auth')
@@ -31,6 +50,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly usersService: UsersService,
+    private readonly prismaService: PrismaService,
   ) {}
 
   @Get('me')
@@ -64,8 +84,54 @@ export class AuthController {
   @ApiOkResponse({ type: SuccessResponseDto })
   @ApiTooManyRequestsResponse({ description: 'OTP requests are rate limited' })
   async requestOtp(@Body() dto: RequestOtpDto): Promise<SuccessResponseDto> {
-    await this.authService.requestOtp(dto.phone);
-    return { success: true };
+    return this.authService.requestOtp(dto.phone, dto.deviceInfo) as unknown as SuccessResponseDto;
+  }
+
+  @Post('bale-login')
+  @Public()
+  @RateLimit({ limit: 10, ttlSeconds: 60 })
+  @ApiOperation({ summary: 'Login via linked Bale account (no OTP)' })
+  @ApiOkResponse({ type: AuthResponseDto })
+  @ApiUnauthorizedResponse({ description: 'Bale account not linked' })
+  async baleLogin(@Body() dto: BaleLoginDto): Promise<AuthResponseDto> {
+    return this.authService.baleLogin(dto.phone);
+  }
+
+  @Get('bale-qr')
+  @Public()
+  async getBaleQr(@Res() res: FastifyReply, @Query('start') start?: string): Promise<void> {
+    const now = Date.now();
+    const cacheKey = start === 'signup' ? 'signup' : 'default';
+
+    const cached = qrCache.get(cacheKey);
+    if (cached && now < cached.expiresAt) {
+      res
+        .header('Content-Type', 'image/png')
+        .header('Cache-Control', 'private, max-age=300')
+        .send(cached.buffer);
+      return;
+    }
+
+    const setting = await this.prismaService.websiteSetting.findFirst({
+      where: { key: 'default' },
+    });
+    const baleBotUrl = setting?.baleBotUrl?.trim();
+    if (!baleBotUrl) {
+      throw new NotFoundException('Bale bot URL is not configured.');
+    }
+
+    const qrUrl =
+      start === 'signup'
+        ? `${baleBotUrl}${baleBotUrl.includes('?') ? '&' : '?'}start=signup`
+        : baleBotUrl;
+    const buffer = await QRCode.toBuffer(qrUrl, { type: 'png', width: 400, margin: 2 });
+
+    qrCache.set(cacheKey, { buffer, expiresAt: now + QR_CACHE_TTL_MS });
+
+    res
+      .header('Content-Type', 'image/png')
+      .header('Cache-Control', 'private, max-age=300')
+      .send(buffer);
   }
 
   @Post('verify-otp')

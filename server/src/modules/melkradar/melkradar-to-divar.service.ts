@@ -298,7 +298,7 @@ export class MelkradarToDivarService {
       if (!cityOnly) {
         this.logger.warn(
           `[DISTRICT_MAP] No district match in Karaj for post ${source.id} (${source.externalId}): ` +
-          `cityAreaTitle="${source.cityAreaTitle}" — continuing without district`,
+            `cityAreaTitle="${source.cityAreaTitle}" — continuing without district`,
         );
       }
     }

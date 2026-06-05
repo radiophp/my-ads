@@ -4,24 +4,22 @@ import { useCallback, useMemo, useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 
-import { useRequestOtpMutation, useVerifyOtpMutation } from '@/features/api/apiSlice';
-import { setAuth } from '@/features/auth/authSlice';
-import { useAppDispatch, useAppSelector } from '@/lib/hooks';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+  useRequestOtpMutation,
+  useBaleLoginMutation,
+  useVerifyOtpMutation,
+} from '@/features/api/apiSlice';
+import { setAuth } from '@/features/auth/authSlice';
+import { useBaleLinkSocket } from '@/features/bale/useBaleLinkSocket';
+import { useAppDispatch, useAppSelector } from '@/lib/hooks';
+import { cn, getDeviceInfo } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 
-type Step = 'phone' | 'verify';
+type Step = 'phone' | 'verify' | 'bale_required';
 const CODE_LENGTH = 4;
 
 const sanitizeIranLocalPhone = (input: string): string => {
@@ -58,11 +56,29 @@ export function PhoneOtpLoginForm() {
   const [code, setCode] = useState('');
   const [step, setStep] = useState<Step>('phone');
   const [lastRequestedPhoneLocal, setLastRequestedPhoneLocal] = useState<string | null>(null);
+  const [baleBotUrl, setBaleBotUrl] = useState<string | null>(null);
+  const [isBaleOtp, setIsBaleOtp] = useState(false);
+  const [baleLinkToken, setBaleLinkToken] = useState<string | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
   const phoneInputRef = useRef<HTMLInputElement>(null);
+  const baleLoginCallbackRef = useRef<() => void>(() => {});
+
+  useBaleLinkSocket({
+    token: baleLinkToken,
+    onLinked: () => baleLoginCallbackRef.current(),
+  });
+
+  useEffect(() => {
+    setIsMobile(window.innerWidth < 768);
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
   const codeInputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const codeRef = useRef(code);
 
   const [requestOtp, { isLoading: isRequesting }] = useRequestOtpMutation();
+  const [baleLogin, { isLoading: isBaleLoggingIn }] = useBaleLoginMutation();
   const [verifyOtp, { isLoading: isVerifying }] = useVerifyOtpMutation();
 
   const isAuthenticated = useMemo(() => Boolean(auth.accessToken), [auth.accessToken]);
@@ -91,10 +107,7 @@ export function PhoneOtpLoginForm() {
 
       if (!value) {
         setCode((prev) => {
-          const digits = Array.from(
-            { length: CODE_LENGTH },
-            (_, position) => prev[position] ?? '',
-          );
+          const digits = Array.from({ length: CODE_LENGTH }, (_, position) => prev[position] ?? '');
           digits[index] = '';
           return digits.join('');
         });
@@ -171,32 +184,62 @@ export function PhoneOtpLoginForm() {
       const sanitizedLocal = sanitizeIranLocalPhone(phone);
 
       if (!isValidIranLocalPhone(sanitizedLocal)) {
-        toast({
-          title: t('errors.invalidPhone'),
-          variant: 'destructive',
-        });
+        toast({ title: t('errors.invalidPhone'), variant: 'destructive' });
         return;
       }
 
       try {
         const international = toInternationalIranPhone(sanitizedLocal);
-        await requestOtp({ phone: international }).unwrap();
-        setStep('verify');
-        setLastRequestedPhoneLocal(sanitizedLocal);
-        toast({
-          title: t('requestToast'),
-          description: t('codeInfo', { phone: formatDisplayIranPhone(sanitizedLocal) }),
-        });
+        const response = await requestOtp({ phone: international, deviceInfo: getDeviceInfo() }).unwrap();
+
+        if (response.viaBale) {
+          setStep('verify');
+          setIsBaleOtp(true);
+          setBaleBotUrl(response.baleBotUrl ?? null);
+          setLastRequestedPhoneLocal(sanitizedLocal);
+          toast({ title: t('requestToast'), description: t('checkBale') });
+        } else if (response.baleLinked === false && response.baleBotUrl) {
+          setBaleBotUrl(response.baleBotUrl);
+          setBaleLinkToken(response.baleLinkToken ?? null);
+          setLastRequestedPhoneLocal(sanitizedLocal);
+          setStep('bale_required');
+        } else {
+          setStep('verify');
+          setLastRequestedPhoneLocal(sanitizedLocal);
+          toast({
+            title: t('requestToast'),
+            description: t('codeInfo', { phone: formatDisplayIranPhone(sanitizedLocal) }),
+          });
+        }
       } catch (error) {
         console.error('Failed to request OTP', error);
-        toast({
-          title: t('errors.requestFailed'),
-          variant: 'destructive',
-        });
+        toast({ title: t('errors.requestFailed'), variant: 'destructive' });
       }
     },
     [phone, requestOtp, t, toast],
   );
+
+  const handleBaleLogin = useCallback(async () => {
+    const localDigits = sanitizeIranLocalPhone(lastRequestedPhoneLocal ?? phone);
+    if (!isValidIranLocalPhone(localDigits)) {
+      toast({ title: t('errors.invalidPhone'), variant: 'destructive' });
+      return;
+    }
+
+    try {
+      const response = await baleLogin({ phone: toInternationalIranPhone(localDigits) }).unwrap();
+      dispatch(setAuth(response));
+      toast({ title: t('baleLoginSuccess') });
+      router.push('/dashboard');
+    } catch (error) {
+      console.error('Bale login failed', error);
+      toast({ title: t('baleLoginError'), variant: 'destructive' });
+    }
+  }, [baleLogin, dispatch, lastRequestedPhoneLocal, phone, router, t, toast]);
+
+  useEffect(() => {
+    baleLoginCallbackRef.current = handleBaleLogin;
+  }, [handleBaleLogin]);
 
   const handleVerifyOtp = useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
@@ -205,18 +248,12 @@ export function PhoneOtpLoginForm() {
       const sanitizedCode = sanitizeCode(code);
 
       if (!isValidIranLocalPhone(localDigits)) {
-        toast({
-          title: t('errors.invalidPhone'),
-          variant: 'destructive',
-        });
+        toast({ title: t('errors.invalidPhone'), variant: 'destructive' });
         return;
       }
 
       if (!sanitizedCode || sanitizedCode.length < CODE_LENGTH) {
-        toast({
-          title: t('errors.invalidCode'),
-          variant: 'destructive',
-        });
+        toast({ title: t('errors.invalidCode'), variant: 'destructive' });
         return;
       }
 
@@ -231,10 +268,7 @@ export function PhoneOtpLoginForm() {
         router.push('/dashboard');
       } catch (error) {
         console.error('Failed to verify OTP', error);
-        toast({
-          title: t('errors.verifyFailed'),
-          variant: 'destructive',
-        });
+        toast({ title: t('errors.verifyFailed'), variant: 'destructive' });
       }
     },
     [code, dispatch, lastRequestedPhoneLocal, phone, router, t, toast, verifyOtp],
@@ -247,17 +281,21 @@ export function PhoneOtpLoginForm() {
     }
 
     try {
-      await requestOtp({ phone: toInternationalIranPhone(localDigits) }).unwrap();
-      toast({
-        title: t('requestToast'),
-        description: t('codeInfo', { phone: formatDisplayIranPhone(localDigits) }),
-      });
+      const response = await requestOtp({ phone: toInternationalIranPhone(localDigits), deviceInfo: getDeviceInfo() }).unwrap();
+      if (response.viaBale) {
+        setIsBaleOtp(true);
+        setBaleBotUrl(response.baleBotUrl ?? null);
+        toast({ title: t('requestToast'), description: t('checkBale') });
+      } else {
+        setIsBaleOtp(false);
+        toast({
+          title: t('requestToast'),
+          description: t('codeInfo', { phone: formatDisplayIranPhone(localDigits) }),
+        });
+      }
     } catch (error) {
       console.error('Failed to resend OTP', error);
-      toast({
-        title: t('errors.requestFailed'),
-        variant: 'destructive',
-      });
+      toast({ title: t('errors.requestFailed'), variant: 'destructive' });
     }
   }, [lastRequestedPhoneLocal, phone, requestOtp, t, toast]);
 
@@ -289,6 +327,7 @@ export function PhoneOtpLoginForm() {
         <CardTitle>{t('title')}</CardTitle>
         <CardDescription>{t('description')}</CardDescription>
       </CardHeader>
+
       {step === 'phone' ? (
         <form onSubmit={handleRequestOtp} noValidate>
           <CardContent className="space-y-4">
@@ -322,13 +361,94 @@ export function PhoneOtpLoginForm() {
             </Button>
           </CardFooter>
         </form>
+      ) : step === 'bale_required' ? (
+        <CardContent className="space-y-4">
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            <p className="font-medium">{t('baleRequired')}</p>
+            <p className="mt-1 text-amber-700">{t('baleRequiredDescription')}</p>
+          </div>
+          {baleBotUrl && (
+            <>
+              {!isMobile && (
+                <div className="flex justify-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/api/auth/bale-qr?start=signup"
+                    alt="QR Code"
+                    className="size-48 rounded-lg border"
+                    crossOrigin="anonymous"
+                  />
+                </div>
+              )}
+              <p className="break-all text-center text-xs text-muted-foreground">
+                <a href={`${baleBotUrl}?start=signup`} target="_blank" rel="noopener noreferrer" className="hover:text-primary">
+                  {baleBotUrl}?start=signup
+                </a>
+              </p>
+              <Button
+                className="w-full"
+                variant="outline"
+                onClick={() => window.open(`${baleBotUrl}?start=signup`, '_blank', 'noopener')}
+              >
+                {t('openBaleBot')}
+              </Button>
+            </>
+          )}
+          <Button
+            className="w-full"
+            onClick={handleBaleLogin}
+            disabled={isBaleLoggingIn}
+          >
+            {isBaleLoggingIn ? t('verifying') : t('enterToWebsite')}
+          </Button>
+          <div className="flex justify-center">
+            <button
+              type="button"
+              className="text-sm text-muted-foreground transition-colors hover:text-primary"
+                onClick={() => {
+                  setStep('phone');
+                  setCode('');
+                  setBaleLinkToken(null);
+                }}
+              >
+                {t('changePhone')}
+              </button>
+          </div>
+        </CardContent>
       ) : (
         <form onSubmit={handleVerifyOtp} noValidate>
           <CardContent className="space-y-4">
+            {isBaleOtp && baleBotUrl && (
+              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
+                <p className="font-medium">{t('checkBale')}</p>
+                {!isMobile && (
+                  <div className="mt-3 flex justify-center">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src="/api/auth/bale-qr"
+                      alt="QR Code"
+                      className="size-40 rounded-lg border"
+                      crossOrigin="anonymous"
+                    />
+                  </div>
+                )}
+                <p className="mt-2 break-all text-center text-xs text-blue-600">
+                  <a href={baleBotUrl} target="_blank" rel="noopener noreferrer" className="hover:text-blue-800">
+                    {baleBotUrl}
+                  </a>
+                </p>
+                <Button
+                  className="mt-2 w-full"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open(baleBotUrl, '_blank', 'noopener')}
+                >
+                  {t('openBaleBot')}
+                </Button>
+              </div>
+            )}
             <p className="text-sm text-muted-foreground">
-              {t('codeDescription', {
-                phone: displayPhone,
-              })}
+              {t('codeDescription', { phone: displayPhone })}
             </p>
             <div className="space-y-1.5">
               <Label htmlFor="code">{t('codeLabel')}</Label>
@@ -376,6 +496,7 @@ export function PhoneOtpLoginForm() {
                 onClick={() => {
                   setStep('phone');
                   setCode('');
+                  setIsBaleOtp(false);
                 }}
               >
                 {t('changePhone')}

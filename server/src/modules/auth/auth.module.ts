@@ -5,6 +5,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { UsersModule } from '@app/modules/users/users.module';
+import { BaleModule } from '@app/modules/bale/bale.module';
+import { PrismaService } from '@app/platform/database/prisma.service';
 import { JwtAccessStrategy } from './strategies/jwt-access.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -19,6 +21,7 @@ import type { JwtConfig } from '@app/platform/config/jwt.config';
     ConfigModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     UsersModule,
+    BaleModule,
     RateLimitModule,
     OtpModule,
     JwtModule.registerAsync({
@@ -41,6 +44,7 @@ import type { JwtConfig } from '@app/platform/config/jwt.config';
   controllers: [AuthController],
   providers: [
     AuthService,
+    PrismaService,
     JwtAccessStrategy,
     JwtRefreshStrategy,
     JwtAuthGuard,

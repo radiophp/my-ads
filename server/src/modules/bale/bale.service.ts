@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { Context, Markup, Telegraf, Telegram, session, Input } from 'telegraf';
 import type { InlineKeyboardMarkup } from '@telegraf/types';
 import { PrismaService } from '../../platform/database/prisma.service';
+import { BaleLinkGateway } from './bale-link.gateway';
 
 const BALE_API_ROOT = 'https://tapi.bale.ai';
 
@@ -41,6 +42,7 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
   constructor(
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
+    private readonly baleLinkGateway: BaleLinkGateway,
   ) {
     this.sendTimeoutMs = this.toNumber(
       this.configService.get<string>('BALE_SEND_TIMEOUT_MS'),
@@ -399,6 +401,42 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
     });
     if (baleId) {
       this.phoneCache.set(Number(baleId), phone);
+    }
+    await this.baleLinkGateway.emitLinked(phone);
+  }
+
+  async sendOtpToUser(
+    phone: string,
+    otpCode: string,
+    deviceInfo?: string,
+  ): Promise<{ status: 'sent' | 'not_connected' | 'failed'; error?: string }> {
+    await this.ensureSender();
+    if (!this.sender) {
+      return { status: 'failed', error: 'Bale sender is not initialized' };
+    }
+
+    const chatLink = await this.findChatLink({ phone });
+    if (!chatLink) {
+      return { status: 'not_connected', error: 'no_link' };
+    }
+
+    const deviceSuffix = deviceInfo ? `\n\n${deviceInfo}` : '';
+    try {
+      await this.sendWithRetry(
+        'sendOtp',
+        () =>
+          this.sender!.sendMessage(
+            chatLink.chatId,
+            `کد ورود شما: ${otpCode}\n\nاین کد تا ۵ دقیقه معتبر است.${deviceSuffix}`,
+          ),
+        { chatId: chatLink.chatId },
+      );
+      this.logger.log(`OTP sent to ${phone} via Bale (chat ${chatLink.chatId})`);
+      return { status: 'sent' };
+    } catch (err) {
+      const errMsg = (err as any)?.response?.description ?? (err as Error).message;
+      this.logger.error(`Failed to send OTP to ${phone} via Bale: ${errMsg}`);
+      return { status: 'failed', error: errMsg };
     }
   }
 

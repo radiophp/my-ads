@@ -38,4 +38,8 @@ export type CurrentUser = {
 
 export type SuccessResponse = {
   success: boolean;
+  viaBale?: boolean;
+  baleLinked?: boolean;
+  baleBotUrl?: string;
+  baleLinkToken?: string;
 };

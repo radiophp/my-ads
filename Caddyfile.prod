@@ -19,16 +19,16 @@ mahanfile.com, www.mahanfile.com {
 			Cross-Origin-Resource-Policy "cross-origin"
 			Timing-Allow-Origin "*"
 		}
-		reverse_proxy minio:${MINIO_PORT}
+		reverse_proxy minio:6304
 	}
 
 	handle_path /map* {
 		reverse_proxy tileserver:8080
 	}
 
-	reverse_proxy /socket.io/* api:${APP_PORT}
-	reverse_proxy /api/* api:${APP_PORT}
-	reverse_proxy ui:${NEXT_UI_PORT}
+	reverse_proxy /socket.io/* api:6300
+	reverse_proxy /api/* api:6300
+	reverse_proxy ui:6306
 }
 
 map.mahanfile.com {

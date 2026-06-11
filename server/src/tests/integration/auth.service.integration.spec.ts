@@ -4,6 +4,9 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthService } from '@app/modules/auth/auth.service';
 import { UsersService } from '@app/modules/users/users.service';
 import { OtpService } from '@app/platform/otp/otp.service';
+import { PrismaService } from '@app/platform/database/prisma.service';
+import { RedisService } from '@app/platform/cache/redis.service';
+import { BaleBotService } from '@app/modules/bale/bale.service';
 import jwtConfig from '@app/platform/config/jwt.config';
 import { Role } from '@app/common/decorators/roles.decorator';
 
@@ -43,6 +46,25 @@ describe('AuthService (integration)', () => {
         {
           provide: OtpService,
           useValue: mockOtpService,
+        },
+        {
+          provide: PrismaService,
+          useValue: {
+            baleUserLink: {
+              findFirst: jest.fn().mockResolvedValue(null),
+            },
+            websiteSetting: {
+              findFirst: jest.fn().mockResolvedValue(null),
+            },
+          },
+        },
+        {
+          provide: RedisService,
+          useValue: {},
+        },
+        {
+          provide: BaleBotService,
+          useValue: {},
         },
       ],
     }).compile();

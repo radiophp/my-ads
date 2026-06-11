@@ -259,143 +259,85 @@ jobs:
       - name: Build project
         run: npm run build
 
-  publish-api-image:
+  build-api-image:
     if: |
       (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
       (github.event_name == 'pull_request' && github.base_ref == 'main' && github.event.pull_request.head.repo.full_name == github.repository)
-    runs-on: ubuntu-latest
+    runs-on:
+      - self-hosted
+      - linux
+      - x64
     needs:
       - server-build
-    permissions:
-      contents: read
-      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Build API image
+        run: |
+          docker build \
+            -t my-ads-api:latest \
+            --build-arg NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL || 'https://mahanfile.com' }} \
+            --build-arg NEXT_PUBLIC_API_BASE_URL=${{ vars.NEXT_PUBLIC_API_BASE_URL || 'https://mahanfile.com/api' }} \
+            -f server/Dockerfile server
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Derive image namespace
-        id: vars
-        run: echo "owner=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
-
-      - name: Build and push API image
-        uses: docker/build-push-action@v6
-        with:
-          context: server
-          file: server/Dockerfile
-          build-args: |
-            NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL || 'https://mahanfile.com' }}
-            NEXT_PUBLIC_API_BASE_URL=${{ vars.NEXT_PUBLIC_API_BASE_URL || 'https://mahanfile.com/api' }}
-          push: true
-          tags: |
-            ghcr.io/${{ steps.vars.outputs.owner }}/my-ads-api:${{ github.sha }}
-            ghcr.io/${{ steps.vars.outputs.owner }}/my-ads-api:latest
-
-  publish-backup-image:
+  build-backup-image:
     if: |
       (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
       (github.event_name == 'pull_request' && github.base_ref == 'main' && github.event.pull_request.head.repo.full_name == github.repository)
-    runs-on: ubuntu-latest
+    runs-on:
+      - self-hosted
+      - linux
+      - x64
     needs:
       - server-build
-    permissions:
-      contents: read
-      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Build backup image
+        run: |
+          docker build \
+            -t my-ads-backup:latest \
+            -f backup/Dockerfile backup
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Derive image namespace
-        id: vars
-        run: echo "owner=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
-
-      - name: Build and push backup image
-        uses: docker/build-push-action@v6
-        with:
-          context: backup
-          file: backup/Dockerfile
-          push: true
-          tags: |
-            ghcr.io/${{ steps.vars.outputs.owner }}/my-ads-backup:${{ github.sha }}
-            ghcr.io/${{ steps.vars.outputs.owner }}/my-ads-backup:latest
-
-  publish-ui-image:
+  build-ui-image:
     if: |
       always() &&
       (
         (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
         (github.event_name == 'pull_request' && github.base_ref == 'main' && github.event.pull_request.head.repo.full_name == github.repository)
       )
-    runs-on: ubuntu-latest
+    runs-on:
+      - self-hosted
+      - linux
+      - x64
     needs:
       - changes
       - ui-build
-    permissions:
-      contents: read
-      packages: write
     steps:
-      - name: Skip UI image publish (no UI changes)
+      - name: Skip UI image build (no UI changes)
         if: needs.changes.outputs.ui != 'true'
-        run: echo "No UI changes detected; skipping UI image build/push."
+        run: echo "No UI changes detected; skipping UI image build."
 
-      - name: Abort publish (UI build failed)
+      - name: Abort build (UI build failed)
         if: needs.changes.outputs.ui == 'true' && needs.ui-build.result != 'success'
         run: exit 1
 
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Set up Docker Buildx
+      - name: Build UI image
         if: needs.changes.outputs.ui == 'true'
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to GitHub Container Registry
-        if: needs.changes.outputs.ui == 'true'
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Derive image namespace
-        id: vars
-        run: echo "owner=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
-
-      - name: Build and push UI image
-        if: needs.changes.outputs.ui == 'true'
-        uses: docker/build-push-action@v6
-        with:
-          context: ui
-          file: ui/Dockerfile
-          build-args: |
-            NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL || 'https://mahanfile.com' }}
-            NEXT_PUBLIC_API_BASE_URL=${{ vars.NEXT_PUBLIC_API_BASE_URL || 'https://mahanfile.com/api' }}
-            NEXT_PUBLIC_WS_BASE_URL=${{ vars.NEXT_PUBLIC_WS_BASE_URL || 'wss://mahanfile.com/socket.io' }}
-            NEXT_PUBLIC_MAP_TILE_BASE_URL=${{ vars.NEXT_PUBLIC_MAP_TILE_BASE_URL || '/map' }}
-            NEXT_PUBLIC_VAPID_PUBLIC_KEY=${{ secrets.NEXT_PUBLIC_VAPID_PUBLIC_KEY || vars.NEXT_PUBLIC_VAPID_PUBLIC_KEY }}
-          push: true
-          tags: |
-            ghcr.io/${{ steps.vars.outputs.owner }}/my-ads-ui:${{ github.sha }}
-            ghcr.io/${{ steps.vars.outputs.owner }}/my-ads-ui:latest
+        run: |
+          docker build \
+            -t my-ads-ui:latest \
+            --build-arg NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL || 'https://mahanfile.com' }} \
+            --build-arg NEXT_PUBLIC_API_BASE_URL=${{ vars.NEXT_PUBLIC_API_BASE_URL || 'https://mahanfile.com/api' }} \
+            --build-arg NEXT_PUBLIC_WS_BASE_URL=${{ vars.NEXT_PUBLIC_WS_BASE_URL || 'wss://mahanfile.com/socket.io' }} \
+            --build-arg NEXT_PUBLIC_MAP_TILE_BASE_URL=${{ vars.NEXT_PUBLIC_MAP_TILE_BASE_URL || '/map' }} \
+            --build-arg NEXT_PUBLIC_VAPID_PUBLIC_KEY=${{ secrets.NEXT_PUBLIC_VAPID_PUBLIC_KEY || vars.NEXT_PUBLIC_VAPID_PUBLIC_KEY }} \
+            -f ui/Dockerfile ui
 
   deploy:
     runs-on:
@@ -403,18 +345,18 @@ jobs:
       - linux
       - x64
     needs:
-      - publish-api-image
-      - publish-backup-image
-      - publish-ui-image
+      - build-api-image
+      - build-backup-image
+      - build-ui-image
     if: |
       always() &&
       (
         (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
         (github.event_name == 'pull_request' && github.base_ref == 'main' && github.event.pull_request.head.repo.full_name == github.repository)
       ) &&
-      (needs.publish-api-image.result == 'success' || needs.publish-api-image.result == 'skipped') &&
-      (needs.publish-backup-image.result == 'success' || needs.publish-backup-image.result == 'skipped') &&
-      (needs.publish-ui-image.result == 'success' || needs.publish-ui-image.result == 'skipped')
+      (needs.build-api-image.result == 'success' || needs.build-api-image.result == 'skipped') &&
+      (needs.build-backup-image.result == 'success' || needs.build-backup-image.result == 'skipped') &&
+      (needs.build-ui-image.result == 'success' || needs.build-ui-image.result == 'skipped')
     permissions:
       contents: read
     env:
@@ -449,7 +391,6 @@ jobs:
       - name: Validate deployment configuration
         env:
           STACK_NAME: ${{ env.STACK_NAME }}
-          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           MINIO_ACCESS_KEY: ${{ secrets.MINIO_ACCESS_KEY }}
           MINIO_SECRET_KEY: ${{ secrets.MINIO_SECRET_KEY }}
@@ -468,7 +409,7 @@ jobs:
           NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL || 'https://mahanfile.com' }}
           NEXT_PUBLIC_API_BASE_URL: ${{ vars.NEXT_PUBLIC_API_BASE_URL || 'https://mahanfile.com/api' }}
         run: |
-          required_vars=(STACK_NAME GHCR_TOKEN POSTGRES_PASSWORD MINIO_ACCESS_KEY MINIO_SECRET_KEY JWT_ACCESS_TOKEN_SECRET JWT_REFRESH_TOKEN_SECRET RABBITMQ_PASSWORD TELEGRAM_BOT_TOKEN GRAFANA_ADMIN_PASSWORD GRAFANA_ADMIN_USER GRAFANA_ADMIN_EMAIL VAPID_PUBLIC_KEY VAPID_PRIVATE_KEY VAPID_SUBJECT NEXT_PUBLIC_VAPID_PUBLIC_KEY PUSH_NOTIFICATION_TIMEOUT_MS NEXT_PUBLIC_APP_URL NEXT_PUBLIC_API_BASE_URL)
+          required_vars=(STACK_NAME POSTGRES_PASSWORD MINIO_ACCESS_KEY MINIO_SECRET_KEY JWT_ACCESS_TOKEN_SECRET JWT_REFRESH_TOKEN_SECRET RABBITMQ_PASSWORD TELEGRAM_BOT_TOKEN GRAFANA_ADMIN_PASSWORD GRAFANA_ADMIN_USER GRAFANA_ADMIN_EMAIL VAPID_PUBLIC_KEY VAPID_PRIVATE_KEY VAPID_SUBJECT NEXT_PUBLIC_VAPID_PUBLIC_KEY PUSH_NOTIFICATION_TIMEOUT_MS NEXT_PUBLIC_APP_URL NEXT_PUBLIC_API_BASE_URL)
           missing=0
           for name in "${required_vars[@]}"; do
             if [ -z "${!name}" ]; then
@@ -482,23 +423,6 @@ jobs:
 
       - name: Verify Docker connectivity
         run: docker info
-
-      - name: Log in to GitHub Container Registry
-        env:
-          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME || github.repository_owner }}
-          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
-        run: |
-          if [ -z "$GHCR_TOKEN" ]; then
-            echo "GHCR_TOKEN secret is required for deployment" >&2
-            exit 1
-          fi
-          echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
-
-      - name: Pull latest images
-        run: |
-          docker pull ghcr.io/radiophp/my-ads-api:latest
-          docker pull ghcr.io/radiophp/my-ads-backup:latest
-          docker pull ghcr.io/radiophp/my-ads-ui:latest
 
       - name: Deploy stack
         env:
@@ -587,7 +511,7 @@ jobs:
           PROMETHEUS_PORT: ${{ vars.PROMETHEUS_PORT || '6322' }}
           GRAFANA_PORT: ${{ vars.GRAFANA_PORT || '6323' }}
           LOKI_PORT: ${{ vars.LOKI_PORT || '6319' }}
-        run: docker stack deploy -c docker-compose-prod.yml "$STACK_NAME" --with-registry-auth
+        run: docker stack deploy -c docker-compose-prod.yml "$STACK_NAME" --resolve-image never
 
       - name: Force update cron/bot/ui services
         run: |

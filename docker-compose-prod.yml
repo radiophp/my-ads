@@ -83,7 +83,7 @@ services:
           - node.role == manager
 
   pgbackrest-backup:
-    image: ghcr.io/radiophp/my-ads-backup:latest
+    image: my-ads-backup:latest
     environment:
       TZ: ${BACKUP_TZ:-Asia/Tehran}
       BACKUP_CRON: ${BACKUP_CRON:-0 2 * * *}
@@ -206,7 +206,7 @@ services:
       replicas: 1
 
   api:
-    image: ghcr.io/radiophp/my-ads-api:latest
+    image: my-ads-api:latest
     environment:
       NODE_ENV: production
       ENABLE_CRON_JOBS: 'false'
@@ -281,7 +281,7 @@ services:
           - node.role == manager
 
   api-cron:
-    image: ghcr.io/radiophp/my-ads-api:latest
+    image: my-ads-api:latest
     command:
       [
         "node",
@@ -515,7 +515,7 @@ services:
       replicas: 1
 
   bale-bot:
-    image: ghcr.io/radiophp/my-ads-api:latest
+    image: my-ads-api:latest
     command:
       [
         "node",
@@ -589,7 +589,7 @@ services:
         order: stop-first
 
   telegram-bot:
-    image: ghcr.io/radiophp/my-ads-api:latest
+    image: my-ads-api:latest
     command:
       [
         "node",
@@ -667,7 +667,7 @@ services:
           - node.role == manager
 
   ui:
-    image: ghcr.io/radiophp/my-ads-ui:latest
+    image: my-ads-ui:latest
     environment:
       NODE_ENV: production
       NEXT_UI_PORT: ${NEXT_UI_PORT}
@@ -692,6 +692,60 @@ services:
         constraints:
           - node.role == manager
 
+  caddy:
+    image: ghcr.io/caddybuilds/caddy-cloudflare:alpine
+    restart: unless-stopped
+    ports:
+      - "2015:2015"
+    env_file:
+      - .env.prod
+    environment:
+      CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN}
+    volumes:
+      - ./Caddyfile.prod:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - minio
+    networks:
+      - app_net
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+
+  dnsproxy:
+    image: coredns/coredns:latest
+    restart: unless-stopped
+    command: ["-conf", "/Corefile"]
+    volumes:
+      - ./cloudflare/Corefile:/Corefile:ro
+    networks:
+      - app_net
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: ["tunnel", "--no-prechecks", "--config", "/etc/cloudflared/config.yml", "run", "${CLOUDFLARE_TUNNEL_NAME:-mahanfile}"]
+    environment:
+      TZ: ${BACKUP_TZ:-Asia/Tehran}
+      TUNNEL_CREDENTIALS: /etc/cloudflared/tunnel.json
+    volumes:
+      - ./cloudflare/production:/etc/cloudflared
+    networks:
+      - app_net
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+
 networks:
   app_net:
     driver: overlay
@@ -707,3 +761,5 @@ volumes:
   grafana_data:
   promtail_positions:
   rabbitmq_data:
+  caddy_data:
+  caddy_config:

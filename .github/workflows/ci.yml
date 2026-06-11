@@ -365,29 +365,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Use Node.js 22
-        uses: actions/setup-node@v6
-        with:
-          node-version: 22
-          cache: 'npm'
-          cache-dependency-path: server/package-lock.json
-
-      - name: Install server dependencies (migrations)
-        working-directory: server
-        run: npm ci
-
-      - name: Apply database migrations (production)
-        working-directory: server
-        env:
-          POSTGRES_DB: ${{ vars.POSTGRES_DB }}
-          POSTGRES_USER: ${{ vars.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_PUBLISHED_PORT: ${{ vars.POSTGRES_PORT }}
-        run: |
-          export DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@host.docker.internal:${POSTGRES_PUBLISHED_PORT}/${POSTGRES_DB}?schema=public"
-          export DATABASE_DIRECT_URL="$DATABASE_URL"
-          npx prisma migrate deploy
-
       - name: Validate deployment configuration
         env:
           STACK_NAME: ${{ env.STACK_NAME }}
@@ -512,6 +489,42 @@ jobs:
           GRAFANA_PORT: ${{ vars.GRAFANA_PORT || '6323' }}
           LOKI_PORT: ${{ vars.LOKI_PORT || '6319' }}
         run: docker stack deploy -c docker-compose-prod.yml "$STACK_NAME" --resolve-image never
+
+      - name: Wait for PostgreSQL to be ready
+        env:
+          POSTGRES_USER: ${{ vars.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_PUBLISHED_PORT: ${{ vars.POSTGRES_PORT }}
+          POSTGRES_DB: ${{ vars.POSTGRES_DB }}
+        run: |
+          for i in $(seq 1 30); do
+            pg_isready -h host.docker.internal -p "${POSTGRES_PUBLISHED_PORT}" -U "${POSTGRES_USER}" && break
+            echo "Waiting for PostgreSQL... ($i/30)"
+            sleep 2
+          done
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install server dependencies (migrations)
+        working-directory: server
+        run: npm ci
+
+      - name: Apply database migrations (production)
+        working-directory: server
+        env:
+          POSTGRES_DB: ${{ vars.POSTGRES_DB }}
+          POSTGRES_USER: ${{ vars.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_PUBLISHED_PORT: ${{ vars.POSTGRES_PORT }}
+        run: |
+          export DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@host.docker.internal:${POSTGRES_PUBLISHED_PORT}/${POSTGRES_DB}?schema=public"
+          export DATABASE_DIRECT_URL="$DATABASE_URL"
+          npx prisma migrate deploy
 
       - name: Force update cron/bot/ui services
         run: |

@@ -153,7 +153,7 @@ Services exposed:
 | Telegram Bot | n/a | separate `telegram-bot` service runs `npm run telegram:bot` |
 | Telegram Bot | (runs alongside API; no exposed port) | separate `telegram-bot` service runs `npm run telegram:bot` |
 | Grafana | 3000 | provisions dashboards from `observability/grafana/...` |
-| Tileserver | 8080 | serves Iran MBTiles (map) at `/map` |
+| Tileserver | 6235 | serves Iran MBTiles (map) at `/map` (dev). Prod uses **7235**. |
 
 Stop with `docker compose down`.
 
@@ -360,6 +360,16 @@ npm run typecheck      # TypeScript --noEmit
 
 Tailwind class ordering rules are enabled; ESLint may rewrite class strings during `--fix`.
 
+### 3. Git Hooks (Husky)
+
+Pre-commit hooks run lint-staged, typecheck, and tests for both `server/` and `ui/`:
+
+```bash
+git config core.hooksPath .husky
+```
+
+Run this once per clone to enable hooks. The config is local to the repo and tells git to use `.husky/` instead of `.git/hooks/`.
+
 ### 3. Tests
 
 ```bash
@@ -416,18 +426,26 @@ npm run build          # Produces the production .next/ artefacts
 
 ## Continuous Integration
 
-GitHub Actions (`.github/workflows/ci.yml`) run on every push and pull request. The pipeline currently spans eight jobs:
+GitHub Actions (`.github/workflows/ci.yml`) run on every push and pull request. The pipeline has three stages:
 
-1. **server-lint** — installs dependencies in `server/` and runs ESLint.
-2. **server-typecheck** — reruns dependency install and executes `npm run typecheck`.
-3. **server-test** — boots PostgreSQL + Redis services, generates Prisma client, runs unit tests (`npm test -- --runInBand`) and e2e tests (`npm run test:e2e`).
-4. **server-build** — ensures the backend compiles (`npm run build`).
-5. **ui-lint** — installs UI dependencies and runs ESLint with Tailwind rules.
-6. **ui-typecheck** — executes `npm run typecheck` in `ui/`.
-7. **ui-test** — runs Vitest (`--passWithNoTests`) and installs Playwright browsers; the Playwright execution step is currently disabled with `if: ${{ false }}` while the suite is stabilised.
-8. **ui-build** — performs `npm run build` to validate the Next.js production bundle.
+### 1. Validation (GitHub-hosted, Node.js 22)
 
-All jobs run on Node.js 22 to mirror local prerequisites. The UI tests are tolerant of empty suites, so adding Vitest specs will not require pipeline changes. Re-enable Playwright by removing the conditional guard once the e2e suite is ready.
+Jobs run on `ubuntu-latest` to lint, typecheck, test, and build the code:
+- **server-lint**, **server-typecheck**, **server-test**, **server-build**
+- **ui-lint**, **ui-typecheck**, **ui-test**, **ui-build**
+
+### 2. Build images (self-hosted runner)
+
+On `main` branch pushes, three build jobs run on the **self-hosted** runner (same machine as deployment):
+- **build-api-image** — `docker build -t my-ads-api:latest -f server/Dockerfile server`
+- **build-backup-image** — `docker build -t my-ads-backup:latest -f backup/Dockerfile backup`
+- **build-ui-image** — `docker build -t my-ads-ui:latest -f ui/Dockerfile ui`
+
+Images are tagged with simple names (no registry prefix) and stored only in the local Docker daemon — no push to ghcr.io.
+
+### 3. Deploy (self-hosted runner)
+
+The **deploy** job runs `docker stack deploy -c docker-compose-prod.yml my-ads --resolve-image never`, using the locally built images. No registry login or image pull is needed.
 
 ---
 
@@ -543,12 +561,21 @@ Environment variables not listed above are either optional feature toggles or in
 
 ## Production deployment (Docker Swarm)
 
-`docker-compose-prod.yml` defines the production stack expected to run on a Docker Swarm cluster. The stack consumes container images that are already built in CI (for example, the GitHub Actions workflow can push `ghcr.io/<org>/my-ads-api` and `ghcr.io/<org>/my-ads-ui`). A typical deployment job performs the following steps:
+`docker-compose-prod.yml` defines the production stack expected to run on a Docker Swarm cluster. Images are built locally by a **self-hosted GitHub Actions runner** and deployed directly — no container registry push/pull.
 
-1. Log in to the container registry that hosts the pre-built images.
-2. Export the required environment variables (usually sourced from GitHub Actions variables and secrets).
-3. Run `docker stack deploy -c docker-compose-prod.yml my-ads --with-registry-auth` on the Swarm manager node.
+A typical deployment:
+1. **Build images** on the self-hosted runner from CI: `docker build -t my-ads-api:latest ...` (and similarly for `my-ads-ui`, `my-ads-backup`).
+2. **Export environment variables** from GitHub Actions variables/secrets.
+3. **Deploy**: `docker stack deploy -c docker-compose-prod.yml my-ads --resolve-image never` on the Swarm manager node.
 
+**No registry login or image pull is required.** The `--resolve-image never` flag ensures Docker uses the locally built images without attempting to pull from a remote registry.
+
+### Networking
+- Production uses **Cloudflare Tunnel** (`cloudflared`) to expose services externally.
+- Caddy does **not** bind host ports 80/443 — cloudflared connects to `https://caddy:443` internally over the Docker overlay network.
+- Caddy exposes port `2015` on the host for health/management checks only.
+
+### Stack services
 The stack runs **two API-related services**:
 
 - `api` – the primary NestJS HTTP service that serves requests.
@@ -558,10 +585,8 @@ The stack runs **two API-related services**:
 
 | Name | Description |
 | --- | --- |
-| `API_IMAGE` | Fully qualified reference to the API image (e.g., `ghcr.io/toncloud/my-ads-api`). |
-| `API_IMAGE_TAG` | Tag that should be deployed (`latest`, `main`, `${{ github.sha }}` …). |
-| `UI_IMAGE` | UI image reference (e.g., `ghcr.io/toncloud/my-ads-ui`). |
-| `UI_IMAGE_TAG` | Tag for the UI image. |
+| `API_IMAGE` | API image name (e.g., `my-ads-api`). Built locally on the self-hosted runner. |
+| `UI_IMAGE` | UI image name (e.g., `my-ads-ui`). Built locally on the self-hosted runner. |
 | `APP_PORT` | Published Fastify/Nest port (defaults to `6200`). |
 | `APP_GLOBAL_PREFIX` | API prefix (`api`). |
 | `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PORT` | Database connection metadata (non-secret). |
@@ -595,16 +620,13 @@ The stack runs **two API-related services**:
 | `NEXT_PUBLIC_ANALYTICS_WRITE_KEY` | Treat as secret if your analytics vendor forbids public exposure. |
 | Any other third-party tokens (e.g., `OTEL_EXPORTER_OTLP_HEADERS`, extra webhook URLs, etc.). |
 
-All of these values are read by `docker-compose-prod.yml` at deploy time. The deploy workflow should export them with something like:
+All of these values are read by `docker-compose-prod.yml` at deploy time. The deploy workflow exports them and runs:
 
-```yaml
-env:
-  API_IMAGE: ${{ vars.API_IMAGE }}
-  API_IMAGE_TAG: ${{ vars.API_IMAGE_TAG }}
-  POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+```bash
+docker stack deploy -c docker-compose-prod.yml my-ads --resolve-image never
+```
 
-run: |
-  docker stack deploy -c docker-compose-prod.yml my-ads --with-registry-auth
+No registry login or image pull is needed. Images are built locally by the CI build jobs before the deploy step.
 ```
 
 ---
@@ -637,7 +659,9 @@ run: |
 - The health service caches the last failure per dependency to provide fast responses during outages; adjust `HEALTH_FAILURE_CACHE_MS` if you need different behaviour.
 - For TLS-enabled Redis, set `REDIS_TLS=true` and supply proper certificates (handled automatically by `ioredis` when `tls` object is present).
 - Grafana dashboards are provisioned from `observability/grafana/provisioning`; customize JSON there to extend observability out of the box.
-- Maps/tiles: TileServer-GL is wired in compose (ports `${MAP_TILES_PORT:-7235}` dev, `${MAP_TILES_PORT:-8235}` prod) and expects `maps/iran.mbtiles` locally or `${MAP_TILES_PATH:-/var/lib/my-ads/maps}/iran.mbtiles` in prod.
+- Maps/tiles: TileServer-GL is wired in compose (port `${MAP_TILES_PORT:-7235}`) and expects `maps/iran.mbtiles` locally or `${MAP_TILES_PATH:-/var/lib/my-ads/maps}/iran.mbtiles` in prod.
+  - **Dev** uses port `6235` (set `MAP_TILES_PORT=6235` in `.env`).
+  - **Prod** uses port `7235` (set in `.env.prod`).
   - Install tiles (choose one):
     - **Sync a prebuilt file**: set `MBTILES_URL` to a hosted MBTiles and run `./scripts/sync-tiles.sh` (uses `MAP_TILES_PATH`, default `./maps/iran.mbtiles`). Use this in CI before `docker compose up`.
     - **Build Iran locally**: run `OMT_POSTGRES_PORT=<free_port> MIN_ZOOM=0 MAX_ZOOM=14 ./scripts/build-iran-tiles.sh` and wait for completion (tens of minutes). The script drops a full `maps/iran.mbtiles`.

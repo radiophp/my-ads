@@ -2,7 +2,7 @@ protocol: http2
 
 ingress:
   - hostname: dev.mahanfile.com
-    service: https://caddy:443
+    service: https://172.30.0.15:443
     originRequest:
       noTLSVerify: true
       originServerName: dev.mahanfile.com

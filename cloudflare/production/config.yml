@@ -1,0 +1,22 @@
+protocol: http2
+
+ingress:
+  - hostname: mahanfile.com
+    service: https://caddy:443
+    originRequest:
+      noTLSVerify: true
+      originServerName: mahanfile.com
+
+  - hostname: www.mahanfile.com
+    service: https://caddy:443
+    originRequest:
+      noTLSVerify: true
+      originServerName: mahanfile.com
+
+  - hostname: map.mahanfile.com
+    service: https://caddy:443
+    originRequest:
+      noTLSVerify: true
+      originServerName: map.mahanfile.com
+
+  - service: http_status:404

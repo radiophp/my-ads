@@ -732,10 +732,10 @@ services:
   cloudflared:
     image: cloudflare/cloudflared:latest
     restart: unless-stopped
-    command: ["tunnel", "--no-prechecks", "--config", "/etc/cloudflared/config.yml", "run", "--credentials", "/etc/cloudflared/tunnel.json"]
+    command: ["tunnel", "--no-prechecks", "--config", "/etc/cloudflared/config.yml", "run", "df7e3d2c-483a-4978-9e61-eb4d02e34f94"]
     environment:
       TZ: ${BACKUP_TZ:-Asia/Tehran}
-      TUNNEL_CREDENTIALS: /etc/cloudflared/tunnel.json
+      TUNNEL_CRED_FILE: /etc/cloudflared/tunnel.json
     volumes:
       - ./cloudflare/production:/etc/cloudflared
     networks:

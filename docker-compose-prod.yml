@@ -732,7 +732,7 @@ services:
   cloudflared:
     image: cloudflare/cloudflared:latest
     restart: unless-stopped
-    command: ["tunnel", "--no-prechecks", "--config", "/etc/cloudflared/config.yml", "run", "${CLOUDFLARE_TUNNEL_NAME:-mahanfile}"]
+    command: ["tunnel", "--no-prechecks", "--config", "/etc/cloudflared/config.yml", "run", "--credentials", "/etc/cloudflared/tunnel.json"]
     environment:
       TZ: ${BACKUP_TZ:-Asia/Tehran}
       TUNNEL_CREDENTIALS: /etc/cloudflared/tunnel.json

@@ -67,7 +67,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - postgres_socket:/var/run/postgresql
-      - ./scripts/pgbackrest/postgres-entrypoint.sh:/usr/local/bin/pgbackrest-entrypoint.sh:ro
+      # - ./scripts/pgbackrest/postgres-entrypoint.sh:/usr/local/bin/pgbackrest-entrypoint.sh:ro
     extra_hosts:
       - 'storage.mahanfile.com:host-gateway'
     networks:

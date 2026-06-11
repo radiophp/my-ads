@@ -313,22 +313,12 @@ jobs:
       - linux
       - x64
     needs:
-      - changes
       - ui-build
     steps:
-      - name: Skip UI image build (no UI changes)
-        if: needs.changes.outputs.ui != 'true'
-        run: echo "No UI changes detected; skipping UI image build."
-
-      - name: Abort build (UI build failed)
-        if: needs.changes.outputs.ui == 'true' && needs.ui-build.result != 'success'
-        run: exit 1
-
       - name: Checkout
         uses: actions/checkout@v6
 
       - name: Build UI image
-        if: needs.changes.outputs.ui == 'true'
         run: |
           docker build \
             -t my-ads-ui:latest \
@@ -356,7 +346,7 @@ jobs:
       ) &&
       (needs.build-api-image.result == 'success' || needs.build-api-image.result == 'skipped') &&
       (needs.build-backup-image.result == 'success' || needs.build-backup-image.result == 'skipped') &&
-      (needs.build-ui-image.result == 'success' || needs.build-ui-image.result == 'skipped')
+      (needs.build-ui-image.result == 'success')
     permissions:
       contents: read
     env:

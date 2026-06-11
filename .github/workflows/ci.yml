@@ -489,35 +489,26 @@ jobs:
         env:
           POSTGRES_USER: ${{ vars.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_PUBLISHED_PORT: ${{ vars.POSTGRES_PORT }}
           POSTGRES_DB: ${{ vars.POSTGRES_DB }}
         run: |
-          for i in $(seq 1 30); do
-            pg_isready -h localhost -p "${POSTGRES_PUBLISHED_PORT}" -U "${POSTGRES_USER}" && break
-            echo "Waiting for PostgreSQL... ($i/30)"
+          for i in $(seq 1 60); do
+            docker run --rm --network "${STACK_NAME}_app_net" -e PGPASSWORD="${POSTGRES_PASSWORD}" postgres:16-alpine pg_isready -h postgres -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" 2>/dev/null && break
+            echo "Waiting for PostgreSQL... ($i/60)"
             sleep 2
           done
 
-      - name: Use Node.js 22
-        uses: actions/setup-node@v6
-        with:
-          node-version: 22
-
-      - name: Install server dependencies (migrations)
-        working-directory: server
-        run: npm ci
-
       - name: Apply database migrations (production)
-        working-directory: server
         env:
           POSTGRES_DB: ${{ vars.POSTGRES_DB }}
           POSTGRES_USER: ${{ vars.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          POSTGRES_PUBLISHED_PORT: ${{ vars.POSTGRES_PORT }}
         run: |
-          export DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PUBLISHED_PORT}/${POSTGRES_DB}?schema=public"
-          export DATABASE_DIRECT_URL="$DATABASE_URL"
-          npx prisma migrate deploy
+          docker run --rm --network "${STACK_NAME}_app_net" \
+            -e DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public" \
+            -e DATABASE_DIRECT_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public" \
+            -v "$(pwd)/server/prisma:/app/prisma" \
+            -w /app \
+            node:22-alpine sh -c "npm install prisma@6 && npx prisma migrate deploy"
 
       - name: Force update cron/bot/ui services
         run: |

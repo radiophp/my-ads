@@ -333,19 +333,26 @@ export class DivarPostAnalyzeService {
   private resolvePublishedAt(baseTimestamp: Date | null, parsed: ParsedDivarPost): Date | null {
     const relativeMs = parsed.relativePublishMs ?? null;
 
-    if (baseTimestamp && relativeMs !== null && relativeMs < ONE_DAY_MS) {
-      return new Date(baseTimestamp.getTime() - relativeMs);
-    }
-
     if (baseTimestamp && relativeMs !== null) {
       return new Date(baseTimestamp.getTime() - relativeMs);
     }
 
     if (parsed.jalaliGregorianDate) {
+      if (baseTimestamp && this.isSameCalendarDate(parsed.jalaliGregorianDate, baseTimestamp)) {
+        return baseTimestamp;
+      }
       return parsed.jalaliGregorianDate;
     }
 
     return null;
+  }
+
+  private isSameCalendarDate(a: Date, b: Date): boolean {
+    return (
+      a.getUTCFullYear() === b.getUTCFullYear() &&
+      a.getUTCMonth() === b.getUTCMonth() &&
+      a.getUTCDate() === b.getUTCDate()
+    );
   }
 
   private async resolveDistrictId(

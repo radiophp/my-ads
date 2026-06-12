@@ -409,13 +409,14 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
     phone: string,
     otpCode: string,
     deviceInfo?: string,
+    userId?: string,
   ): Promise<{ status: 'sent' | 'not_connected' | 'failed'; error?: string }> {
     await this.ensureSender();
     if (!this.sender) {
       return { status: 'failed', error: 'Bale sender is not initialized' };
     }
 
-    const chatLink = await this.findChatLink({ phone });
+    const chatLink = await this.findChatLink({ phone, userId });
     if (!chatLink) {
       return { status: 'not_connected', error: 'no_link' };
     }

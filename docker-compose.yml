@@ -45,16 +45,22 @@ services:
     command:
       [
         "postgres",
-        "-c",
-        "port=${POSTGRES_PORT:-6201}",
-        "-c",
-        "archive_mode=on",
-        "-c",
-        "archive_timeout=60",
-        "-c",
-        "work_mem=64MB",
-        "-c",
-        "archive_command=pgbackrest --stanza=${PGBACKREST_STANZA:-my-ads} archive-push %p"
+        "-c", "port=${POSTGRES_PORT:-6201}",
+        "-c", "max_connections=${POSTGRES_MAX_CONNECTIONS:-200}",
+        "-c", "shared_preload_libraries=pg_stat_statements",
+        "-c", "pg_stat_statements.max=5000",
+        "-c", "pg_stat_statements.track=all",
+        "-c", "pg_stat_statements.track_planning=on",
+        "-c", "track_io_timing=on",
+        "-c", "maintenance_work_mem=512MB",
+        "-c", "autovacuum_vacuum_cost_limit=2000",
+        "-c", "vacuum_cost_limit=2000",
+        "-c", "autovacuum_vacuum_scale_factor=0.05",
+        "-c", "autovacuum_vacuum_threshold=1000",
+        "-c", "archive_mode=on",
+        "-c", "archive_timeout=60",
+        "-c", "work_mem=64MB",
+        "-c", "archive_command=pgbackrest --stanza=${PGBACKREST_STANZA:-my-ads} archive-push %p",
       ]
     volumes:
       - postgres_data:/var/lib/postgresql/data

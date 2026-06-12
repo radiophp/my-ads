@@ -39,6 +39,18 @@ const sanitizeIranLocalPhone = (input: string): string => {
   return digits.slice(0, 10);
 };
 
+const formatPhoneInput = (input: string): string => {
+  let digits = input.replace(/\D/g, '');
+  if (digits.startsWith('0098')) {
+    digits = digits.slice(4);
+  } else if (digits.startsWith('098')) {
+    digits = digits.slice(3);
+  } else if (digits.startsWith('98') && digits.length > 11) {
+    digits = digits.slice(2);
+  }
+  return digits.slice(0, 11);
+};
+
 const isValidIranLocalPhone = (digits: string): boolean => /^9\d{9}$/.test(digits);
 
 const toInternationalIranPhone = (digits: string): string => (digits ? `+98${digits}` : '');
@@ -355,7 +367,7 @@ export function PhoneOtpLoginForm() {
                   autoComplete="tel-national"
                   placeholder={t('phonePlaceholder')}
                   value={phone}
-                  onChange={(event) => setPhone(sanitizeIranLocalPhone(event.target.value))}
+                  onChange={(event) => setPhone(formatPhoneInput(event.target.value))}
                   disabled={isRequesting}
                   required
                   dir="ltr"

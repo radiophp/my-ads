@@ -381,7 +381,7 @@ export function PhoneOtpLoginForm() {
                 <Turnstile
                   siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
                   onSuccess={setTurnstileToken}
-                  options={{ theme: 'light' }}
+                  options={{ theme: 'light', language: 'fa' }}
                 />
               </div>
             )}

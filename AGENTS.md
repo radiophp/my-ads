@@ -53,3 +53,71 @@
 - Squash WIP commits locally; automated release tooling expects tidy histories.
 - PRs must explain scope, solution, and verification (tests, screenshots, curl output) and link the relevant issue. Call out env or migration steps explicitly.
 - When editing infrastructure or observability assets, note required rollout timing so ops can coordinate.
+
+## Migration Context — Production Move to WSL
+
+### Goal
+Migrate production deployment from the current Linux machine to a WSL2 (Ubuntu 24.04) machine on the same LAN, using a self-hosted GitHub Actions runner.
+
+### Constraints
+- No public IP; all external access via Cloudflare Tunnel (cloudflared)
+- No push/pull to ghcr.io (images too large) — build locally on runner
+- Dev services run alongside production on same machine
+- Docker Swarm for production orchestration
+- **Docker Desktop on WSL2 does NOT route published container ports to the WSL VM** — any CI step connecting to `localhost:6301` (or any published port) will fail. Must use `docker run --network "${STACK_NAME}_app_net"` to reach containers by service name.
+- **Postgres bind mounts fail on Docker Desktop WSL** — relative paths resolve to nonexistent `/run/desktop/mnt/host/wsl/docker-desktop-bind-mounts/...` paths. Use named volumes or remove bind mounts.
+- New WSL machine: `DESKTOP-766QUFO` (`armita` user), at `192.168.31.170:2222` (Windows host forwards port 2222 → WSL 22)
+
+### Key CI Changes
+- Images built locally on self-hosted runner: `docker build -t my-ads-api:latest`, etc. No registry push.
+- Deploy step uses `--resolve-image never` and loads images built in prior build jobs.
+- Migration step: `docker run --network "${STACK_NAME}_app_net" node:22-alpine sh -c "npx prisma migrate deploy"`
+- CLOUDFLARE_API_TOKEN stored as GitHub secret (not in .env.prod) due to GitHub push protection.
+- Postgres service: removed custom entrypoint, bind mount, `archive_mode`/`archive_command` (pgbackrest unavailable on WSL).
+
+### Data Migration (completed manually after CI)
+1. Dumped production DB from old machine Postgres volume (811MB, pg_dump -Fc)
+2. Copied dump to WSL via SCP; dropped/recreated `public` schema on WSL Postgres before restore
+3. Restored with `pg_restore --no-owner --no-acl -j 4` (2 FK constraints failed due to parallel deadlock — recreated manually)
+4. Tarred production MinIO data (1.4GB) from old machine volume; extracted into WSL MinIO volume
+
+### WSL Machine Access
+- SSH: `ssh armita@192.168.31.170 -p 2222`
+- Sudo password: `Ghader1+***`
+- GitHub runner: `/home/armita/actions-runner/` (systemd service, auto-starts on boot)
+
+### Postgres Settings (in docker-compose-prod.yml)
+Postgres global settings are set via `-c` flags in the `command` array of the postgres service:
+- `shared_preload_libraries=pg_stat_statements` + `pg_stat_statements.*` config
+- `track_io_timing=on`
+- `maintenance_work_mem=512MB`
+- `autovacuum_vacuum_cost_limit=2000`, `vacuum_cost_limit=2000`
+- `autovacuum_vacuum_scale_factor=0.05`, `autovacuum_vacuum_threshold=1000`
+
+### Post-Restore SQL (run after DB restore when volume is recreated)
+These cannot be persisted via compose — run manually after restoring a production backup:
+
+```sql
+-- Per-table autovacuum for large tables
+ALTER TABLE "DivarPostAttribute" SET (autovacuum_vacuum_scale_factor = 0.02, autovacuum_vacuum_threshold = 5000, autovacuum_vacuum_cost_limit = 2000);
+ALTER TABLE "DivarPostMedia" SET (autovacuum_vacuum_scale_factor = 0.02, autovacuum_vacuum_threshold = 5000, autovacuum_vacuum_cost_limit = 2000);
+ALTER TABLE "DivarPost" SET (autovacuum_vacuum_scale_factor = 0.02, autovacuum_vacuum_threshold = 5000, autovacuum_vacuum_cost_limit = 2000);
+ALTER TABLE "PostToReadQueue" SET (autovacuum_vacuum_scale_factor = 0.02, autovacuum_vacuum_threshold = 5000, autovacuum_vacuum_cost_limit = 2000);
+
+-- Index for fetch service query (not in Prisma schema)
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "PostToReadQueue_status_requestedAt_idx" ON "PostToReadQueue" (status, "requestedAt");
+
+-- Composite indexes for dashboard post listing (prevents full-table scans)
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "DivarPost_provinceId_cityId_publishedAt_idx" ON "DivarPost" ("provinceId", "cityId", "publishedAt" DESC NULLS LAST, "createdAt" DESC, "id" DESC);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "DivarPost_cityId_publishedAt_idx" ON "DivarPost" ("cityId", "publishedAt" DESC NULLS LAST, "createdAt" DESC, "id" DESC);
+
+-- pg_stat_statements extension
+CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
+```
+
+### Relevant Files
+- `.github/workflows/ci.yml` — CI/CD pipeline with migration via `docker run --network`
+- `docker-compose-prod.yml` — postgres settings via `-c` flags, entrypoint + bind mount removed (WSL compat)
+- `Caddyfile.prod` — ports hardcoded (6304, 6300, 6306)
+- `.env.prod` — CLOUDFLARE_API_TOKEN removed (stored as GitHub secret)
+- `cloudflare/production/tunnel.json` — Cloudflare tunnel credentials

@@ -300,9 +300,7 @@ export class DivarPostsAdminService {
     if (typeof options.provinceId === 'number') {
       where.provinceId = options.provinceId;
     }
-    if (options.cityIds && options.cityIds.length > 0) {
-      where.cityId = { in: options.cityIds };
-    }
+    // cityIds handled below after all other conditions are built
     if (options.districtIds && options.districtIds.length > 0) {
       where.districtId = { in: options.districtIds };
     }
@@ -371,6 +369,54 @@ export class DivarPostsAdminService {
     }
     if (options.createdAfter) {
       this.appendAndCondition(where, { createdAt: { gte: options.createdAfter } });
+    }
+
+    // Multi-city (>1): run per-city queries in parallel using composite index
+    if (options.cityIds && options.cityIds.length > 1) {
+      const queries = options.cityIds.map((cityId) => {
+        const cityWhere = structuredClone(where);
+        cityWhere.cityId = cityId;
+        return this.prisma.divarPost.findMany({
+          orderBy: [
+            { publishedAt: { sort: 'desc', nulls: 'last' } },
+            { createdAt: 'desc' },
+            { id: 'desc' },
+          ],
+          select: DIVAR_POST_SUMMARY_SELECT,
+          where: cityWhere,
+          take: take + 1,
+          ...(options.cursor
+            ? {
+                skip: 1,
+                cursor: { id: options.cursor },
+              }
+            : {}),
+        });
+      });
+      const results = await Promise.all(queries);
+      const allRecords = results.flat();
+      allRecords.sort((a, b) => {
+        if (a.publishedAt !== null && b.publishedAt !== null) {
+          const diff = b.publishedAt.getTime() - a.publishedAt.getTime();
+          if (diff !== 0) return diff;
+        } else if (a.publishedAt === null && b.publishedAt !== null) return 1;
+        else if (a.publishedAt !== null && b.publishedAt === null) return -1;
+        const createdAtDiff = b.createdAt.getTime() - a.createdAt.getTime();
+        if (createdAtDiff !== 0) return createdAtDiff;
+        return b.id.localeCompare(a.id);
+      });
+      const hasMore = allRecords.length > take;
+      const items = hasMore ? allRecords.slice(0, take) : allRecords;
+      const categoryLabels = await this.resolveCategoryLabels(items);
+      return {
+        items: items.map((record) => this.mapRecordToListItem(record, categoryLabels)),
+        nextCursor: hasMore ? items[items.length - 1].id : null,
+        hasMore,
+      };
+    }
+
+    if (options.cityIds && options.cityIds.length === 1) {
+      where.cityId = options.cityIds[0];
     }
 
     const queryArgs = {

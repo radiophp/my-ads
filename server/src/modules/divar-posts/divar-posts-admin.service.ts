@@ -371,24 +371,25 @@ export class DivarPostsAdminService {
       this.appendAndCondition(where, { createdAt: { gte: options.createdAfter } });
     }
 
+    const runQuery = (qWhere: Prisma.DivarPostWhereInput, qTake: number) =>
+      this.prisma.divarPost.findMany({
+        orderBy: [
+          { publishedAt: { sort: 'desc', nulls: 'last' } },
+          { createdAt: 'desc' },
+          { id: 'desc' },
+        ],
+        select: DIVAR_POST_SUMMARY_SELECT,
+        where: qWhere,
+        take: qTake,
+        ...(options.cursor ? { cursor: { id: options.cursor } } : {}),
+      } satisfies Prisma.DivarPostFindManyArgs);
+
     // Multi-city (>1): run per-city queries in parallel using composite index
     if (options.cityIds && options.cityIds.length > 1) {
       const queries = options.cityIds.map((cityId) => {
         const cityWhere = structuredClone(where);
         cityWhere.cityId = cityId;
-        if (options.cursor) {
-          cityWhere.id = { lt: options.cursor };
-        }
-        return this.prisma.divarPost.findMany({
-          orderBy: [
-            { publishedAt: { sort: 'desc', nulls: 'last' } },
-            { createdAt: 'desc' },
-            { id: 'desc' },
-          ],
-          select: DIVAR_POST_SUMMARY_SELECT,
-          where: cityWhere,
-          take: take + 1,
-        });
+        return runQuery(cityWhere, take + 1 + (options.cursor ? 1 : 0));
       });
       const results = await Promise.all(queries);
       const allRecords = results.flat();
@@ -402,8 +403,11 @@ export class DivarPostsAdminService {
         if (createdAtDiff !== 0) return createdAtDiff;
         return b.id.localeCompare(a.id);
       });
-      const hasMore = allRecords.length > take;
-      const items = hasMore ? allRecords.slice(0, take) : allRecords;
+      const filtered = options.cursor
+        ? allRecords.filter((r) => r.id !== options.cursor)
+        : allRecords;
+      const hasMore = filtered.length > take;
+      const items = hasMore ? filtered.slice(0, take) : filtered;
       const categoryLabels = await this.resolveCategoryLabels(items);
       return {
         items: items.map((record) => this.mapRecordToListItem(record, categoryLabels)),
@@ -415,28 +419,15 @@ export class DivarPostsAdminService {
     if (options.cityIds && options.cityIds.length === 1) {
       where.cityId = options.cityIds[0];
     }
-    if (options.cursor) {
-      where.id = { lt: options.cursor };
-    }
-
-    const queryArgs = {
-      orderBy: [
-        { publishedAt: { sort: 'desc', nulls: 'last' } },
-        { createdAt: 'desc' },
-        { id: 'desc' },
-      ],
-      select: DIVAR_POST_SUMMARY_SELECT,
-      take: take + 1,
-      where,
-    } satisfies Prisma.DivarPostFindManyArgs;
 
     this.logger.debug(
-      `DivarPosts query -> where: ${JSON.stringify(queryArgs.where)}, cursor: ${
+      `DivarPosts query -> where: ${JSON.stringify(where)}, cursor: ${
         options.cursor
       }, limit: ${options.limit}, filters: ${options.filters ? JSON.stringify(options.filters) : 'none'}`,
     );
 
-    const records = await this.prisma.divarPost.findMany(queryArgs);
+    const rawRecords = await runQuery(where, take + 1 + (options.cursor ? 1 : 0));
+    const records = options.cursor ? rawRecords.filter((r) => r.id !== options.cursor) : rawRecords;
     const hasMore = records.length > take;
     const items = hasMore ? records.slice(0, take) : records;
     const categoryLabels = await this.resolveCategoryLabels(items);

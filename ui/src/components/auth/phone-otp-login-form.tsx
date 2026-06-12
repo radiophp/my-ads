@@ -74,6 +74,7 @@ export function PhoneOtpLoginForm() {
   const [baleLinkToken, setBaleLinkToken] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileTheme, setTurnstileTheme] = useState<'light' | 'dark'>('light');
   const phoneInputRef = useRef<HTMLInputElement>(null);
   const baleLoginCallbackRef = useRef<() => void>(() => {});
   const formRef = useRef<HTMLFormElement>(null);
@@ -88,6 +89,17 @@ export function PhoneOtpLoginForm() {
     const onResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  useEffect(() => {
+    const updateTheme = () => {
+      const theme = document.documentElement.dataset.theme;
+      setTurnstileTheme(theme === 'dark' ? 'dark' : 'light');
+    };
+    updateTheme();
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => observer.disconnect();
   }, []);
   const codeInputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const codeRef = useRef(code);
@@ -381,7 +393,7 @@ export function PhoneOtpLoginForm() {
                 <Turnstile
                   siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
                   onSuccess={setTurnstileToken}
-                  options={{ theme: 'light', language: 'fa' }}
+                  options={{ theme: turnstileTheme, language: 'fa' }}
                 />
               </div>
             )}

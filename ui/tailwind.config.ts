@@ -58,6 +58,14 @@ const config: Config = {
       fontFamily: {
         sans: ['var(--font-inter)', ...fontFamily.sans],
       },
+      ringWidth: {
+        DEFAULT: '0px',
+        '0': '0px',
+        '1': '0px',
+        '2': '0px',
+        '4': '0px',
+        '8': '0px',
+      },
       fontSize: {
         xs: ['0.75rem', { lineHeight: '1.5rem' }],
         sm: ['0.875rem', { lineHeight: '1.75rem' }],

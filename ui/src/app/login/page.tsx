@@ -12,7 +12,6 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function LoginPage() {
-  const t = await getTranslations('landing');
   return (
     <div className="mx-auto w-full max-w-md px-4 py-12">
       <HomeAuthPanel />

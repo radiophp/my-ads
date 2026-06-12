@@ -376,6 +376,9 @@ export class DivarPostsAdminService {
       const queries = options.cityIds.map((cityId) => {
         const cityWhere = structuredClone(where);
         cityWhere.cityId = cityId;
+        if (options.cursor) {
+          cityWhere.id = { lt: options.cursor };
+        }
         return this.prisma.divarPost.findMany({
           orderBy: [
             { publishedAt: { sort: 'desc', nulls: 'last' } },
@@ -385,12 +388,6 @@ export class DivarPostsAdminService {
           select: DIVAR_POST_SUMMARY_SELECT,
           where: cityWhere,
           take: take + 1,
-          ...(options.cursor
-            ? {
-                skip: 1,
-                cursor: { id: options.cursor },
-              }
-            : {}),
         });
       });
       const results = await Promise.all(queries);
@@ -418,6 +415,9 @@ export class DivarPostsAdminService {
     if (options.cityIds && options.cityIds.length === 1) {
       where.cityId = options.cityIds[0];
     }
+    if (options.cursor) {
+      where.id = { lt: options.cursor };
+    }
 
     const queryArgs = {
       orderBy: [
@@ -428,12 +428,6 @@ export class DivarPostsAdminService {
       select: DIVAR_POST_SUMMARY_SELECT,
       take: take + 1,
       where,
-      ...(options.cursor
-        ? {
-            skip: 1,
-            cursor: { id: options.cursor },
-          }
-        : {}),
     } satisfies Prisma.DivarPostFindManyArgs;
 
     this.logger.debug(

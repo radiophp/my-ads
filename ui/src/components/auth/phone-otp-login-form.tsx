@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { ArrowRight, Copy, ExternalLink } from 'lucide-react';
 
 import {
   useRequestOtpMutation,
@@ -76,6 +77,8 @@ export function PhoneOtpLoginForm() {
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileReady, setTurnstileReady] = useState(false);
   const [turnstileTheme, setTurnstileTheme] = useState<'light' | 'dark'>('light');
+  const [hasInteractedWithBot, setHasInteractedWithBot] = useState(false);
+  const [countdown, setCountdown] = useState(0);
   const phoneInputRef = useRef<HTMLInputElement>(null);
   const baleLoginCallbackRef = useRef<() => void>(() => {});
   const formRef = useRef<HTMLFormElement>(null);
@@ -102,6 +105,25 @@ export function PhoneOtpLoginForm() {
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     return () => observer.disconnect();
   }, []);
+
+  useEffect(() => {
+    if (step !== 'bale_required' || !hasInteractedWithBot) {
+      setCountdown(0);
+      return;
+    }
+    setCountdown(15);
+    const interval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [step, hasInteractedWithBot]);
+
   const codeInputRefs = useRef<Array<HTMLInputElement | null>>([]);
   const codeRef = useRef(code);
 
@@ -360,7 +382,27 @@ export function PhoneOtpLoginForm() {
   return (
     <Card className="shadow-lg">
       <CardHeader>
-        <CardTitle>{t('title')}</CardTitle>
+        {step === 'bale_required' ? (
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => {
+                setStep('phone');
+                setCode('');
+                setTurnstileToken(null);
+                setBaleLinkToken(null);
+                setHasInteractedWithBot(false);
+              }}
+              className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-primary"
+            >
+              <ArrowRight className="size-3.5" aria-hidden />
+              {t('changePhone')}
+            </button>
+            <CardTitle className="text-base">{t('baleTitle')}</CardTitle>
+          </div>
+        ) : (
+          <CardTitle>{t('title')}</CardTitle>
+        )}
         {step === 'phone' && <CardDescription>{t('description')}</CardDescription>}
       </CardHeader>
 
@@ -419,48 +461,58 @@ export function PhoneOtpLoginForm() {
                 <div className="flex justify-center">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src="/api/auth/bale-qr?start=signup"
+                    src={`/api/auth/bale-qr?start=signup${baleLinkToken ? `&token=${baleLinkToken}` : ''}`}
                     alt="QR Code"
                     className="size-48 rounded-lg border"
                     crossOrigin="anonymous"
                   />
                 </div>
               )}
-              <p className="break-all text-center text-xs text-muted-foreground">
-                <a href={`${baleBotUrl}?start=signup`} target="_blank" rel="noopener noreferrer" className="hover:text-primary">
-                  {baleBotUrl}?start=signup
-                </a>
-              </p>
-              <Button
-                className="w-full"
-                variant="outline"
-                onClick={() => window.open(`${baleBotUrl}?start=signup`, '_blank', 'noopener')}
-              >
-                {t('openBaleBot')}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  className="flex-1"
+                  variant="outline"
+                  onClick={() => {
+                    setHasInteractedWithBot(true);
+                    window.open(`${baleBotUrl}?start=${baleLinkToken ? `link_${baleLinkToken}` : 'signup'}`, '_blank', 'noopener');
+                  }}
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <ExternalLink className="size-4" aria-hidden />
+                    {t('openBaleBot')}
+                  </span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="shrink-0 text-xs text-muted-foreground"
+                  onClick={() => {
+                    setHasInteractedWithBot(true);
+                    navigator.clipboard.writeText(`${baleBotUrl}?start=${baleLinkToken ? `link_${baleLinkToken}` : 'signup'}`);
+                    toast({ title: t('botUrlCopied') });
+                  }}
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <Copy className="size-3" aria-hidden />
+                    {t('copyBotUrl')}
+                  </span>
+                </Button>
+              </div>
             </>
           )}
-          <Button
-            className="w-full"
-            onClick={handleBaleLogin}
-            disabled={isBaleLoggingIn}
-          >
-            {isBaleLoggingIn ? t('verifying') : t('enterToWebsite')}
-          </Button>
-          <div className="flex justify-center">
-            <button
-              type="button"
-              className="text-sm text-muted-foreground transition-colors hover:text-primary"
-                onClick={() => {
-                  setStep('phone');
-                  setCode('');
-                  setTurnstileToken(null);
-                  setBaleLinkToken(null);
-                }}
-              >
-                {t('changePhone')}
-              </button>
-          </div>
+          {hasInteractedWithBot && (
+            <Button
+              className="w-full"
+              onClick={handleBaleLogin}
+              disabled={countdown > 0 || isBaleLoggingIn}
+            >
+              {isBaleLoggingIn
+                ? t('verifying')
+                : countdown > 0
+                  ? `${t('joinedBale')} (${countdown})`
+                  : t('joinedBale')}
+            </Button>
+          )}
         </CardContent>
       ) : (
         <form ref={formRef} onSubmit={handleVerifyOtp} noValidate>

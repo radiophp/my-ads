@@ -66,6 +66,7 @@
     },
     "login": {
       "title": "Sign in with your phone",
+      "baleTitle": "Join with Bale",
       "description": "Enter your phone number to receive a one-time login code.",
       "phoneLabel": "Phone number",
       "phonePlaceholder": "9XXXXXXXXX",
@@ -86,12 +87,15 @@
       "signedInDescription": "Head to your dashboard to manage your ads and profile.",
       "dashboardCta": "Go to dashboard",
       "baleRequired": "You must join our Bale bot to sign in.",
+      "copyBotUrl": "Copy address",
+      "botUrlCopied": "Bot address copied",
       "baleRequiredDescription": "Your phone is not registered with our Bale bot. Please join and share your contact number.",
       "openBaleBot": "Open Bale Bot",
       "enterToWebsite": "Enter website",
       "checkBale": "We sent a verification code to you on Bale.",
       "baleLoginError": "Your phone is not yet registered with our Bale bot. Please join first.",
       "baleLoginSuccess": "Signed in successfully!",
+      "joinedBale": "I joined",
       "errors": {
         "invalidPhone": "Enter a valid phone number.",
         "invalidCode": "Enter the 4-digit code.",

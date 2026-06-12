@@ -371,7 +371,46 @@ export class DivarPostsAdminService {
       this.appendAndCondition(where, { createdAt: { gte: options.createdAfter } });
     }
 
-    const runQuery = (qWhere: Prisma.DivarPostWhereInput, qTake: number) =>
+    // Manual cursor: look up the cursor record and add a tuple comparison to WHERE
+    // Prisma's built-in cursor: { id } generates WHERE id < cursor (broken for compound ORDER BY)
+    if (options.cursor) {
+      const cursorRecord = await this.prisma.divarPost.findUnique({
+        where: { id: options.cursor },
+        select: { publishedAt: true, createdAt: true },
+      });
+      if (cursorRecord) {
+        if (cursorRecord.publishedAt !== null) {
+          this.appendAndCondition(where, {
+            OR: [
+              { publishedAt: { lt: cursorRecord.publishedAt } },
+              {
+                publishedAt: cursorRecord.publishedAt,
+                createdAt: { lt: cursorRecord.createdAt },
+              },
+              {
+                publishedAt: cursorRecord.publishedAt,
+                createdAt: cursorRecord.createdAt,
+                id: { lt: options.cursor },
+              },
+            ],
+          });
+        } else {
+          // publishedAt is NULL and it's the last group (DESC NULLS LAST)
+          this.appendAndCondition(where, {
+            publishedAt: null,
+            OR: [
+              { createdAt: { lt: cursorRecord.createdAt } },
+              {
+                createdAt: cursorRecord.createdAt,
+                id: { lt: options.cursor },
+              },
+            ],
+          });
+        }
+      }
+    }
+
+    const runQuery = (qWhere: Prisma.DivarPostWhereInput) =>
       this.prisma.divarPost.findMany({
         orderBy: [
           { publishedAt: { sort: 'desc', nulls: 'last' } },
@@ -380,8 +419,7 @@ export class DivarPostsAdminService {
         ],
         select: DIVAR_POST_SUMMARY_SELECT,
         where: qWhere,
-        take: qTake,
-        ...(options.cursor ? { cursor: { id: options.cursor } } : {}),
+        take: take + 1,
       } satisfies Prisma.DivarPostFindManyArgs);
 
     // Multi-city (>1): run per-city queries in parallel using composite index
@@ -389,7 +427,7 @@ export class DivarPostsAdminService {
       const queries = options.cityIds.map((cityId) => {
         const cityWhere = structuredClone(where);
         cityWhere.cityId = cityId;
-        return runQuery(cityWhere, take + 1 + (options.cursor ? 1 : 0));
+        return runQuery(cityWhere);
       });
       const results = await Promise.all(queries);
       const allRecords = results.flat();
@@ -403,11 +441,8 @@ export class DivarPostsAdminService {
         if (createdAtDiff !== 0) return createdAtDiff;
         return b.id.localeCompare(a.id);
       });
-      const filtered = options.cursor
-        ? allRecords.filter((r) => r.id !== options.cursor)
-        : allRecords;
-      const hasMore = filtered.length > take;
-      const items = hasMore ? filtered.slice(0, take) : filtered;
+      const hasMore = allRecords.length > take;
+      const items = hasMore ? allRecords.slice(0, take) : allRecords;
       const categoryLabels = await this.resolveCategoryLabels(items);
       return {
         items: items.map((record) => this.mapRecordToListItem(record, categoryLabels)),
@@ -426,8 +461,7 @@ export class DivarPostsAdminService {
       }, limit: ${options.limit}, filters: ${options.filters ? JSON.stringify(options.filters) : 'none'}`,
     );
 
-    const rawRecords = await runQuery(where, take + 1 + (options.cursor ? 1 : 0));
-    const records = options.cursor ? rawRecords.filter((r) => r.id !== options.cursor) : rawRecords;
+    const records = await runQuery(where);
     const hasMore = records.length > take;
     const items = hasMore ? records.slice(0, take) : records;
     const categoryLabels = await this.resolveCategoryLabels(items);

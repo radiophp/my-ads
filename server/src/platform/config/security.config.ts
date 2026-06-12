@@ -20,7 +20,7 @@ export default registerAs<SecurityConfig>('security', () => {
       scriptSrc: ["'self'", "'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", 'data:', 'blob:'],
-      connectSrc: ["'self'"],
+      connectSrc: ["'self'", 'https://challenges.cloudflare.com'],
     },
     rateLimit: {
       ttlSeconds: Number(env['RATE_LIMIT_TTL'] ?? 60),

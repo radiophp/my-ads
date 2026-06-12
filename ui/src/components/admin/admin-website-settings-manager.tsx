@@ -24,6 +24,7 @@ type WebsiteSettingsDraft = {
   baleBotUrl: string;
   aboutDescription: string;
   address: string;
+  turnstileEnabled: boolean;
 };
 
 const CONTACT_SLOTS = 5;
@@ -60,6 +61,7 @@ export function AdminWebsiteSettingsManager() {
     baleBotUrl: '',
     aboutDescription: '',
     address: '',
+    turnstileEnabled: false,
   }));
 
   useEffect(() => {
@@ -72,6 +74,7 @@ export function AdminWebsiteSettingsManager() {
       baleBotUrl: data.baleBotUrl ?? '',
       aboutDescription: data.aboutDescription ?? '',
       address: data.address ?? '',
+      turnstileEnabled: data.turnstileEnabled ?? false,
     });
   }, [data]);
 
@@ -93,6 +96,7 @@ export function AdminWebsiteSettingsManager() {
       baleBotUrl: normalizeField(draft.baleBotUrl),
       aboutDescription: normalizeField(draft.aboutDescription),
       address: normalizeField(draft.address),
+      turnstileEnabled: draft.turnstileEnabled,
     }),
     [draft],
   );
@@ -266,6 +270,26 @@ export function AdminWebsiteSettingsManager() {
                   rows={3}
                 />
               </div>
+            </div>
+          </section>
+
+          <section className="rounded-xl border border-border/60 p-4">
+            <h3 className="text-sm font-semibold text-foreground">{t('sections.security')}</h3>
+            <p className="mt-1 text-xs text-muted-foreground">{t('sections.securityHint')}</p>
+            <div className="mt-4">
+              <label className="flex cursor-pointer items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={draft.turnstileEnabled}
+                  onChange={(event) =>
+                    setDraft((current) => ({ ...current, turnstileEnabled: event.target.checked }))
+                  }
+                  className="size-5 rounded border-border accent-primary"
+                />
+                <span className="text-sm font-medium text-foreground">
+                  {t('fields.turnstileEnabled')}
+                </span>
+              </label>
             </div>
           </section>
 

@@ -84,7 +84,11 @@ export class AuthController {
   @ApiOkResponse({ type: SuccessResponseDto })
   @ApiTooManyRequestsResponse({ description: 'OTP requests are rate limited' })
   async requestOtp(@Body() dto: RequestOtpDto): Promise<SuccessResponseDto> {
-    return this.authService.requestOtp(dto.phone, dto.deviceInfo) as unknown as SuccessResponseDto;
+    return this.authService.requestOtp(
+      dto.phone,
+      dto.deviceInfo,
+      dto.turnstileToken,
+    ) as unknown as SuccessResponseDto;
   }
 
   @Post('bale-login')

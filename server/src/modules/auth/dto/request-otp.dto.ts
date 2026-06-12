@@ -16,4 +16,9 @@ export class RequestOtpDto {
   @IsOptional()
   @ApiProperty({ required: false })
   deviceInfo?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty({ required: false })
+  turnstileToken?: string;
 }

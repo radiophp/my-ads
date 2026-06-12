@@ -9,6 +9,7 @@ import {
   useBaleLoginMutation,
   useVerifyOtpMutation,
 } from '@/features/api/apiSlice';
+import { useGetWebsiteSettingsQuery } from '@/features/api/endpoints/website-settings';
 import { setAuth } from '@/features/auth/authSlice';
 import { useBaleLinkSocket } from '@/features/bale/useBaleLinkSocket';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
@@ -18,6 +19,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
+import { Turnstile } from '@marsidev/react-turnstile';
 
 type Step = 'phone' | 'verify' | 'bale_required';
 const CODE_LENGTH = 4;
@@ -59,6 +61,7 @@ export function PhoneOtpLoginForm() {
   const [baleBotUrl, setBaleBotUrl] = useState<string | null>(null);
   const [baleLinkToken, setBaleLinkToken] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const phoneInputRef = useRef<HTMLInputElement>(null);
   const baleLoginCallbackRef = useRef<() => void>(() => {});
   const formRef = useRef<HTMLFormElement>(null);
@@ -80,6 +83,7 @@ export function PhoneOtpLoginForm() {
   const [requestOtp, { isLoading: isRequesting }] = useRequestOtpMutation();
   const [baleLogin, { isLoading: isBaleLoggingIn }] = useBaleLoginMutation();
   const [verifyOtp, { isLoading: isVerifying }] = useVerifyOtpMutation();
+  const { data: websiteSettings } = useGetWebsiteSettingsQuery();
 
   const isAuthenticated = useMemo(() => Boolean(auth.accessToken), [auth.accessToken]);
   const displayPhone = formatDisplayIranPhone(lastRequestedPhoneLocal ?? phone) || '+98';
@@ -190,7 +194,11 @@ export function PhoneOtpLoginForm() {
 
       try {
         const international = toInternationalIranPhone(sanitizedLocal);
-        const response = await requestOtp({ phone: international, deviceInfo: getDeviceInfo() }).unwrap();
+        const response = await requestOtp({
+          phone: international,
+          deviceInfo: getDeviceInfo(),
+          turnstileToken: turnstileToken ?? undefined,
+        }).unwrap();
 
         if (response.viaBale) {
           setStep('verify');
@@ -215,7 +223,7 @@ export function PhoneOtpLoginForm() {
         toast({ title: t('errors.requestFailed'), variant: 'destructive' });
       }
     },
-    [phone, requestOtp, t, toast],
+    [phone, turnstileToken, requestOtp, t, toast],
   );
 
   const handleBaleLogin = useCallback(async () => {
@@ -357,6 +365,15 @@ export function PhoneOtpLoginForm() {
               </div>
               <p className="text-xs text-muted-foreground">{t('phoneHint')}</p>
             </div>
+            {websiteSettings?.turnstileEnabled && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+              <div className="flex justify-center">
+                <Turnstile
+                  siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+                  onSuccess={setTurnstileToken}
+                  options={{ theme: 'light' }}
+                />
+              </div>
+            )}
           </CardContent>
           <CardFooter>
             <Button type="submit" className="w-full" disabled={isRequesting}>
@@ -411,6 +428,7 @@ export function PhoneOtpLoginForm() {
                 onClick={() => {
                   setStep('phone');
                   setCode('');
+                  setTurnstileToken(null);
                   setBaleLinkToken(null);
                 }}
               >
@@ -467,10 +485,11 @@ export function PhoneOtpLoginForm() {
                   'text-muted-foreground transition-colors hover:text-primary',
                   isVerifying && 'pointer-events-none opacity-60',
                 )}
-                onClick={() => {
-                  setStep('phone');
-                  setCode('');
-                }}
+                  onClick={() => {
+                    setStep('phone');
+                    setCode('');
+                    setTurnstileToken(null);
+                  }}
               >
                 {t('changePhone')}
               </button>

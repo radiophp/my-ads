@@ -375,7 +375,6 @@ export function PhoneOtpLoginForm() {
                   ref={phoneInputRef}
                 />
               </div>
-              <p className="text-xs text-muted-foreground">{t('phoneHint')}</p>
             </div>
             {websiteSettings?.turnstileEnabled && process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
               <div className="flex justify-center">

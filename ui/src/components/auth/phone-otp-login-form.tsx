@@ -57,7 +57,6 @@ export function PhoneOtpLoginForm() {
   const [step, setStep] = useState<Step>('phone');
   const [lastRequestedPhoneLocal, setLastRequestedPhoneLocal] = useState<string | null>(null);
   const [baleBotUrl, setBaleBotUrl] = useState<string | null>(null);
-  const [isBaleOtp, setIsBaleOtp] = useState(false);
   const [baleLinkToken, setBaleLinkToken] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const phoneInputRef = useRef<HTMLInputElement>(null);
@@ -195,7 +194,6 @@ export function PhoneOtpLoginForm() {
 
         if (response.viaBale) {
           setStep('verify');
-          setIsBaleOtp(true);
           setBaleBotUrl(response.baleBotUrl ?? null);
           setLastRequestedPhoneLocal(sanitizedLocal);
           toast({ title: t('requestToast'), description: t('checkBale') });
@@ -290,11 +288,9 @@ export function PhoneOtpLoginForm() {
     try {
       const response = await requestOtp({ phone: toInternationalIranPhone(localDigits), deviceInfo: getDeviceInfo() }).unwrap();
       if (response.viaBale) {
-        setIsBaleOtp(true);
         setBaleBotUrl(response.baleBotUrl ?? null);
         toast({ title: t('requestToast'), description: t('checkBale') });
       } else {
-        setIsBaleOtp(false);
         toast({
           title: t('requestToast'),
           description: t('codeInfo', { phone: formatDisplayIranPhone(localDigits) }),
@@ -313,7 +309,7 @@ export function PhoneOtpLoginForm() {
           <CardTitle>{t('alreadySignedIn')}</CardTitle>
           <CardDescription>{t('signedInDescription')}</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
           <div className="rounded-lg border border-border/60 bg-muted/40 p-4 text-sm">
             <p className="font-medium">{auth.user.firstName ?? auth.user.phone}</p>
             {auth.user.email && <p className="text-muted-foreground">{auth.user.email}</p>}
@@ -332,13 +328,13 @@ export function PhoneOtpLoginForm() {
     <Card className="shadow-lg">
       <CardHeader>
         <CardTitle>{t('title')}</CardTitle>
-        <CardDescription>{t('description')}</CardDescription>
+        {step === 'phone' && <CardDescription>{t('description')}</CardDescription>}
       </CardHeader>
 
       {step === 'phone' ? (
         <form onSubmit={handleRequestOtp} noValidate>
-          <CardContent className="space-y-4">
-            <div className="space-y-1.5">
+          <CardContent className="space-y-6">
+            <div className="space-y-3">
               <Label htmlFor="phone">{t('phoneLabel')}</Label>
               <div className="relative">
                 <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm font-medium text-muted-foreground">
@@ -369,7 +365,7 @@ export function PhoneOtpLoginForm() {
           </CardFooter>
         </form>
       ) : step === 'bale_required' ? (
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
           <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
             <p className="font-medium">{t('baleRequired')}</p>
             <p className="mt-1 text-amber-700">{t('baleRequiredDescription')}</p>
@@ -424,11 +420,11 @@ export function PhoneOtpLoginForm() {
         </CardContent>
       ) : (
         <form ref={formRef} onSubmit={handleVerifyOtp} noValidate>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
             <p className="text-sm text-muted-foreground">
               {t('codeDescription', { phone: displayPhone })}
             </p>
-            <div className="space-y-1.5">
+            <div className="space-y-3">
               <Label htmlFor="code">{t('codeLabel')}</Label>
               <div
                 className="flex items-center justify-center"
@@ -474,7 +470,6 @@ export function PhoneOtpLoginForm() {
                 onClick={() => {
                   setStep('phone');
                   setCode('');
-                  setIsBaleOtp(false);
                 }}
               >
                 {t('changePhone')}

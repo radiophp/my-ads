@@ -74,6 +74,7 @@ export function PhoneOtpLoginForm() {
   const [baleLinkToken, setBaleLinkToken] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileReady, setTurnstileReady] = useState(false);
   const [turnstileTheme, setTurnstileTheme] = useState<'light' | 'dark'>('light');
   const phoneInputRef = useRef<HTMLInputElement>(null);
   const baleLoginCallbackRef = useRef<() => void>(() => {});
@@ -393,13 +394,15 @@ export function PhoneOtpLoginForm() {
                 <Turnstile
                   siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
                   onSuccess={setTurnstileToken}
+                  onWidgetLoad={() => setTurnstileReady(true)}
+                  onError={() => setTurnstileReady(true)}
                   options={{ theme: turnstileTheme, language: 'fa' }}
                 />
               </div>
             )}
           </CardContent>
           <CardFooter>
-            <Button type="submit" className="w-full" disabled={isRequesting}>
+            <Button type="submit" className="w-full" disabled={isRequesting || (!!websiteSettings?.turnstileEnabled && !turnstileReady)}>
               {isRequesting ? t('requesting') : t('requestCode')}
             </Button>
           </CardFooter>

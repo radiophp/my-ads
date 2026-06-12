@@ -158,16 +158,25 @@ export class AuthService {
       throw new ForbiddenException('Human verification required.');
     }
 
-    const formData = new URLSearchParams();
-    formData.append('secret', secretKey);
-    formData.append('response', token);
-    const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-      method: 'POST',
-      body: formData,
-    });
-    const result = (await res.json()) as { success: boolean };
-    if (!result.success) {
-      throw new ForbiddenException('Human verification failed.');
+    try {
+      const formData = new URLSearchParams();
+      formData.append('secret', secretKey);
+      formData.append('response', token);
+      const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+        method: 'POST',
+        body: formData,
+      });
+      const result = (await res.json()) as { success: boolean };
+      if (!result.success) {
+        throw new ForbiddenException('Human verification failed.');
+      }
+    } catch (error) {
+      if (error instanceof ForbiddenException) {
+        throw error;
+      }
+      this.logger.warn(
+        `Turnstile verification unreachable, skipping: ${(error as Error).message}`,
+      );
     }
   }
 

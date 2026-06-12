@@ -197,12 +197,29 @@ PostgreSQL is exposed on host-mode ports (dev `6201`, prod published `6301` targ
 
 Adjust usernames/passwords/ports per your env. Keep `TargetPort=5432` and `PublishedPort=6301` aligned in `docker-compose-prod.yml`.
 
-After a restore, mark completed queue rows as freshly fetched to avoid mass reactivation in harvest:
+After a restore, run these SQL commands to re-apply per-table settings, indexes, and extensions that aren't persisted in the compose file:
 
 ```sql
+-- Mark completed queue rows as freshly fetched to avoid mass reactivation
 UPDATE "PostToReadQueue"
 SET "lastFetchedAt" = now(), "updatedAt" = now()
 WHERE status = 'COMPLETED';
+
+-- Per-table autovacuum for large tables (prevents vacuum storms)
+ALTER TABLE "DivarPostAttribute" SET (autovacuum_vacuum_scale_factor = 0.02, autovacuum_vacuum_threshold = 5000, autovacuum_vacuum_cost_limit = 2000);
+ALTER TABLE "DivarPostMedia" SET (autovacuum_vacuum_scale_factor = 0.02, autovacuum_vacuum_threshold = 5000, autovacuum_vacuum_cost_limit = 2000);
+ALTER TABLE "DivarPost" SET (autovacuum_vacuum_scale_factor = 0.02, autovacuum_vacuum_threshold = 5000, autovacuum_vacuum_cost_limit = 2000);
+ALTER TABLE "PostToReadQueue" SET (autovacuum_vacuum_scale_factor = 0.02, autovacuum_vacuum_threshold = 5000, autovacuum_vacuum_cost_limit = 2000);
+
+-- Index for fetch service query (prevents sequential scans on 600K+ rows)
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "PostToReadQueue_status_requestedAt_idx" ON "PostToReadQueue" (status, "requestedAt");
+
+-- Composite indexes for dashboard post listing (prevents full-table scans on scroll/pagination)
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "DivarPost_provinceId_cityId_publishedAt_idx" ON "DivarPost" ("provinceId", "cityId", "publishedAt" DESC NULLS LAST, "createdAt" DESC, "id" DESC);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS "DivarPost_cityId_publishedAt_idx" ON "DivarPost" ("cityId", "publishedAt" DESC NULLS LAST, "createdAt" DESC, "id" DESC);
+
+-- pg_stat_statements extension (for query performance monitoring)
+CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
 ```
 
 ### Automated pgBackRest backups (production)

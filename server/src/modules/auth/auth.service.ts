@@ -67,7 +67,7 @@ export class AuthService {
 
     if (baleLink) {
       const code = await this.otpService.generateAndStoreOtp(phone);
-      const result = await this.baleBotService.sendOtpToUser(phone, code, deviceInfo);
+      const result = await this.baleBotService.sendOtpToUser(phone, code, deviceInfo, user.id);
       if (result.status === 'sent') {
         return {
           success: true,
@@ -77,25 +77,27 @@ export class AuthService {
         };
       }
       this.logger.warn(
-        `Bale OTP delivery failed for ${phone} (${result.error ?? 'unknown'}); removing stale link.`,
+        `Bale OTP delivery failed for ${phone} (${result.error ?? 'unknown'}); falling back to SMS.`,
       );
-      await this.prismaService.baleUserLink
-        .delete({ where: { baleId: baleLink.baleId } })
-        .catch(() => undefined);
     }
 
-    if (!baleBotUrl) {
-      try {
-        await this.otpService.sendCode(phone);
-      } catch {
-        throw new InternalServerErrorException('Failed to send verification code.');
-      }
-      return { success: true };
+    if (baleBotUrl && !baleLink) {
+      const baleLinkToken = randomBytes(24).toString('hex');
+      await this.redisService.pSetEx(`bale-link-token:${baleLinkToken}`, 300_000, phone);
+      return { success: true, viaBale: false, baleLinked: false, baleBotUrl, baleLinkToken };
     }
 
-    const baleLinkToken = randomBytes(24).toString('hex');
-    await this.redisService.pSetEx(`bale-link-token:${baleLinkToken}`, 300_000, phone);
-    return { success: true, viaBale: false, baleLinked: false, baleBotUrl, baleLinkToken };
+    try {
+      await this.otpService.sendCode(phone);
+    } catch {
+      throw new InternalServerErrorException('Failed to send verification code.');
+    }
+    return {
+      success: true,
+      viaBale: false,
+      baleLinked: !!baleLink,
+      baleBotUrl: baleBotUrl ?? undefined,
+    };
   }
 
   async baleLogin(phone: string): Promise<AuthResponseDto> {

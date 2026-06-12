@@ -510,8 +510,9 @@ jobs:
             -w /app \
             node:22-alpine sh -c "npm install prisma@6 && npx prisma migrate deploy"
 
-      - name: Force update cron/bot/ui services
+      - name: Force update api/cron/bot/ui services
         run: |
+          docker service update --force "${STACK_NAME}_api"
           docker service update --force "${STACK_NAME}_api-cron"
           docker service update --force "${STACK_NAME}_telegram-bot"
           docker service update --force "${STACK_NAME}_ui"

@@ -58,6 +58,25 @@ const config: Config = {
       fontFamily: {
         sans: ['var(--font-inter)', ...fontFamily.sans],
       },
+      fontSize: {
+        xs: ['0.75rem', { lineHeight: '1.5rem' }],
+        sm: ['0.875rem', { lineHeight: '1.75rem' }],
+        base: ['1rem', { lineHeight: '2rem' }],
+        lg: ['1.125rem', { lineHeight: '2rem' }],
+        xl: ['1.25rem', { lineHeight: '2.25rem' }],
+        '2xl': ['1.5rem', { lineHeight: '2.75rem' }],
+        '3xl': ['1.875rem', { lineHeight: '3.25rem' }],
+        '4xl': ['2.25rem', { lineHeight: '3.75rem' }],
+        '5xl': ['3rem', { lineHeight: '4.5rem' }],
+      },
+      lineHeight: {
+        none: '1.6',
+        tight: '1.65',
+        snug: '1.7',
+        normal: '1.75',
+        relaxed: '1.8',
+        loose: '2',
+      },
       keyframes: {
         'accordion-down': {
           from: { height: '0' },

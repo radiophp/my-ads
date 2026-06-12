@@ -62,6 +62,7 @@ export function PhoneOtpLoginForm() {
   const [isMobile, setIsMobile] = useState(false);
   const phoneInputRef = useRef<HTMLInputElement>(null);
   const baleLoginCallbackRef = useRef<() => void>(() => {});
+  const formRef = useRef<HTMLFormElement>(null);
 
   useBaleLinkSocket({
     token: baleLinkToken,
@@ -241,6 +242,12 @@ export function PhoneOtpLoginForm() {
     baleLoginCallbackRef.current = handleBaleLogin;
   }, [handleBaleLogin]);
 
+  useEffect(() => {
+    if (sanitizeCode(code).length === CODE_LENGTH) {
+      formRef.current?.requestSubmit();
+    }
+  }, [code]);
+
   const handleVerifyOtp = useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
@@ -416,37 +423,8 @@ export function PhoneOtpLoginForm() {
           </div>
         </CardContent>
       ) : (
-        <form onSubmit={handleVerifyOtp} noValidate>
+        <form ref={formRef} onSubmit={handleVerifyOtp} noValidate>
           <CardContent className="space-y-4">
-            {isBaleOtp && baleBotUrl && (
-              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
-                <p className="font-medium">{t('checkBale')}</p>
-                {!isMobile && (
-                  <div className="mt-3 flex justify-center">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src="/api/auth/bale-qr"
-                      alt="QR Code"
-                      className="size-40 rounded-lg border"
-                      crossOrigin="anonymous"
-                    />
-                  </div>
-                )}
-                <p className="mt-2 break-all text-center text-xs text-blue-600">
-                  <a href={baleBotUrl} target="_blank" rel="noopener noreferrer" className="hover:text-blue-800">
-                    {baleBotUrl}
-                  </a>
-                </p>
-                <Button
-                  className="mt-2 w-full"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.open(baleBotUrl, '_blank', 'noopener')}
-                >
-                  {t('openBaleBot')}
-                </Button>
-              </div>
-            )}
             <p className="text-sm text-muted-foreground">
               {t('codeDescription', { phone: displayPhone })}
             </p>
@@ -514,11 +492,6 @@ export function PhoneOtpLoginForm() {
               </button>
             </div>
           </CardContent>
-          <CardFooter>
-            <Button type="submit" className="w-full" disabled={isVerifying}>
-              {isVerifying ? t('verifying') : t('verifyCode')}
-            </Button>
-          </CardFooter>
         </form>
       )}
     </Card>

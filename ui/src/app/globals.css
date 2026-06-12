@@ -73,11 +73,13 @@
 
 body {
   font-family: 'IRANSans', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  line-height: 1.7;
   @apply bg-background text-foreground antialiased transition-colors;
 }
 
 body[data-pathname^='/admin'] [data-site-footer],
-body[data-pathname^='/dashboard'] [data-site-footer] {
+body[data-pathname^='/dashboard'] [data-site-footer],
+body[data-pathname^='/login'] [data-site-footer] {
   display: none;
 }
 

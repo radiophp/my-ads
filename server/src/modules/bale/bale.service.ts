@@ -428,7 +428,15 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
         () =>
           this.sender!.sendMessage(
             chatLink.chatId,
-            `کد ورود شما: ${otpCode}\n\nاین کد تا ۵ دقیقه معتبر است.${deviceSuffix}`,
+            `<b>کد ورود شما: <code>${otpCode}</code></b>\n\nاین کد تا ۵ دقیقه معتبر است.${deviceSuffix}`,
+            {
+              parse_mode: 'HTML',
+              reply_markup: {
+                inline_keyboard: [
+                  [{ text: 'کپی کد تأیید', copy_text: { text: otpCode } } as any],
+                ],
+              },
+            },
           ),
         { chatId: chatLink.chatId },
       );

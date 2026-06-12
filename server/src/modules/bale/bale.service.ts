@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { Context, Markup, Telegraf, Telegram, session, Input } from 'telegraf';
 import type { InlineKeyboardMarkup } from '@telegraf/types';
 import { PrismaService } from '../../platform/database/prisma.service';
+import { RedisService } from '../../platform/cache/redis.service';
 import { BaleLinkGateway } from './bale-link.gateway';
 
 const BALE_API_ROOT = 'https://tapi.bale.ai';
@@ -42,6 +43,7 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
   constructor(
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
+    private readonly redisService: RedisService,
     private readonly baleLinkGateway: BaleLinkGateway,
   ) {
     this.sendTimeoutMs = this.toNumber(
@@ -119,6 +121,19 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
       });
 
       this.bot.start(async (ctx: BotContext) => {
+        const payload = (ctx as any).startPayload ?? '';
+        if (payload.startsWith('link_')) {
+          const token = payload.slice(5);
+          const chatId = ctx.chat?.id;
+          if (token && chatId) {
+            await this.redisService
+              .pSetEx(`bale-chat-token:${chatId}`, 300_000, token)
+              .catch((err) =>
+                this.logger.error(`Failed to store bale-chat-token: ${(err as Error).message}`),
+              );
+          }
+        }
+
         await ctx.reply(
           'سلام! \u{1F44B} لطفاً با دکمه زیر شماره تماس خود را ارسال کنید.',
           Markup.keyboard([Markup.button.contactRequest('\u{1F4F1} ارسال شماره تماس')])
@@ -153,6 +168,42 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
           }
 
           if (chatId) {
+            const token = await this.redisService
+              .get(`bale-chat-token:${chatId}`)
+              .catch(() => null);
+
+            if (token) {
+              const expectedPhone = await this.redisService
+                .get(`bale-link-token:${token}`)
+                .catch(() => null);
+
+              if (!expectedPhone) {
+                await this.redisService.del(`bale-chat-token:${chatId}`).catch(() => {});
+                await ctx.reply(
+                  '⏰ لینک منقضی شده است. لطفاً از وب‌سایت دوباره تلاش کنید.',
+                  Markup.keyboard([Markup.button.contactRequest('\u{1F4F1} ارسال شماره تماس')])
+                    .oneTime()
+                    .resize(),
+                );
+                return;
+              }
+
+              const normalizedShared = phone.replace(/\D+/g, '');
+              const normalizedExpected = expectedPhone.replace(/\D+/g, '');
+
+              if (normalizedShared !== normalizedExpected) {
+                await ctx.reply(
+                  `⚠️ شما با شماره ${phone} در بله وارد شده‌اید.\nلطفاً با شماره ${expectedPhone} در بله وارد شوید و دوباره تلاش کنید.`,
+                  Markup.keyboard([Markup.button.contactRequest('\u{1F4F1} ارسال شماره تماس')])
+                    .oneTime()
+                    .resize(),
+                );
+                return;
+              }
+
+              await this.redisService.del(`bale-chat-token:${chatId}`).catch(() => {});
+            }
+
             void this.saveBaleLink({
               baleId: String(contactUserId ?? senderId ?? chatId),
               chatId: String(chatId),
@@ -432,9 +483,7 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
             {
               parse_mode: 'HTML',
               reply_markup: {
-                inline_keyboard: [
-                  [{ text: 'کپی کد تأیید', copy_text: { text: otpCode } } as any],
-                ],
+                inline_keyboard: [[{ text: 'کپی کد تأیید', copy_text: { text: otpCode } } as any]],
               },
             },
           ),

@@ -103,17 +103,23 @@ export class AuthController {
 
   @Get('bale-qr')
   @Public()
-  async getBaleQr(@Res() res: FastifyReply, @Query('start') start?: string): Promise<void> {
+  async getBaleQr(
+    @Res() res: FastifyReply,
+    @Query('start') start?: string,
+    @Query('token') token?: string,
+  ): Promise<void> {
     const now = Date.now();
-    const cacheKey = start === 'signup' ? 'signup' : 'default';
+    const cacheKey = token ? `token:${token}` : start === 'signup' ? 'signup' : 'default';
 
-    const cached = qrCache.get(cacheKey);
-    if (cached && now < cached.expiresAt) {
-      res
-        .header('Content-Type', 'image/png')
-        .header('Cache-Control', 'private, max-age=300')
-        .send(cached.buffer);
-      return;
+    if (!token) {
+      const cached = qrCache.get(cacheKey);
+      if (cached && now < cached.expiresAt) {
+        res
+          .header('Content-Type', 'image/png')
+          .header('Cache-Control', 'private, max-age=300')
+          .send(cached.buffer);
+        return;
+      }
     }
 
     const setting = await this.prismaService.websiteSetting.findFirst({
@@ -124,13 +130,15 @@ export class AuthController {
       throw new NotFoundException('Bale bot URL is not configured.');
     }
 
-    const qrUrl =
-      start === 'signup'
-        ? `${baleBotUrl}${baleBotUrl.includes('?') ? '&' : '?'}start=signup`
-        : baleBotUrl;
+    const startParam = token ? `link_${token}` : start === 'signup' ? 'signup' : undefined;
+    const qrUrl = startParam
+      ? `${baleBotUrl}${baleBotUrl.includes('?') ? '&' : '?'}start=${startParam}`
+      : baleBotUrl;
     const buffer = await QRCode.toBuffer(qrUrl, { type: 'png', width: 400, margin: 2 });
 
-    qrCache.set(cacheKey, { buffer, expiresAt: now + QR_CACHE_TTL_MS });
+    if (!token) {
+      qrCache.set(cacheKey, { buffer, expiresAt: now + QR_CACHE_TTL_MS });
+    }
 
     res
       .header('Content-Type', 'image/png')

@@ -174,9 +174,7 @@ export class AuthService {
       if (error instanceof ForbiddenException) {
         throw error;
       }
-      this.logger.warn(
-        `Turnstile verification unreachable, skipping: ${(error as Error).message}`,
-      );
+      this.logger.warn(`Turnstile verification unreachable, skipping: ${(error as Error).message}`);
     }
   }
 

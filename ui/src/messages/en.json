@@ -1161,7 +1161,9 @@
         "phones": "Phone contacts",
         "phonesHint": "Add up to five contact numbers with their owner names.",
         "social": "Social links",
-        "about": "About page content"
+        "about": "About page content",
+        "security": "Security",
+        "securityHint": "Human verification settings (e.g. Cloudflare Turnstile)."
       },
       "fields": {
         "phoneLabel": "Contact {index}",
@@ -1178,7 +1180,8 @@
         "aboutDescription": "About description",
         "aboutDescriptionPlaceholder": "Write the about page description",
         "address": "Address",
-        "addressPlaceholder": "Company address"
+        "addressPlaceholder": "Company address",
+        "turnstileEnabled": "Enable Cloudflare Turnstile human verification"
       },
       "actions": {
         "refresh": "Refresh",

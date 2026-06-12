@@ -12,5 +12,6 @@ export type WebsiteSettings = {
   baleBotUrl: string | null;
   aboutDescription: string | null;
   address: string | null;
+  turnstileEnabled: boolean;
   updatedAt?: string;
 };

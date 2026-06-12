@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsArray, IsOptional, IsString, IsUrl, ValidateNested } from 'class-validator';
+import { IsArray, IsBoolean, IsOptional, IsString, IsUrl, ValidateNested } from 'class-validator';
 import { WebsiteContactDto } from './website-contact.dto';
 
 export class UpdateWebsiteSettingsDto {
@@ -32,4 +32,8 @@ export class UpdateWebsiteSettingsDto {
   @IsOptional()
   @IsString()
   address?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  turnstileEnabled?: boolean;
 }

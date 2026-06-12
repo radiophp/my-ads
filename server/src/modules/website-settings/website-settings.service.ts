@@ -31,6 +31,7 @@ type WebsiteSettingRecord = {
   baleBotUrl: string | null;
   aboutDescription: string | null;
   address: string | null;
+  turnstileEnabled: boolean;
   updatedAt: Date;
 };
 
@@ -43,6 +44,7 @@ export type WebsiteSettingsItem = {
   baleBotUrl: string | null;
   aboutDescription: string | null;
   address: string | null;
+  turnstileEnabled: boolean;
   updatedAt?: Date;
 };
 
@@ -106,6 +108,7 @@ export class WebsiteSettingsService {
       baleBotUrl: record?.baleBotUrl ?? null,
       aboutDescription: record?.aboutDescription ?? null,
       address: record?.address ?? null,
+      turnstileEnabled: record?.turnstileEnabled ?? false,
       updatedAt: record?.updatedAt,
     };
   }
@@ -183,6 +186,7 @@ export class WebsiteSettingsService {
           baleBotUrl: normalizeValue(dto.baleBotUrl),
           aboutDescription: normalizeValue(dto.aboutDescription),
           address: normalizeValue(dto.address),
+          turnstileEnabled: dto.turnstileEnabled ?? false,
         },
         update: {
           phoneContacts: normalizeContacts(dto.phoneContacts as WebsiteContact[]),
@@ -192,6 +196,7 @@ export class WebsiteSettingsService {
           baleBotUrl: normalizeValue(dto.baleBotUrl),
           aboutDescription: normalizeValue(dto.aboutDescription),
           address: normalizeValue(dto.address),
+          turnstileEnabled: dto.turnstileEnabled ?? false,
         },
       });
       const item = this.toItem(record);

@@ -1161,7 +1161,9 @@
         "phones": "اطلاعات تماس",
         "phonesHint": "حداکثر پنج شماره همراه با نام مالک وارد کنید.",
         "social": "لینک‌های شبکه‌های اجتماعی",
-        "about": "محتوای صفحه درباره ما"
+        "about": "محتوای صفحه درباره ما",
+        "security": "امنیت",
+        "securityHint": "تنظیمات احراز هویت انسانی (مانند Cloudflare Turnstile)."
       },
       "fields": {
         "phoneLabel": "تماس {index}",
@@ -1178,7 +1180,8 @@
         "aboutDescription": "توضیح درباره ما",
         "aboutDescriptionPlaceholder": "توضیحات صفحه درباره ما را بنویسید",
         "address": "آدرس",
-        "addressPlaceholder": "آدرس شرکت"
+        "addressPlaceholder": "آدرس شرکت",
+        "turnstileEnabled": "فعال‌سازی احراز هویت انسانی Cloudflare Turnstile"
       },
       "actions": {
         "refresh": "تازه‌سازی",

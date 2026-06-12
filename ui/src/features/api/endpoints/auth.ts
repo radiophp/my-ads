@@ -13,7 +13,7 @@ type UpdateCurrentUserPayload = Partial<{
 
 const authApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
-    requestOtp: builder.mutation<SuccessResponse, { phone: string; deviceInfo?: string }>({
+    requestOtp: builder.mutation<SuccessResponse, { phone: string; deviceInfo?: string; turnstileToken?: string }>({
       query: (body) => ({
         url: '/auth/request-otp',
         method: 'POST',

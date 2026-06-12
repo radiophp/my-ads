@@ -1,4 +1,5 @@
 import {
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -48,6 +49,7 @@ export class AuthService {
   async requestOtp(
     phone: string,
     deviceInfo?: string,
+    turnstileToken?: string,
   ): Promise<{
     success: true;
     viaBale?: boolean;
@@ -55,6 +57,8 @@ export class AuthService {
     baleBotUrl?: string;
     baleLinkToken?: string;
   }> {
+    await this.verifyTurnstile(turnstileToken);
+
     const user = await this.usersService.findOrCreateByPhone(phone);
 
     if (!user.isActive) {
@@ -135,6 +139,36 @@ export class AuthService {
       where: { key: 'default' },
     });
     return setting?.baleBotUrl?.trim() || null;
+  }
+
+  private async verifyTurnstile(token?: string): Promise<void> {
+    const secretKey = this.configService.get<string>('TURNSTILE_SECRET_KEY');
+    if (!secretKey) {
+      return;
+    }
+
+    const setting = await this.prismaService.websiteSetting.findFirst({
+      where: { key: 'default' },
+    });
+    if (!setting?.turnstileEnabled) {
+      return;
+    }
+
+    if (!token) {
+      throw new ForbiddenException('Human verification required.');
+    }
+
+    const formData = new URLSearchParams();
+    formData.append('secret', secretKey);
+    formData.append('response', token);
+    const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      body: formData,
+    });
+    const result = (await res.json()) as { success: boolean };
+    if (!result.success) {
+      throw new ForbiddenException('Human verification failed.');
+    }
   }
 
   async verifyOtp(dto: VerifyOtpDto): Promise<AuthResponseDto> {

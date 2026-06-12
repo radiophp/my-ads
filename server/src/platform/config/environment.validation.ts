@@ -406,6 +406,10 @@ export class EnvironmentVariables {
   })
   @IsBoolean()
   NOTIFICATION_QUEUE_CONSUMER_ENABLED: boolean = true;
+
+  @IsOptional()
+  @IsString()
+  TURNSTILE_SECRET_KEY?: string;
 }
 
 export const validateEnvironment = (config: Record<string, unknown>): EnvironmentVariables => {

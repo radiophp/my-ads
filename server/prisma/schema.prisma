@@ -1003,6 +1003,7 @@ model WebsiteSetting {
   baleBotUrl           String?
   aboutDescription    String?
   address             String?
+  turnstileEnabled    Boolean  @default(false)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 

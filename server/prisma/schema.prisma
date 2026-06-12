@@ -344,6 +344,7 @@ model DivarPost {
   @@index([contactUuid, phoneNumber])
   @@index([notificationsChecked, createdAt])
   @@index([provinceId, cityId, publishedAt(sort: Desc), createdAt(sort: Desc), id(sort: Desc)])
+  @@index([provinceId, publishedAt(sort: Desc), createdAt(sort: Desc), id(sort: Desc)])
   @@index([cityId, publishedAt(sort: Desc), createdAt(sort: Desc), id(sort: Desc)])
 }
 

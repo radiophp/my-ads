@@ -520,4 +520,5 @@ jobs:
           docker service update --force "${STACK_NAME}_api"
           docker service update --force "${STACK_NAME}_api-cron"
           docker service update --force "${STACK_NAME}_telegram-bot"
+          docker service update --force "${STACK_NAME}_bale-bot"
           docker service update --force "${STACK_NAME}_ui"

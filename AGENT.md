@@ -16,6 +16,7 @@ This repository hosts the **My Ads** NestJS backend (`server/`). Key operational
   - The UI persists the category filter as `searchFilter.categorySelection` (an object with `slug`/`depth`). Always dispatch `setCategorySelection({ slug, depth })` so the dashboard rail and API params stay in sync.
   - Location filters cascade: `provinceId` → `citySelection` (multi-select) → `districtSelection` (enabled whenever at least one city is selected; multi-city mode prefixes district labels with the city name). Province changes reset both cities and districts; changing city selections resets districts as well.
   - `/divar-posts` accepts `categorySlug`, `categoryDepth`, and optional `districtIds`. The service maps categories to `cat1`/`cat2`/`cat3` (or the canonical slug) and filters `districtId` when provided. Every call logs the Prisma `where` clause, cursor, and limit—search for `DivarPosts query -> ...` before assuming “no data”.
+  - **Pagination:** Use manual tuple cursor (`(publishedAt, createdAt, id) < (cursor...)`) — Prisma cursor causes full-table scans on large tables with tie values. Multi-city queries use per-city `UNION ALL`. Composite indexes (`DivarPost_provinceId_cityId_publishedAt_idx`, etc.) are required for performance.
   - For the full widget DSL that powers per-category filters, see `docs/category-filters.md`.
 
 - **Husky pre-commit hook**
@@ -52,5 +53,20 @@ This repository hosts the **My Ads** NestJS backend (`server/`). Key operational
   - The login page is `/login`; use the shared login form component for modal login prompts.
   - Mobile uses a fixed bottom navigation and hides the top header on small screens; keep the `pb-[calc(4rem+env(safe-area-inset-bottom))]` padding in layout so content does not collide with the nav.
   - Toasts cap at 3 visible items and support swipe-to-dismiss (see `ui/src/components/ui/toast.tsx` + `ui/src/components/ui/use-toast.ts`).
+
+- **Turnstile & login flow**
+  - Login OTP verification is gated by `ENABLE_TURNSTILE` (admin website settings toggle). Backend calls `https://challenges.cloudflare.com/turnstile/v0/siteverify` with `TURNSTILE_SECRET_KEY`.
+  - Turnstile token verification is guarded with try-catch — network errors return `false` (no 500).
+  - UI loads Turnstile widget on login; send-code button disabled until widget loaded. Supports Persian (`fa`) and system dark/light theme sync via `data-theme` attribute.
+  - Phone input preserves leading `0` in UI, strips it on form submit to match E.164 storage.
+  - Bale OTP button available on login as alternative delivery channel. Dev OTP code is always `1234`.
+  - OTP sender falls back to `console.log` when no gateway URL configured.
+
+- **Bale bot architecture**
+  - `BaleUserLink.botId` stores the numeric prefix of `BALE_BOT_TOKEN` (e.g., `"1046150776"` from `"1046150776:V09px..."`).
+  - `bale.service.ts` has `getBotId()` helper that splits on `:` and returns the first segment.
+  - `saveBaleLink()` stores `botId` on every upsert. Both `findChatLink()` and `findBaleLinkByPhone()` filter by the current bot's ID, returning `null` when no match (or no token configured).
+  - This prevents stale links from restored DBs across environments with different bot tokens.
+  - Docker Swarm: `bale-bot` service handles polling (`BALE_BOT_AUTOSTART=true`); `api` service sets `BALE_BOT_AUTOSTART=false` but can still send outbound OTPs.
 
 Keep outputs ASCII-only when editing files, prefer `apply_patch`, and avoid destructive git commands. Refer to `README.md` for a full architecture and environment overview.

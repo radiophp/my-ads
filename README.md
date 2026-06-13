@@ -22,6 +22,7 @@ The **My Ads** project is a NestJS + Fastify backend that powers a classified ad
 - **Uploads Module (`modules/uploads`)** — File upload orchestration layered over MinIO/S3 storage.
 - **User Panel & Admin Panel (`modules/user-panel`, `modules/admin-panel`)** — Domain-specific APIs protected by role guards.
 - **Telegram Module (`modules/telegram`)** — Bot entrypoint to collect user phone via contact share and deliver posts (albums) to users.
+- **Bale Module (`modules/bale`)** — Bale messenger bot integration for OTP delivery and post notifications. Outbound sends work from the `api` container; polling runs in the `bale-bot` service. All `BaleUserLink` records scoped by `botId` for cross-environment safety.
 - **News Module (`modules/news`)** — News categories/tags plus public list/detail endpoints and admin CRUD for publishing updates.
 - **Blog Module (`modules/blog`)** — Blog categories/tags plus public list/detail endpoints and admin CRUD for long-form articles.
 - **Slides Module (`modules/slides`)** — Hero slides for the homepage with admin CRUD and ordering.
@@ -129,6 +130,12 @@ Phone-based OTP replaces the traditional email/password flow:
 - `POST /auth/verify-otp` &mdash; submit the phone number and the received code to obtain access/refresh tokens (during development, the code `1234` always succeeds).
 
 OTP defaults are controlled via `OTP_TTL_SECONDS`, `OTP_DIGITS`, and the optional `OTP_SENDER_BASE_URL`/`OTP_SENDER_API_KEY` environment variables. When no gateway URL is configured, OTPs are logged to the server console for local development.
+
+**Cloudflare Turnstile** — When `ENABLE_TURNSTILE` is enabled (admin website settings toggle), the `request-otp` endpoint validates a Turnstile token submitted by the client. The backend calls `https://challenges.cloudflare.com/turnstile/v0/siteverify` with `TURNSTILE_SECRET_KEY`; network failures are caught gracefully (returns `false`, no 500). The UI disables the send-code button until the Turnstile widget loads and supports Persian language + system dark/light theme sync.
+
+**Bale OTP delivery** — The login page offers a **Bale messenger** button as an alternative OTP delivery channel. OTPs are sent directly from the `api` container via `baleBotService.sendOtpToUser()` (uses Bale bot API, not the polling service). The sender falls back to `console.log` when `BALE_BOT_TOKEN` is not configured. All `BaleUserLink` records store `botId` (numeric token prefix) so restored DBs across environments never use stale links from a different bot.
+
+**Phone input** — The login form preserves the leading `0` visually but strips it on form submit to match E.164 phone storage format.
 
 Sessions in the UI auto-hydrate from `localStorage` before any RTK Query hooks fire (we moved the hydration hook to `useLayoutEffect`) and refresh tokens are reused transparently: every 401 triggers a single-flight refresh call, updates Redux/local storage, and retries the original request. If refresh fails, the app clears auth state and routes back to `/`.
 
@@ -333,6 +340,7 @@ WORKER_ID=worker-2 npm run phone-fetch:worker
 - **Tehran-aware page limits:** `DIVAR_HARVEST_MAX_PAGES` caps how deep each category/location is crawled during daytime. Between `DIVAR_HARVEST_NIGHT_START_HOUR` and `DIVAR_HARVEST_NIGHT_END_HOUR` (evaluated in the `Asia/Tehran` timezone) the system switches to `DIVAR_HARVEST_MAX_PAGES_NIGHT`. Setting either limit to `-1` disables the cap and the harvester keeps paging until Divar has no more data.
 - **Concurrency coordination:** While `divar:fetch-posts` is working on a token it marks the queue row so harvest skips reactivation for that record until the fetch job finishes or times out. That prevents thrash whenever Divar reshuffles publish times.
 - **Stuck job recovery:** The fetcher releases any queue rows stuck in `PROCESSING` for more than 1 minute back to `PENDING` before each batch (hardcoded safeguard for crashes/restarts).
+- **Pagination (dashboard):** The dashboard post listing avoids Prisma cursor/skip — full-table scans occur when the cursor column has tied values. Instead, the service uses manual `WHERE (publishedAt, createdAt, id) < (cursor...)` tuple comparisons with a `runQuery`/`buildWhereClause` helper. Multi-city queries split into per-city `UNION ALL` to leverage composite indexes. Required indexes (run manually after DB restore): `DivarPost_provinceId_cityId_publishedAt_idx`, `DivarPost_cityId_publishedAt_idx`, `DivarPost_provinceId_publishedAt_idx`.
 
 ### Media mirroring
 
@@ -551,6 +559,10 @@ All configuration is validated at startup (`platform/config/environment.validati
 | `OTP_DIGITS` | `6` | Number of digits generated for OTP codes. |
 | `OTP_SENDER_BASE_URL` | — | Optional HTTP endpoint invoked to deliver OTP codes. |
 | `OTP_SENDER_API_KEY` | — | Optional bearer token used when calling the OTP provider. |
+| `TURNSTILE_SECRET_KEY` | — | Cloudflare Turnstile secret key for server-side verification (`POST /auth/request-otp`). |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | — | Public Turnstile site key exposed to the UI for widget rendering. |
+| `BALE_BOT_TOKEN` | — | Bale messenger bot token (`<numeric_id>:<secret>`). Used for OTP delivery and user linking. |
+| `BALE_BOT_AUTOSTART` | `true` | Whether the bot polling service starts automatically. Set to `false` in the `api` container (polling handled by `bale-bot` service). |
 | `ENABLE_CRON_JOBS` | `false` | Set to `true` to allow scheduled jobs to execute (used by `npm run cron:scheduler`). |
 | `DIVAR_HARVEST_CRON` | `0 */30 * * * *` | Cron expression controlling the Divar harvest scheduler (defaults to every 30 minutes). |
 | `DIVAR_FETCH_CRON` | `*/1 * * * *` | Cron expression for the Divar post fetch scheduler (defaults to every minute). |
@@ -616,6 +628,7 @@ The stack runs **two API-related services**:
 | `NEXT_PUBLIC_APP_URL` | Public URL that the UI should advertise (e.g., `https://mahan.toncloud.observer`). |
 | `NEXT_PUBLIC_API_BASE_URL` | Public API base URL (usually `${NEXT_PUBLIC_APP_URL}/api`). |
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | Public VAPID key for the UI to register push subscriptions. |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Public Turnstile site key for the login page widget. |
 | `API_REPLICAS` / `UI_REPLICAS` / `API_CRON_REPLICAS` | Desired replica counts for each service (Swarm will scale them). |
 | `RATE_LIMIT_TTL` / `RATE_LIMIT_MAX` | Optional overrides for the API rate limiter. |
 | `OTP_TTL_SECONDS` / `OTP_DIGITS` / `OTP_SENDER_BASE_URL` | OTP delivery configuration (non-secret pieces). |

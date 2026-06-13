@@ -42,6 +42,23 @@
 - Automated backups: `pgbackrest-backup` writes to MinIO bucket `db-backup` with AES-256-CBC (pass `Ghader`), bundle size `1GiB`, 30-day retention, and Telegram delivery to `BACKUP_TELEGRAM_PHONES` recipients (must `/start` the bot).
 - News crawlers: Eghtesad, Khabaronline, and Asriran crawlers run every 15 minutes when cron is enabled. One-off runs: `npm run news:crawl:eghtesad`, `npm run news:crawl:khabaronline`, `npm run news:crawl:asriran`. Use the News Sources admin list to enable/disable each feed.
 
+## Authentication & Security Patterns
+
+- **Cloudflare Turnstile** — Login OTP flow gated by `ENABLE_TURNSTILE` (admin toggle in website settings). Backend verifies Turnstile token via `https://challenges.cloudflare.com/turnstile/v0/siteverify`. Fetch guarded with try-catch to avoid 500 on network errors. UI disables send-code button until widget loads; supports Persian language + system dark/light theme sync.
+- **OTP login flow**: `POST /auth/request-otp` (triggers delivery) → `POST /auth/verify-otp` (returns JWT). Dev code `1234`. Bale OTP button available as alternative delivery channel. OTP sender falls back to console log when no gateway configured.
+- **Phone input** — Leading `0` preserved visually in UI, stripped on form submit to match E.164 storage format.
+- **Bale bot linking** — `BaleUserLink` stores `botId` extracted from `BALE_BOT_TOKEN` (`<numeric_id>:<secret>`). All lookups (`findChatLink()`, `findBaleLinkByPhone()`) filter by current bot's ID so restored DBs across environments never produce stale links.
+
+## Pagination Strategy (Divar dashboard)
+
+- **No Prisma cursor/skip** for large tables — Prisma's `cursor` + `take` causes full-table scans when the cursor column has many ties (same `publishedAt`). Instead use manual `WHERE (publishedAt, createdAt, id) < (cursor...)` tuple comparisons with a `runQuery`/`buildWhereClause` helper pattern.
+- **Multi-city queries** split into per-city `UNION ALL` to hit composite indexes instead of one large table scan.
+- **Required indexes** (not in Prisma schema, run after restore):
+  - `DivarPost_provinceId_cityId_publishedAt_idx`
+  - `DivarPost_cityId_publishedAt_idx`
+  - `DivarPost_provinceId_publishedAt_idx`
+  - `PostToReadQueue_status_requestedAt_idx`
+
 ## Testing Guidelines
 - Jest powers every suite; use `*.spec.ts` for unit/integration and `*.e2e-spec.ts` for HTTP flows.
 - Initialize Fastify via `src/tests/setup-test.ts` to share mock providers and config overrides.

@@ -40,7 +40,7 @@ const mapTileBaseUrl =
   process.env.NEXT_PUBLIC_MAP_TILE_BASE_URL ??
   (process.env.NODE_ENV === 'production'
     ? 'https://map.mahanfile.com'
-    : 'https://dev-map.mahanfile.com');
+    : '/map');
 
 if (!process.env.NEXT_PUBLIC_APP_URL) {
   process.env.NEXT_PUBLIC_APP_URL = defaultAppUrl;
@@ -79,7 +79,10 @@ const withPWA = withPWAInit({
       {
         // Always go to network for map tiles/styles to avoid SW interception issues
         urlPattern: ({ url }: { url: URL }) => {
-          const hosts = ['dev-map.mahanfile.com', 'map.mahanfile.com'];
+          if (url.pathname.startsWith('/map/') || url.pathname === '/map') {
+            return true;
+          }
+          const hosts = ['map.mahanfile.com'];
           try {
             const mapHost = new URL(mapTileBaseUrl).hostname;
             if (!hosts.includes(mapHost)) {

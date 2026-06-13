@@ -363,7 +363,7 @@ services:
 
   tileserver:
     image: maptiler/tileserver-gl:v4.8.0
-    command: ["--mbtiles", "/data/iran.mbtiles", "--port", "8080"]
+    command: ["--config", "/data/config.json", "--port", "8080"]
     ports:
       - target: 8080
         published: ${MAP_TILES_PORT}
@@ -373,6 +373,10 @@ services:
       - type: bind
         source: ${MAP_TILES_PATH}
         target: /data
+        read_only: true
+      - type: bind
+        source: ${MAP_TILES_PATH}/fonts
+        target: /usr/src/app/node_modules/tileserver-gl-styles/fonts
         read_only: true
     networks:
       - app_net

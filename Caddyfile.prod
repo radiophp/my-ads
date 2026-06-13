@@ -22,7 +22,7 @@ mahanfile.com, www.mahanfile.com {
 		reverse_proxy minio:6304
 	}
 
-	handle_path /map* {
+	handle_path /map/* {
 		reverse_proxy tileserver:8080
 	}
 

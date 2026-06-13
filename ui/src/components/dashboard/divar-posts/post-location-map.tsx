@@ -35,10 +35,20 @@ export function PostLocationMap({
     const envBase = process.env.NEXT_PUBLIC_MAP_TILE_BASE_URL?.replace(/\/+$/, '');
     if (envBase) return envBase;
     if (typeof window !== 'undefined' && window.location.hostname.includes('dev')) {
-      return 'https://dev-map.mahanfile.com';
+      return 'https://dev.mahanfile.com/map';
     }
     return 'https://map.mahanfile.com';
   }, []);
+
+  const isCdnMode = useMemo(
+    () => !!process.env.NEXT_PUBLIC_MAP_STYLE_CDN_URL,
+    [],
+  );
+
+  const styleUrl = useMemo((): string => {
+    if (isCdnMode) return process.env.NEXT_PUBLIC_MAP_STYLE_CDN_URL || '/map-assets/style.json';
+    return '/map-assets/style.json';
+  }, [isCdnMode]);
 
   useEffect(() => {
     let cancelled = false;
@@ -47,13 +57,47 @@ export function PostLocationMap({
         const maplibre = await import('maplibre-gl');
         if (cancelled || !mapContainerRef.current) return;
 
-        const rewriteStyle = async (): Promise<StyleSpecification> => {
-          const res = await fetch(`${tileBase}/styles/basic-preview/style.json`);
-          const style = (await res.json()) as StyleSpecification & { sprite?: string };
+        // Load RTL text plugin for Persian/Arabic script
+        if (maplibre.getRTLTextPluginStatus() === 'unavailable') {
+          try {
+            await maplibre.setRTLTextPlugin('/map-assets/maplibre-rtl-text.js', false);
+          } catch {
+            // Plugin already loaded or failed silently
+          }
+        }
 
-          // Drop sprite (not present) and force glyph path to same-origin
-          delete style.sprite;
-          style.glyphs = `${tileBase}/fonts/{fontstack}/{range}.pbf`;
+        const rewriteStyle = async (): Promise<StyleSpecification> => {
+          const res = await fetch(styleUrl);
+          const style = (await res.json()) as StyleSpecification & { sprite?: string; glyphs?: string };
+
+          // CDN mode: replace Noto Sans with Noto Naskh Arabic for Persian support
+          if (isCdnMode && style.layers) {
+            style.layers.forEach((layer: any) => {
+              if (layer.layout?.['text-font']) {
+                layer.layout['text-font'] = ['Noto Naskh Arabic Regular'];
+              }
+            });
+          }
+
+          // Scale down font sizes (Noto Naskh Arabic renders larger than Noto Sans)
+          const scaleFontSize = (v: any): any => {
+            if (typeof v === 'number') return Math.round(v * 0.55);
+            if (v && typeof v === 'object') {
+              const scaled = { ...v };
+              if (v.stops) {
+                scaled.stops = v.stops.map((s: any) => [s[0], typeof s[1] === 'number' ? Math.round(s[1] * 0.55) : s[1]]);
+              }
+              return scaled;
+            }
+            return v;
+          };
+          if (style.layers) {
+            style.layers.forEach((layer: any) => {
+              if (layer.layout?.['text-size'] !== undefined) {
+                layer.layout['text-size'] = scaleFontSize(layer.layout['text-size']);
+              }
+            });
+          }
 
           // Rewrite vector source URLs/tiles to same-origin paths
           if (style.sources) {
@@ -104,6 +148,19 @@ export function PostLocationMap({
           attributionControl: false,
           locale: isRTL ? 'fa' : 'en',
           cooperativeGestures: isTouchDevice,
+          transformRequest: (url) => {
+            const origin =
+              typeof window !== 'undefined' ? window.location.origin : '';
+            try {
+              const parsed = new URL(url, origin);
+              if (parsed.pathname.startsWith('/data/') && parsed.origin === origin) {
+                return { url: `${origin}${tileBase}${parsed.pathname}` };
+              }
+            } catch {
+              // ignore
+            }
+            return { url };
+          },
         });
         mapRef.current = map;
 
@@ -159,7 +216,7 @@ export function PostLocationMap({
       }
       mapRef.current = null;
     };
-  }, [lat, lon, tileBase, isRTL, isTouchDevice, onReady]);
+  }, [lat, lon, tileBase, isRTL, isTouchDevice, onReady, isCdnMode, styleUrl]);
 
   const osmUrl = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=14/${lat}/${lon}`;
   const prettyCoords = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;

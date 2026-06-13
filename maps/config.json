@@ -1,0 +1,23 @@
+{
+  "options": {
+    "paths": {
+      "root": "/usr/src/app/node_modules/tileserver-gl-styles",
+      "fonts": "fonts",
+      "styles": "styles"
+    },
+    "serveAllFonts": true
+  },
+  "data": {
+    "v3": {
+      "mbtiles": "/data/iran.mbtiles"
+    }
+  },
+  "styles": {
+    "basic-preview": {
+      "style": "basic-preview/style.json",
+      "tilejson": {
+        "name": "Basic Preview"
+      }
+    }
+  }
+}

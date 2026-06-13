@@ -1,20 +1,3 @@
-dev-map.mahanfile.com {
-	tls {
-		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
-		protocols tls1.2 tls1.3
-	}
-	log {
-		output stdout
-		format json
-	}
-	header {
-		Access-Control-Allow-Origin *
-		Access-Control-Allow-Methods "GET, OPTIONS"
-		Access-Control-Allow-Headers *
-	}
-	reverse_proxy host.docker.internal:8080
-}
-
 map.mahanfile.com {
 	tls {
 		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
@@ -45,17 +28,17 @@ dev.mahanfile.com {
 		output stdout
 		format json
 	}
-	handle_path /storage* {
-		header {
-			Access-Control-Allow-Origin "*"
-			Cross-Origin-Resource-Policy "cross-origin"
-			Timing-Allow-Origin "*"
-		}
-		reverse_proxy host.docker.internal:6204
-	}
-	handle_path /map* {
-		reverse_proxy host.docker.internal:8080
-	}
+handle_path /storage/* {
+    header {
+        Access-Control-Allow-Origin "*"
+        Cross-Origin-Resource-Policy "cross-origin"
+        Timing-Allow-Origin "*"
+    }
+    reverse_proxy host.docker.internal:6204
+}
+handle_path /map/* {
+    reverse_proxy 172.30.0.20:8080
+}
 	reverse_proxy /socket.io/* host.docker.internal:6200
 	reverse_proxy /api/* host.docker.internal:6200
 	reverse_proxy host.docker.internal:6005

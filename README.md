@@ -696,7 +696,7 @@ No registry login or image pull is needed. Images are built locally by the CI bu
     - **Sync a prebuilt file**: set `MBTILES_URL` to a hosted MBTiles and run `./scripts/sync-tiles.sh` (uses `MAP_TILES_PATH`, default `./maps/iran.mbtiles`). Use this in CI before `docker compose up`.
     - **Build Iran locally**: run `OMT_POSTGRES_PORT=<free_port> MIN_ZOOM=0 MAX_ZOOM=14 ./scripts/build-iran-tiles.sh` and wait for completion (tens of minutes). The script drops a full `maps/iran.mbtiles`.
   - After syncing/building, restart the tileserver: `docker compose --profile full restart tileserver`.
-  - Default UI config uses same-origin tiles: `NEXT_PUBLIC_MAP_TILE_BASE_URL=/map`, so requests hit `/map/styles/basic-preview/style.json` and `/map/styles/basic-preview/{z}/{x}/{y}.pbf|.png` on the app domain (no CORS).
+  - Default UI uses same-origin tiles: `NEXT_PUBLIC_MAP_TILE_BASE_URL=/map` with OSM Bright style (128 layers, street names, POIs). The style is served from `ui/public/map-assets/style.json` (self-hosted, no internet) or toggled to CDN via `NEXT_PUBLIC_MAP_STYLE_CDN_URL` in `.env`. Sprites and fonts are hosted locally under `/map-assets/` and `/map/fonts/`.
   - If you change tile paths/ports or revert to dedicated domains, also adjust `Caddyfile.central` (proxy `/map`, `/data`, `/fonts` to the tileserver) and `NEXT_PUBLIC_MAP_TILE_BASE_URL`.
 
 ---

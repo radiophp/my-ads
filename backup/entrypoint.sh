@@ -9,3 +9,4 @@ touch /var/log/pgbackrest-backup.log
 echo "${CRON_SCHEDULE} /opt/backup/run-backup.sh >> /var/log/pgbackrest-backup.log 2>&1" > /etc/crontabs/root
 
 exec crond -f -l 8 -L /var/log/pgbackrest-cron.log
+

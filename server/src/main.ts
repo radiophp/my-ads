@@ -17,8 +17,6 @@ import type { SecurityConfig } from './platform/config/security.config';
 import { initializeOpenTelemetry } from './platform/observability/opentelemetry';
 import { Logger as PinoLogger } from 'nestjs-pino';
 
-
-
 async function bootstrap(): Promise<void> {
   await initializeOpenTelemetry();
 

@@ -114,6 +114,25 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     return this.client.del(this.applyPrefix(key));
   }
 
+  async delPattern(pattern: string): Promise<number> {
+    const prefixed = this.applyPrefix(pattern);
+    const script = `
+      local cursor = '0'
+      local count = 0
+      repeat
+        local result = redis.call('SCAN', cursor, 'MATCH', ARGV[1], 'COUNT', 100)
+        cursor = result[1]
+        local keys = result[2]
+        if #keys > 0 then
+          count = count + #keys
+          redis.call('DEL', unpack(keys))
+        end
+      until cursor == '0'
+      return count
+    `;
+    return this.eval<number>(script, [], [prefixed]);
+  }
+
   async pTTL(key: string): Promise<number> {
     return this.client.pTTL(this.applyPrefix(key));
   }

@@ -1,6 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import type { ConfigType } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@app/platform/database/prisma.service';
+import { RedisService } from '@app/platform/cache/redis.service';
+import cacheConfig from '@app/platform/config/cache.config';
 import { normalizeSlug } from './news.utils';
 import type { CreateNewsDto } from './dto/create-news.dto';
 import type { UpdateNewsDto } from './dto/update-news.dto';
@@ -89,7 +92,14 @@ const summarySelect = {
 
 @Injectable()
 export class NewsService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(NewsService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redisService: RedisService,
+    @Inject(cacheConfig.KEY)
+    private readonly cacheCfg: ConfigType<typeof cacheConfig>,
+  ) {}
 
   private mapNews(record: any) {
     return {
@@ -184,6 +194,18 @@ export class NewsService {
   async listPublic(page = 1, pageSize = DEFAULT_PAGE_SIZE) {
     const safePage = Math.max(1, page);
     const safeSize = Math.min(Math.max(1, pageSize), MAX_PAGE_SIZE);
+    const cacheKey = `news:list:public:page:${safePage}:size:${safeSize}`;
+
+    if (this.cacheCfg.enabled) {
+      const cached = await this.redisService.get(cacheKey);
+      if (cached) {
+        if (process.env['NODE_ENV'] !== 'production') {
+          this.logger.log(`Cache HIT: ${cacheKey}`);
+        }
+        return JSON.parse(cached);
+      }
+    }
+
     const skip = (safePage - 1) * safeSize;
 
     const [items, total] = await Promise.all([
@@ -197,15 +219,33 @@ export class NewsService {
       this.prisma.news.count({ where: { category: { isActive: true } } }),
     ]);
 
-    return {
+    const result = {
       items: items.map((item) => this.mapNews(item)),
       total,
       page: safePage,
       pageSize: safeSize,
     };
+
+    if (this.cacheCfg.enabled) {
+      await this.redisService.pSetEx(cacheKey, 5 * 60 * 1000, JSON.stringify(result));
+    }
+
+    return result;
   }
 
   async getPublicBySlug(slug: string) {
+    const cacheKey = `news:slug:${slug}`;
+
+    if (this.cacheCfg.enabled) {
+      const cached = await this.redisService.get(cacheKey);
+      if (cached) {
+        if (process.env['NODE_ENV'] !== 'production') {
+          this.logger.log(`Cache HIT: ${cacheKey}`);
+        }
+        return JSON.parse(cached);
+      }
+    }
+
     const record = await this.prisma.news.findUnique({
       where: { slug },
       select: newsSelect,
@@ -215,14 +255,32 @@ export class NewsService {
       throw new NotFoundException('News item not found.');
     }
 
-    return this.mapNews(record);
+    const result = this.mapNews(record);
+
+    if (this.cacheCfg.enabled) {
+      await this.redisService.pSetEx(cacheKey, 5 * 60 * 1000, JSON.stringify(result));
+    }
+
+    return result;
   }
 
   async listAdminNews(page = 1, pageSize = DEFAULT_PAGE_SIZE, search?: string) {
     const safePage = Math.max(1, page);
     const safeSize = Math.min(Math.max(1, pageSize), MAX_PAGE_SIZE);
-    const skip = (safePage - 1) * safeSize;
     const trimmedSearch = search?.trim();
+    const cacheKey = `news:list:admin:page:${safePage}:size:${safeSize}:search:${trimmedSearch ?? ''}`;
+
+    if (this.cacheCfg.enabled) {
+      const cached = await this.redisService.get(cacheKey);
+      if (cached) {
+        if (process.env['NODE_ENV'] !== 'production') {
+          this.logger.log(`Cache HIT: ${cacheKey}`);
+        }
+        return JSON.parse(cached);
+      }
+    }
+
+    const skip = (safePage - 1) * safeSize;
     const where = trimmedSearch
       ? {
           title: {
@@ -243,15 +301,33 @@ export class NewsService {
       this.prisma.news.count({ where }),
     ]);
 
-    return {
+    const result = {
       items: items.map((item) => this.mapNews(item)),
       total,
       page: safePage,
       pageSize: safeSize,
     };
+
+    if (this.cacheCfg.enabled) {
+      await this.redisService.pSetEx(cacheKey, 5 * 60 * 1000, JSON.stringify(result));
+    }
+
+    return result;
   }
 
   async getAdminNewsById(id: string) {
+    const cacheKey = `news:id:${id}`;
+
+    if (this.cacheCfg.enabled) {
+      const cached = await this.redisService.get(cacheKey);
+      if (cached) {
+        if (process.env['NODE_ENV'] !== 'production') {
+          this.logger.log(`Cache HIT: ${cacheKey}`);
+        }
+        return JSON.parse(cached);
+      }
+    }
+
     const item = await this.prisma.news.findUnique({
       where: { id },
       select: newsSelect,
@@ -261,7 +337,13 @@ export class NewsService {
       throw new NotFoundException('News item not found.');
     }
 
-    return this.mapNews(item);
+    const result = this.mapNews(item);
+
+    if (this.cacheCfg.enabled) {
+      await this.redisService.pSetEx(cacheKey, 5 * 60 * 1000, JSON.stringify(result));
+    }
+
+    return result;
   }
 
   async createNews(dto: CreateNewsDto) {
@@ -285,6 +367,8 @@ export class NewsService {
       },
       select: newsSelect,
     });
+
+    await this.invalidateNewsCache();
 
     return this.mapNews(created);
   }
@@ -320,26 +404,51 @@ export class NewsService {
       select: newsSelect,
     });
 
+    await this.invalidateNewsCache();
+
     return this.mapNews(updated);
   }
 
   async deleteNews(id: string) {
     await this.prisma.news.delete({ where: { id } });
+    await this.invalidateNewsCache();
   }
 
   async listCategories() {
-    return this.prisma.newsCategory.findMany({ orderBy: { createdAt: 'desc' } });
+    const cacheKey = 'news:categories';
+    if (this.cacheCfg.enabled) {
+      const cached = await this.redisService.get(cacheKey);
+      if (cached) {
+        if (process.env['NODE_ENV'] !== 'production') {
+          this.logger.log(`Cache HIT: ${cacheKey}`);
+        }
+        return JSON.parse(cached);
+      }
+    }
+
+    const result = await this.prisma.newsCategory.findMany({ orderBy: { createdAt: 'desc' } });
+
+    if (this.cacheCfg.enabled) {
+      await this.redisService.pSetEx(cacheKey, 5 * 60 * 1000, JSON.stringify(result));
+    }
+
+    return result;
   }
 
   async createCategory(dto: CreateNewsCategoryDto) {
     const slug = await this.ensureUniqueCategorySlug(dto.slug ?? dto.name);
-    return this.prisma.newsCategory.create({
+
+    const result = await this.prisma.newsCategory.create({
       data: {
         name: dto.name,
         slug,
         isActive: dto.isActive ?? true,
       },
     });
+
+    await this.invalidateNewsCache();
+
+    return result;
   }
 
   async updateCategory(id: string, dto: UpdateNewsCategoryDto) {
@@ -351,7 +460,7 @@ export class NewsService {
     const slugBase = dto.slug ?? dto.name ?? existing.slug;
     const slug = await this.ensureUniqueCategorySlug(slugBase, existing.id);
 
-    return this.prisma.newsCategory.update({
+    const result = await this.prisma.newsCategory.update({
       where: { id },
       data: {
         name: dto.name ?? existing.name,
@@ -359,18 +468,57 @@ export class NewsService {
         isActive: dto.isActive ?? existing.isActive,
       },
     });
+
+    await this.invalidateNewsCache();
+
+    return result;
   }
 
   async deleteCategory(id: string) {
     await this.prisma.newsCategory.delete({ where: { id } });
+    await this.invalidateNewsCache();
   }
 
   async listTags() {
-    return this.prisma.newsTag.findMany({ orderBy: { createdAt: 'desc' } });
+    const cacheKey = 'news:tags';
+    if (this.cacheCfg.enabled) {
+      const cached = await this.redisService.get(cacheKey);
+      if (cached) {
+        if (process.env['NODE_ENV'] !== 'production') {
+          this.logger.log(`Cache HIT: ${cacheKey}`);
+        }
+        return JSON.parse(cached);
+      }
+    }
+
+    const result = await this.prisma.newsTag.findMany({ orderBy: { createdAt: 'desc' } });
+
+    if (this.cacheCfg.enabled) {
+      await this.redisService.pSetEx(cacheKey, 5 * 60 * 1000, JSON.stringify(result));
+    }
+
+    return result;
   }
 
   async listSources() {
-    return this.prisma.newsSource.findMany({ orderBy: { updatedAt: 'desc' } });
+    const cacheKey = 'news:sources';
+    if (this.cacheCfg.enabled) {
+      const cached = await this.redisService.get(cacheKey);
+      if (cached) {
+        if (process.env['NODE_ENV'] !== 'production') {
+          this.logger.log(`Cache HIT: ${cacheKey}`);
+        }
+        return JSON.parse(cached);
+      }
+    }
+
+    const result = await this.prisma.newsSource.findMany({ orderBy: { updatedAt: 'desc' } });
+
+    if (this.cacheCfg.enabled) {
+      await this.redisService.pSetEx(cacheKey, 5 * 60 * 1000, JSON.stringify(result));
+    }
+
+    return result;
   }
 
   async updateSource(id: string, dto: { name?: string; slug?: string; isActive?: boolean }) {
@@ -382,7 +530,7 @@ export class NewsService {
     const slugBase = dto.slug ?? dto.name ?? existing.slug;
     const slug = await this.ensureUniqueSourceSlug(slugBase, existing.id);
 
-    return this.prisma.newsSource.update({
+    const result = await this.prisma.newsSource.update({
       where: { id },
       data: {
         name: dto.name ?? existing.name,
@@ -390,16 +538,25 @@ export class NewsService {
         isActive: dto.isActive ?? existing.isActive,
       },
     });
+
+    await this.invalidateNewsCache();
+
+    return result;
   }
 
   async createTag(dto: CreateNewsTagDto) {
     const slug = await this.ensureUniqueTagSlug(dto.slug ?? dto.name);
-    return this.prisma.newsTag.create({
+
+    const result = await this.prisma.newsTag.create({
       data: {
         name: dto.name,
         slug,
       },
     });
+
+    await this.invalidateNewsCache();
+
+    return result;
   }
 
   async updateTag(id: string, dto: UpdateNewsTagDto) {
@@ -411,16 +568,31 @@ export class NewsService {
     const slugBase = dto.slug ?? dto.name ?? existing.slug;
     const slug = await this.ensureUniqueTagSlug(slugBase, existing.id);
 
-    return this.prisma.newsTag.update({
+    const result = await this.prisma.newsTag.update({
       where: { id },
       data: {
         name: dto.name ?? existing.name,
         slug,
       },
     });
+
+    await this.invalidateNewsCache();
+
+    return result;
   }
 
   async deleteTag(id: string) {
     await this.prisma.newsTag.delete({ where: { id } });
+    await this.invalidateNewsCache();
+  }
+
+  private async invalidateNewsCache(): Promise<void> {
+    if (!this.cacheCfg.enabled) {
+      return;
+    }
+    await this.redisService.delPattern('news:*');
+    if (process.env['NODE_ENV'] !== 'production') {
+      this.logger.log('Cache INVALIDATED: news:*');
+    }
   }
 }

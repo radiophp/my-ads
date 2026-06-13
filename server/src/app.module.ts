@@ -10,6 +10,7 @@ import rabbitmqConfig from './platform/config/rabbitmq.config';
 import minioConfig from './platform/config/minio.config';
 import observabilityConfig from './platform/config/observability.config';
 import loggerConfig from './platform/config/logger.config';
+import cacheConfig from './platform/config/cache.config';
 import { validateEnvironment } from './platform/config/environment.validation';
 import otpConfig from './platform/config/otp.config';
 import { PrismaModule } from './platform/database/prisma.module';
@@ -82,6 +83,7 @@ import { SubscriptionsModule } from './modules/subscriptions/subscriptions.modul
         loggerConfig,
         healthConfig,
         otpConfig,
+        cacheConfig,
         schedulerConfig,
         notificationsConfig,
         pushConfig,

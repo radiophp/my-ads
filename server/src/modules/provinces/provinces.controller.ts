@@ -19,12 +19,14 @@ export class ProvincesController {
   @ApiOkResponse({ type: ProvinceDto, isArray: true })
   async list(): Promise<ProvinceDto[]> {
     const provinces = await this.provincesService.findAll();
-    return provinces.map((province) => ({
-      id: province.id,
-      name: province.name,
-      slug: province.slug,
-      allowPosting: province.allowPosting,
-    }));
+    return provinces.map(
+      (province: { id: number; name: string; slug: string; allowPosting: boolean }) => ({
+        id: province.id,
+        name: province.name,
+        slug: province.slug,
+        allowPosting: province.allowPosting,
+      }),
+    );
   }
 
   @Patch(':id/allow-posting')

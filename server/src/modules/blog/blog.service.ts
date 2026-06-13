@@ -1,6 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import type { ConfigType } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@app/platform/database/prisma.service';
+import { RedisService } from '@app/platform/cache/redis.service';
+import cacheConfig from '@app/platform/config/cache.config';
 import { normalizeSlug } from './blog.utils';
 import type { CreateBlogDto } from './dto/create-blog.dto';
 import type { UpdateBlogDto } from './dto/update-blog.dto';
@@ -89,7 +92,14 @@ const summarySelect = {
 
 @Injectable()
 export class BlogService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(BlogService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redisService: RedisService,
+    @Inject(cacheConfig.KEY)
+    private readonly cacheCfg: ConfigType<typeof cacheConfig>,
+  ) {}
 
   private mapBlog(record: any) {
     return {
@@ -184,6 +194,18 @@ export class BlogService {
   async listPublic(page = 1, pageSize = DEFAULT_PAGE_SIZE) {
     const safePage = Math.max(1, page);
     const safeSize = Math.min(Math.max(1, pageSize), MAX_PAGE_SIZE);
+    const cacheKey = `blog:list:public:page:${safePage}:size:${safeSize}`;
+
+    if (this.cacheCfg.enabled) {
+      const cached = await this.redisService.get(cacheKey);
+      if (cached) {
+        if (process.env['NODE_ENV'] !== 'production') {
+          this.logger.log(`Cache HIT: ${cacheKey}`);
+        }
+        return JSON.parse(cached);
+      }
+    }
+
     const skip = (safePage - 1) * safeSize;
 
     const [items, total] = await Promise.all([
@@ -197,15 +219,33 @@ export class BlogService {
       this.prisma.blog.count({ where: { category: { isActive: true } } }),
     ]);
 
-    return {
+    const result = {
       items: items.map((item) => this.mapBlog(item)),
       total,
       page: safePage,
       pageSize: safeSize,
     };
+
+    if (this.cacheCfg.enabled) {
+      await this.redisService.pSetEx(cacheKey, 5 * 60 * 1000, JSON.stringify(result));
+    }
+
+    return result;
   }
 
   async getPublicBySlug(slug: string) {
+    const cacheKey = `blog:slug:${slug}`;
+
+    if (this.cacheCfg.enabled) {
+      const cached = await this.redisService.get(cacheKey);
+      if (cached) {
+        if (process.env['NODE_ENV'] !== 'production') {
+          this.logger.log(`Cache HIT: ${cacheKey}`);
+        }
+        return JSON.parse(cached);
+      }
+    }
+
     const record = await this.prisma.blog.findUnique({
       where: { slug },
       select: blogSelect,
@@ -215,14 +255,32 @@ export class BlogService {
       throw new NotFoundException('Blog item not found.');
     }
 
-    return this.mapBlog(record);
+    const result = this.mapBlog(record);
+
+    if (this.cacheCfg.enabled) {
+      await this.redisService.pSetEx(cacheKey, 5 * 60 * 1000, JSON.stringify(result));
+    }
+
+    return result;
   }
 
   async listAdminBlog(page = 1, pageSize = DEFAULT_PAGE_SIZE, search?: string) {
     const safePage = Math.max(1, page);
     const safeSize = Math.min(Math.max(1, pageSize), MAX_PAGE_SIZE);
-    const skip = (safePage - 1) * safeSize;
     const trimmedSearch = search?.trim();
+    const cacheKey = `blog:list:admin:page:${safePage}:size:${safeSize}:search:${trimmedSearch ?? ''}`;
+
+    if (this.cacheCfg.enabled) {
+      const cached = await this.redisService.get(cacheKey);
+      if (cached) {
+        if (process.env['NODE_ENV'] !== 'production') {
+          this.logger.log(`Cache HIT: ${cacheKey}`);
+        }
+        return JSON.parse(cached);
+      }
+    }
+
+    const skip = (safePage - 1) * safeSize;
     const where = trimmedSearch
       ? {
           title: {
@@ -243,15 +301,33 @@ export class BlogService {
       this.prisma.blog.count({ where }),
     ]);
 
-    return {
+    const result = {
       items: items.map((item) => this.mapBlog(item)),
       total,
       page: safePage,
       pageSize: safeSize,
     };
+
+    if (this.cacheCfg.enabled) {
+      await this.redisService.pSetEx(cacheKey, 5 * 60 * 1000, JSON.stringify(result));
+    }
+
+    return result;
   }
 
   async getAdminBlogById(id: string) {
+    const cacheKey = `blog:id:${id}`;
+
+    if (this.cacheCfg.enabled) {
+      const cached = await this.redisService.get(cacheKey);
+      if (cached) {
+        if (process.env['NODE_ENV'] !== 'production') {
+          this.logger.log(`Cache HIT: ${cacheKey}`);
+        }
+        return JSON.parse(cached);
+      }
+    }
+
     const item = await this.prisma.blog.findUnique({
       where: { id },
       select: blogSelect,
@@ -261,7 +337,13 @@ export class BlogService {
       throw new NotFoundException('Blog item not found.');
     }
 
-    return this.mapBlog(item);
+    const result = this.mapBlog(item);
+
+    if (this.cacheCfg.enabled) {
+      await this.redisService.pSetEx(cacheKey, 5 * 60 * 1000, JSON.stringify(result));
+    }
+
+    return result;
   }
 
   async createBlog(dto: CreateBlogDto) {
@@ -285,6 +367,8 @@ export class BlogService {
       },
       select: blogSelect,
     });
+
+    await this.invalidateBlogCache();
 
     return this.mapBlog(created);
   }
@@ -320,26 +404,51 @@ export class BlogService {
       select: blogSelect,
     });
 
+    await this.invalidateBlogCache();
+
     return this.mapBlog(updated);
   }
 
   async deleteBlog(id: string) {
     await this.prisma.blog.delete({ where: { id } });
+    await this.invalidateBlogCache();
   }
 
   async listCategories() {
-    return this.prisma.blogCategory.findMany({ orderBy: { createdAt: 'desc' } });
+    const cacheKey = 'blog:categories';
+    if (this.cacheCfg.enabled) {
+      const cached = await this.redisService.get(cacheKey);
+      if (cached) {
+        if (process.env['NODE_ENV'] !== 'production') {
+          this.logger.log(`Cache HIT: ${cacheKey}`);
+        }
+        return JSON.parse(cached);
+      }
+    }
+
+    const result = await this.prisma.blogCategory.findMany({ orderBy: { createdAt: 'desc' } });
+
+    if (this.cacheCfg.enabled) {
+      await this.redisService.pSetEx(cacheKey, 5 * 60 * 1000, JSON.stringify(result));
+    }
+
+    return result;
   }
 
   async createCategory(dto: CreateBlogCategoryDto) {
     const slug = await this.ensureUniqueCategorySlug(dto.slug ?? dto.name);
-    return this.prisma.blogCategory.create({
+
+    const result = await this.prisma.blogCategory.create({
       data: {
         name: dto.name,
         slug,
         isActive: dto.isActive ?? true,
       },
     });
+
+    await this.invalidateBlogCache();
+
+    return result;
   }
 
   async updateCategory(id: string, dto: UpdateBlogCategoryDto) {
@@ -351,7 +460,7 @@ export class BlogService {
     const slugBase = dto.slug ?? dto.name ?? existing.slug;
     const slug = await this.ensureUniqueCategorySlug(slugBase, existing.id);
 
-    return this.prisma.blogCategory.update({
+    const result = await this.prisma.blogCategory.update({
       where: { id },
       data: {
         name: dto.name ?? existing.name,
@@ -359,18 +468,57 @@ export class BlogService {
         isActive: dto.isActive ?? existing.isActive,
       },
     });
+
+    await this.invalidateBlogCache();
+
+    return result;
   }
 
   async deleteCategory(id: string) {
     await this.prisma.blogCategory.delete({ where: { id } });
+    await this.invalidateBlogCache();
   }
 
   async listTags() {
-    return this.prisma.blogTag.findMany({ orderBy: { createdAt: 'desc' } });
+    const cacheKey = 'blog:tags';
+    if (this.cacheCfg.enabled) {
+      const cached = await this.redisService.get(cacheKey);
+      if (cached) {
+        if (process.env['NODE_ENV'] !== 'production') {
+          this.logger.log(`Cache HIT: ${cacheKey}`);
+        }
+        return JSON.parse(cached);
+      }
+    }
+
+    const result = await this.prisma.blogTag.findMany({ orderBy: { createdAt: 'desc' } });
+
+    if (this.cacheCfg.enabled) {
+      await this.redisService.pSetEx(cacheKey, 5 * 60 * 1000, JSON.stringify(result));
+    }
+
+    return result;
   }
 
   async listSources() {
-    return this.prisma.blogSource.findMany({ orderBy: { updatedAt: 'desc' } });
+    const cacheKey = 'blog:sources';
+    if (this.cacheCfg.enabled) {
+      const cached = await this.redisService.get(cacheKey);
+      if (cached) {
+        if (process.env['NODE_ENV'] !== 'production') {
+          this.logger.log(`Cache HIT: ${cacheKey}`);
+        }
+        return JSON.parse(cached);
+      }
+    }
+
+    const result = await this.prisma.blogSource.findMany({ orderBy: { updatedAt: 'desc' } });
+
+    if (this.cacheCfg.enabled) {
+      await this.redisService.pSetEx(cacheKey, 5 * 60 * 1000, JSON.stringify(result));
+    }
+
+    return result;
   }
 
   async updateSource(id: string, dto: { name?: string; slug?: string; isActive?: boolean }) {
@@ -382,7 +530,7 @@ export class BlogService {
     const slugBase = dto.slug ?? dto.name ?? existing.slug;
     const slug = await this.ensureUniqueSourceSlug(slugBase, existing.id);
 
-    return this.prisma.blogSource.update({
+    const result = await this.prisma.blogSource.update({
       where: { id },
       data: {
         name: dto.name ?? existing.name,
@@ -390,16 +538,25 @@ export class BlogService {
         isActive: dto.isActive ?? existing.isActive,
       },
     });
+
+    await this.invalidateBlogCache();
+
+    return result;
   }
 
   async createTag(dto: CreateBlogTagDto) {
     const slug = await this.ensureUniqueTagSlug(dto.slug ?? dto.name);
-    return this.prisma.blogTag.create({
+
+    const result = await this.prisma.blogTag.create({
       data: {
         name: dto.name,
         slug,
       },
     });
+
+    await this.invalidateBlogCache();
+
+    return result;
   }
 
   async updateTag(id: string, dto: UpdateBlogTagDto) {
@@ -411,16 +568,31 @@ export class BlogService {
     const slugBase = dto.slug ?? dto.name ?? existing.slug;
     const slug = await this.ensureUniqueTagSlug(slugBase, existing.id);
 
-    return this.prisma.blogTag.update({
+    const result = await this.prisma.blogTag.update({
       where: { id },
       data: {
         name: dto.name ?? existing.name,
         slug,
       },
     });
+
+    await this.invalidateBlogCache();
+
+    return result;
   }
 
   async deleteTag(id: string) {
     await this.prisma.blogTag.delete({ where: { id } });
+    await this.invalidateBlogCache();
+  }
+
+  private async invalidateBlogCache(): Promise<void> {
+    if (!this.cacheCfg.enabled) {
+      return;
+    }
+    await this.redisService.delPattern('blog:*');
+    if (process.env['NODE_ENV'] !== 'production') {
+      this.logger.log('Cache INVALIDATED: blog:*');
+    }
   }
 }

@@ -1,6 +1,15 @@
-import { Injectable, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  NotFoundException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
+import type { ConfigType } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@app/platform/database/prisma.service';
+import { RedisService } from '@app/platform/cache/redis.service';
+import cacheConfig from '@app/platform/config/cache.config';
 import type { CreateSlideDto } from './dto/create-slide.dto';
 import type { UpdateSlideDto } from './dto/update-slide.dto';
 
@@ -35,21 +44,45 @@ const getSlideDelegate = (prisma: PrismaService) => {
   return delegate;
 };
 
+const SLIDE_CACHE_TTL_MS = 60 * 60 * 1000;
+const SLIDE_CACHE_KEY = 'slides:public';
+
 @Injectable()
 export class SlidesService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(SlidesService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redisService: RedisService,
+    @Inject(cacheConfig.KEY)
+    private readonly cacheCfg: ConfigType<typeof cacheConfig>,
+  ) {}
 
   async listPublicSlides() {
+    if (this.cacheCfg.enabled) {
+      const cached = await this.redisService.get(SLIDE_CACHE_KEY);
+      if (cached) {
+        if (process.env['NODE_ENV'] !== 'production') {
+          this.logger.log(`Cache HIT: ${SLIDE_CACHE_KEY}`);
+        }
+        return JSON.parse(cached);
+      }
+    }
+
     try {
       const delegate = getSlideDelegate(this.prisma);
       if (!delegate) {
         return [];
       }
-      return await delegate.findMany({
+      const slides = await delegate.findMany({
         where: { isActive: true },
         orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
         select: slideSelect,
       });
+      if (this.cacheCfg.enabled) {
+        await this.redisService.pSetEx(SLIDE_CACHE_KEY, SLIDE_CACHE_TTL_MS, JSON.stringify(slides));
+      }
+      return slides;
     } catch (error) {
       if (isMissingSlideTable(error)) {
         return [];
@@ -132,7 +165,7 @@ export class SlidesService {
       if (!delegate) {
         throw new ServiceUnavailableException('Slides are not initialized.');
       }
-      return await delegate.create({
+      const result = await delegate.create({
         data: {
           title: dto.title?.trim() || null,
           description: dto.description?.trim() || null,
@@ -146,6 +179,8 @@ export class SlidesService {
         },
         select: slideSelect,
       });
+      await this.invalidateSlideCache();
+      return result;
     } catch (error) {
       if (isMissingSlideTable(error)) {
         throw new ServiceUnavailableException('Slides are not initialized.');
@@ -177,7 +212,7 @@ export class SlidesService {
       if (!delegate) {
         throw new ServiceUnavailableException('Slides are not initialized.');
       }
-      return await delegate.update({
+      const result = await delegate.update({
         where: { id },
         data: {
           title: dto.title !== undefined ? dto.title?.trim() || null : undefined,
@@ -192,6 +227,8 @@ export class SlidesService {
         },
         select: slideSelect,
       });
+      await this.invalidateSlideCache();
+      return result;
     } catch (error) {
       if (isMissingSlideTable(error)) {
         throw new ServiceUnavailableException('Slides are not initialized.');
@@ -223,11 +260,22 @@ export class SlidesService {
         throw new ServiceUnavailableException('Slides are not initialized.');
       }
       await delegate.delete({ where: { id } });
+      await this.invalidateSlideCache();
     } catch (error) {
       if (isMissingSlideTable(error)) {
         throw new ServiceUnavailableException('Slides are not initialized.');
       }
       throw error;
+    }
+  }
+
+  private async invalidateSlideCache(): Promise<void> {
+    if (!this.cacheCfg.enabled) {
+      return;
+    }
+    await this.redisService.del(SLIDE_CACHE_KEY);
+    if (process.env['NODE_ENV'] !== 'production') {
+      this.logger.log(`Cache INVALIDATED: ${SLIDE_CACHE_KEY}`);
     }
   }
 }

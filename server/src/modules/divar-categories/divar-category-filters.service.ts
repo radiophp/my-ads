@@ -1,6 +1,9 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import type { ConfigType } from '@nestjs/config';
 import type { Prisma } from '@prisma/client';
 import { PrismaService } from '@app/platform/database/prisma.service';
+import { RedisService } from '@app/platform/cache/redis.service';
+import cacheConfig from '@app/platform/config/cache.config';
 import { DivarCategoryFilterDto, type FilterOptionDto } from './dto/divar-category-filter.dto';
 import { DivarCategoryFilterSummaryDto } from './dto/divar-category-filter-summary.dto';
 
@@ -43,7 +46,12 @@ export class DivarCategoryFiltersService {
     process.env['DIVAR_FILTER_FETCH_MAX_RETRIES'] ?? 3,
   );
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redisService: RedisService,
+    @Inject(cacheConfig.KEY)
+    private readonly cacheCfg: ConfigType<typeof cacheConfig>,
+  ) {}
 
   async syncFiltersFromApi(cityId?: string): Promise<DivarCategoryFiltersSyncResult> {
     const categories = await this.prisma.divarCategory.findMany({
@@ -98,10 +106,29 @@ export class DivarCategoryFiltersService {
       }
     }
 
+    if (this.cacheCfg.enabled) {
+      await this.redisService.del('divar:filters:summaries');
+      await this.redisService.delPattern('divar:filters:slug:*');
+      if (process.env['NODE_ENV'] !== 'production') {
+        this.logger.log('Cache INVALIDATED: divar:filters:summaries, divar:filters:slug:*');
+      }
+    }
+
     return summary;
   }
 
   async getFiltersBySlug(slug: string): Promise<DivarCategoryFilterDto> {
+    const cacheKey = `divar:filters:slug:${slug}`;
+    if (this.cacheCfg.enabled) {
+      const cached = await this.redisService.get(cacheKey);
+      if (cached) {
+        if (process.env['NODE_ENV'] !== 'production') {
+          this.logger.log(`Cache HIT: ${cacheKey}`);
+        }
+        return JSON.parse(cached) as DivarCategoryFilterDto;
+      }
+    }
+
     const record = await this.prisma.divarCategoryFilter.findFirst({
       where: {
         category: {
@@ -128,7 +155,7 @@ export class DivarCategoryFiltersService {
       throw new NotFoundException(`Filters for category "${slug}" were not found.`);
     }
 
-    return {
+    const result: DivarCategoryFilterDto = {
       categoryId: record.category.id,
       categorySlug: record.category.slug,
       categoryName: record.category.name,
@@ -137,9 +164,27 @@ export class DivarCategoryFiltersService {
       updatedAt: record.updatedAt,
       normalizedOptions: (record.normalizedOptions as NormalizedFilterOptions | null) ?? {},
     };
+
+    if (this.cacheCfg.enabled) {
+      const cacheTtlMs = 24 * 60 * 60 * 1000;
+      await this.redisService.pSetEx(cacheKey, cacheTtlMs, JSON.stringify(result));
+    }
+
+    return result;
   }
 
   async listFilterSummaries(): Promise<DivarCategoryFilterSummaryDto[]> {
+    const cacheKey = 'divar:filters:summaries';
+    if (this.cacheCfg.enabled) {
+      const cached = await this.redisService.get(cacheKey);
+      if (cached) {
+        if (process.env['NODE_ENV'] !== 'production') {
+          this.logger.log(`Cache HIT: ${cacheKey}`);
+        }
+        return JSON.parse(cached) as DivarCategoryFilterSummaryDto[];
+      }
+    }
+
     const records = await this.prisma.divarCategoryFilter.findMany({
       include: {
         category: {
@@ -154,13 +199,20 @@ export class DivarCategoryFiltersService {
       orderBy: { updatedAt: 'desc' },
     });
 
-    return records.map((record) => ({
+    const result = records.map((record) => ({
       categoryId: record.category.id,
       categorySlug: record.category.slug,
       categoryName: record.category.name,
       displayPath: record.category.displayPath,
       updatedAt: record.updatedAt,
     }));
+
+    if (this.cacheCfg.enabled) {
+      const cacheTtlMs = 24 * 60 * 60 * 1000;
+      await this.redisService.pSetEx(cacheKey, cacheTtlMs, JSON.stringify(result));
+    }
+
+    return result;
   }
 
   private async fetchFiltersPayload(slug: string, cityId: string): Promise<Prisma.InputJsonValue> {

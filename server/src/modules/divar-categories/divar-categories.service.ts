@@ -1,5 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import type { ConfigType } from '@nestjs/config';
 import { PrismaService } from '@app/platform/database/prisma.service';
+import { RedisService } from '@app/platform/cache/redis.service';
+import cacheConfig from '@app/platform/config/cache.config';
 import type { DivarCategoryDto } from './dto/divar-category.dto';
 import type { Prisma } from '@prisma/client';
 
@@ -33,13 +36,20 @@ type CategoryNode = {
   path: string;
 };
 
+const CATEGORY_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
 @Injectable()
 export class DivarCategoriesService {
   private readonly logger = new Logger(DivarCategoriesService.name);
 
   private readonly apiUrl = 'https://api.divar.ir/v1/open-platform/assets/category';
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redisService: RedisService,
+    @Inject(cacheConfig.KEY)
+    private readonly cacheCfg: ConfigType<typeof cacheConfig>,
+  ) {}
 
   async syncCategoriesFromApi(): Promise<DivarCategorySyncResult> {
     this.logger.log('Fetching Divar categories…');
@@ -187,6 +197,14 @@ export class DivarCategoriesService {
       data: { isActive: false },
     });
 
+    if (this.cacheCfg.enabled) {
+      await this.redisService.del('divar:categories:all');
+      await this.redisService.del('divar:categories:public');
+      if (process.env['NODE_ENV'] !== 'production') {
+        this.logger.log('Cache INVALIDATED: divar:categories:all, divar:categories:public');
+      }
+    }
+
     const summary: DivarCategorySyncResult = {
       total: categories.length,
       created,
@@ -202,22 +220,56 @@ export class DivarCategoriesService {
   }
 
   async listCategories(): Promise<DivarCategoryDto[]> {
+    const cacheKey = 'divar:categories:all';
+    if (this.cacheCfg.enabled) {
+      const cached = await this.redisService.get(cacheKey);
+      if (cached) {
+        if (process.env['NODE_ENV'] !== 'production') {
+          this.logger.log(`Cache HIT: ${cacheKey}`);
+        }
+        return JSON.parse(cached) as DivarCategoryDto[];
+      }
+    }
+
     const categories = await this.prisma.divarCategory.findMany({
       orderBy: [{ displayPath: 'asc' }],
       include: this.includeForCategory(),
     });
 
-    return categories.map((category) => this.toDto(category));
+    const result = categories.map((category) => this.toDto(category));
+
+    if (this.cacheCfg.enabled) {
+      await this.redisService.pSetEx(cacheKey, CATEGORY_CACHE_TTL_MS, JSON.stringify(result));
+    }
+
+    return result;
   }
 
   async listPublicCategories(): Promise<DivarCategoryDto[]> {
+    const cacheKey = 'divar:categories:public';
+    if (this.cacheCfg.enabled) {
+      const cached = await this.redisService.get(cacheKey);
+      if (cached) {
+        if (process.env['NODE_ENV'] !== 'production') {
+          this.logger.log(`Cache HIT: ${cacheKey}`);
+        }
+        return JSON.parse(cached) as DivarCategoryDto[];
+      }
+    }
+
     const categories = await this.prisma.divarCategory.findMany({
       where: { isActive: true },
       orderBy: [{ displayPath: 'asc' }],
       include: this.includeForCategory(),
     });
 
-    return categories.map((category) => this.toDto(category));
+    const result = categories.map((category) => this.toDto(category));
+
+    if (this.cacheCfg.enabled) {
+      await this.redisService.pSetEx(cacheKey, CATEGORY_CACHE_TTL_MS, JSON.stringify(result));
+    }
+
+    return result;
   }
 
   async updateAllowPosting(id: string, allowPosting: boolean): Promise<DivarCategoryDto> {
@@ -239,6 +291,14 @@ export class DivarCategoriesService {
 
       return updated;
     });
+
+    if (this.cacheCfg.enabled) {
+      await this.redisService.del('divar:categories:all');
+      await this.redisService.del('divar:categories:public');
+      if (process.env['NODE_ENV'] !== 'production') {
+        this.logger.log('Cache INVALIDATED: divar:categories:all, divar:categories:public');
+      }
+    }
 
     return this.toDto(category);
   }

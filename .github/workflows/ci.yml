@@ -455,6 +455,7 @@ jobs:
           REDIS_DB: ${{ vars.REDIS_DB }}
           REDIS_TLS: ${{ vars.REDIS_TLS }}
           REDIS_KEY_PREFIX: ${{ vars.REDIS_KEY_PREFIX }}
+          ENABLE_USE_REDIS_CACHE: ${{ vars.ENABLE_USE_REDIS_CACHE }}
           RABBITMQ_HOST: ${{ vars.RABBITMQ_HOST }}
           RABBITMQ_PORT: ${{ vars.RABBITMQ_PORT }}
           RABBITMQ_MANAGEMENT_PORT: ${{ vars.RABBITMQ_MANAGEMENT_PORT }}

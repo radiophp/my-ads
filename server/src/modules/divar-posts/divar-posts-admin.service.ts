@@ -1,5 +1,8 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common';
+import type { ConfigType } from '@nestjs/config';
 import { PrismaService } from '@app/platform/database/prisma.service';
+import { RedisService } from '@app/platform/cache/redis.service';
+import cacheConfig from '@app/platform/config/cache.config';
 import { PostAnalysisStatus, Prisma } from '@prisma/client';
 import type { PaginatedPostsToAnalyzeDto, PostToAnalyzeItemDto } from './dto/post-to-analyze.dto';
 import type { PaginatedDivarPostsDto, DivarPostListItemDto } from './dto/divar-post.dto';
@@ -225,7 +228,12 @@ type NumericRangeInput = {
 export class DivarPostsAdminService {
   private readonly logger = new Logger(DivarPostsAdminService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redisService: RedisService,
+    @Inject(cacheConfig.KEY)
+    private readonly cacheCfg: ConfigType<typeof cacheConfig>,
+  ) {}
 
   async listPostsToAnalyze(
     page: number,
@@ -480,6 +488,19 @@ export class DivarPostsAdminService {
   }): Promise<DivarPostListItemDto[]> {
     const citySlug = options.citySlug?.trim();
     const districtSlug = options.districtSlug?.trim();
+    const limit = options.limit ?? 40;
+    const cacheKey = `divar:posts:preview:city:${citySlug ?? ''}:district:${districtSlug ?? ''}:limit:${limit}`;
+
+    if (this.cacheCfg.enabled) {
+      const cached = await this.redisService.get(cacheKey);
+      if (cached) {
+        if (process.env['NODE_ENV'] !== 'production') {
+          this.logger.log(`Cache HIT: ${cacheKey}`);
+        }
+        return JSON.parse(cached) as DivarPostListItemDto[];
+      }
+    }
+
     let cityId: number | undefined;
     let districtId: number | undefined;
 
@@ -505,10 +526,15 @@ export class DivarPostsAdminService {
     }
 
     const { items } = await this.listNormalizedPosts({
-      limit: options.limit ?? 40,
+      limit,
       cityIds: cityId ? [cityId] : undefined,
       districtIds: districtId ? [districtId] : undefined,
     });
+
+    if (this.cacheCfg.enabled) {
+      const cacheTtlMs = 5 * 60 * 1000;
+      await this.redisService.pSetEx(cacheKey, cacheTtlMs, JSON.stringify(items));
+    }
 
     return items;
   }
@@ -540,6 +566,18 @@ export class DivarPostsAdminService {
   }
 
   async getNormalizedPostById(id: string): Promise<DivarPostListItemDto | null> {
+    const cacheKey = `divar:post:id:${id}`;
+
+    if (this.cacheCfg.enabled) {
+      const cached = await this.redisService.get(cacheKey);
+      if (cached) {
+        if (process.env['NODE_ENV'] !== 'production') {
+          this.logger.log(`Cache HIT: ${cacheKey}`);
+        }
+        return JSON.parse(cached) as DivarPostListItemDto | null;
+      }
+    }
+
     const record = await this.prisma.divarPost.findUnique({
       where: { id },
       select: DIVAR_POST_SUMMARY_SELECT,
@@ -548,10 +586,29 @@ export class DivarPostsAdminService {
       return null;
     }
     const categoryLabels = await this.resolveCategoryLabels([record]);
-    return this.mapRecordToListItem(record, categoryLabels);
+    const result = this.mapRecordToListItem(record, categoryLabels);
+
+    if (this.cacheCfg.enabled) {
+      const cacheTtlMs = 5 * 60 * 1000;
+      await this.redisService.pSetEx(cacheKey, cacheTtlMs, JSON.stringify(result));
+    }
+
+    return result;
   }
 
   async getNormalizedPostByCode(code: number): Promise<DivarPostListItemDto | null> {
+    const cacheKey = `divar:post:code:${code}`;
+
+    if (this.cacheCfg.enabled) {
+      const cached = await this.redisService.get(cacheKey);
+      if (cached) {
+        if (process.env['NODE_ENV'] !== 'production') {
+          this.logger.log(`Cache HIT: ${cacheKey}`);
+        }
+        return JSON.parse(cached) as DivarPostListItemDto | null;
+      }
+    }
+
     const record = await this.prisma.divarPost.findUnique({
       where: { code },
       select: DIVAR_POST_SUMMARY_SELECT,
@@ -560,7 +617,14 @@ export class DivarPostsAdminService {
       return null;
     }
     const categoryLabels = await this.resolveCategoryLabels([record]);
-    return this.mapRecordToListItem(record, categoryLabels);
+    const result = this.mapRecordToListItem(record, categoryLabels);
+
+    if (this.cacheCfg.enabled) {
+      const cacheTtlMs = 5 * 60 * 1000;
+      await this.redisService.pSetEx(cacheKey, cacheTtlMs, JSON.stringify(result));
+    }
+
+    return result;
   }
 
   async getNormalizedPostByExternalId(externalId: string): Promise<DivarPostListItemDto | null> {

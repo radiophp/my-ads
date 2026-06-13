@@ -400,6 +400,7 @@ model BaleUserLink {
   baleId    String   @id
   chatId    String
   phone     String
+  botId     String
   userId    String?
   user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   createdAt DateTime @default(now())
@@ -407,6 +408,7 @@ model BaleUserLink {
 
   @@index([phone])
   @@index([userId])
+  @@index([botId])
 }
 
 model SubscriptionPackage {

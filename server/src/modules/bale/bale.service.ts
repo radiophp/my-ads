@@ -430,6 +430,11 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
     return undefined;
   }
 
+  private getBotId(): string {
+    const token = this.configService.get<string>('BALE_BOT_TOKEN');
+    return token?.split(':')[0] ?? '';
+  }
+
   private async ensureSender(): Promise<void> {
     if (this.sender) {
       return;
@@ -444,11 +449,12 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
 
   private async saveBaleLink(params: { baleId: string; chatId: string; phone: string }) {
     const { baleId, chatId, phone } = params;
+    const botId = this.getBotId();
     const user = await this.findUserByPhone(phone);
     await this.prisma.baleUserLink.upsert({
       where: { baleId },
-      update: { chatId, phone, userId: user?.id ?? null },
-      create: { baleId, chatId, phone, userId: user?.id ?? null },
+      update: { chatId, phone, botId, userId: user?.id ?? null },
+      create: { baleId, chatId, phone, botId, userId: user?.id ?? null },
     });
     if (baleId) {
       this.phoneCache.set(Number(baleId), phone);
@@ -532,9 +538,11 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async findChatLink(options: { userId?: string; phone?: string }) {
+    const botId = this.getBotId();
+
     if (options.userId) {
       const byUser = await this.prisma.baleUserLink.findFirst({
-        where: { userId: options.userId },
+        where: { userId: options.userId, botId },
         orderBy: { updatedAt: 'desc' },
       });
       if (byUser) return byUser;
@@ -548,7 +556,7 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
         candidates.add(`+${digits}`);
       }
       const byPhone = await this.prisma.baleUserLink.findFirst({
-        where: { phone: { in: Array.from(candidates) } },
+        where: { phone: { in: Array.from(candidates) }, botId },
         orderBy: { updatedAt: 'desc' },
       });
       if (byPhone) return byPhone;

@@ -123,6 +123,7 @@ const nextConfig: NextConfig = {
     remotePatterns: imageRemotePatterns,
     domains: imageRemotePatterns.map((pattern) => pattern.hostname),
   },
+  allowedDevOrigins: process.env.NODE_ENV === 'development' ? ['dev.mahanfile.com'] : undefined,
   webpack(config) {
     config.resolve ??= {};
     config.resolve.alias ??= {};

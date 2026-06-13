@@ -273,9 +273,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Set up Docker BuildKit cache
+        run: mkdir -p /tmp/docker-cache
+
       - name: Build API image
+        env:
+          DOCKER_BUILDKIT: 1
         run: |
           docker build \
+            --cache-from type=local,src=/tmp/docker-cache \
+            --cache-to type=local,dest=/tmp/docker-cache,mode=max \
             -t my-ads-api:latest \
             --build-arg NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL || 'https://mahanfile.com' }} \
             --build-arg NEXT_PUBLIC_API_BASE_URL=${{ vars.NEXT_PUBLIC_API_BASE_URL || 'https://mahanfile.com/api' }} \
@@ -295,9 +302,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Set up Docker BuildKit cache
+        run: mkdir -p /tmp/docker-cache
+
       - name: Build backup image
+        env:
+          DOCKER_BUILDKIT: 1
         run: |
           docker build \
+            --cache-from type=local,src=/tmp/docker-cache \
+            --cache-to type=local,dest=/tmp/docker-cache,mode=max \
             -t my-ads-backup:latest \
             -f backup/Dockerfile backup
 
@@ -318,9 +332,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Set up Docker BuildKit cache
+        run: mkdir -p /tmp/docker-cache
+
       - name: Build UI image
+        env:
+          DOCKER_BUILDKIT: 1
         run: |
           docker build \
+            --cache-from type=local,src=/tmp/docker-cache \
+            --cache-to type=local,dest=/tmp/docker-cache,mode=max \
             -t my-ads-ui:latest \
             --build-arg NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL || 'https://mahanfile.com' }} \
             --build-arg NEXT_PUBLIC_API_BASE_URL=${{ vars.NEXT_PUBLIC_API_BASE_URL || 'https://mahanfile.com/api' }} \

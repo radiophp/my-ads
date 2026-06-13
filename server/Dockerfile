@@ -63,7 +63,7 @@ ENV LOG_LEVEL=${LOG_LEVEL}
 ENV LOG_PRETTY=${LOG_PRETTY}
 ENV PRISMA_LOG_QUERIES=${PRISMA_LOG_QUERIES}
 COPY package.json package-lock.json* ./
-RUN npm install
+RUN --mount=type=cache,target=/root/.npm npm install
 COPY . .
 RUN npm run prisma:generate
 RUN npm run build

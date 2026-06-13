@@ -14,13 +14,10 @@ type InMemoryEntry = {
   expiresAt?: number;
 };
 
-class InMemoryRedisClient
-  implements
-    Pick<
-      RedisClient,
-      'get' | 'mGet' | 'set' | 'pSetEx' | 'del' | 'multi' | 'pTTL' | 'scan' | 'quit' | 'ping'
-    >
-{
+class InMemoryRedisClient implements Pick<
+  RedisClient,
+  'get' | 'mGet' | 'set' | 'pSetEx' | 'del' | 'multi' | 'pTTL' | 'scan' | 'quit' | 'ping'
+> {
   constructor(private readonly store: Map<string, InMemoryEntry>) {}
 
   private isExpired(key: string): boolean {
@@ -189,9 +186,10 @@ const prismaServiceMock = {
   },
 };
 
-class StorageServiceMock
-  implements Pick<StorageService, 'uploadObject' | 'getPublicUrl' | 'healthCheck'>
-{
+class StorageServiceMock implements Pick<
+  StorageService,
+  'uploadObject' | 'getPublicUrl' | 'healthCheck'
+> {
   async uploadObject(): Promise<StoredObjectMetadata> {
     return {
       bucket: 'upload',
@@ -209,13 +207,10 @@ class StorageServiceMock
   }
 }
 
-class QueueServiceMock
-  implements
-    Pick<
-      QueueService,
-      'publish' | 'registerConsumer' | 'close' | 'healthCheck' | 'getConsumerRetryOptions'
-    >
-{
+class QueueServiceMock implements Pick<
+  QueueService,
+  'publish' | 'registerConsumer' | 'close' | 'healthCheck' | 'getConsumerRetryOptions'
+> {
   shouldFailHealthCheck = false;
 
   async publish(): Promise<void> {
@@ -242,17 +237,14 @@ class QueueServiceMock
   }
 }
 
-class MetricsServiceMock
-  implements
-    Pick<
-      MetricsService,
-      | 'recordHealthCheck'
-      | 'observeHttp'
-      | 'incrementUsersCreated'
-      | 'incrementNotificationRetries'
-      | 'recordQueueMetrics'
-    >
-{
+class MetricsServiceMock implements Pick<
+  MetricsService,
+  | 'recordHealthCheck'
+  | 'observeHttp'
+  | 'incrementUsersCreated'
+  | 'incrementNotificationRetries'
+  | 'recordQueueMetrics'
+> {
   recordHealthCheck = jest.fn();
   observeHttp(): void {}
   incrementUsersCreated(): void {}

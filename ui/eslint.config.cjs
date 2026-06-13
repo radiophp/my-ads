@@ -14,6 +14,7 @@ module.exports = [
       '.next/**',
       'public/**',
       'commitlint.config.js',
+      '.eslintrc.cjs',
       'eslint.config.cjs',
     ],
   },

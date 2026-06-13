@@ -12,7 +12,7 @@ module.exports = {
   settings: {
     tailwindcss: {
       callees: ['cn'],
-      config: 'tailwind.config.ts'
+      config: require('path').join(__dirname, 'tailwind.config.ts')
     }
   },
   overrides: [
@@ -20,6 +20,9 @@ module.exports = {
       files: ['**/*.js', '**/*.cjs', '**/*.mjs'],
       parserOptions: {
         project: null
+      },
+      rules: {
+        'tailwindcss/enforces-negative-arbitrary-values': 'off'
       }
     },
     {

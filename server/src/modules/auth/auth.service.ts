@@ -122,6 +122,9 @@ export class AuthService {
   }
 
   private async findBaleLinkByPhone(phone: string) {
+    const botId = this.configService.get<string>('BALE_BOT_TOKEN')?.split(':')[0] ?? '';
+    if (!botId) return null;
+
     const digits = phone.replace(/\D+/g, '');
     const candidates = new Set<string>([phone]);
     if (digits) {
@@ -129,7 +132,7 @@ export class AuthService {
       candidates.add(`+${digits}`);
     }
     return this.prismaService.baleUserLink.findFirst({
-      where: { phone: { in: Array.from(candidates) } },
+      where: { phone: { in: Array.from(candidates) }, botId },
       orderBy: { updatedAt: 'desc' },
     });
   }

@@ -262,6 +262,8 @@ services:
       LOG_PRETTY: ${LOG_PRETTY}
       PRISMA_LOG_QUERIES: ${PRISMA_LOG_QUERIES}
       NEXT_UI_PORT: ${NEXT_UI_PORT}
+      BALE_BOT_TOKEN: ${BALE_BOT_TOKEN:?BALE_BOT_TOKEN not set}
+      BALE_BOT_AUTOSTART: 'false'
     ports:
       - target: ${APP_PORT}
         published: ${APP_PORT}

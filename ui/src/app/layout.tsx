@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { NextIntlClientProvider } from 'next-intl';
 import { headers } from 'next/headers';
-import { getLocale, getMessages, unstable_setRequestLocale } from 'next-intl/server';
+import { getLocale, getMessages, setRequestLocale } from 'next-intl/server';
 
 import { inter } from '@/app/fonts';
 import { Providers } from '@/app/providers';
@@ -124,7 +124,7 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const locale = await getLocale();
-  unstable_setRequestLocale(locale);
+  setRequestLocale(locale);
   const messages = await getMessages();
   const dir = locale === 'fa' ? 'rtl' : 'ltr';
   const requestHeaders = await headers();

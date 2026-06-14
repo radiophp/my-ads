@@ -774,62 +774,35 @@ export function DivarPostsFeed(): JSX.Element {
               </div>
 
               <div className="border-t border-border bg-background/95 px-6 py-4 sm:border-0 sm:bg-transparent sm:px-0">
-                <div
-                  className={cn(
-                    'flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between',
-                    isRTL ? 'sm:flex-row-reverse' : 'sm:flex-row',
-                  )}
-                >
-                  <div className={cn('flex flex-wrap gap-3', isRTL ? 'flex-row-reverse' : 'flex-row')}>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className={cn(
-                        'min-w-[140px] flex-1 sm:flex-none',
-                        isRTL ? 'order-last' : 'order-first',
-                      )}
-                      onClick={() => handleNavigateByOffset(-1)}
-                      disabled={!hasPrevious || !mapReady}
-                    >
-                      <span className="flex items-center gap-2">
-                        {isRTL ? (
-                          <ChevronRight className="size-4" aria-hidden />
-                        ) : (
-                          <ChevronLeft className="size-4" aria-hidden />
-                        )}
-                        {t('previousPost')}
-                      </span>
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className={cn(
-                        'min-w-[140px] flex-1 sm:flex-none',
-                        isRTL ? 'order-first' : 'order-last',
-                      )}
-                      onClick={() => handleNavigateByOffset(1)}
-                      disabled={!hasNext || !mapReady}
-                    >
-                      <span className="flex items-center gap-2">
-                        {t('nextPost')}
-                        {isRTL ? (
-                          <ChevronLeft className="size-4" aria-hidden />
-                        ) : (
-                          <ChevronRight className="size-4" aria-hidden />
-                        )}
-                      </span>
-                    </Button>
-                  </div>
-                  <div className={cn('flex flex-wrap gap-3', isRTL ? 'flex-row-reverse' : 'flex-row')}>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      className="min-w-[140px] flex-1 sm:flex-none"
-                      onClick={() => closeDialog(false)}
-                    >
-                      {t('close')}
-                    </Button>
-                  </div>
+                <div className="flex w-full items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="px-6 py-2"
+                    onClick={() => handleNavigateByOffset(-1)}
+                    disabled={!hasPrevious || !mapReady}
+                  >
+                    <ChevronRight className="size-4" aria-hidden />
+                    <span className="sr-only">{t('nextPost')}</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="flex-1"
+                    onClick={() => closeDialog(false)}
+                  >
+                    {t('close')}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="px-6 py-2"
+                    onClick={() => handleNavigateByOffset(1)}
+                    disabled={!hasNext || !mapReady}
+                  >
+                    <ChevronLeft className="size-4" aria-hidden />
+                    <span className="sr-only">{t('previousPost')}</span>
+                  </Button>
                 </div>
               </div>
             </div>

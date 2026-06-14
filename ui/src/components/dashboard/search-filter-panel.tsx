@@ -64,6 +64,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { cloneSearchFilterState, mergeSavedFilterState } from '@/features/search-filter/utils';
 import { DesktopCategorySection } from './desktop-category-section';
 import { DesktopRegionSelectors } from './desktop-region-selectors';
+import { CodeSearch } from '@/components/layout/code-search';
 
 const DEFAULT_SAVED_FILTER_LIMIT = 5;
 const DEFAULT_PROVINCE_NAME_FA = 'البرز';
@@ -1077,6 +1078,9 @@ export function DashboardSearchFilterPanel() {
 
         {!filterModalOpen ? (
           <>
+            <div className="hidden lg:block">
+              <CodeSearch />
+            </div>
             <div className="hidden justify-end lg:flex">
               <Button
                 type="button"
@@ -1317,6 +1321,9 @@ export function DashboardSearchFilterPanel() {
 		                {mobileFiltersTab === 'main' ? (
 		                  <>
 			                    <div className="flex flex-col gap-3">
+			                      <div className="lg:hidden">
+			                        <CodeSearch variant="mobile" onSuccess={() => setFilterModalOpen(false)} />
+			                      </div>
 			                      <div className="py-0">
 			                        <div className="space-y-1 lg:hidden">
 			                          <label

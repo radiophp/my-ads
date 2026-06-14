@@ -7,6 +7,19 @@ import type { useTranslations } from 'next-intl';
 import type { Map as MapLibreMap, Marker as MapLibreMarker, StyleSpecification } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
+type MutableLayer = {
+  id?: string;
+  type?: string;
+  layout?: Record<string, unknown>;
+  paint?: Record<string, unknown>;
+  filter?: unknown;
+  metadata?: Record<string, unknown>;
+  source?: string;
+  'source-layer'?: string;
+  minzoom?: number;
+  maxzoom?: number;
+};
+
 type PostLocationMapProps = {
   lat: number;
   lon: number;
@@ -72,29 +85,31 @@ export function PostLocationMap({
 
           // CDN mode: replace Noto Sans with Noto Naskh Arabic for Persian support
           if (isCdnMode && style.layers) {
-            style.layers.forEach((layer: any) => {
-              if (layer.layout?.['text-font']) {
-                layer.layout['text-font'] = ['Noto Naskh Arabic Regular'];
+            style.layers.forEach((layer) => {
+              const l = layer as MutableLayer;
+              if (l.layout?.['text-font']) {
+                l.layout['text-font'] = ['Noto Naskh Arabic Regular'];
               }
             });
           }
 
           // Scale down font sizes (Noto Naskh Arabic renders larger than Noto Sans)
-          const scaleFontSize = (v: any): any => {
+          const scaleFontSize = (v: unknown): unknown => {
             if (typeof v === 'number') return Math.round(v * 0.55);
             if (v && typeof v === 'object') {
-              const scaled = { ...v };
-              if (v.stops) {
-                scaled.stops = v.stops.map((s: any) => [s[0], typeof s[1] === 'number' ? Math.round(s[1] * 0.55) : s[1]]);
+              const scaled = { ...v } as Record<string, unknown>;
+              if ('stops' in scaled) {
+                scaled.stops = (scaled.stops as Array<[unknown, unknown]>).map((s) => [s[0], typeof s[1] === 'number' ? Math.round(s[1] * 0.55) : s[1]]);
               }
               return scaled;
             }
             return v;
           };
           if (style.layers) {
-            style.layers.forEach((layer: any) => {
-              if (layer.layout?.['text-size'] !== undefined) {
-                layer.layout['text-size'] = scaleFontSize(layer.layout['text-size']);
+            style.layers.forEach((layer) => {
+              const l = layer as MutableLayer;
+              if (l.layout?.['text-size'] !== undefined) {
+                l.layout['text-size'] = scaleFontSize(l.layout['text-size']);
               }
             });
           }

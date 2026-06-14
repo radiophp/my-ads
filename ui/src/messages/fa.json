@@ -39,8 +39,8 @@
     },
     "installApp": "نصب برنامه",
     "search": {
-      "label": "جستجو با کد آگهی",
-      "placeholder": "کد آگهی…",
+      "label": "جستجو با کد",
+      "placeholder": "کد…",
       "button": "جستجو",
       "invalid": "یک کد عددی معتبر وارد کنید.",
       "notFound": "آگهی یافت نشد.",
@@ -643,7 +643,7 @@
       "shareMessageDetailLabel": "جزئیات",
       "map": {
         "title": "موقعیت روی نقشه",
-        "openExternal": "نمایش در نقشه کامل",
+        "openExternal": "نمایش کامل",
         "coordinates": "مختصات: {lat}، {lon}"
       },
       "shareMessagePublishUnknown": "نامشخص",
@@ -751,8 +751,8 @@
         "permalink": "لینک آگهی",
         "notAvailable": "نامشخص",
         "otherFeatures": "سایر ویژگی‌ها",
-        "postCode": "کد آگهی",
-        "postCodeCopied": "کد آگهی کپی شد"
+        "postCode": "کد",
+        "postCodeCopied": "کد کپی شد"
       },
       "businessType": {
         "realEstateBusiness": "مشاور املاک",
@@ -1783,7 +1783,7 @@
       "fields": {
         "userId": "شناسه کاربر",
         "savedFilterId": "شناسه مجموعه فیلتر",
-        "postCode": "کد آگهی",
+        "postCode": "کد",
         "postCodePlaceholder": "مثلاً 355325",
         "message": "پیام (اختیاری)",
         "messagePlaceholder": "اگر خالی بماند از عنوان/توضیح آگهی استفاده می‌شود",
@@ -1811,7 +1811,7 @@
       },
       "errors": {
         "missing": "فیلدهای لازم وارد نشده‌اند",
-        "required": "شناسه کاربر، مجموعه فیلتر و کد آگهی را وارد کنید."
+        "required": "شناسه کاربر، مجموعه فیلتر و کد را وارد کنید."
       },
       "tips": {
         "title": "نکات",

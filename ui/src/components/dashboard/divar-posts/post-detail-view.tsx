@@ -643,9 +643,9 @@ export function PostDetailView({
               }}
               aria-label={t('labels.postCode')}
             >
+              <Copy className="size-4" aria-hidden />
               <span>{t('labels.postCode')}:</span>
               <span className="font-mono text-sm">{post.code ?? '—'}</span>
-              <Copy className="size-4" aria-hidden />
             </button>
             {publishedDisplay ? (
               <span className="inline-flex items-center gap-2 rounded-md border border-border/70 bg-muted/40 px-3 py-1 text-sm font-normal text-foreground">
@@ -809,9 +809,9 @@ export function PostDetailView({
                 }}
                 aria-label={t('labels.postCode')}
               >
+                <Copy className="size-4" aria-hidden />
                 <span>{t('labels.postCode')}:</span>
                 <span className="font-mono text-xs">{post.code ?? '—'}</span>
-                <Copy className="size-4" aria-hidden />
               </button>
               {publishedDisplay ? (
                 <span

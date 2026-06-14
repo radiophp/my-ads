@@ -174,6 +174,15 @@ export function DashboardSearchFilterPanel() {
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [savedFiltersModalOpen, setSavedFiltersModalOpen] = useState(false);
 
+  useEffect(() => {
+    if (!filterModalOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setFilterModalOpen(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [filterModalOpen]);
+
   const [provinceDialogOpen, setProvinceDialogOpen] = useState(false);
   const [cityDialogOpen, setCityDialogOpen] = useState(false);
   const [districtDialogOpen, setDistrictDialogOpen] = useState(false);
@@ -2122,25 +2131,31 @@ export function DashboardSearchFilterPanel() {
 	        </div>
 	        {filterModalOpen ? (
 	          <div className="z-10 mt-auto flex shrink-0 flex-col justify-end gap-3 border-t border-border bg-background p-4 lg:hidden">
-	            <div className="flex flex-row gap-3">
-	              <Button
-	                type="button"
-                className="flex-1"
-                onClick={() => {
-                  dispatch(commitAppliedFilters());
-                  setFilterModalOpen(false);
-                }}
-                disabled={!modalHasPendingChanges}
-              >
-                <span className="flex items-center justify-center gap-2">
-                  <Check className="size-4" aria-hidden="true" />
-                  <span>{t('applyFilters')}</span>
-                </span>
-              </Button>
+            <div className="flex flex-row gap-3">
+              <div className="flex-1" onClick={() => {
+                if (!modalHasPendingChanges) {
+                  toast({ title: t('noChanges') });
+                }
+              }}>
+                <Button
+                  type="button"
+                  className="w-full"
+                  onClick={() => {
+                    dispatch(commitAppliedFilters());
+                    setFilterModalOpen(false);
+                  }}
+                  disabled={!modalHasPendingChanges}
+                >
+                  <span className="flex items-center justify-center gap-2">
+                    <Check className="size-4" aria-hidden="true" />
+                    <span>{t('applyFilters')}</span>
+                  </span>
+                </Button>
+              </div>
               <Button
                 type="button"
                 variant="secondary"
-                className="flex-1"
+                className="shrink-0"
                 disabled={!hasActiveFilters || saveLimitReached || isCreatingSavedFilter}
                 onClick={() => setSaveDialogOpen(true)}
                 title={
@@ -2157,17 +2172,6 @@ export function DashboardSearchFilterPanel() {
                 </span>
               </Button>
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={() => setFilterModalOpen(false)}
-            >
-              <span className="flex items-center justify-center gap-2">
-                <X className="size-4" aria-hidden="true" />
-                <span>{t('mobileBack')}</span>
-              </span>
-            </Button>
           </div>
         ) : null}
       </section>

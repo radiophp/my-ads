@@ -1,0 +1,250 @@
+# Full Module Index
+
+## Server Backend (`server/src/`)
+
+### App Entry
+- `main.ts` — Bootstrap NestJS + Fastify adapter, listen on APP_HOST:APP_PORT
+- `app.module.ts` — Root module wiring all platform + feature modules
+
+### Modules (`server/src/modules/*`)
+| File | Purpose |
+| --- | --- |
+| `auth/auth.controller.ts` | POST /auth/request-otp, /auth/verify-otp |
+| `auth/auth.service.ts` | OTP generate/validate, JWT sign |
+| `users/users.*.ts` | User CRUD, roles, admin management |
+| `admin-panel/*.ts` | Admin dashboard stats/endpoints |
+| `user-panel/*.ts` | User dashboard endpoints |
+| `divar-posts/divar-posts.controller.ts` | GET /divar-posts (dashboard list, detail) |
+| `divar-posts/divar-posts-admin.controller.ts` | Admin CRUD for posts |
+| `divar-posts/divar-post-harvest.service.ts` | Harvest new posts from Divar |
+| `divar-posts/divar-post-fetch.service.ts` | Fetch post details from Divar |
+| `divar-posts/divar-post-analyze.service.ts` | Analyze post content |
+| `divar-posts/divar-post-media-sync.service.ts` | Sync media to MinIO |
+| `divar-posts/divar-contact-fetch.service.ts` | Fetch phone contacts |
+| `divar-posts/divar-post-stats.service.ts` | Post statistics aggregation |
+| `divar-posts/divar-post-parser.ts` | Divar HTML/JSON parser |
+| `divar-categories/*.ts` | Category tree sync + filter widgets |
+| `melkradar/*.ts` | MelkRadar archive, fetch, divar conversion |
+| `arka/*.ts` | Arka phone fetch, transfer, session admin |
+| `news/news.controller.ts` | Public news list/detail |
+| `news/admin-news.controller.ts` | Admin news CRUD |
+| `news/news-crawler.service.ts` | Base crawler logic |
+| `news/asriran-crawler.service.ts` | Asriran news crawler |
+| `news/khabar-crawler.service.ts` | Khabaronline news crawler |
+| `blog/blog.controller.ts` | Public blog list/detail |
+| `blog/admin-blog.controller.ts` | Admin blog CRUD |
+| `cities/*.ts` | City CRUD |
+| `provinces/*.ts` | Province CRUD |
+| `districts/*.ts` | District CRUD |
+| `uploads/*.ts` | File upload to MinIO |
+| `slides/*.ts` | Homepage slides CRUD |
+| `featured-posts/*.ts` | Featured post management |
+| `notifications/notifications.controller.ts` | Notification listing/mark-read |
+| `notifications/notifications.service.ts` | Notification CRUD |
+| `notifications/notification-queue.processor.ts` | General notification queue |
+| `notifications/notification-matcher.service.ts` | Match notifications to users |
+| `notifications/push-notification.service.ts` | Push notification sending |
+| `notifications/bale-notification-queue.processor.ts` | Bale channel queue |
+| `notifications/telegram-notification-queue.processor.ts` | Telegram queue |
+| `notifications/notification-maintenance.service.ts` | Cleanup old notifications |
+| `phone-fetch/*.ts` | Business title refresh, phone fetch admin |
+| `website-settings/*.ts` | Contact/social/about-us admin |
+| `seo-settings/*.ts` | SEO metadata admin |
+| `saved-filters/*.ts` | User saved search filters |
+| `ring-binders/*.ts` | Post collection ring binders |
+| `packages/*.ts` | Subscription packages |
+| `subscriptions/*.ts` | User subscriptions |
+| `invite-codes/*.ts` | Referral codes |
+| `discount-codes/*.ts` | Discount codes |
+| `bale/*.ts` | Bale bot integration, WebSocket link gateway |
+| `telegram/*.ts` | Telegram bot integration |
+| `public/*.ts` | Health check, public endpoints |
+| `admin-divar-sessions/*.ts` | Divar crawl session admin |
+
+### Platform (`server/src/platform/*`)
+| File | Purpose |
+| --- | --- |
+| `database/prisma.service.ts` | Prisma client (singleton) |
+| `database/prisma.module.ts` | Global Prisma module |
+| `cache/redis.service.ts` | Redis cache (get/set/del, ttl, multi-key) |
+| `cache/redis.module.ts` | Redis module |
+| `queue/queue.service.ts` | RabbitMQ publish/consume |
+| `queue/queue.module.ts` | RabbitMQ module |
+| `storage/storage.service.ts` | MinIO/S3 upload/download/delete |
+| `storage/storage.module.ts` | Storage module |
+| `config/*.ts` | All NestJS configs (15 files: app, db, redis, jwt, minio, rabbitmq, etc.) |
+| `metrics/metrics.service.ts` | Prometheus metrics (HTTP latency, health, queue) |
+| `observability/opentelemetry.ts` | OTEL tracing setup |
+| `logging/logging.module.ts` | Pino logger |
+| `otp/otp.service.ts` | OTP generation & validation |
+| `http/favicon.controller.ts` | Favicon handler |
+| `websocket/websocket.gateway.ts` | Socket.IO gateway |
+| `websocket/redis-io.adapter.ts` | Redis Socket.IO adapter |
+
+### Common (`server/src/common/*`)
+| File | Purpose |
+| --- | --- |
+| `decorators/public.decorator.ts` | Mark route as public (no auth) |
+| `decorators/roles.decorator.ts` | Role-based access decorator |
+| `decorators/rate-limit.decorator.ts` | Rate limit decorator |
+| `guards/rate-limit/*.ts` | Rate limit guard + service |
+| `filters/all-exceptions.filter.ts` | Global exception filter |
+| `pipes/sanitize.pipe.ts` | Input sanitization |
+| `utils/password.util.ts` | Password hashing |
+| `types/json.type.ts` | JSON type utility |
+| `dto/update-allow-posting.dto.ts` | DTO for allow-posting toggle |
+
+## Frontend UI (`ui/src/`)
+
+### Pages (`ui/src/app/`)
+| Directory | Purpose |
+| --- | --- |
+| `admin/` | Admin panel pages |
+| `dashboard/` | User dashboard pages (posts, ring binders, etc.) |
+| `blog/` | Public blog pages (SSR, revalidate=300) |
+| `news/` | Public news pages (SSR, revalidate=300) |
+| `login/` | Login page |
+| `about/` | About page |
+| `preview/` | Post preview (SSR) |
+| `offline/` | Offline fallback page |
+| `api/` | API route handlers (Next.js API routes) |
+
+### Components (`ui/src/components/`)
+| Directory | Purpose |
+| --- | --- |
+| `ui/` | Primitives (button, input, card, modal, skeleton, etc.) |
+| `layout/` | Header, footer, sidebar, navigation |
+| `dashboard/` | Dashboard-specific components (post cards, filters, feed, map) |
+| `admin/` | Admin panel components |
+| `blog/` | Blog components |
+| `news/` | News components |
+| `auth/` | Auth components (login form, OTP) |
+| `forms/` | Form components |
+| `editor/` | Rich text editor |
+| `home/` | Homepage components |
+| `notifications/` | Notification components |
+| `preview/` | Preview components |
+| `profile/` | Profile components |
+| `ring-binder/` | Ring binder components |
+
+### State & API (`ui/src/features/`)
+| File | Purpose |
+| --- | --- |
+| `api/baseApi.ts` | RTK Query base slice (fetchBaseQuery + tag types) |
+| `api/apiSlice.ts` | Re-exports all endpoint hooks |
+| `api/endpoints/auth.ts` | Auth API (login, verify, refresh) |
+| `api/endpoints/divar-posts.ts` | Divar post API (list, detail, admin CRUD) |
+| `api/endpoints/divar-categories.ts` | Category tree API |
+| `api/endpoints/divar-category-filters.ts` | Filter widgets API |
+| `api/endpoints/locations.ts` | Province/city/district API |
+| `api/endpoints/users.ts` | User CRUD API |
+| `api/endpoints/uploads.ts` | File upload API |
+| `api/endpoints/notifications.ts` | Notification API |
+| `api/endpoints/news.ts` | News CRUD API |
+| `api/endpoints/blog.ts` | Blog CRUD API |
+| `api/endpoints/slides.ts` | Slides API |
+| `api/endpoints/featured-posts.ts` | Featured posts API |
+| `api/endpoints/seo-settings.ts` | SEO settings API |
+| `api/endpoints/website-settings.ts` | Website settings API |
+| `api/endpoints/saved-filters.ts` | Saved filters API |
+| `api/endpoints/ring-binder.ts` | Ring binder API |
+| `api/endpoints/packages.ts` | Packages API |
+| `api/endpoints/subscriptions.ts` | Subscriptions API |
+| `api/endpoints/invite-codes.ts` | Invite codes API |
+| `api/endpoints/discount-codes.ts` | Discount codes API |
+| `api/endpoints/admin-stats.ts` | Admin stats API |
+| `api/endpoints/admin-sessions.ts` | Admin sessions API |
+| `api/endpoints/health.ts` | Health check API |
+| `auth/authSlice.ts` | Auth Redux slice |
+| `notifications/notificationsSlice.ts` | Notifications Redux slice |
+| `notifications/useNotificationsSocket.ts` | Notifications WebSocket hook |
+| `notifications/usePushSubscription.ts` | Push subscription hook |
+| `notifications/nativeNotifications.ts` | Browser notification helper |
+| `search-filter/searchFilterSlice.ts` | Search/filter Redux slice |
+| `bale/useBaleLinkSocket.ts` | Bale WebSocket link hook |
+
+### Key Config Files
+| File | Purpose |
+| --- | --- |
+| `server/prisma/schema.prisma` | Database schema (all models + relations) |
+| `docker-compose.yml` | Dev environment (19 services) |
+| `docker-compose-prod.yml` | Production stack (20 services) |
+| `Caddyfile.central` | Dev Caddy routing (dev.mahanfile.com) |
+| `Caddyfile.prod` | Prod Caddy routing (mahanfile.com) |
+| `.env` | Dev environment variables |
+| `.env.prod` | Production secrets |
+| `observability/prometheus.yml` | Prometheus scrape config |
+| `observability/loki-config.yaml` | Loki log config |
+| `observability/tempo.yaml` | Tempo tracing config |
+| `observability/otel-collector-config.yaml` | OTEL collector config |
+| `observability/grafana/provisioning/datasources/datasources.yml` | Grafana datasources |
+| `observability/grafana/provisioning/dashboards/*.json` | Grafana dashboards (3) |
+| `.github/workflows/ci.yml` | CI/CD pipeline (13 jobs) |
+
+### Map Tile Files
+| File | Purpose |
+| --- | --- |
+| `maps/iran.mbtiles` | Iran vector tiles (905 MB, maxzoom 14, not in git) |
+| `maps/config.json` | Tileserver config with serveAllFonts:true |
+| `maps/fonts/` | Noto Naskh Arabic PBF font stacks (515 files) |
+| `ui/public/map-assets/style.json` | Self-hosted OSM Bright style (Persian labels) |
+| `ui/public/map-assets/sprite*.{json,png}` | OSM Bright sprites |
+| `ui/public/map-assets/maplibre-rtl-text.js` | RTL text plugin |
+| `ui/src/components/dashboard/divar-posts/post-location-map.tsx` | MapLibre component |
+
+### Scripts (`scripts/`)
+| File | Purpose |
+| --- | --- |
+| `scripts/build-iran-tiles.sh` | Build Iran mbtiles from OpenMapTiles |
+| `scripts/sync-tiles.sh` | Download prebuilt mbtiles |
+| `scripts/get-iran-mbtiles.sh` | Alternative tile download |
+| `scripts/sync-gh-vars.sh` | Sync .env vars to GitHub secrets |
+| `scripts/phone-fetch-worker.js` | Phone fetch worker |
+| `scripts/fetch_divar_phones.sh` | Divar phone harvester launcher |
+| `scripts/pgbackrest/` | pgBackRest config for DB backup |
+
+### API Routes Quick Reference
+| Method | Path | Module |
+| --- | --- | --- |
+| POST | /auth/request-otp | auth |
+| POST | /auth/verify-otp | auth |
+| GET | /divar-posts | divar-posts (paginated, filtered) |
+| GET | /divar-posts/:code | divar-posts (detail) |
+| GET | /divar-categories | divar-categories (tree) |
+| GET | /divar-category-filters/:slug | divar-category-filters |
+| GET | /public/health | public |
+| GET | /provinces | provinces |
+| GET | /cities | cities |
+| GET | /districts | districts |
+| GET | /news | news (public) |
+| GET | /blog | blog (public) |
+| GET | /notifications | notifications |
+| POST | /uploads | uploads |
+| POST | /slides | slides (admin) |
+
+## Production Environment
+
+### Access
+- SSH: `ssh armita@192.168.31.170 -p 2222`
+- Password: Ghader1+***
+- Stack name: `my-ads-production`
+- Runner: `/home/armita/actions-runner/` (systemd)
+
+### WSL Limitations
+- Docker Desktop WSL2 does NOT route published ports to VM
+- Must use `docker run --network my-ads-production_app_net` for cross-service access
+- Postgres bind mounts fail (use named volumes instead)
+
+### Port Mappings (Prod)
+| Service | Internal | Published |
+| --- | --- | --- |
+| postgres | 5432 | 6301 |
+| redis | 6379 | 6302 |
+| api | 6300 | 6300 |
+| ui | 6306 | 6306 |
+| minio | 9000/9001 | 6304/6305 |
+| tileserver | 8080 | 7235 |
+| loki | 3100 | 6319 |
+| tempo | 3200 | 6309 |
+| prometheus | 9090 | 6322 |
+| grafana | 3000 | 6323 |

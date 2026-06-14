@@ -1078,9 +1078,6 @@ export function DashboardSearchFilterPanel() {
 
         {!filterModalOpen ? (
           <>
-            <div className="hidden lg:block">
-              <CodeSearch />
-            </div>
             <div className="hidden justify-end lg:flex">
               <Button
                 type="button"
@@ -1281,6 +1278,12 @@ export function DashboardSearchFilterPanel() {
           </div>
         ) : null}
 
+        {!filterModalOpen ? (
+          <div className="hidden flex-col gap-2 lg:flex">
+            <CodeSearch showLabel />
+          </div>
+        ) : null}
+
         {filterModalOpen ? (
           <div className="flex flex-1 flex-col lg:hidden">
             <AnimatePresence initial={false} custom={mobileTabDirection}>
@@ -1321,9 +1324,6 @@ export function DashboardSearchFilterPanel() {
 		                {mobileFiltersTab === 'main' ? (
 		                  <>
 			                    <div className="flex flex-col gap-3">
-			                      <div className="lg:hidden">
-			                        <CodeSearch variant="mobile" onSuccess={() => setFilterModalOpen(false)} />
-			                      </div>
 			                      <div className="py-0">
 			                        <div className="space-y-1 lg:hidden">
 			                          <label
@@ -1986,6 +1986,9 @@ export function DashboardSearchFilterPanel() {
 			                            'has_video',
 			                          ]}
 			                        />
+			                      </div>
+			                      <div className="lg:hidden">
+			                        <CodeSearch variant="mobile" showLabel />
 			                      </div>
 			                    </div>
 			                  </>

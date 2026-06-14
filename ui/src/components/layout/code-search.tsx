@@ -2,27 +2,26 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
 
 import { useLazyGetDivarPostByCodeQuery } from '@/features/api/apiSlice';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/use-toast';
+import { cn } from '@/lib/utils';
 
 type CodeSearchProps = {
   onSuccess?: () => void;
   variant?: 'desktop' | 'mobile';
+  showLabel?: boolean;
 };
 
-export function CodeSearch({ onSuccess, variant = 'desktop' }: CodeSearchProps) {
+export function CodeSearch({ onSuccess, variant = 'desktop', showLabel }: CodeSearchProps) {
   const t = useTranslations('header.search');
-  const router = useRouter();
   const [codeValue, setCodeValue] = useState('');
   const [trigger, { isFetching }] = useLazyGetDivarPostByCodeQuery();
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleSearch = async () => {
     const numericCode = Number(codeValue.trim());
     if (!Number.isInteger(numericCode) || numericCode <= 0) {
       toast({ title: t('invalid') });
@@ -30,8 +29,8 @@ export function CodeSearch({ onSuccess, variant = 'desktop' }: CodeSearchProps) 
     }
     try {
       const result = await trigger(numericCode, true).unwrap();
-      router.push(`/dashboard/posts/${result.id}`);
       onSuccess?.();
+      window.location.href = `/dashboard/posts/${result.id}`;
     } catch (error: unknown) {
       const maybeStatus = (error as { status?: number })?.status;
       if (maybeStatus === 404) {
@@ -44,11 +43,14 @@ export function CodeSearch({ onSuccess, variant = 'desktop' }: CodeSearchProps) 
     }
   };
 
+  const labelContent = showLabel ? (
+    <label className="block text-sm font-medium text-foreground">{t('label')}</label>
+  ) : null;
+
   return (
-    <form
-      onSubmit={handleSubmit}
-      className={variant === 'desktop' ? 'hidden sm:flex' : 'flex'}
-    >
+    <div className={variant === 'desktop' ? 'hidden flex-col gap-1.5 sm:flex' : 'flex flex-col gap-1.5'}>
+      {labelContent}
+      <div className="flex">
       <Input
         type="text"
         inputMode="numeric"
@@ -56,6 +58,7 @@ export function CodeSearch({ onSuccess, variant = 'desktop' }: CodeSearchProps) 
         placeholder={t('placeholder')}
         value={codeValue}
         onChange={(e) => setCodeValue(e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSearch(); } }}
         className={
           variant === 'desktop'
             ? 'h-9 w-24 rounded-l-none rounded-r-sm text-sm shadow-none ring-0 focus-visible:ring-0 sm:w-28 lg:w-36'
@@ -64,14 +67,19 @@ export function CodeSearch({ onSuccess, variant = 'desktop' }: CodeSearchProps) 
         aria-label={t('label')}
       />
       <Button
-        type="submit"
+        type="button"
         size="sm"
         disabled={isFetching}
-        className="h-9 rounded-l-sm rounded-r-none px-2"
+        onClick={handleSearch}
+        className={cn(
+          'rounded-l-sm rounded-r-none px-4',
+          variant === 'desktop' ? 'h-9' : 'h-10',
+        )}
       >
         <Search className="size-4" aria-hidden />
         <span className="sr-only">{t('button')}</span>
       </Button>
-    </form>
+      </div>
+    </div>
   );
 }

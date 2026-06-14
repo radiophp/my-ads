@@ -234,7 +234,6 @@ export function PostLocationMap({
   }, [lat, lon, tileBase, isRTL, isTouchDevice, onReady, isCdnMode, styleUrl]);
 
   const osmUrl = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=14/${lat}/${lon}`;
-  const prettyCoords = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
 
   return (
     <div className="mt-4 overflow-hidden rounded-xl border border-border/70 bg-muted/30 shadow-sm">
@@ -260,21 +259,6 @@ export function PostLocationMap({
       </div>
       <div className="relative h-64 w-full bg-muted">
         <div ref={mapContainerRef} className="size-full" />
-      </div>
-      <div
-        className={cn(
-          'flex items-center justify-between gap-3 px-4 py-3 text-xs text-muted-foreground',
-          isRTL ? 'flex-row-reverse text-right' : '',
-        )}
-      >
-        <span className="truncate">
-          {t('map.coordinates', {
-            lat: lat.toFixed(5),
-            lon: lon.toFixed(5),
-            coords: prettyCoords,
-          })}
-        </span>
-        <span className="font-mono text-foreground">{prettyCoords}</span>
       </div>
     </div>
   );

@@ -427,6 +427,87 @@ npm run build          # Produces the production .next/ artefacts
 - **Mobile navigation** – Small screens use a fixed bottom nav (Home/Dashboard/Notifications/Other) and hide the top header; the “Other” item opens the full mobile menu.
 - **Manifest + URLs** – PWA metadata lives in `ui/src/app/manifest.ts` with icons under `/public/fav`. Set `NEXT_PUBLIC_APP_URL` + `NEXT_PUBLIC_API_BASE_URL` in CI/builds so install metadata and notification links resolve to the right domain.
 
+## Map Tile Service
+
+The platform runs a self-hosted **TileServer-GL v4.8.0** serving Iran vector tiles with Persian street labels from an OSM Bright style — all **offline** (no internet dependency).
+
+### Architecture
+
+```
+                     ┌─────────────────────┐
+                     │   Caddy (mahanfile)  │
+                     │  /map/* → tileserver │
+                     │  /map-assets/* → UI  │
+                     └──────┬──────────────┘
+                            │
+              ┌─────────────┴──────────────┐
+              │       TileServer-GL         │
+              │  v4.8.0  (port 8080/7235)   │
+              │  mounts: config.json, fonts │
+              │  serves: Iran vector tiles  │
+              └─────────────┬──────────────┘
+                            │
+              ┌─────────────┴──────────────┐
+              │      iran.mbtiles          │
+              │  905 MB, maxzoom 14        │
+              │  bounds: 44-63E, 24-39N    │
+              └────────────────────────────┘
+```
+
+### Key files
+
+| File | Purpose |
+| --- | --- |
+| `maps/iran.mbtiles` | Pre-built Iran vector tileset (not in git, see `.gitignore`) |
+| `maps/config.json` | Tileserver config: `serveAllFonts: true`, mbtiles source declaration |
+| `maps/fonts/` | Noto Naskh Arabic Regular/Bold PBF font stacks (515 files, 7.3 MB, committed) |
+| `ui/public/map-assets/style.json` | Self-hosted OSM Bright style with Persian-only labels |
+| `ui/public/map-assets/sprite*.{json,png}` | OSM Bright sprite sheets (4 files) |
+| `ui/public/map-assets/maplibre-rtl-text.js` | RTL text plugin for Persian/Arabic shaping (426 KB) |
+| `ui/src/components/dashboard/divar-posts/post-location-map.tsx` | MapLibre component: RTL loader, font scaling, tile source rewrite |
+
+### Caddy routing
+
+- Production: `handle_path /map/*` → `tileserver:8080`
+- `/map-assets/*` falls through to Next.js static serving
+- **Trailing slash is crucial** — `/map*` would also catch `/map-assets/*` and forward it to tileserver (404)
+
+### Font generation
+
+To regenerate PBF fonts from TTF:
+```bash
+node /tmp/gen-pbf-fonts.js
+```
+Key details:
+- Uses `@elastic/fontnik.glyphToSDF()` + `opentype.js` + `protobufjs`
+- Buffer fix: stored dimensions must subtract `2*buffer` from fontnik output to match MapLibre's internal 3px border
+- Font stacks go in `maps/fonts/{Font Name}/{start-end}.pbf`
+
+### Environment variables
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `NEXT_PUBLIC_MAP_TILE_BASE_URL` | `/map` | Same-origin tile proxy path |
+| `NEXT_PUBLIC_MAP_STYLE_CDN_URL` | *(empty)* | Set to use MapTiler CDN style instead of local |
+| `MAP_TILES_PORT` | `7235` (dev) / `8235` (prod) | Tileserver host port |
+
+### Production deployment
+
+After CI deploys stack:
+1. **SCP data** to host: `iran.mbtiles` (905 MB), `config.json`, `fonts/` → `${MAP_TILES_PATH:-/var/lib/my-ads/maps}/`
+2. **Force-update tileserver**: `docker service update --force my-ads-production_tileserver` (picks up new fonts + config)
+3. **Force-update Caddy**: `docker service update --force my-ads-production_caddy` (picks up Caddyfile changes)
+
+### Building tiles locally
+
+```bash
+# Full build (4+ hours, requires OpenMapTiles + PostGIS)
+OMT_POSTGRES_PORT=55432 MIN_ZOOM=0 MAX_ZOOM=14 ./scripts/build-iran-tiles.sh
+
+# Or fetch prebuilt
+MBTILES_URL=https://example.com/iran.mbtiles ./scripts/sync-tiles.sh
+```
+
 ---
 
 ## Prometheus, Observability & Metrics

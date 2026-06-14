@@ -39,6 +39,21 @@
   - Build Iran locally (full labels): `OMT_POSTGRES_PORT=<free_port> MIN_ZOOM=0 MAX_ZOOM=14 ./scripts/build-iran-tiles.sh` (long-running). Restart tileserver after build.
   - Default UI uses same-origin tiles: `NEXT_PUBLIC_MAP_TILE_BASE_URL=/map` with OSM Bright style (128 layers, street names, POIs). The style is served from `ui/public/map-assets/style.json` (self-hosted, no internet) or toggled to CDN via `NEXT_PUBLIC_MAP_STYLE_CDN_URL` in `.env`. Sprites and fonts are hosted locally under `/map-assets/` and `/map/fonts/`. If switching to dedicated map domains, update env + Caddy accordingly and proxy `/map`, `/data`, `/fonts` to the tileserver.
   - Persian labels: style uses `Noto Naskh Arabic` font (Regular/Bold PBF stacks in `maps/fonts/`, mounted to tileserver at `/data/fonts`). Text-field uses `{name:nonlatin}` for Persian-only labels. Regenerate PBF fonts from TTF via `opentype.js` + `@elastic/fontnik` + `protobufjs` if needed (see `/tmp/gen-pbf-fonts.js`).
+  - **RTL text plugin** (`maplibre-rtl-text.js`): loaded via `setRTLTextPlugin()` in `post-location-map.tsx` for correct Persian/Arabic script shaping. Plugin file at `ui/public/map-assets/maplibre-rtl-text.js` (426 KB, from `@mapbox/mapbox-gl-rtl-text@0.2.3`).
+  - **Font size scaling**: Noto Naskh Arabic renders ~1.8x larger than Noto Sans at the same px. `post-location-map.tsx` applies 0.55x scale factor via `scaleFontSize()` to `text-size` properties.
+  - **Font PBF buffer fix**: Fontnik's `glyphToSDF()` output dimensions include 3px internal buffer. MapLibre adds its own 3px border on decode. Stored dimensions must subtract `2*buffer` so that `(w+6)*(h+6)` matches actual bitmap data. See `/tmp/gen-pbf-fonts.js`.
+  - **Tileserver config**: `maps/config.json` sets `serveAllFonts: true` and declares the mbtiles source. Without this, `--mbtiles` mode defaults to `basic-preview` without custom fonts. Mounted to `/data/config.json` in both dev (`docker-compose.yml`) and prod (`docker-compose-prod.yml`).
+  - **Caddy routing**: Caddyfile uses `handle_path /map/*` (trailing slash is crucial). Without trailing slash, `/map-assets/*` requests also match and get forwarded to tileserver (404). The trailing slash ensures only `/map/*` paths reach tileserver while `/map-assets/*` falls through to Next.js static serving.
+  - **Frontend map component**: `ui/src/components/dashboard/divar-posts/post-location-map.tsx` handles:
+    - Style fetch from local (`/map-assets/style.json`) or CDN
+    - RTL plugin loading for Persian text direction
+    - Text-field rewrite to `{name:nonlatin}` (Persian-only)
+    - 0.55x font size scaling for Noto Naskh Arabic
+    - Tile source rewrite to same-origin `/map/data/v3/{z}/{x}/{y}.pbf`
+  - **Production deployment steps** (after CI deploys stack):
+    1. SCP `iran.mbtiles`, `maps/config.json`, `maps/fonts/` to `${MAP_TILES_PATH}` on host
+    2. `docker service update --force my-ads-production_tileserver` (picks up new fonts + config)
+    3. `docker service update --force my-ads-production_caddy` (picks up Caddyfile changes)
 - DB backup/restore: dev Postgres on `6201` (`postgres/postgres`); prod published `6301` -> internal `5432` (`mahan_admin/zQ5gG7k3S9nK2bFw`). Backup example: `PGPASSWORD=postgres pg_dump -Fc -h host.docker.internal -p 6201 -U postgres -d my_ads -f /tmp/dev-backup.dump`. Restore to prod: `PGPASSWORD=zQ5gG7k3S9nK2bFw pg_restore --clean --if-exists --no-owner --no-acl -h host.docker.internal -p 6301 -U mahan_admin -d mahan_file /tmp/dev-backup.dump`. Keep compose target port 5432 and published port 6301 aligned.
 - Automated backups: `pgbackrest-backup` writes to MinIO bucket `db-backup` with AES-256-CBC (pass `Ghader`), bundle size `1GiB`, 30-day retention, and Telegram delivery to `BACKUP_TELEGRAM_PHONES` recipients (must `/start` the bot).
 - News crawlers: Eghtesad, Khabaronline, and Asriran crawlers run every 15 minutes when cron is enabled. One-off runs: `npm run news:crawl:eghtesad`, `npm run news:crawl:khabaronline`, `npm run news:crawl:asriran`. Use the News Sources admin list to enable/disable each feed.

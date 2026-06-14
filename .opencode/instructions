@@ -248,3 +248,80 @@
 | tempo | 3200 | 6309 |
 | prometheus | 9090 | 6322 |
 | grafana | 3000 | 6323 |
+
+## MCP Memory (opencode-mem)
+
+A persistent semantic memory server is available via MCP. It retains context across sessions.
+
+- **DB**: Dedicated PostgreSQL at `localhost:4004` (Docker, `~/opencode-mem-infra/docker-compose.yml`)
+- **Binary**: `~/.local/bin/opencode-mem-cli` (built from `Stranmor/opencode-mem`)
+- **Compression model**: `qwen/qwen3-coder:free` via OpenRouter
+- **Fallback**: `deepseek-v4-flash-free` via OpenCode Zen (swap model + API URL in config)
+
+### 3-Layer Workflow (token-efficient)
+
+**Layer 1 — `search`**: Always start here. Returns index with IDs (~50-100 tokens).
+**Layer 2 — `timeline`**: Get chronological context around interesting results.
+**Layer 3 — `get_observations`**: Fetch full details ONLY for filtered IDs. Never fetch all at once.
+
+### When to use each tool
+
+| Situation | Tool | What to pass |
+|-----------|------|-------------|
+| Start of session — find past context | `search` | Query describing what you need (e.g. "map tile deployment", "database config") |
+| Explore what happened in a time window | `timeline` | `from`/`to` ISO dates |
+| Read specific memories | `get_observations` | Array of IDs from search results |
+| Save a decision or gotcha | `save_memory` | `title` (short), `output` (detail), `type` (bugfix/feature/decision) |
+| Store a reusable pattern | `knowledge_save` | `type`: skill/pattern/gotcha, `description`, `instructions` |
+| Check recent activity | `memory_recent` | No args needed |
+| Deep-dive into a day's work | `infinite_expand` | Summary ID from timeline |
+| See hour-level breakdown | `infinite_drill_hour` | Day summary ID |
+| See 5-minute breakdown | `infinite_drill_minute` | Hour summary ID |
+| Find related memories | `memory_graph` | `action`: connected/path/subgraph |
+
+### Skill: Cross-session memory pattern
+
+**ALWAYS at session start:**
+```
+search(query="<topic from user request or last session context>")
+```
+If results mention relevant prior work, call `get_observations` on those IDs before proceeding.
+
+**ALWAYS at session end (before final message):**
+```
+save_memory(
+  tool="opencode",
+  title="<brief summary of what was done>",
+  output="<detailed description including decisions, files modified, configs changed>",
+  observation_type="<bugfix|feature|refactor|change|discovery|decision|gotcha|preference>"
+)
+```
+For reusable knowledge (not one-time facts), use `knowledge_save` instead:
+```
+knowledge_save(
+  knowledge_type="skill|pattern|gotcha|architecture",
+  title="<name>",
+  description="<when to use>",
+  instructions="<step-by-step>",
+  triggers=["<keywords>"]
+)
+```
+
+### Skill: Debugging with memory
+
+When investigating a bug, first search for related past work:
+1. `search(query="<error message or feature name>")` — find prior context
+2. `timeline(from="<last-24h>")` — check recent changes
+3. Save findings with `save_memory` type=`bugfix` so future sessions know the fix
+
+### Skill: Project conventions
+
+Store project conventions as knowledge entries:
+```
+knowledge_save(
+  knowledge_type="pattern",
+  title="Coding style for this project",
+  description="TypeScript + NestJS, 2-space indent, trailing commas",
+  instructions="Follow existing patterns in server/src/ and ui/src/"
+)
+```

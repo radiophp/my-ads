@@ -64,9 +64,9 @@ export const getMediaDownloadUrl = (
 export const resolveMediaSrc = (
   media: DivarPostSummary['medias'][number] | DownloadableMedia | null | undefined,
   fallback?: string | null,
-): string => {
+): string | undefined => {
   if (!media) {
-    return fallback ?? '';
+    return fallback ?? undefined;
   }
   if (
     'localUrl' in media &&
@@ -75,7 +75,7 @@ export const resolveMediaSrc = (
   ) {
     return (media as { localUrl?: string | null }).localUrl as string;
   }
-  return media.url ?? fallback ?? '';
+  return media.url ?? fallback ?? undefined;
 };
 
 export const resolveMediaAlt = (

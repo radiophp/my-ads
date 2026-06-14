@@ -1,10 +1,10 @@
 /* eslint-disable @next/next/no-img-element, tailwindcss/classnames-order */
 import type { JSX } from 'react';
 import { useCallback, useMemo, useState } from 'react';
-import { Download, Loader2 } from 'lucide-react';
+import { Download, ImageIcon, Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { DivarPostSummary } from '@/types/divar-posts';
 import { cn } from '@/lib/utils';
 import type { useTranslations } from 'next-intl';
@@ -106,6 +106,7 @@ export function DownloadPhotosDialog({
           <div className="hidden px-6 py-4 sm:block">
             <DialogHeader>
               <DialogTitle>{t('downloadPhotos')}</DialogTitle>
+              <DialogDescription className="sr-only">{t('downloadPhotos')}</DialogDescription>
             </DialogHeader>
           </div>
           <div className="flex-1 min-h-0 touch-pan-y overflow-y-auto overscroll-contain px-6 pb-4 pt-2 sm:px-6">
@@ -117,12 +118,18 @@ export function DownloadPhotosDialog({
                   return (
                     <div key={media.id ?? `download-media-${index}`} className="flex flex-col gap-2">
                       <div className="aspect-[4/3] overflow-hidden rounded-xl border border-border/80">
-                        <img
-                          src={media.thumbnailUrl ?? media.url ?? ''}
-                          alt={resolveMediaAlt(media, post?.title, post?.externalId)}
-                          className="size-full object-cover"
-                          draggable={false}
-                        />
+                        {media.thumbnailUrl || media.url ? (
+                          <img
+                            src={media.thumbnailUrl ?? media.url ?? undefined}
+                            alt={resolveMediaAlt(media, post?.title, post?.externalId)}
+                            className="size-full object-cover"
+                            draggable={false}
+                          />
+                        ) : (
+                          <div className="flex size-full items-center justify-center bg-muted">
+                            <ImageIcon className="size-6 text-muted-foreground" aria-hidden />
+                          </div>
+                        )}
                       </div>
                         {downloadUrl ? (
                           <Button

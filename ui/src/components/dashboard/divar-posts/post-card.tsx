@@ -118,18 +118,20 @@ export function PostCard({
               </span>
             ) : null}
             <div className="relative h-48 w-full bg-muted">
-              <img
-                src={post.imageUrl ?? ''}
-                alt=""
-                className={cn(
-                  'size-full object-cover transition-opacity duration-200',
-                  post.imageUrl && !imageFailed ? 'opacity-100' : 'opacity-0',
-                )}
-                loading="lazy"
-                onLoad={() => setImageLoading(false)}
-                onError={() => setImageFailed(true)}
-              />
-              {imageLoading && !imageFailed ? (
+              {post.imageUrl ? (
+                <img
+                  src={post.imageUrl}
+                  alt=""
+                  className={cn(
+                    'size-full object-cover transition-opacity duration-200',
+                    !imageFailed ? 'opacity-100' : 'opacity-0',
+                  )}
+                  loading="lazy"
+                  onLoad={() => setImageLoading(false)}
+                  onError={() => setImageFailed(true)}
+                />
+              ) : null}
+              {imageLoading && !imageFailed && post.imageUrl ? (
                 <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <ImageIcon className="size-5 animate-pulse" aria-hidden />

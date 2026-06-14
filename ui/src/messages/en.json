@@ -784,7 +784,9 @@
       "printAmenities": "Amenities",
       "printAttributes": "Attributes",
       "shareMessageCategoryLabel": "Category",
-      "shareMessageBusinessLabel": "Business type"
+      "shareMessageBusinessLabel": "Business type",
+      "loginTitle": "Sign in to continue",
+      "loginDescription": "Full details and advanced filters are available after signing in."
     }
   },
   "admin": {

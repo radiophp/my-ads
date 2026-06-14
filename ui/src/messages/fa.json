@@ -785,7 +785,9 @@
       "printAmenities": "امکانات",
       "printAttributes": "جزئیات",
       "shareMessageCategoryLabel": "دسته‌بندی",
-      "shareMessageBusinessLabel": "نوع آگهی‌دهنده"
+      "shareMessageBusinessLabel": "نوع آگهی‌دهنده",
+      "loginTitle": "برای ادامه وارد شوید",
+      "loginDescription": "مشاهده جزئیات و فیلتر دقیق آگهی‌ها فقط برای کاربران واردشده امکان‌پذیر است."
     }
   },
   "admin": {

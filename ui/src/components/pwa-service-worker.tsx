@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { registerServiceWorker } from '@/lib/service-worker';
+import { registerServiceWorker, unregisterServiceWorker } from '@/lib/service-worker';
 
 const canRegisterSw = (): boolean => {
   if (typeof window === 'undefined') return false;
@@ -18,15 +18,19 @@ export function PwaServiceWorker() {
     }
     let cancelled = false;
 
-    const register = async () => {
-      try {
-        await registerServiceWorker();
-      } catch (error) {
-        if (!cancelled) console.warn('Service worker registration failed', error);
+    const init = async () => {
+      await unregisterServiceWorker();
+
+      if (!cancelled) {
+        try {
+          await registerServiceWorker();
+        } catch (error) {
+          if (!cancelled) console.warn('Service worker registration failed', error);
+        }
       }
     };
 
-    void register();
+    void init();
 
     return () => {
       cancelled = true;

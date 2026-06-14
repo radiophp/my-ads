@@ -15,7 +15,7 @@ import { Navigation, Zoom, Keyboard, A11y, Mousewheel } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
 
 import type { DivarPostSummary } from '@/types/divar-posts';
-import { Dialog, DialogClose, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import {
   mapPostMediasToDownloadables,
   resolveMediaAlt,
@@ -218,14 +218,16 @@ export function PostMediaCarousel({
       return (
         <div className="relative overflow-hidden rounded-lg border border-border/60">
           {renderTopBadges()}
-          <img
-            src={currentMediaSrc}
-            alt={post.title ?? post.externalId}
-            className="h-64 w-full cursor-pointer object-cover"
-            onLoad={() => handleImageLoad()}
-            onError={() => handleImageError()}
-            onClick={handleOpenLightbox}
-          />
+          {currentMediaSrc ? (
+            <img
+              src={currentMediaSrc}
+              alt={post.title ?? post.externalId}
+              className="h-64 w-full cursor-pointer object-cover"
+              onLoad={() => handleImageLoad()}
+              onError={() => handleImageError()}
+              onClick={handleOpenLightbox}
+            />
+          ) : null}
           {imageLoading && !imageFailed ? (
             <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -329,6 +331,7 @@ export function PostMediaCarousel({
           className="flex h-dvh w-dvw max-w-none items-center justify-center overflow-hidden rounded-none bg-black p-0"
         >
           <DialogTitle className="sr-only">{fullScreenLabel}</DialogTitle>
+          <DialogDescription className="sr-only">{fullScreenLabel}</DialogDescription>
           <div className="relative flex size-full items-center justify-center">
             <DialogClose className="absolute right-4 top-4 z-20 inline-flex size-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20">
               <X className="size-5" aria-hidden />

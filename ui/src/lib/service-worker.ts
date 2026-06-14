@@ -1,8 +1,22 @@
 const PRIMARY_SW_PATH = '/service-worker.js';
 const FALLBACK_SW_PATH = '/push-sw.js';
 
+export const unregisterServiceWorker = async (): Promise<void> => {
+  if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
+    return;
+  }
+  const registration = await navigator.serviceWorker.getRegistration();
+  if (registration) {
+    await registration.unregister();
+  }
+};
+
 export const registerServiceWorker = async (): Promise<ServiceWorkerRegistration | null> => {
   if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
+    return null;
+  }
+
+  if (process.env.NODE_ENV === 'development') {
     return null;
   }
 

@@ -124,7 +124,6 @@ const nextConfig: NextConfig = {
   },
   images: {
     remotePatterns: imageRemotePatterns,
-    domains: imageRemotePatterns.map((pattern) => pattern.hostname),
   },
   allowedDevOrigins: process.env.NODE_ENV === 'development' ? ['dev.mahanfile.com'] : undefined,
   webpack(config) {
@@ -167,6 +166,5 @@ turbopackConfig.resolveAlias ??= {};
 
 configWithPlugins.images ??= {};
 configWithPlugins.images.remotePatterns = imageRemotePatterns;
-configWithPlugins.images.domains = imageRemotePatterns.map((pattern) => pattern.hostname);
 
 export default configWithPlugins;

@@ -13,6 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -673,6 +674,7 @@ function FilterOptionsDialog({
             <div className="flex items-center gap-3" dir={isRTL ? 'rtl' : 'ltr'}>
               <DialogHeader className={cn('flex-1', isRTL ? 'text-right' : 'text-left')}>
                 <DialogTitle>{modal.title}</DialogTitle>
+                <DialogDescription className="sr-only">{modal.title}</DialogDescription>
               </DialogHeader>
               <Button
                 type="button"

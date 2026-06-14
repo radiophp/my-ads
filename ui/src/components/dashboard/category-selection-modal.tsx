@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Check, ChevronLeft, ChevronRight, Folder } from 'lucide-react';
 import type { useTranslations } from 'next-intl';
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import type { DivarCategory } from '@/types/divar-category';
 import { cn } from '@/lib/utils';
@@ -134,6 +134,7 @@ export function CategorySelectionModal({
           <div className="border-b border-border px-6 py-4">
             <DialogHeader>
               <DialogTitle>{t('categories.title')}</DialogTitle>
+              <DialogDescription className="sr-only">{t('categories.title')}</DialogDescription>
             </DialogHeader>
           </div>
           <div className="flex-1 overflow-y-auto px-6 py-4">

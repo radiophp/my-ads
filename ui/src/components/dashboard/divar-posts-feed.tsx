@@ -8,7 +8,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   useLazyGetDivarPostsQuery,
@@ -726,6 +726,9 @@ export function DivarPostsFeed(): JSX.Element {
                       {selectedPost.title ?? t('untitled', { externalId: selectedPost.externalId })}
                     </span>
                   </DialogTitle>
+                  <DialogDescription className="sr-only">
+                    {selectedPost.title ?? t('untitled', { externalId: selectedPost.externalId })}
+                  </DialogDescription>
                 </DialogHeader>
               </div>
 

@@ -27,7 +27,7 @@ import {
 } from '@/features/notifications/nativeNotifications';
 import { usePushSubscription } from '@/features/notifications/usePushSubscription';
 import { useNotificationPreferences } from '@/features/notifications/useNotificationPreferences';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DownloadPhotosDialog } from '@/components/dashboard/divar-posts/download-photos-dialog';
 import { buildPostDetailData } from '@/components/dashboard/divar-posts/post-detail-data';
 import { PostDetailView } from '@/components/dashboard/divar-posts/post-detail-view';
@@ -647,6 +647,7 @@ export function NotificationsPanel() {
                 <DialogTitle className="mb-4 flex flex-wrap items-center gap-2 break-words">
                   {dialogTitle}
                 </DialogTitle>
+                <DialogDescription className="sr-only">{dialogTitle}</DialogDescription>
               </DialogHeader>
             </div>
             <div className="flex-1 overflow-y-auto px-6 py-4 sm:p-0">

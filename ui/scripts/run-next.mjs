@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawn } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, unlinkSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { config as loadEnv } from 'dotenv';
 
@@ -15,6 +15,15 @@ for (const file of envFiles) {
 }
 
 const [mode = 'dev', ...rest] = process.argv.slice(2);
+
+// Clean stale PWA service worker files in dev mode to prevent browser caching issues
+if (mode === 'dev') {
+  for (const file of ['public/service-worker.js', 'public/sw.js', 'public/push-sw.js']) {
+    try {
+      unlinkSync(resolve(process.cwd(), file));
+    } catch { /* file doesn't exist, skip */ }
+  }
+}
 
 const defaultPort = process.env.NEXT_UI_PORT ?? '6005';
 const port = rest.includes('--port') || rest.includes('-p') ? null : defaultPort;

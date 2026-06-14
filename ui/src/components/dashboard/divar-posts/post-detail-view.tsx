@@ -7,7 +7,7 @@ import { AmenitiesSection, AttributeLabelGrid, AttributeValueGrid } from './post
 import type { BusinessBadge } from './business-badge';
 import type { PostDetailData } from './post-detail-data';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FaTelegramPlane, FaWhatsapp, FaSms, FaRegCopy } from 'react-icons/fa';
 import {
   Bookmark,
@@ -483,6 +483,9 @@ export function PostDetailView({
                     <DialogContent className="max-w-sm" hideCloseButton={false}>
                       <DialogHeader>
                         <DialogTitle>{t('sharePost')}</DialogTitle>
+                        <DialogDescription className="sr-only">
+                          {t('sharePost')}
+                        </DialogDescription>
                       </DialogHeader>
                       <div className="flex flex-col gap-3">
                         {onShareWhatsapp ? (
@@ -544,21 +547,23 @@ export function PostDetailView({
                   </Dialog>
                 </>
               ) : null}
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                className={actionButtonClass}
-                onClick={onRequestContactInfo}
-                disabled={!onRequestContactInfo || contactLoading}
-              >
-                {contactLoading ? (
-                <Loader2 className="size-3.5 animate-spin" />
-                ) : (
-                <Phone className="size-3.5" />
-                )}
-                <span>{t('contactInfo.button')}</span>
-              </Button>
+              {post.hasContactInfo ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  className={actionButtonClass}
+                  onClick={onRequestContactInfo}
+                  disabled={!onRequestContactInfo || contactLoading}
+                >
+                  {contactLoading ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                  <Phone className="size-3.5" />
+                  )}
+                  <span>{t('contactInfo.button')}</span>
+                </Button>
+              ) : null}
               {hasDownloadableMedia ? (
                 <Button
                   type="button"
@@ -875,7 +880,10 @@ export function PostDetailView({
         <DialogContent
           hideCloseButton
           className="h-dvh w-screen max-w-none rounded-none p-0 sm:h-auto sm:max-w-lg sm:rounded-lg"
+          aria-describedby={undefined}
         >
+          <DialogTitle className="sr-only">{t('loginTitle')}</DialogTitle>
+          <DialogDescription className="sr-only">{t('loginDescription')}</DialogDescription>
           <div className="flex h-full flex-col">
             <div className="flex-1 overflow-y-auto">
               <PhoneOtpLoginForm />

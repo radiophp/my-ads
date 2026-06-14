@@ -10,6 +10,10 @@ import { SiteHeader } from '@/components/layout/site-header';
 import { Footer } from '@/components/layout/site-footer';
 import { PathnameSync } from '@/components/layout/pathname-sync';
 import { Breadcrumbs } from '@/components/layout/breadcrumbs';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+import 'swiper/css/zoom';
 import './globals.css';
 
 const DEFAULT_APP_URL =

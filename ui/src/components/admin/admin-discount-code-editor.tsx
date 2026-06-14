@@ -25,9 +25,9 @@ import { useToast } from '@/components/ui/use-toast';
 import {
   useCreateDiscountCodeMutation,
   useGetDiscountCodeQuery,
-  useGetPackagesQuery,
   useUpdateDiscountCodeMutation,
-} from '@/features/api/apiSlice';
+} from '@/features/api/endpoints/discount-codes';
+import { useGetPackagesQuery } from '@/features/api/endpoints/packages';
 import { Link } from '@/i18n/routing';
 
 type AdminDiscountCodeEditorProps = {

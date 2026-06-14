@@ -5,7 +5,7 @@ import { urlBase64ToUint8Array } from '@/lib/vapid';
 import {
   useRegisterPushSubscriptionMutation,
   useUnregisterPushSubscriptionMutation,
-} from '@/features/api/apiSlice';
+} from '@/features/api/endpoints/notifications';
 import { registerServiceWorker } from '@/lib/service-worker';
 
 const canUsePush = (): boolean =>

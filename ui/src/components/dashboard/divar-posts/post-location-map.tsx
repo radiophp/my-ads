@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { ExternalLink, MapPin } from 'lucide-react';
 import type { useTranslations } from 'next-intl';
 import type { Map as MapLibreMap, Marker as MapLibreMarker, StyleSpecification } from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
+
 
 type MutableLayer = {
   id?: string;
@@ -67,6 +67,7 @@ export function PostLocationMap({
     let cancelled = false;
     (async () => {
       try {
+        await import('maplibre-gl/dist/maplibre-gl.css');
         const maplibre = await import('maplibre-gl');
         if (cancelled || !mapContainerRef.current) return;
 

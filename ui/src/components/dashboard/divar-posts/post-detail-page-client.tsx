@@ -8,7 +8,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
-import { useGetDivarPostQuery } from '@/features/api/apiSlice';
+import { useGetDivarPostQuery } from '@/features/api/endpoints/divar-posts';
 import { DownloadPhotosDialog } from '@/components/dashboard/divar-posts/download-photos-dialog';
 import { buildPostDetailData } from '@/components/dashboard/divar-posts/post-detail-data';
 import { PostDetailView } from '@/components/dashboard/divar-posts/post-detail-view';

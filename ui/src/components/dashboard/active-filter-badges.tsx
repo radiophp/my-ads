@@ -10,10 +10,10 @@ import {
   useGetCitiesQuery,
   useGetDistrictsQuery,
   useGetProvincesQuery,
-  useGetPublicDivarCategoriesQuery,
-  useGetPublicDivarCategoryFilterQuery,
-  useGetRingBinderFoldersQuery,
-} from '@/features/api/apiSlice';
+} from '@/features/api/endpoints/locations';
+import { useGetPublicDivarCategoriesQuery } from '@/features/api/endpoints/divar-categories';
+import { useGetPublicDivarCategoryFilterQuery } from '@/features/api/endpoints/divar-category-filters';
+import { useGetRingBinderFoldersQuery } from '@/features/api/endpoints/ring-binder';
 import {
   clearCategoryFilters,
   commitAppliedFilters,

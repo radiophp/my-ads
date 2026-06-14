@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useTranslations, type TranslationValues } from 'next-intl';
 import { Check, ChevronLeft, ChevronRight, Eraser, X } from 'lucide-react';
 
-import { useGetPublicDivarCategoryFilterQuery } from '@/features/api/apiSlice';
+import { useGetPublicDivarCategoryFilterQuery } from '@/features/api/endpoints/divar-category-filters';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

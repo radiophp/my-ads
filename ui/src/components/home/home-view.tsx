@@ -18,7 +18,7 @@ import {
 import { toast } from '@/components/ui/use-toast';
 import { Link } from '@/i18n/routing';
 import { CounterWidget } from '@/features/counter/components/counter-widget';
-import { useGetHealthQuery } from '@/features/api/apiSlice';
+import { useGetHealthQuery } from '@/features/api/endpoints/health';
 
 export function HomeView() {
   const { data, isFetching, isError } = useGetHealthQuery();

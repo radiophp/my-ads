@@ -25,9 +25,9 @@ import { useToast } from '@/components/ui/use-toast';
 import {
   useCreateInviteCodeMutation,
   useGetInviteCodeQuery,
-  useGetUsersQuery,
   useUpdateInviteCodeMutation,
-} from '@/features/api/apiSlice';
+} from '@/features/api/endpoints/invite-codes';
+import { useGetUsersQuery } from '@/features/api/endpoints/users';
 import { Link } from '@/i18n/routing';
 import type { CurrentUser } from '@/types/auth';
 

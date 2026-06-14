@@ -73,7 +73,7 @@ import {
 } from '@lexical/list';
 import { ImageNode, INSERT_IMAGE_COMMAND, $createImageNode, type ImagePayload } from './image-node';
 
-import { useUploadPublicImageMutation } from '@/features/api/apiSlice';
+import { useUploadPublicImageMutation } from '@/features/api/endpoints/uploads';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,

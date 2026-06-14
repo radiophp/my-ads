@@ -20,9 +20,9 @@ import { usePwaPrompt } from '@/hooks/usePwaPrompt';
 import { Link } from '@/i18n/routing';
 import {
   useGetNotificationsQuery,
-  useGetRingBinderFoldersQuery,
-  useLogoutMutation,
-} from '@/features/api/apiSlice';
+} from '@/features/api/endpoints/notifications';
+import { useGetRingBinderFoldersQuery } from '@/features/api/endpoints/ring-binder';
+import { useLogoutMutation } from '@/features/api/endpoints/auth';
 import { clearAuth } from '@/features/auth/authSlice';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import type { RingBinderFolder } from '@/types/ring-binder';

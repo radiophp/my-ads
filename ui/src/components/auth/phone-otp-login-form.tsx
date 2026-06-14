@@ -9,7 +9,7 @@ import {
   useRequestOtpMutation,
   useBaleLoginMutation,
   useVerifyOtpMutation,
-} from '@/features/api/apiSlice';
+} from '@/features/api/endpoints/auth';
 import { useGetWebsiteSettingsQuery } from '@/features/api/endpoints/website-settings';
 import { setAuth } from '@/features/auth/authSlice';
 import { useBaleLinkSocket } from '@/features/bale/useBaleLinkSocket';

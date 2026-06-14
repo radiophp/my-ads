@@ -15,7 +15,7 @@ import { getBusinessTypeBadge } from '@/components/dashboard/divar-posts/busines
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-import 'swiper/css';
+
 
 type HomeFeaturedPostsProps = {
   posts: DivarPostSummary[];

@@ -17,7 +17,7 @@ import { useToast } from '@/components/ui/use-toast';
 import {
   useGetPackagesQuery,
   useUpdatePackageMutation,
-} from '@/features/api/apiSlice';
+} from '@/features/api/endpoints/packages';
 import { Link } from '@/i18n/routing';
 import type { SubscriptionPackage } from '@/types/packages';
 

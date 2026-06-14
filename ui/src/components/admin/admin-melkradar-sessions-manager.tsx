@@ -8,7 +8,7 @@ import {
   useCreateAdminMelkradarSessionMutation,
   useGetAdminMelkradarSessionsQuery,
   useUpdateAdminMelkradarSessionMutation,
-} from '@/features/api/apiSlice';
+} from '@/features/api/endpoints/admin-sessions';
 import { Button } from '@/components/ui/button';
 import {
   Card,

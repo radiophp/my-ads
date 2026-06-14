@@ -16,9 +16,9 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import {
   useGetDiscountCodesQuery,
-  useGetPackagesQuery,
   useUpdateDiscountCodeMutation,
-} from '@/features/api/apiSlice';
+} from '@/features/api/endpoints/discount-codes';
+import { useGetPackagesQuery } from '@/features/api/endpoints/packages';
 import { Link } from '@/i18n/routing';
 import type { DiscountCode } from '@/types/discount-codes';
 

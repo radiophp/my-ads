@@ -7,10 +7,12 @@ import { Bell, ChevronDown, ExternalLink, Loader2, RefreshCw } from 'lucide-reac
 import {
   useFetchPostContactInfoMutation,
   useGetDivarPostQuery,
+} from '@/features/api/endpoints/divar-posts';
+import {
   useGetNotificationsQuery,
   useLazyGetNotificationsQuery,
   useMarkNotificationReadMutation,
-} from '@/features/api/apiSlice';
+} from '@/features/api/endpoints/notifications';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import {
   appendNotifications,

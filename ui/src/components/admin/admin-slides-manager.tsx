@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 
-import { useDeleteAdminSlideMutation, useGetAdminSlidesQuery } from '@/features/api/apiSlice';
+import { useDeleteAdminSlideMutation, useGetAdminSlidesQuery } from '@/features/api/endpoints/slides';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';

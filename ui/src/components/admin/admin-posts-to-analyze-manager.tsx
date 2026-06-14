@@ -19,7 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { useGetPostsToAnalyzeQuery } from '@/features/api/apiSlice';
+import { useGetPostsToAnalyzeQuery } from '@/features/api/endpoints/divar-posts';
 import type { PostToAnalyze } from '@/types/divar-posts';
 
 export function AdminPostsToAnalyzeManager() {

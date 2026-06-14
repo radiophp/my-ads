@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import {
   useGetProvincesQuery,
   useUpdateProvinceAllowPostingMutation,
-} from '@/features/api/apiSlice';
+} from '@/features/api/endpoints/locations';
 import { Button } from '@/components/ui/button';
 
 export function AdminProvincesManager() {

@@ -14,7 +14,7 @@ import {
   useLazyGetDivarPostsQuery,
   useFetchPostPhoneMutation,
   useFetchPostContactInfoMutation,
-} from '@/features/api/apiSlice';
+} from '@/features/api/endpoints/divar-posts';
 import type { DivarPostContactInfo, DivarPostSummary } from '@/types/divar-posts';
 import { useAppSelector } from '@/lib/hooks';
 import { DownloadPhotosDialog } from '@/components/dashboard/divar-posts/download-photos-dialog';

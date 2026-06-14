@@ -9,7 +9,7 @@ import {
   useDeleteAdminNewsCategoryMutation,
   useGetAdminNewsCategoriesQuery,
   useUpdateAdminNewsCategoryMutation,
-} from '@/features/api/apiSlice';
+} from '@/features/api/endpoints/admin-news';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';

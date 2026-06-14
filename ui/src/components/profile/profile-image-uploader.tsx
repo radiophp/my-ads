@@ -28,7 +28,7 @@ import {
   useDeleteTempProfileImageMutation,
   useUploadProfileImageMutation,
   useUploadTempProfileImageMutation,
-} from '@/features/api/apiSlice';
+} from '@/features/api/endpoints/uploads';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
 

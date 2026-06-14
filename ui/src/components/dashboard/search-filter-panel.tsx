@@ -36,9 +36,9 @@ import {
   useGetProvincesQuery,
   useGetCitiesQuery,
   useGetDistrictsQuery,
-  useGetPublicDivarCategoriesQuery,
-  useGetRingBinderFoldersQuery,
-} from '@/features/api/apiSlice';
+} from '@/features/api/endpoints/locations';
+import { useGetPublicDivarCategoriesQuery } from '@/features/api/endpoints/divar-categories';
+import { useGetRingBinderFoldersQuery } from '@/features/api/endpoints/ring-binder';
 import {
   Dialog,
   DialogContent,
@@ -57,7 +57,7 @@ import { BASE_CATEGORY_SLUG } from '@/lib/divar-categories';
 import {
   useGetSavedFiltersQuery,
   useCreateSavedFilterMutation,
-} from '@/features/api/apiSlice';
+} from '@/features/api/endpoints/saved-filters';
 import type { SavedFilter } from '@/types/saved-filters';
 import { SaveFilterDialog } from '@/components/dashboard/save-filter-dialog';
 import { useToast } from '@/components/ui/use-toast';

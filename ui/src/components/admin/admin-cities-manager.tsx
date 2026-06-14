@@ -16,7 +16,7 @@ import {
   useGetCitiesQuery,
   useGetProvincesQuery,
   useUpdateCityAllowPostingMutation,
-} from '@/features/api/apiSlice';
+} from '@/features/api/endpoints/locations';
 import { Button } from '@/components/ui/button';
 
 export function AdminCitiesManager() {

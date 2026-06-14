@@ -22,7 +22,7 @@ import {
   useSavePostToRingBinderFolderMutation,
   useUpsertPostNoteMutation,
   useDeletePostNoteMutation,
-} from '@/features/api/apiSlice';
+} from '@/features/api/endpoints/ring-binder';
 import { cn } from '@/lib/utils';
 
 export type SaveToFolderDialogProps = {

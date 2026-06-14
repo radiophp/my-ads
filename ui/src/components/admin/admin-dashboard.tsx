@@ -27,7 +27,7 @@ import {
 import { useTranslations } from 'next-intl';
 
 import { Link } from '@/i18n/routing';
-import { useGetAdminDashboardStatsQuery } from '@/features/api/apiSlice';
+import { useGetAdminDashboardStatsQuery } from '@/features/api/endpoints/admin-stats';
 import type { AdminDashboardStats } from '@/types/admin';
 
 type DashboardNavItem = {

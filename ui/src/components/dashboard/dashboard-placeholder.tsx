@@ -19,7 +19,7 @@ import {
   useGetCitiesQuery,
   useGetDistrictsQuery,
   useGetProvincesQuery,
-} from '@/features/api/apiSlice';
+} from '@/features/api/endpoints/locations';
 
 export function DashboardPlaceholder() {
   const searchParams = useSearchParams();

@@ -8,7 +8,6 @@ import type { BusinessBadge } from './business-badge';
 import type { PostDetailData } from './post-detail-data';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { FaTelegramPlane, FaWhatsapp, FaSms, FaRegCopy } from 'react-icons/fa';
 import {
   Bookmark,
   BookmarkCheck,
@@ -20,16 +19,19 @@ import {
   Loader2,
   Printer,
   Clock3,
+  MessageCircle,
+  Send,
+  MessageSquare,
 } from 'lucide-react';
 import { SaveToFolderDialog } from '@/components/ring-binder/save-to-folder-dialog';
 import { SavedFoldersDialog } from '@/components/ring-binder/saved-folders-dialog';
 import {
   useDeletePostNoteMutation,
   useGetPostSavedFoldersQuery,
-  useGetPublicDivarCategoryFilterQuery,
   useRemovePostFromRingBinderFolderMutation,
   useUpsertPostNoteMutation,
-} from '@/features/api/apiSlice';
+} from '@/features/api/endpoints/ring-binder';
+import { useGetPublicDivarCategoryFilterQuery } from '@/features/api/endpoints/divar-category-filters';
 import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { AMENITY_CONFIG } from './post-detail-sections';
@@ -498,7 +500,7 @@ export function PostDetailView({
                               setShareDialogOpen(false);
                             }}
                           >
-                            <FaWhatsapp className="text-green-600" />
+                            <MessageCircle className="text-green-600" />
                             <span>{t('shareWhatsApp')}</span>
                           </Button>
                         ) : null}
@@ -512,7 +514,7 @@ export function PostDetailView({
                               setShareDialogOpen(false);
                             }}
                           >
-                            <FaTelegramPlane className="text-sky-500" />
+                            <Send className="text-sky-500" />
                             <span>{t('shareTelegram')}</span>
                           </Button>
                         ) : null}
@@ -523,7 +525,7 @@ export function PostDetailView({
                             className="flex items-center gap-2 sm:hidden"
                           >
                             <a href={smsHref} onClick={() => setShareDialogOpen(false)}>
-                              <FaSms className="text-primary" />
+                              <MessageSquare className="text-primary" />
                               <span>{t('shareSms')}</span>
                             </a>
                           </Button>
@@ -538,7 +540,7 @@ export function PostDetailView({
                               setShareDialogOpen(false);
                             }}
                           >
-                            <FaRegCopy />
+                            <Copy />
                             <span>{copyLinkLabel ?? t('copyLink')}</span>
                           </Button>
                         ) : null}

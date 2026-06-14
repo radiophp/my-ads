@@ -22,7 +22,7 @@ import {
   useDeleteRingBinderFolderMutation,
   useGetRingBinderFoldersQuery,
   useUpdateRingBinderFolderMutation,
-} from '@/features/api/apiSlice';
+} from '@/features/api/endpoints/ring-binder';
 import type { RingBinderFolder } from '@/types/ring-binder';
 
 const DEFAULT_MAX_FOLDERS = 30;

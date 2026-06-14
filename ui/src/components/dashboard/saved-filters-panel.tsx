@@ -9,12 +9,14 @@ import {
   useGetSavedFiltersQuery,
   useDeleteSavedFilterMutation,
   useUpdateSavedFilterMutation,
+} from '@/features/api/endpoints/saved-filters';
+import {
   useGetProvincesQuery,
   useGetCitiesQuery,
   useGetDistrictsQuery,
-  useGetRingBinderFoldersQuery,
-  useGetPublicDivarCategoryFilterQuery,
-} from '@/features/api/apiSlice';
+} from '@/features/api/endpoints/locations';
+import { useGetRingBinderFoldersQuery } from '@/features/api/endpoints/ring-binder';
+import { useGetPublicDivarCategoryFilterQuery } from '@/features/api/endpoints/divar-category-filters';
 import type { SavedFilter } from '@/types/saved-filters';
 import type { CategoryFilterValue } from '@/features/search-filter/searchFilterSlice';
 import { Button } from '@/components/ui/button';

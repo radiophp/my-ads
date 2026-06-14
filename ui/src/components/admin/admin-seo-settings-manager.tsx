@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { RefreshCw, Save } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import { useGetAdminSeoSettingsQuery, useUpdateAdminSeoSettingMutation } from '@/features/api/apiSlice';
+import { useGetAdminSeoSettingsQuery, useUpdateAdminSeoSettingMutation } from '@/features/api/endpoints/seo-settings';
 import type { SeoPageKey } from '@/types/seo-settings';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

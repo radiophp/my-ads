@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import type { UseFormReturn } from 'react-hook-form';
+import { useWatch, type UseFormReturn } from 'react-hook-form';
 import { Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -57,7 +57,7 @@ export function PackageForm({
   submitIcon,
   secondaryAction,
 }: PackageFormProps) {
-  const isTrial = form.watch('isTrial');
+  const isTrial = useWatch({ control: form.control, name: 'isTrial' });
 
   return (
     <Form {...form}>

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
@@ -26,10 +26,12 @@ import {
 import { Input } from '@/components/ui/input';
 import {
   useGetCitiesQuery,
-  useGetCurrentUserQuery,
   useGetProvincesQuery,
+} from '@/features/api/endpoints/locations';
+import {
+  useGetCurrentUserQuery,
   useUpdateCurrentUserMutation,
-} from '@/features/api/apiSlice';
+} from '@/features/api/endpoints/auth';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import { updateUser } from '@/features/auth/authSlice';
 import { ProfileImageUploader } from '@/components/profile/profile-image-uploader';
@@ -224,6 +226,7 @@ export function ProfileForm() {
   };
 
   const isSaving = isUpdating || form.formState.isSubmitting;
+  const profileImageUrl = useWatch({ control: form.control, name: 'profileImageUrl' });
 
   if (isLoadingUser) {
     return (
@@ -243,7 +246,7 @@ export function ProfileForm() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <ProfileImageUploader
-          value={form.watch('profileImageUrl') || null}
+          value={profileImageUrl || null}
           onChange={handleProfileImageChange}
           disabled={isSaving}
           texts={imageTexts}

@@ -17,7 +17,7 @@ import {
   useGetCitiesQuery,
   useGetDistrictsQuery,
   useGetProvincesQuery,
-} from '@/features/api/apiSlice';
+} from '@/features/api/endpoints/locations';
 
 export function AdminDistrictsManager() {
   const t = useTranslations('admin.locations.districts');

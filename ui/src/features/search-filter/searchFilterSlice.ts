@@ -1,4 +1,5 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { createSelector } from '@reduxjs/toolkit';
 
 export type SelectionMode = 'all' | 'custom';
 
@@ -179,6 +180,53 @@ export const {
 
 export default searchFilterSlice.reducer;
 export { initialFilterState as searchFilterInitialState };
+
+type SearchFilterRootState = { searchFilter: SearchFilterSliceState };
+
+export const selectSearchFilterState = createSelector(
+  [(state: SearchFilterRootState) => state.searchFilter],
+  (searchFilter) => searchFilter,
+);
+
+export const selectProvinceId = createSelector(
+  [selectSearchFilterState],
+  (state) => state.provinceId,
+);
+
+export const selectCitySelection = createSelector(
+  [selectSearchFilterState],
+  (state) => state.citySelection,
+);
+
+export const selectDistrictSelection = createSelector(
+  [selectSearchFilterState],
+  (state) => state.districtSelection,
+);
+
+export const selectCategorySelection = createSelector(
+  [selectSearchFilterState],
+  (state) => state.categorySelection,
+);
+
+export const selectCategoryFilters = createSelector(
+  [selectSearchFilterState],
+  (state) => state.categoryFilters,
+);
+
+export const selectRingBinderFolderId = createSelector(
+  [selectSearchFilterState],
+  (state) => state.ringBinderFolderId,
+);
+
+export const selectNoteFilter = createSelector(
+  [selectSearchFilterState],
+  (state) => state.noteFilter,
+);
+
+export const selectPersistNonce = createSelector(
+  [selectSearchFilterState],
+  (state) => state.persistNonce,
+);
 
 function shouldRemoveFilterValue(value: CategoryFilterValue | null): boolean {
   if (!value) {

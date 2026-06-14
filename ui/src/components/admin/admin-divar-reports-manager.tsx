@@ -14,10 +14,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
-import {
-  useGetDivarCategoriesQuery,
-  useLazyGetDivarDistrictPriceReportQuery,
-} from '@/features/api/apiSlice';
+import { useGetDivarCategoriesQuery } from '@/features/api/endpoints/divar-categories';
+import { useLazyGetDivarDistrictPriceReportQuery } from '@/features/api/endpoints/divar-posts';
 import type { DivarCategory } from '@/types/divar-category';
 
 type CategoryType = 'rent' | 'sell' | 'unknown';

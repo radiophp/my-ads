@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Search } from 'lucide-react';
 
-import { useLazyGetDivarPostByCodeQuery } from '@/features/api/apiSlice';
+import { useLazyGetDivarPostByCodeQuery } from '@/features/api/endpoints/divar-posts';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/use-toast';

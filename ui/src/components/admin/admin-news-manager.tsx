@@ -7,7 +7,7 @@ import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { useDeleteAdminNewsMutation, useGetAdminNewsQuery } from '@/features/api/apiSlice';
+import { useDeleteAdminNewsMutation, useGetAdminNewsQuery } from '@/features/api/endpoints/admin-news';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';

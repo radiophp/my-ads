@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import {
   useGetDivarCategoryFilterQuery,
   useGetDivarCategoryFiltersQuery,
-} from '@/features/api/apiSlice';
+} from '@/features/api/endpoints/divar-category-filters';
 import {
   Dialog,
   DialogContent,

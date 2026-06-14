@@ -9,7 +9,7 @@ import {
   useDeleteAdminBlogTagMutation,
   useGetAdminBlogTagsQuery,
   useUpdateAdminBlogTagMutation,
-} from '@/features/api/apiSlice';
+} from '@/features/api/endpoints/admin-blog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';

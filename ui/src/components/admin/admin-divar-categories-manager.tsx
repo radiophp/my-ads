@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import {
   useGetDivarCategoriesQuery,
   useUpdateDivarCategoryAllowPostingMutation,
-} from '@/features/api/apiSlice';
+} from '@/features/api/endpoints/divar-categories';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 

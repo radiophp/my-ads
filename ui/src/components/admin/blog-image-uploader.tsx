@@ -4,7 +4,7 @@ import { useCallback, useRef, useState } from 'react';
 import { CloudUpload, Loader2, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-import { useUploadPublicImageMutation } from '@/features/api/apiSlice';
+import { useUploadPublicImageMutation } from '@/features/api/endpoints/uploads';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';

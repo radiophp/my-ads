@@ -7,7 +7,7 @@ import { useTranslations } from 'next-intl';
 import {
   useGetAdminWebsiteSettingsQuery,
   useUpdateAdminWebsiteSettingsMutation,
-} from '@/features/api/apiSlice';
+} from '@/features/api/endpoints/website-settings';
 import type { WebsiteContact, WebsiteSettings } from '@/types/website-settings';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';

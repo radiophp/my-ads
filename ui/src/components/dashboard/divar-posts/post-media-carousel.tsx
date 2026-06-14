@@ -23,9 +23,7 @@ import {
   type DownloadableMedia,
 } from './helpers';
 
-import 'swiper/css';
-import 'swiper/css/navigation';
-import 'swiper/css/zoom';
+
 
 type BusinessBadge = {
   label: string;

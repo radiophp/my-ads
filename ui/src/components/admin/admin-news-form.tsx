@@ -11,7 +11,7 @@ import {
   useGetAdminNewsItemQuery,
   useGetAdminNewsTagsQuery,
   useUpdateAdminNewsMutation,
-} from '@/features/api/apiSlice';
+} from '@/features/api/endpoints/admin-news';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';

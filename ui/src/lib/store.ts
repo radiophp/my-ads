@@ -1,7 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { setupListeners } from '@reduxjs/toolkit/query';
 
-import { apiSlice } from '@/features/api/apiSlice';
+import { apiSlice } from '@/features/api/baseApi';
 import counterReducer from '@/features/counter/counterSlice';
 import authReducer from '@/features/auth/authSlice';
 import searchFilterReducer, {

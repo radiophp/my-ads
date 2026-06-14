@@ -7,7 +7,7 @@ import { useTranslations } from 'next-intl';
 import {
   useGetAdminBlogSourcesQuery,
   useUpdateAdminBlogSourceMutation,
-} from '@/features/api/apiSlice';
+} from '@/features/api/endpoints/admin-blog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';

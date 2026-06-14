@@ -9,8 +9,7 @@ import { Link } from '@/i18n/routing';
 import { normalizeStorageUrl } from '@/lib/storage';
 import { cn } from '@/lib/utils';
 
-import 'swiper/css';
-import 'swiper/css/pagination';
+
 
 type HomeSliderProps = {
   slides: Slide[];

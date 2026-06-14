@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { Loader2, Save, ArrowLeft } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
@@ -27,7 +27,7 @@ import {
   useCreatePackageMutation,
   useGetPackageQuery,
   useUpdatePackageMutation,
-} from '@/features/api/apiSlice';
+} from '@/features/api/endpoints/packages';
 import { Link } from '@/i18n/routing';
 
 type AdminPackageEditorProps = {
@@ -134,7 +134,7 @@ export function AdminPackageEditor({ mode, packageId }: AdminPackageEditorProps)
     [form],
   );
 
-  const imageValue = form.watch('imageUrl') || '';
+  const imageValue = useWatch({ control: form.control, name: 'imageUrl' }) || '';
 
   const handleSubmit = async (values: PackageFormValues) => {
     const payload = {

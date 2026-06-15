@@ -3,11 +3,14 @@ import { useEffect, useState } from 'react';
 import type { useTranslations } from 'next-intl';
 import type { DivarPostContactInfo, DivarPostSummary } from '@/types/divar-posts';
 import { PostMediaCarousel } from './post-media-carousel';
+import { SharePostDialog } from './post-share-dialog';
+import { ContactInfoCard } from './post-contact-info-card';
+import { InlineNoteEditor } from './post-inline-note-editor';
 import { AmenitiesSection, AttributeLabelGrid, AttributeValueGrid } from './post-detail-sections';
 import type { BusinessBadge } from './business-badge';
 import type { PostDetailData } from './post-detail-data';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import {
   Bookmark,
   BookmarkCheck,
@@ -19,9 +22,6 @@ import {
   Loader2,
   Printer,
   Clock3,
-  MessageCircle,
-  Send,
-  MessageSquare,
 } from 'lucide-react';
 import { SaveToFolderDialog } from '@/components/ring-binder/save-to-folder-dialog';
 import { SavedFoldersDialog } from '@/components/ring-binder/saved-folders-dialog';
@@ -35,6 +35,7 @@ import { useGetPublicDivarCategoryFilterQuery } from '@/features/api/endpoints/d
 import { toast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { AMENITY_CONFIG } from './post-detail-sections';
+import { createPostPrintContent } from './post-print-utils';
 import { PostLocationMap } from './post-location-map';
 import { PhoneOtpLoginForm } from '@/components/auth/phone-otp-login-form';
 import { useAppSelector } from '@/lib/hooks';
@@ -102,14 +103,12 @@ export function PostDetailView({
     useGetPostSavedFoldersQuery(post.id, { skip: !post.id });
   const [removePostFromFolder, { isLoading: isRemoving }] =
     useRemovePostFromRingBinderFolderMutation();
-  const [upsertPostNote, { isLoading: isSavingInlineNote }] = useUpsertPostNoteMutation();
-  const [deletePostNote, { isLoading: isDeletingInlineNote }] = useDeletePostNoteMutation();
+  const [upsertPostNote] = useUpsertPostNoteMutation();
+  const [deletePostNote] = useDeletePostNoteMutation();
   const savedFolders = savedData?.saved ?? [];
   const isSaved = savedFolders.length > 0;
   const noteContent = savedData?.note?.content ?? null;
-  const [isEditingNote, setIsEditingNote] = useState(false);
-  const [noteDraft, setNoteDraft] = useState(noteContent ?? '');
-  const isMutatingNote = isSavingInlineNote || isDeletingInlineNote;
+  const [noteEditTrigger, setNoteEditTrigger] = useState(0);
   const actionButtonClass = cn(
     'flex flex-1 basis-0 items-center gap-1 rounded-none px-2 py-1 text-xs',
     isRTL
@@ -121,11 +120,6 @@ export function PostDetailView({
       setSavedDialogOpen(false);
     }
   }, [isSaved, savedDialogOpen]);
-  useEffect(() => {
-    if (!isEditingNote) {
-      setNoteDraft(noteContent ?? '');
-    }
-  }, [noteContent, isEditingNote]);
   useEffect(() => {
     if (loginDialogOpen && isAuthenticated) {
       setLoginDialogOpen(false);
@@ -168,29 +162,10 @@ export function PostDetailView({
     }
   };
 
-  const handleStartNoteEdit = () => {
-    if (!ensureAuthenticated()) {
-      return;
-    }
-    setNoteDraft(noteContent ?? '');
-    setIsEditingNote(true);
-  };
-
-  const handleCancelNoteEdit = () => {
-    setNoteDraft(noteContent ?? '');
-    setIsEditingNote(false);
-  };
-
-  const handleSaveNote = async () => {
-    const trimmed = noteDraft.trim();
-    const previous = (noteContent ?? '').trim();
-    if (trimmed === previous) {
-      setIsEditingNote(false);
-      return;
-    }
+  const handleNoteSave = async (content: string) => {
     try {
-      if (trimmed.length > 0) {
-        await upsertPostNote({ postId: post.id, content: trimmed }).unwrap();
+      if (content.length > 0) {
+        await upsertPostNote({ postId: post.id, content }).unwrap();
         toast({
           title: t('noteSection.updateSuccess'),
           description: t('noteSection.updateSuccessDescription'),
@@ -202,17 +177,15 @@ export function PostDetailView({
         });
       }
       await refetchSaved();
-      setIsEditingNote(false);
-      setNoteDraft(trimmed);
     } catch (error) {
       console.error('Failed to update note', error);
       toast({
         title: t('noteSection.updateError'),
         variant: 'destructive',
       });
+      throw error;
     }
   };
-  const canSaveNote = noteDraft.trim() !== (noteContent ?? '').trim();
 
   const handleCopyContactInfo = async (info: DivarPostContactInfo) => {
     if (!info.phoneNumber) {
@@ -235,176 +208,19 @@ export function PostDetailView({
   };
 
   const handlePrint = () => {
-    const owner = contactInfo?.ownerName || post.ownerName || t('contactInfo.ownerUnknown');
-    const phone = contactInfo?.phoneNumber ?? t('contactInfo.phoneUnknown');
-    const published = publishedDisplay ?? t('shareMessagePublishUnknown');
-    const location = cityDistrict ?? t('shareMessageLocationUnknown');
-
-    // Pull translated labels once to ensure we don't print raw keys
-    const printLabels = {
-      owner: t('contactInfo.ownerLabel'),
-      phone: t('contactInfo.phoneLabel'),
-      location: t('shareMessageLocationLabel'),
-      publish: t('shareMessagePublishLabel'),
-      title: t('shareMessageTitleLabel'),
-      link: t('shareMessageLinkLabel'),
-      category: t('shareMessageCategoryLabel'),
-      business: t('shareMessageBusinessLabel'),
-    };
-
-    const categoryDisplay =
-      categoryFilter?.categoryName ?? post.categoryName ?? post.categorySlug ?? t('labels.notAvailable');
-
-    const coreSummary = [
-      { label: printLabels.owner, value: owner },
-      { label: printLabels.phone, value: phone },
-      { label: printLabels.location, value: location },
-      { label: printLabels.publish, value: published },
-      { label: printLabels.title, value: '' },
-      { label: printLabels.link, value: '' },
-      {
-        label: printLabels.category,
-        value: categoryDisplay,
-      },
-      {
-        label: printLabels.business,
-        value: businessBadge?.label ?? t('businessType.unknown'),
-      },
-    ];
-
-    const summaryTriples = [
-      { label: t('labels.postCode'), value: post.code?.toString() ?? '' },
-      { label: printLabels.category, value: categoryDisplay },
-      coreSummary[0],
-      coreSummary[1],
-      coreSummary[2],
-    ].filter((row) => row.value && row.value.toString().trim().length > 0);
-
-    const summaryRows =
-      summaryTriples.length > 0
-        ? `<tr>
-            ${summaryTriples
-              .map(
-                (row) =>
-                  `<td style="font-weight:700;background:#f3f4f6;">${row.label}</td>`,
-              )
-              .join('')}
-          </tr>
-          <tr>
-            ${summaryTriples
-              .map(
-                (row) =>
-                  `<td>${row.value}</td>`,
-              )
-              .join('')}
-          </tr>`
-        : '';
-
-    const detailPairs = combinedDetailEntries
-      .filter((entry) => entry.value && entry.value.toString().trim().length > 0)
-      .map((entry) => ({ label: entry.label, value: entry.value }));
-
-    const detailRows = detailPairs.length
-      ? detailPairs
-          .reduce<string[]>((rows, pair, idx) => {
-            if (idx % 3 === 0) rows.push('');
-            const rowIdx = Math.floor(idx / 3);
-            rows[rowIdx] += `<td style="font-weight:600;background:#fdfdfd;min-width:140px;">${pair.label}</td>
-                             <td style="min-width:180px;">${pair.value}</td>`;
-            return rows;
-          }, [])
-          .map((row) => `<tr>${row}</tr>`)
-          .join('')
-      : '';
-
-    const amenityPairs = AMENITY_CONFIG.reduce<{ label: string; value: string }[]>((acc, config) => {
-      const value = post[config.key];
-      if (value === true) {
-        acc.push({ label: t(config.labelKey), value: t('labels.booleanYes') });
-      }
-      return acc;
-    }, []);
-
-    const attributeRows =
-      detailData.attributeValueEntries.length > 0 || amenityPairs.length > 0
-        ? [...detailData.attributeValueEntries.map((attr) => ({ label: attr.label, value: attr.value })), ...amenityPairs]
-            .reduce<string[]>((rows, pair, idx) => {
-              if (idx % 3 === 0) rows.push('');
-              const rowIdx = Math.floor(idx / 3);
-              rows[rowIdx] += `<td style="padding:8px 10px;font-weight:600;border:1px solid #e5e7eb;background:#fdfdfd;min-width:140px;">${pair.label}</td>
-                               <td style="padding:8px 10px;border:1px solid #e5e7eb;min-width:180px;">${pair.value}</td>`;
-              return rows;
-            }, [])
-            .map((row) => `<tr>${row}</tr>`)
-            .join('')
-        : '';
-
-    const labelOnlyLine =
-      detailData.attributeLabelOnlyEntries.length > 0
-        ? `<p style="margin-top:12px; margin-bottom:0; color:#111; line-height:1.6;">
-             <span style="font-weight:700;">${t('labels.otherFeatures')}:</span>
-             <span>${detailData.attributeLabelOnlyEntries.map((attr) => attr.label).join(' ، ')}</span>
-           </p>`
-        : '';
-
-    const html = `
-<!doctype html>
-<html ${isRTL ? 'dir="rtl"' : ''}>
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>${post.title ?? t('shareMessageTitleUnknown')}</title>
-  <style>
-    @font-face {
-      font-family: 'IRANSans';
-      src: url('/font/IRANSans/IRANSans%20Regular/IRANSans%20Regular.ttf') format('truetype');
-      font-weight: 400;
-      font-style: normal;
-      font-display: swap;
-    }
-    body { font-family: 'IRANSans','Inter',system-ui,-apple-system,BlinkMacSystemFont,sans-serif; margin: 20px; color: #111; font-size: 12px; }
-    h1 { font-size: 16px; margin-bottom: 6px; }
-    h2 { margin-top: 14px; margin-bottom: 6px; font-size: 12px; color: #374151; }
-    table { width: 100%; border-collapse: collapse; margin-top: 6px; border:1px solid #e5e7eb; table-layout: fixed; }
-    .print-table td { padding:8px; border:1px solid #e5e7eb; font-size: 12px; word-wrap: break-word; }
-    .print-container { width:100%; max-width:1100px; margin:0 auto; }
-    @page { size: A4 landscape; margin: 16mm; }
-  </style>
-</head>
-<body>
-  <div class="print-container">
-    <h1>${post.title ?? ''}</h1>
-    <table class="print-table">${summaryRows}</table>
-    <table class="print-table">
-      ${detailRows}
-    </table>
-    ${
-      attributeRows
-        ? `<table class="print-table" style="margin-top:12px;">${attributeRows}</table>`
-        : ''
-    }
-    ${labelOnlyLine}
-    ${
-      post.description
-        ? (() => {
-            const flat = post.description
-              .split('\n')
-              .map((line) => line.trim())
-              .filter(Boolean)
-              .join('. ');
-            const normalized = flat.endsWith('.') ? flat : `${flat}.`;
-            return `<div style="margin-top:16px;">
-              <p style="margin:6px 0 0 0;line-height:1.6;">
-                <span style="font-weight:700;">${t('shareMessageDescriptionLabel')}:</span>
-                <span style="margin-${isRTL ? 'right' : 'left'}:6px;">${normalized}</span>
-              </p>
-            </div>`;
-          })()
-        : ''
-    }
-  </div>
-</body>
-</html>`;
+    const html = createPostPrintContent({
+      t,
+      post,
+      isRTL,
+      contactInfo,
+      publishedDisplay,
+      cityDistrict,
+      businessBadge,
+      categoryFilter,
+      combinedDetailEntries,
+      detailData,
+      AMENITY_CONFIG,
+    });
 
     const openPrintWindow = () => {
       const win = window.open('', '_blank');
@@ -483,72 +299,16 @@ export function PostDetailView({
                     <Share2 className="size-3.5" aria-hidden="true" />
                     <span>{t('sharePost')}</span>
                   </Button>
-                  <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
-                    <DialogContent className="max-w-sm" hideCloseButton={false}>
-                      <DialogHeader>
-                        <DialogTitle>{t('sharePost')}</DialogTitle>
-                        <DialogDescription className="sr-only">
-                          {t('sharePost')}
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="flex flex-col gap-3">
-                        {onShareWhatsapp ? (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className="flex items-center gap-2"
-                            onClick={() => {
-                              onShareWhatsapp();
-                              setShareDialogOpen(false);
-                            }}
-                          >
-                            <MessageCircle className="text-green-600" />
-                            <span>{t('shareWhatsApp')}</span>
-                          </Button>
-                        ) : null}
-                        {onShareTelegram ? (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className="flex items-center gap-2"
-                            onClick={() => {
-                              onShareTelegram();
-                              setShareDialogOpen(false);
-                            }}
-                          >
-                            <Send className="text-sky-500" />
-                            <span>{t('shareTelegram')}</span>
-                          </Button>
-                        ) : null}
-                        {smsHref ? (
-                          <Button
-                            asChild
-                            variant="outline"
-                            className="flex items-center gap-2 sm:hidden"
-                          >
-                            <a href={smsHref} onClick={() => setShareDialogOpen(false)}>
-                              <MessageSquare className="text-primary" />
-                              <span>{t('shareSms')}</span>
-                            </a>
-                          </Button>
-                        ) : null}
-                        {onCopyLink ? (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className="flex items-center gap-2"
-                            onClick={() => {
-                              onCopyLink();
-                              setShareDialogOpen(false);
-                            }}
-                          >
-                            <Copy />
-                            <span>{copyLinkLabel ?? t('copyLink')}</span>
-                          </Button>
-                        ) : null}
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                  <SharePostDialog
+                    open={shareDialogOpen}
+                    onOpenChange={setShareDialogOpen}
+                    t={t}
+                    onShareWhatsapp={onShareWhatsapp}
+                    onShareTelegram={onShareTelegram}
+                    smsHref={smsHref}
+                    onCopyLink={onCopyLink}
+                    copyLinkLabel={copyLinkLabel}
+                  />
                 </>
               ) : null}
               {post.hasContactInfo ? (
@@ -613,7 +373,7 @@ export function PostDetailView({
                 type="button"
                 variant="secondary"
                 size="sm"
-                onClick={handleStartNoteEdit}
+                onClick={() => setNoteEditTrigger((prev) => prev + 1)}
                 className={actionButtonClass}
               >
                 <Pencil className="size-3.5" aria-hidden="true" />
@@ -659,102 +419,19 @@ export function PostDetailView({
             ) : null}
           </div>
           {contactInfo ? (
-            <div className="rounded-xl border border-border/70 bg-muted/30 p-3 text-sm shadow-sm">
-              <div className="flex flex-col gap-1">
-                <p className="text-xs text-muted-foreground">{t('contactInfo.ownerLabel')}</p>
-                <p className="text-sm font-semibold text-foreground">
-                  {contactInfo.ownerName ?? t('contactInfo.ownerUnknown')}
-                </p>
-              </div>
-              <div className="mt-2 flex flex-col gap-1">
-                <p className="text-xs text-muted-foreground">{t('contactInfo.phoneLabel')}</p>
-                <p className="text-base font-semibold text-foreground ltr:font-mono rtl:font-sans">
-                  {contactInfo.phoneNumber ?? t('contactInfo.missingShort')}
-                </p>
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={!contactInfo.phoneNumber}
-                  className="flex items-center gap-2"
-                  onClick={() => {
-                    if (contactInfo.phoneNumber) {
-                      window.location.href = `tel:${contactInfo.phoneNumber}`;
-                    }
-                  }}
-                >
-                  <Phone className="size-4" />
-                  <span>{t('contactInfo.call')}</span>
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={!contactInfo.phoneNumber}
-                  className="flex items-center gap-2"
-                  onClick={() => handleCopyContactInfo(contactInfo)}
-                >
-                  <Copy className="size-4" />
-                  <span>{t('contactInfo.copy')}</span>
-                </Button>
-              </div>
-            </div>
+            <ContactInfoCard
+              contactInfo={contactInfo}
+              t={t}
+              onCopy={handleCopyContactInfo}
+            />
           ) : null}
-          {noteContent || isEditingNote ? (
-            <div className="rounded-xl border border-border/70 bg-muted/30 p-3 text-sm">
-              <div className="flex items-center justify-between gap-3">
-                <p className="font-medium text-foreground">{t('noteSection.heading')}</p>
-                {isEditingNote ? (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleCancelNoteEdit}
-                    disabled={isMutatingNote}
-                  >
-                    {t('noteSection.cancel')}
-                  </Button>
-                ) : (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleStartNoteEdit}
-                    className="flex items-center gap-1"
-                  >
-                    <span className="sr-only">{t('noteSection.editButton')}</span>
-                    <Pencil className="size-4" aria-hidden="true" />
-                  </Button>
-                )}
-              </div>
-              {isEditingNote ? (
-                <>
-                  <textarea
-                    className="mt-3 w-full rounded-xl border border-border/70 bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none"
-                    placeholder={t('noteSection.placeholder')}
-                    value={noteDraft}
-                    onChange={(event) => setNoteDraft(event.target.value)}
-                    maxLength={2000}
-                  />
-                  <div className={cn('mt-3 flex', isRTL ? 'justify-start' : 'justify-end')}>
-                    <Button
-                      type="button"
-                      size="sm"
-                      className="w-full sm:w-auto"
-                      onClick={handleSaveNote}
-                      disabled={!canSaveNote || isMutatingNote}
-                    >
-                      {isMutatingNote ? t('noteSection.saving') : t('noteSection.save')}
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                <p className="mt-2 whitespace-pre-wrap text-muted-foreground">{noteContent}</p>
-              )}
-            </div>
-          ) : null}
+          <InlineNoteEditor
+            noteContent={noteContent}
+            isRTL={isRTL}
+            t={t}
+            onSave={handleNoteSave}
+            editTrigger={noteEditTrigger}
+          />
           {combinedDetailEntries.length > 0 ? (
             <div className="grid grid-cols-3 gap-3">
               {combinedDetailEntries.map((entry) => (

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { Bell, ChevronDown, ExternalLink, Loader2, RefreshCw } from 'lucide-react';
+import { ChevronDown, Loader2, RefreshCw } from 'lucide-react';
 
 import {
   useFetchPostContactInfoMutation,
@@ -18,7 +18,6 @@ import {
   appendNotifications,
   markNotificationRead as markNotificationReadAction,
   replaceNotifications,
-  type NotificationsState,
 } from '@/features/notifications/notificationsSlice';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -29,17 +28,15 @@ import {
 } from '@/features/notifications/nativeNotifications';
 import { usePushSubscription } from '@/features/notifications/usePushSubscription';
 import { useNotificationPreferences } from '@/features/notifications/useNotificationPreferences';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { DownloadPhotosDialog } from '@/components/dashboard/divar-posts/download-photos-dialog';
 import { buildPostDetailData } from '@/components/dashboard/divar-posts/post-detail-data';
-import { PostDetailView } from '@/components/dashboard/divar-posts/post-detail-view';
 import { getBusinessTypeBadge } from '@/components/dashboard/divar-posts/business-badge';
 import { useToast } from '@/components/ui/use-toast';
-import type { DivarPostContactInfo, DivarPostSummary } from '@/types/divar-posts';
-import { PostCard } from '@/components/dashboard/divar-posts/post-card';
+import type { DivarPostContactInfo } from '@/types/divar-posts';
+import { NotificationCard } from '@/components/dashboard/notification-card';
+import { NotificationsPostDialog } from '@/components/dashboard/notifications-post-dialog';
+import { NotificationsSkeleton, EmptyState } from '@/components/dashboard/notifications-helpers';
 
 const PAGE_SIZE = 20;
-type NotificationsTranslator = ReturnType<typeof useTranslations<'dashboard.notificationsPage'>>;
 type PushStatus = 'checking' | 'active' | 'inactive' | 'blocked' | 'unsupported';
 
 export function NotificationsPanel() {
@@ -434,9 +431,6 @@ export function NotificationsPanel() {
     }
   }, []);
 
-  const dialogTitle = selectedPost
-    ? selectedPost.title ?? postT('untitled', { externalId: selectedPost.externalId })
-    : postT('loading');
   const postLoading = isPostLoading || isPostFetching;
 
   return (
@@ -623,262 +617,30 @@ export function NotificationsPanel() {
           </div>
         ) : null}
       </div>
-      <Dialog open={dialogOpen} onOpenChange={closeDialog}>
-        <DialogContent
-          hideCloseButton
-          className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] sm:left-1/2 sm:top-1/2 sm:flex sm:max-h-[90vh] sm:w-full sm:max-w-[1200px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:flex-col sm:overflow-hidden sm:rounded-2xl sm:p-8"
-          onPointerDownOutside={(event) => {
-            if (downloadDialogOpen) {
-              event.preventDefault();
-            }
-          }}
-          onInteractOutside={(event) => {
-            if (downloadDialogOpen) {
-              event.preventDefault();
-            }
-          }}
-        >
-          <div className="flex h-full flex-col overflow-hidden">
-            <div className="border-b border-border px-6 py-4 sm:hidden">
-              <p className={`break-words text-base font-semibold ${isRTL ? 'text-right' : 'text-center'}`}>
-                {dialogTitle}
-              </p>
-            </div>
-            <div className="hidden p-0 sm:block">
-              <DialogHeader>
-                <DialogTitle className="mb-4 flex flex-wrap items-center gap-2 break-words">
-                  {dialogTitle}
-                </DialogTitle>
-                <DialogDescription className="sr-only">{dialogTitle}</DialogDescription>
-              </DialogHeader>
-            </div>
-            <div className="flex-1 overflow-y-auto px-6 py-4 sm:p-0">
-              {postLoading ? (
-                <div className="flex flex-1 items-center justify-center py-24">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="size-4 animate-spin" aria-hidden />
-                    <span>{postT('loading')}</span>
-                  </div>
-                </div>
-              ) : isPostError || !selectedPost || !detailData ? (
-                <div className="flex flex-1 flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-border/80 p-10 text-center text-muted-foreground">
-                  <p>{postT('detailLoadFailed')}</p>
-                </div>
-              ) : (
-                <>
-                  <PostDetailView
-                    post={selectedPost}
-                    t={postT}
-                    isRTL={isRTL}
-                    businessBadge={businessBadge}
-                    cityDistrict={cityDistrict}
-                    publishedDisplay={publishedDisplay}
-                    hasDownloadableMedia={hasDownloadableMedia}
-                    onRequestDownload={handleOpenDownloadDialog}
-                    detailData={detailData}
-                    onRequestContactInfo={handleFetchContactInfo}
-                    contactInfo={contactInfo}
-                    contactLoading={contactLoading}
-                    mapWrapperClassName="lg:px-4"
-                  />
-                  <div className={cn('mt-6 flex', isRTL ? 'justify-start' : 'justify-end')}>
-                    <Button asChild variant="link" className="h-auto p-0 text-sm">
-                      <a
-                        href={
-                          selectedPost.permalink ?? `https://divar.ir/v/${selectedPost.externalId}`
-                        }
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center gap-2"
-                      >
-                        {postT('openOnDivar')}
-                        <ExternalLink className="size-4" aria-hidden />
-                      </a>
-                    </Button>
-                  </div>
-                </>
-              )}
-            </div>
-            <div className="border-t border-border bg-background/95 px-6 py-4 sm:border-0 sm:bg-transparent sm:px-0">
-              <div
-                className={cn(
-                  'flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between',
-                  isRTL ? 'sm:flex-row-reverse' : 'sm:flex-row',
-                )}
-              >
-                <div className={cn('flex flex-wrap gap-3', isRTL ? 'flex-row-reverse' : 'flex-row')}>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="min-w-[140px] flex-1 sm:flex-none"
-                    onClick={() => closeDialog(false)}
-                  >
-                    {postT('close')}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-      <DownloadPhotosDialog
-        open={downloadDialogOpen}
-        onOpenChange={setDownloadDialogOpen}
-        post={selectedPost ?? null}
+      <NotificationsPostDialog
+        open={dialogOpen}
+        onClose={closeDialog}
+        downloadDialogOpen={downloadDialogOpen}
+        onDownloadDialogOpenChange={setDownloadDialogOpen}
+        selectedPost={selectedPost}
+        postLoading={postLoading}
+        isPostError={isPostError}
+        detailData={detailData}
+        businessBadge={businessBadge}
+        cityDistrict={cityDistrict}
+        publishedDisplay={publishedDisplay}
+        hasDownloadableMedia={hasDownloadableMedia}
+        contactInfo={contactInfo}
+        contactLoading={contactLoading}
         isRTL={isRTL}
         t={postT}
+        onFetchContactInfo={handleFetchContactInfo}
+        onOpenDownloadDialog={handleOpenDownloadDialog}
       />
     </div>
   );
 }
 
-function NotificationsSkeleton() {
-  const skeletonKeys = ['one', 'two', 'three'];
-  return (
-    <div className="space-y-4">
-      {skeletonKeys.map((key) => (
-        <div key={key} className="bg-card/50 animate-pulse rounded-2xl border border-border/70 p-4">
-          <div className="h-5 w-1/3 rounded bg-muted" />
-          <div className="mt-2 h-4 w-1/4 rounded bg-muted" />
-        </div>
-      ))}
-    </div>
-  );
-}
 
-type EmptyStateProps = {
-  title: string;
-  description: string;
-};
 
-function EmptyState({ title, description }: EmptyStateProps) {
-  return (
-    <div className="rounded-2xl border border-dashed border-border/70 bg-muted/30 px-6 py-10 text-center">
-      <Bell className="mx-auto mb-3 size-8 text-muted-foreground" aria-hidden />
-      <h2 className="text-xl font-semibold text-foreground">{title}</h2>
-      <p className="mt-2 text-sm text-muted-foreground">{description}</p>
-    </div>
-  );
-}
 
-type NotificationCardProps = {
-  notification: NotificationsState['items'][number];
-  t: NotificationsTranslator;
-  postT: ReturnType<typeof useTranslations<'dashboard.posts'>>;
-  formatPrice: (value: number | string | null | undefined) => string | null;
-  getRelativeLabel: (isoDate: string | null | undefined, jalaliFallback?: string | null) => string | null;
-  dateFormatter: Intl.DateTimeFormat;
-  onViewPost: (postId: string, notificationId: string, readAt: string | null) => void;
-};
-
-function NotificationCard({
-  notification,
-  t,
-  postT,
-  formatPrice,
-  getRelativeLabel,
-  dateFormatter,
-  onViewPost,
-}: NotificationCardProps) {
-  const filterLabel = t('item.savedFilter', { name: notification.filter.name });
-
-  const isRead = Boolean(notification.readAt);
-  const statusLabel = isRead
-    ? t('status.read')
-    : t(`status.${notification.status.toLowerCase() as 'pending' | 'sent' | 'failed'}`);
-  const statusBadgeClass = isRead
-    ? 'bg-sky-600/90'
-    : notification.status === 'SENT'
-      ? 'bg-emerald-500/90'
-      : notification.status === 'FAILED'
-        ? 'bg-destructive/90'
-        : 'bg-amber-500/90';
-
-  const postSummary: DivarPostSummary = {
-    id: notification.post.id,
-    code: notification.post.code ?? 0,
-    externalId: notification.post.id,
-    title: notification.post.title,
-    description: notification.post.description,
-    ownerName: null,
-    hasContactInfo: false,
-    priceTotal: notification.post.priceTotal,
-    rentAmount: notification.post.rentAmount,
-    depositAmount: notification.post.depositAmount,
-    dailyRateNormal: null,
-    dailyRateWeekend: null,
-    dailyRateHoliday: null,
-    extraPersonFee: null,
-    pricePerSquare: notification.post.pricePerSquare ?? null,
-    area: notification.post.area ?? null,
-    areaLabel: null,
-    landArea: null,
-    landAreaLabel: null,
-    rooms: null,
-    roomsLabel: null,
-    floor: null,
-    floorLabel: null,
-    floorsCount: null,
-    unitPerFloor: null,
-    yearBuilt: null,
-    yearBuiltLabel: null,
-    capacity: null,
-    capacityLabel: null,
-    latitude: null,
-    longitude: null,
-    hasParking: null,
-    hasElevator: null,
-    hasWarehouse: null,
-    hasBalcony: null,
-    isRebuilt: null,
-    photosVerified: notification.post.previewImageUrl ? true : null,
-    cityName: notification.post.cityName,
-    districtName: notification.post.districtName,
-    provinceName: notification.post.provinceName,
-    categorySlug: '',
-    categoryName: null,
-    categoryParentName: null,
-    businessType: null,
-    publishedAt: notification.post.publishedAt ?? notification.createdAt,
-    publishedAtJalali: null,
-    createdAt: notification.createdAt,
-    permalink: notification.post.permalink,
-    imageUrl: notification.post.previewImageUrl,
-    mediaCount: notification.post.previewImageUrl ? 1 : 0,
-    medias: [],
-    attributes: null,
-  };
-
-  return (
-    <PostCard
-      post={postSummary}
-      t={postT}
-      formatPrice={formatPrice}
-      getRelativeLabel={getRelativeLabel}
-      dateFormatter={dateFormatter}
-      onSelect={() =>
-        onViewPost(notification.post.id, notification.id, notification.readAt)
-      }
-      showCategoryBreadcrumb={false}
-      showPostCode
-      headerBadges={
-        <>
-          <span
-            className="inline-flex items-center rounded-full bg-black/70 px-2 py-0.5 text-[11px] font-medium text-white"
-            title={filterLabel}
-          >
-            <span className="max-w-[200px] truncate">{filterLabel}</span>
-          </span>
-          <span
-            className={cn(
-              'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium text-white',
-              statusBadgeClass,
-            )}
-          >
-            {statusLabel}
-          </span>
-        </>
-      }
-    />
-  );
-}

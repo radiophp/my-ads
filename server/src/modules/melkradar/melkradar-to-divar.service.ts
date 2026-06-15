@@ -2,34 +2,19 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@app/platform/database/prisma.service';
 import { toJalaali } from 'jalaali-js';
 import type { AdminMelkradarPost, Prisma } from '@prisma/client';
-
-interface AdverImageEntry {
-  VendorImageUrl?: string;
-  MelkRadarImageUrl?: string;
-}
-
-interface CategoryInfo {
-  id: string;
-  slug: string;
-  cat1: string | null;
-  cat2: string | null;
-  cat3: string | null;
-}
-
-interface DistrictInfo {
-  id: number;
-  slug: string;
-  name: string;
-}
-
-interface AttributeDraft {
-  key: string;
-  label: string | null;
-  type: string | null;
-  stringValue: string | null;
-  numberValue: number | null;
-  boolValue: boolean | null;
-}
+import type {
+  AdverImageEntry,
+  CategoryInfo,
+  DistrictInfo,
+  AttributeDraft,
+} from './melkradar-constants';
+import {
+  CATEGORY_MAP,
+  ATTRIBUTE_DEFS,
+  SKIP_FIELDS,
+  DISTRICT_PREFIXES,
+  INT4_MAX,
+} from './melkradar-constants';
 
 @Injectable()
 export class MelkradarToDivarService {
@@ -40,63 +25,6 @@ export class MelkradarToDivarService {
 
   private readonly KARAJ_CITY_ID = 2;
   private readonly KARAJ_PROVINCE_ID = 895;
-
-  private static readonly CATEGORY_MAP: Record<string, { cat2: string; cat3: string }> = {
-    'residential|فروش|آپارتمان': { cat2: 'residential-sell', cat3: 'apartment-sell' },
-    'residential|فروش|ویلا': { cat2: 'residential-sell', cat3: 'house-villa-sell' },
-    'residential|فروش|زمین و کلنگی': { cat2: 'residential-sell', cat3: 'plot-old' },
-    'residential|فروش|زمین': { cat2: 'residential-sell', cat3: 'plot-old' },
-    'residential|رهن و اجاره|آپارتمان': { cat2: 'residential-rent', cat3: 'apartment-rent' },
-    'residential|رهن و اجاره|ویلا': { cat2: 'residential-rent', cat3: 'house-villa-rent' },
-    'office|فروش|مغازه': { cat2: 'commercial-sell', cat3: 'shop-sell' },
-    'office|رهن و اجاره|مغازه': { cat2: 'commercial-rent', cat3: 'shop-rent' },
-    'office|فروش|اداری': { cat2: 'commercial-sell', cat3: 'office-sell' },
-    'office|رهن و اجاره|اداری': { cat2: 'commercial-rent', cat3: 'office-rent' },
-    'office|فروش|صنعتی، کشاورزی و تجاری': {
-      cat2: 'commercial-sell',
-      cat3: 'industry-agriculture-business-sell',
-    },
-    'office|رهن و اجاره|صنعتی، کشاورزی و تجاری': {
-      cat2: 'commercial-rent',
-      cat3: 'industry-agriculture-business-rent',
-    },
-    'office|فروش|خانه': { cat2: 'residential-sell', cat3: 'house-villa-sell' },
-    'office|رهن و اجاره|خانه': { cat2: 'residential-rent', cat3: 'house-villa-rent' },
-    '|پیش فروش|': { cat2: 'real-estate-services', cat3: 'presell' },
-    '|مشارکت|': { cat2: 'real-estate-services', cat3: 'partnership' },
-    '|سایر|': { cat2: 'real-estate-services', cat3: 'real-estate-services' },
-  };
-
-  private static readonly ATTRIBUTE_DEFS: Record<
-    string,
-    { key: string; label: string; type: string }
-  > = {
-    priceTypeStr: { key: 'price_type', label: 'نوع قیمت', type: 'string' },
-    isExactLocation: { key: 'is_exact_location', label: 'مکان دقیق', type: 'boolean' },
-    cityAreaGroupTitle: { key: 'city_area_group', label: 'گروه منطقه', type: 'string' },
-    calculatedBuildingAge: { key: 'building_age', label: 'سن بنا', type: 'number' },
-    isActive: { key: 'is_active', label: 'فعال', type: 'boolean' },
-  };
-
-  private static readonly SKIP_FIELDS = new Set([
-    'isRenovatedByAI',
-    'deedTypeByAI',
-    'directionByAI',
-    'unitsPerFloorByAI',
-    'totalFloorsByAI',
-    'phaseByAI',
-    'isLightingGoodByAI',
-  ]);
-
-  private static readonly DISTRICT_PREFIXES = [
-    'کوی',
-    'شهرک',
-    'بلوار',
-    'خیابان',
-    'کوچه',
-    'میدان',
-    'بزرگراه',
-  ];
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -277,7 +205,7 @@ export class MelkradarToDivarService {
     district: DistrictInfo | null;
   } {
     const lookupKey = `${source.estateTypeGroupTitle ?? ''}|${source.adverTypeTitle ?? ''}|${source.estateTypeTitle ?? ''}`;
-    const mapping = MelkradarToDivarService.CATEGORY_MAP[lookupKey];
+    const mapping = CATEGORY_MAP[lookupKey];
     if (!mapping) {
       throw new Error(
         `[CATEGORY_MAP] No mapping for post ${source.id} (${source.externalId}): ` +
@@ -323,8 +251,8 @@ export class MelkradarToDivarService {
   private buildAttributes(source: Record<string, unknown>): AttributeDraft[] {
     const attrs: AttributeDraft[] = [];
 
-    for (const [field, def] of Object.entries(MelkradarToDivarService.ATTRIBUTE_DEFS)) {
-      if (MelkradarToDivarService.SKIP_FIELDS.has(field)) continue;
+    for (const [field, def] of Object.entries(ATTRIBUTE_DEFS)) {
+      if (SKIP_FIELDS.has(field)) continue;
 
       const value = source[field];
       if (value == null || value === '') continue;
@@ -342,7 +270,7 @@ export class MelkradarToDivarService {
           break;
         case 'number': {
           const num = Number(value);
-          if (num > MelkradarToDivarService.INT4_MAX) continue;
+          if (num > INT4_MAX) continue;
           attrs.push({
             key: def.key,
             label: def.label,
@@ -378,11 +306,9 @@ export class MelkradarToDivarService {
     return attrs;
   }
 
-  private static readonly INT4_MAX = 2_147_483_647;
-
   private safeInt(value: number | null | undefined): number | null {
     if (value == null) return null;
-    if (value > MelkradarToDivarService.INT4_MAX) return null;
+    if (value > INT4_MAX) return null;
     return value;
   }
 
@@ -484,7 +410,7 @@ export class MelkradarToDivarService {
     name: string,
     normToDistrict: Map<string, DistrictInfo>,
   ): DistrictInfo | null {
-    for (const prefix of MelkradarToDivarService.DISTRICT_PREFIXES) {
+    for (const prefix of DISTRICT_PREFIXES) {
       const prefixed = `${prefix} ${name}`.trim();
       const match = normToDistrict.get(prefixed);
       if (match) return match;
@@ -496,7 +422,7 @@ export class MelkradarToDivarService {
     name: string,
     normToDistrict: Map<string, DistrictInfo>,
   ): DistrictInfo | null {
-    for (const prefix of MelkradarToDivarService.DISTRICT_PREFIXES) {
+    for (const prefix of DISTRICT_PREFIXES) {
       const pfx = `${prefix} `;
       if (name.startsWith(pfx)) {
         const remainder = name.slice(pfx.length).trim();

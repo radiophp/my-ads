@@ -61,6 +61,8 @@ export type PostDetailViewProps = {
   mapWrapperClassName?: string;
 };
 
+const DESCRIPTION_SPAN_STYLE: React.CSSProperties = { wordBreak: 'break-all' };
+
 export function PostDetailView({
   post,
   t,
@@ -780,7 +782,7 @@ export function PostDetailView({
                   {detailData.descriptionLines.map((line, index) => (
                     <span
                       key={`description-line-${index}`}
-                      style={{ wordBreak: 'break-all' }}
+                      style={DESCRIPTION_SPAN_STYLE}
                     >
                       {line || '\u00A0'}
                       {index < detailData.descriptionLines!.length - 1 ? <br /> : null}

@@ -1,4 +1,5 @@
 import type { JSX } from 'react';
+import { useMemo } from 'react';
 import {
   ArrowUpDown,
   Car,
@@ -136,21 +137,21 @@ type AmenitiesSectionProps = {
 };
 
 export function AmenitiesSection({ post, t }: AmenitiesSectionProps): JSX.Element | null {
-  if (!post) {
-    return null;
-  }
-
-  const items = AMENITY_CONFIG.map((config) => {
-    const value = post[config.key];
-    if (typeof value !== 'boolean') {
-      return null;
-    }
-    return { ...config, value };
-  }).filter(
-    (item): item is AmenityConfig & { value: boolean } => Boolean(item && item.value !== null),
+  const items = useMemo(
+    () =>
+      AMENITY_CONFIG.map((config) => {
+        const value = post?.[config.key];
+        if (typeof value !== 'boolean') {
+          return null;
+        }
+        return { ...config, value };
+      }).filter(
+        (item): item is AmenityConfig & { value: boolean } => Boolean(item && item.value !== null),
+      ),
+    [post],
   );
 
-  if (items.length === 0) {
+  if (!post || items.length === 0) {
     return null;
   }
 

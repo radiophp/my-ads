@@ -1,4 +1,5 @@
-import * as React from 'react';
+import { forwardRef } from 'react';
+import type { ButtonHTMLAttributes } from 'react';
 
 import { cn } from '@/lib/utils';
 
@@ -6,9 +7,9 @@ type SwitchProps = {
   checked?: boolean;
   onCheckedChange?: (checked: boolean) => void;
   dir?: 'ltr' | 'rtl';
-} & Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'onChange'>;
+} & Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'onChange'>;
 
-export const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(function Switch(
+export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch(
   { checked = false, onCheckedChange, className, disabled, dir, ...props },
   ref,
 ) {

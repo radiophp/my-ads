@@ -1,6 +1,7 @@
  'use client';
 
-import * as React from 'react';
+import { forwardRef, useEffect, useRef, useState } from 'react';
+import type { ComponentPropsWithoutRef, ElementRef, MouseEvent, PointerEvent } from 'react';
 import * as ToastPrimitives from '@radix-ui/react-toast';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { X } from 'lucide-react';
@@ -8,13 +9,13 @@ import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const ToastProvider = ToastPrimitives.Provider;
-const ToastViewport = React.forwardRef<
-  React.ElementRef<typeof ToastPrimitives.Viewport>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Viewport>
+const ToastViewport = forwardRef<
+  ElementRef<typeof ToastPrimitives.Viewport>,
+  ComponentPropsWithoutRef<typeof ToastPrimitives.Viewport>
 >(({ className, ...props }, ref) => {
-  const [dir, setDir] = React.useState<'ltr' | 'rtl'>('ltr');
+  const [dir, setDir] = useState<'ltr' | 'rtl'>('ltr');
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (typeof document !== 'undefined') {
       const docDir = document.documentElement.getAttribute('dir');
       setDir(docDir === 'rtl' ? 'rtl' : 'ltr');
@@ -67,20 +68,20 @@ const isInteractiveTarget = (target: EventTarget | null): boolean => {
   );
 };
 
-const Toast = React.forwardRef<
-  React.ElementRef<typeof ToastPrimitives.Root>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> & VariantProps<typeof toastVariants>
+const Toast = forwardRef<
+  ElementRef<typeof ToastPrimitives.Root>,
+  ComponentPropsWithoutRef<typeof ToastPrimitives.Root> & VariantProps<typeof toastVariants>
 >(({ className, variant, onClick, onPointerDown, onPointerMove, onPointerUp, onPointerCancel, ...props }, ref) => {
-  const swipeState = React.useRef({
+  const swipeState = useRef({
     active: false,
     swiping: false,
     preventClick: false,
     startX: 0,
     startY: 0,
   });
-  const [offsetX, setOffsetX] = React.useState(0);
+  const [offsetX, setOffsetX] = useState(0);
 
-  const handlePointerDown = (event: React.PointerEvent<HTMLLIElement>) => {
+  const handlePointerDown = (event: PointerEvent<HTMLLIElement>) => {
     if (event.pointerType === 'mouse' && event.button !== 0) {
       onPointerDown?.(event);
       return;
@@ -100,7 +101,7 @@ const Toast = React.forwardRef<
     onPointerDown?.(event);
   };
 
-  const handlePointerMove = (event: React.PointerEvent<HTMLLIElement>) => {
+  const handlePointerMove = (event: PointerEvent<HTMLLIElement>) => {
     if (!swipeState.current.active) {
       onPointerMove?.(event);
       return;
@@ -130,7 +131,7 @@ const Toast = React.forwardRef<
     onPointerMove?.(event);
   };
 
-  const finishPointer = (event: React.PointerEvent<HTMLLIElement>) => {
+  const finishPointer = (event: PointerEvent<HTMLLIElement>) => {
     if (!swipeState.current.active) {
       onPointerUp?.(event);
       onPointerCancel?.(event);
@@ -149,7 +150,7 @@ const Toast = React.forwardRef<
     onPointerCancel?.(event);
   };
 
-  const handleClick = (event: React.MouseEvent<HTMLLIElement>) => {
+  const handleClick = (event: MouseEvent<HTMLLIElement>) => {
     if (swipeState.current.preventClick) {
       swipeState.current.preventClick = false;
       event.preventDefault();
@@ -177,17 +178,17 @@ Toast.displayName = ToastPrimitives.Root.displayName;
 
 const ToastAction = ToastPrimitives.Action;
 const ToastClose = ToastPrimitives.Close;
-const ToastTitle = React.forwardRef<
-  React.ElementRef<typeof ToastPrimitives.Title>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Title>
+const ToastTitle = forwardRef<
+  ElementRef<typeof ToastPrimitives.Title>,
+  ComponentPropsWithoutRef<typeof ToastPrimitives.Title>
 >(({ className, ...props }, ref) => (
   <ToastPrimitives.Title ref={ref} className={cn('text-sm font-semibold', className)} {...props} />
 ));
 ToastTitle.displayName = ToastPrimitives.Title.displayName;
 
-const ToastDescription = React.forwardRef<
-  React.ElementRef<typeof ToastPrimitives.Description>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Description>
+const ToastDescription = forwardRef<
+  ElementRef<typeof ToastPrimitives.Description>,
+  ComponentPropsWithoutRef<typeof ToastPrimitives.Description>
 >(({ className, ...props }, ref) => (
   <ToastPrimitives.Description
     ref={ref}
@@ -197,9 +198,9 @@ const ToastDescription = React.forwardRef<
 ));
 ToastDescription.displayName = ToastPrimitives.Description.displayName;
 
-const ToastCloseButton = React.forwardRef<
-  React.ElementRef<typeof ToastPrimitives.Close>,
-  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Close>
+const ToastCloseButton = forwardRef<
+  ElementRef<typeof ToastPrimitives.Close>,
+  ComponentPropsWithoutRef<typeof ToastPrimitives.Close>
 >(({ className, onClick, ...props }, ref) => (
   <ToastPrimitives.Close
     ref={ref}

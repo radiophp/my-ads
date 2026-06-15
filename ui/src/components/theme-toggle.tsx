@@ -1,7 +1,8 @@
 'use client';
 
 import { Moon, Sun } from 'lucide-react';
-import * as React from 'react';
+import { forwardRef, useEffect, useState } from 'react';
+import type { ComponentPropsWithoutRef } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
@@ -27,18 +28,18 @@ function applyTheme(theme: Theme) {
   root.classList.toggle('dark', theme === 'dark');
 }
 
-type ThemeToggleProps = React.ComponentPropsWithoutRef<typeof Button>;
+type ThemeToggleProps = ComponentPropsWithoutRef<typeof Button>;
 
-export const ThemeToggle = React.forwardRef<HTMLButtonElement, ThemeToggleProps>(function ThemeToggle(
+export const ThemeToggle = forwardRef<HTMLButtonElement, ThemeToggleProps>(function ThemeToggle(
   { className, ...props },
   ref,
 ) {
-  const [theme, setTheme] = React.useState<Theme>(DEFAULT_THEME);
-  const [mounted, setMounted] = React.useState(false);
-  const [userOverride, setUserOverride] = React.useState(false);
+  const [theme, setTheme] = useState<Theme>(DEFAULT_THEME);
+  const [mounted, setMounted] = useState(false);
+  const [userOverride, setUserOverride] = useState(false);
   const t = useTranslations('header');
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (typeof window === 'undefined') return;
     const stored = getStoredTheme();
     if (stored) {
@@ -52,7 +53,7 @@ export const ThemeToggle = React.forwardRef<HTMLButtonElement, ThemeToggleProps>
     setMounted(true);
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (typeof window === 'undefined') return;
     if (!mounted) return;
     applyTheme(theme);
@@ -61,7 +62,7 @@ export const ThemeToggle = React.forwardRef<HTMLButtonElement, ThemeToggleProps>
     }
   }, [theme, mounted, userOverride]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (typeof window === 'undefined') return;
     if (userOverride) return;
     const media = window.matchMedia('(prefers-color-scheme: dark)');

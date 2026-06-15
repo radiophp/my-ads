@@ -1,10 +1,11 @@
 import Image, { type ImageProps } from 'next/image';
-import * as React from 'react';
+import { forwardRef } from 'react';
+import type { HTMLAttributes } from 'react';
 
 import { normalizeStorageUrl } from '@/lib/storage';
 import { cn } from '@/lib/utils';
 
-const Avatar = React.forwardRef<HTMLSpanElement, React.HTMLAttributes<HTMLSpanElement>>(
+const Avatar = forwardRef<HTMLSpanElement, HTMLAttributes<HTMLSpanElement>>(
   ({ className, ...props }, ref) => (
     <span
       ref={ref}
@@ -40,9 +41,9 @@ function AvatarImage({ className, alt, src: rawSrc, ...props }: AvatarImageProps
 }
 AvatarImage.displayName = 'AvatarImage';
 
-const AvatarFallback = React.forwardRef<
+const AvatarFallback = forwardRef<
   HTMLSpanElement,
-  React.HTMLAttributes<HTMLSpanElement>
+  HTMLAttributes<HTMLSpanElement>
 >(({ className, ...props }, ref) => (
   <span
     ref={ref}

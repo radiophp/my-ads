@@ -1,14 +1,14 @@
 'use client';
 
-import * as React from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 export function usePwaPrompt() {
-  const [deferredPrompt, setDeferredPrompt] = React.useState<BeforeInstallPromptEvent | null>(null);
-  const [isInstallable, setIsInstallable] = React.useState(false);
-  const [isStandalone, setIsStandalone] = React.useState(false);
-  const [hasRelatedInstall, setHasRelatedInstall] = React.useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [isInstallable, setIsInstallable] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
+  const [hasRelatedInstall, setHasRelatedInstall] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const existingPrompt = (window as Window & { __pwaPromptEvent?: BeforeInstallPromptEvent | null })
       .__pwaPromptEvent;
     if (existingPrompt) {
@@ -46,7 +46,7 @@ export function usePwaPrompt() {
     };
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const updateStandalone = () => {
       if (typeof window === 'undefined') {
         return;
@@ -80,7 +80,7 @@ export function usePwaPrompt() {
     };
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     let isMounted = true;
     const detectRelatedApps = async () => {
       if (typeof window === 'undefined') {
@@ -109,7 +109,7 @@ export function usePwaPrompt() {
     };
   }, []);
 
-  const promptInstall = React.useCallback(async () => {
+  const promptInstall = useCallback(async () => {
     const storedPrompt =
       deferredPrompt ??
       (window as Window & { __pwaPromptEvent?: BeforeInstallPromptEvent | null }).__pwaPromptEvent ??

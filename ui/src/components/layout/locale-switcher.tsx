@@ -1,6 +1,7 @@
 'use client';
 
-import * as React from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { ChangeEvent } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 
 import { locales, Locale, useRouter } from '@/i18n/routing';
@@ -15,14 +16,14 @@ export function LocaleSwitcher() {
   const t = useTranslations('header');
   const currentLocale = useLocale() as Locale;
   const router = useRouter();
-  const [selectedLocale, setSelectedLocale] = React.useState<Locale>(currentLocale);
-  const hasAppliedStoredPreference = React.useRef(false);
+  const [selectedLocale, setSelectedLocale] = useState<Locale>(currentLocale);
+  const hasAppliedStoredPreference = useRef(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setSelectedLocale(currentLocale);
   }, [currentLocale]);
 
-  const persistPreference = React.useCallback((locale: Locale) => {
+  const persistPreference = useCallback((locale: Locale) => {
     if (typeof document !== 'undefined') {
       document.cookie = `NEXT_LOCALE=${locale}; path=/; max-age=${COOKIE_MAX_AGE_SECONDS}`;
     }
@@ -31,7 +32,7 @@ export function LocaleSwitcher() {
     }
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (hasAppliedStoredPreference.current) {
       return;
     }
@@ -48,7 +49,7 @@ export function LocaleSwitcher() {
     }
   }, [currentLocale, persistPreference, router]);
 
-  const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
     const nextLocale = event.target.value as Locale;
     setSelectedLocale(nextLocale);
     hasAppliedStoredPreference.current = true;

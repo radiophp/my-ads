@@ -4,64 +4,25 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '@app/platform/database/prisma.service';
 import { QueueLocationScope, PostQueueStatus, type Prisma } from '@prisma/client';
 import { schedulerCronExpressions } from '@app/platform/config/scheduler.config';
-
-const DIVAR_SEARCH_URL = 'https://api.divar.ir/v8/postlist/w/search';
-const PAGINATION_TYPE = 'type.googleapis.com/post_list.PaginationData';
-const SERVER_PAYLOAD_TYPE = 'type.googleapis.com/widgets.SearchData.ServerPayload';
-const MAX_REQUESTS_PER_SECOND = 3;
-const RATE_LIMIT_WINDOW_MS = 1000;
-const DEFAULT_MAX_PAGES_PER_COMBO = 20;
-const DEFAULT_MAX_PAGES_PER_COMBO_NIGHT = 5;
-const DEFAULT_REFETCH_WINDOW_MINUTES = 4 * 60;
-const TEHRAN_TZ = 'Asia/Tehran';
-
-type PaginationPayload = {
-  '@type': string;
-  page: number;
-  layer_page: number;
-  cumulative_widgets_count: number;
-  last_post_date?: string;
-};
-
-interface CategoryScope {
-  id: string;
-  slug: string;
-  name: string;
-  displayPath: string;
-  path: string;
-}
-
-interface LocationScope {
-  scope: QueueLocationScope;
-  apiId: number;
-  slug: string;
-  name: string;
-  provinceId: number | null;
-  cityId: number | null;
-  label: string;
-}
-
-interface DivarWidget {
-  widget_type?: string;
-  data?: Record<string, unknown> & { token?: string; title?: string };
-}
-
-interface DivarSearchResponse {
-  list_widgets?: DivarWidget[];
-  pagination?: {
-    data?: {
-      last_post_date?: string;
-      cumulative_widgets_count?: number;
-    };
-  };
-}
-
-export interface HarvestSummary {
-  categories: number;
-  locations: number;
-  combinations: number;
-  enqueued: number;
-}
+import {
+  DIVAR_SEARCH_URL,
+  PAGINATION_TYPE,
+  SERVER_PAYLOAD_TYPE,
+  MAX_REQUESTS_PER_SECOND,
+  RATE_LIMIT_WINDOW_MS,
+  DEFAULT_MAX_PAGES_PER_COMBO,
+  DEFAULT_MAX_PAGES_PER_COMBO_NIGHT,
+  DEFAULT_REFETCH_WINDOW_MINUTES,
+  TEHRAN_TZ,
+} from './divar-post-harvest-types';
+import type {
+  PaginationPayload,
+  CategoryScope,
+  LocationScope,
+  DivarWidget,
+  DivarSearchResponse,
+  HarvestSummary,
+} from './divar-post-harvest-types';
 
 @Injectable()
 export class DivarPostHarvestService {

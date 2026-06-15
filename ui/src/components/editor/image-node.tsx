@@ -98,6 +98,7 @@ export class ImageNode extends DecoratorNode<ReactNode> {
         src={this.__src}
         alt={this.__altText}
         className="max-w-full rounded-md border border-border/60"
+        loading="lazy"
       />
     );
   }

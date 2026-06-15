@@ -569,7 +569,7 @@ export function ProfileImageUploader({
             {preview ? (
               <div className="relative size-32 overflow-hidden rounded-lg border border-border/70 shadow-sm">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={preview} alt="Profile preview" className="size-full object-cover" />
+                <img src={preview} alt="Profile preview" className="size-full object-cover" loading="lazy" />
               </div>
             ) : (
               <CloudUpload className="mb-4 size-10 text-muted-foreground" aria-hidden />
@@ -652,6 +652,7 @@ export function ProfileImageUploader({
                   alt="Crop preview"
                   draggable={false}
                   className="pointer-events-none select-none"
+                  loading="lazy"
                   style={{
                     position: 'absolute',
                     top: imageInfo.offsetY,

@@ -124,6 +124,7 @@ export function DownloadPhotosDialog({
                             alt={resolveMediaAlt(media, post?.title, post?.externalId)}
                             className="size-full object-cover"
                             draggable={false}
+                            loading="lazy"
                           />
                         ) : (
                           <div className="flex size-full items-center justify-center bg-muted">

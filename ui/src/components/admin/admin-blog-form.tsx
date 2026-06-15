@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { ArrowRight, Loader2, Save } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -17,10 +18,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
-import { RichTextEditor } from '@/components/editor/rich-text-editor';
 import { BlogImageUploader } from '@/components/admin/blog-image-uploader';
 import type { BlogCategory, BlogTag } from '@/types/blog';
 import { cn } from '@/lib/utils';
+
+const RichTextEditor = dynamic(
+  () => import('@/components/editor/rich-text-editor').then((m) => m.RichTextEditor),
+  { ssr: false },
+);
 
 type BlogFormState = {
   title: string;

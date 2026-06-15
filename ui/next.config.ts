@@ -120,7 +120,10 @@ const imageRemotePatterns = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
+    removeConsole:
+      process.env.NODE_ENV === 'production'
+        ? { exclude: ['error', 'warn'] }
+        : false,
   },
   images: {
     remotePatterns: imageRemotePatterns,

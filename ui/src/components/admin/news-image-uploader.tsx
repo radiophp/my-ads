@@ -106,7 +106,7 @@ export function NewsImageUploader({ value, onChange, disabled = false }: NewsIma
         {value ? (
           <div className="relative size-24 overflow-hidden rounded-lg border border-border/70 shadow-sm">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={value} alt={t('previewAlt')} className="size-full object-cover" />
+            <img src={value} alt={t('previewAlt')} className="size-full object-cover" loading="lazy" />
           </div>
         ) : (
           <CloudUpload className="mb-4 size-10 text-muted-foreground" aria-hidden />

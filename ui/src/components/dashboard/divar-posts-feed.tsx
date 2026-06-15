@@ -700,6 +700,7 @@ export function DivarPostsFeed(): JSX.Element {
                     src="/fav/android-chrome-192x192.png"
                     alt={headerT('brand')}
                     className="mt-0.5 size-6 shrink-0"
+                    loading="lazy"
                   />
                   <span className={cn('break-words', isRTL && 'text-right')}>
                     {selectedPost.title ?? t('untitled', { externalId: selectedPost.externalId })}

@@ -167,6 +167,7 @@ export function AdminPackagesManager() {
                             alt={pkg.title}
                             className="mt-0.5 size-12 rounded-md border border-border/60 object-cover"
                             referrerPolicy="no-referrer"
+                            loading="lazy"
                           />
                         ) : (
                           <div className="mt-0.5 flex size-12 items-center justify-center rounded-md border border-dashed border-muted-foreground/40 text-muted-foreground">

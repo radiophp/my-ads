@@ -13,6 +13,7 @@ const featuredPostsApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getFeaturedPosts: builder.query<FeaturedPostsResponse, void>({
       query: () => '/featured-posts',
+      providesTags: ['AdminFeaturedPosts'],
     }),
     getAdminFeaturedPosts: builder.query<
       FeaturedPostsAdminListResponse,

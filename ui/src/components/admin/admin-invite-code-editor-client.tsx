@@ -1,5 +1,3 @@
-'use client';
-
 import { AdminGuard } from '@/components/auth/admin-guard';
 import { AdminInviteCodeEditor } from '@/components/admin/admin-invite-code-editor';
 

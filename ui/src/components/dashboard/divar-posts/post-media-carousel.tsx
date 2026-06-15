@@ -221,6 +221,7 @@ export function PostMediaCarousel({
               src={currentMediaSrc}
               alt={post.title ?? post.externalId}
               className="h-64 w-full cursor-pointer object-cover"
+              loading="lazy"
               onLoad={() => handleImageLoad()}
               onError={() => handleImageError()}
               onClick={handleOpenLightbox}
@@ -269,6 +270,7 @@ export function PostMediaCarousel({
                   alt={resolveMediaAlt(media, post.title, post.externalId)}
                   className="size-full cursor-pointer select-none object-cover"
                   draggable={false}
+                  loading="lazy"
                   onLoad={() => handleImageLoad(index)}
                   onError={() => handleImageError(index)}
                   onClick={handleSlideClick}
@@ -354,6 +356,7 @@ export function PostMediaCarousel({
                           src={resolveMediaSrc(media, post.imageUrl)}
                           alt={resolveMediaAlt(media, post.title, post.externalId)}
                           className="max-h-[88vh] max-w-[92vw] object-contain"
+                          loading="lazy"
                         />
                       </div>
                     </div>
@@ -409,6 +412,7 @@ export function PostMediaCarousel({
                     src={media.thumbnailUrl ?? media.url}
                     alt={media.alt ?? media.id}
                     className="size-16 object-cover"
+                    loading="lazy"
                   />
                 </button>
               ))}

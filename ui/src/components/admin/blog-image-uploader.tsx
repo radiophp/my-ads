@@ -111,6 +111,7 @@ export function BlogImageUploader({ value, onChange, disabled = false }: BlogIma
               src={normalizeStorageUrl(value) ?? value}
               alt={t('previewAlt')}
               className="size-full object-cover"
+              loading="lazy"
             />
           </div>
         ) : (

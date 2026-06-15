@@ -92,6 +92,7 @@ const divarPostsApi = apiSlice.injectEndpoints({
     }),
     getDivarPostCategoryCounts: builder.query<DivarPostCategoryCount[], void>({
       query: () => '/divar-posts/category-counts',
+      providesTags: ['DivarPosts'],
     }),
     getDivarDistrictPriceReport: builder.query<
       DivarDistrictPriceReportRow[],

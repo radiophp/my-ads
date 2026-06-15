@@ -162,6 +162,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             src="/logo-mahan-file.png"
             alt="Mahan File"
             className="h-16 w-auto max-w-[75vw] animate-splash-float motion-reduce:animate-none sm:h-20"
+            loading="lazy"
           />
         </div>
         <NextIntlClientProvider locale={locale} messages={messages} timeZone="UTC">

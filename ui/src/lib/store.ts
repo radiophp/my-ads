@@ -2,7 +2,6 @@ import { configureStore } from '@reduxjs/toolkit';
 import { setupListeners } from '@reduxjs/toolkit/query';
 
 import { apiSlice } from '@/features/api/baseApi';
-import counterReducer from '@/features/counter/counterSlice';
 import authReducer from '@/features/auth/authSlice';
 import searchFilterReducer, {
   type SearchFilterState,
@@ -115,7 +114,6 @@ const preloadedSearchFilterState =
 export const store = configureStore({
   reducer: {
     auth: authReducer,
-    counter: counterReducer,
     searchFilter: searchFilterReducer,
     notifications: notificationsReducer,
     [apiSlice.reducerPath]: apiSlice.reducer,

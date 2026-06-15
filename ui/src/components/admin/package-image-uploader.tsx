@@ -123,7 +123,7 @@ export function PackageImageUploader({
           {value ? (
             <div className="relative size-32 overflow-hidden rounded-lg border border-border/70 shadow-sm">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={value} alt="Package illustration" className="size-full object-cover" />
+              <img src={value} alt="Package illustration" className="size-full object-cover" loading="lazy" />
             </div>
           ) : (
             <CloudUpload className="mb-4 size-10 text-muted-foreground" aria-hidden />

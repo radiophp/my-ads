@@ -5,6 +5,7 @@ import type { InlineKeyboardMarkup } from '@telegraf/types';
 import { PrismaService } from '../../platform/database/prisma.service';
 import { RedisService } from '../../platform/cache/redis.service';
 import { BaleLinkGateway } from './bale-link.gateway';
+import { buildCaption, buildDashboardPostUrl } from './bale-message-builder';
 
 const BALE_API_ROOT = 'https://tapi.bale.ai';
 
@@ -598,8 +599,8 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
       return this.sendPostInternal({ chatId, postId, retryMissingPhone: false });
     }
 
-    const dashboardUrl = this.buildDashboardPostUrl(post.id);
-    const caption = this.buildCaption(post, customMessage, dashboardUrl);
+    const dashboardUrl = buildDashboardPostUrl(this.appBaseUrl, post.id);
+    const caption = buildCaption(post, this.appBaseUrl, customMessage);
 
     const photos = (post.medias ?? [])
       .map((m) => m.localUrl || m.url || m.thumbnailUrl)
@@ -942,85 +943,5 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
 
   private normalizeBaseUrl(value: string): string {
     return value.replace(/\/+$/, '').trim();
-  }
-
-  private buildDashboardPostUrl(postId: string): string | null {
-    if (!this.appBaseUrl) {
-      return null;
-    }
-    return `${this.appBaseUrl}/dashboard/posts/${postId}`;
-  }
-
-  private buildCaption(post: any, customMessage?: string, dashboardUrl?: string | null): string {
-    const url =
-      post.shareUrl ||
-      post.permalink ||
-      (post.externalId ? `https://divar.ir/v/${post.externalId}` : '');
-    const title = post.title || post.shareTitle || post.displayTitle || 'آگهی';
-    const lines: string[] = [];
-    if (customMessage) lines.push(customMessage);
-    lines.push(`📌 ${title}`);
-    if (post.code) {
-      lines.push(`🆔 کد آگهی: ${post.code}`);
-    }
-    if (dashboardUrl) {
-      lines.push(`🔗 ${dashboardUrl}`);
-    }
-
-    if (post.cityName || post.districtName || post.provinceName) {
-      const loc = [post.provinceName, post.cityName, post.districtName].filter(Boolean).join('، ');
-      if (loc) lines.push(`📍 ${loc}`);
-    }
-
-    const priceLine = this.formatPriceLine(post);
-    if (priceLine) lines.push(priceLine);
-
-    const facts: string[] = [];
-    if (post.area) facts.push(`متراژ ${post.area}`);
-    if (post.rooms) facts.push(`اتاق ${post.rooms}`);
-    if (post.floor) facts.push(`طبقه ${post.floor}`);
-    if (post.yearBuilt) facts.push(`سال ساخت ${post.yearBuilt}`);
-    if (post.businessType) {
-      const business = post.businessType === 'personal' ? 'شخصی' : 'املاک';
-      facts.push(business);
-    }
-    if (facts.length) lines.push(`ℹ️ ${facts.join(' • ')}`);
-
-    if (post.phoneNumber) lines.push(`☎️ ${post.phoneNumber}`);
-    if (url) lines.push(url);
-
-    if (post.description) {
-      const desc =
-        post.description.length > 900
-          ? `${post.description.slice(0, 900).trimEnd()}…`
-          : post.description;
-      lines.push('');
-      lines.push(desc);
-    }
-
-    const caption = lines.join('\n');
-    return caption.length > 1000 ? `${caption.slice(0, 1000).trimEnd()}…` : caption;
-  }
-
-  private formatPriceLine(post: any): string | null {
-    const fmt = (value: any) => {
-      if (value === null || value === undefined) return null;
-      const num = Number(value);
-      if (!Number.isFinite(num)) return null;
-      return num.toLocaleString('fa-IR');
-    };
-
-    const price = fmt(post.priceTotal);
-    const deposit = fmt(post.depositAmount);
-    const rent = fmt(post.rentAmount);
-
-    if (price) return `💰 قیمت: ${price} تومان`;
-    if (deposit || rent) {
-      const parts = [];
-      if (deposit) parts.push(`ودیعه ${deposit}`);
-      if (rent) parts.push(`اجاره ${rent}`);
-      return `💰 ${parts.join(' / ')} تومان`;
-    }
-    return null;
   }
 }

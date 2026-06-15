@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { ArrowRight, Copy, ExternalLink } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 import {
   useRequestOtpMutation,
@@ -22,43 +22,20 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { Turnstile } from '@marsidev/react-turnstile';
 
+import {
+  CODE_LENGTH,
+  sanitizeIranLocalPhone,
+  formatPhoneInput,
+  isValidIranLocalPhone,
+  toInternationalIranPhone,
+  formatDisplayIranPhone,
+  sanitizeCode,
+} from '@/lib/phone-utils';
+import { AlreadySignedInCard } from './already-signed-in-card';
+import { BaleRequiredStep } from './bale-required-step';
+import { CodeDigitSlot } from './code-digit-slot';
+
 type Step = 'phone' | 'verify' | 'bale_required';
-const CODE_LENGTH = 4;
-
-const sanitizeIranLocalPhone = (input: string): string => {
-  let digits = input.replace(/\D/g, '');
-  if (digits.startsWith('0098')) {
-    digits = digits.slice(4);
-  } else if (digits.startsWith('098')) {
-    digits = digits.slice(3);
-  } else if (digits.startsWith('98')) {
-    digits = digits.slice(2);
-  }
-  if (digits.startsWith('0')) {
-    digits = digits.slice(1);
-  }
-  return digits.slice(0, 10);
-};
-
-const formatPhoneInput = (input: string): string => {
-  let digits = input.replace(/\D/g, '');
-  if (digits.startsWith('0098')) {
-    digits = digits.slice(4);
-  } else if (digits.startsWith('098')) {
-    digits = digits.slice(3);
-  } else if (digits.startsWith('98') && digits.length > 11) {
-    digits = digits.slice(2);
-  }
-  return digits.slice(0, 11);
-};
-
-const isValidIranLocalPhone = (digits: string): boolean => /^9\d{9}$/.test(digits);
-
-const toInternationalIranPhone = (digits: string): string => (digits ? `+98${digits}` : '');
-
-const formatDisplayIranPhone = (digits: string): string => (digits ? `0${digits}` : '');
-
-const sanitizeCode = (input: string) => input.replace(/\D/g, '').slice(0, CODE_LENGTH);
 
 export function PhoneOtpLoginForm() {
   const t = useTranslations('landing.login');
@@ -358,25 +335,7 @@ export function PhoneOtpLoginForm() {
   }, [lastRequestedPhoneLocal, phone, requestOtp, t, toast]);
 
   if (auth.hydrated && isAuthenticated && auth.user) {
-    return (
-      <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle>{t('alreadySignedIn')}</CardTitle>
-          <CardDescription>{t('signedInDescription')}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="rounded-lg border border-border/60 bg-muted/40 p-4 text-sm">
-            <p className="font-medium">{auth.user.firstName ?? auth.user.phone}</p>
-            {auth.user.email && <p className="text-muted-foreground">{auth.user.email}</p>}
-          </div>
-        </CardContent>
-        <CardFooter>
-          <Button className="w-full" onClick={() => router.push('/dashboard')}>
-            {t('dashboardCta')}
-          </Button>
-        </CardFooter>
-      </Card>
-    );
+    return <AlreadySignedInCard user={auth.user} />;
   }
 
   return (
@@ -451,68 +410,24 @@ export function PhoneOtpLoginForm() {
         </form>
       ) : step === 'bale_required' ? (
         <CardContent className="space-y-6">
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-            <p className="font-medium">{t('baleRequired')}</p>
-            <p className="mt-1 text-amber-700">{t('baleRequiredDescription')}</p>
-          </div>
-          {baleBotUrl && (
-            <>
-              {!isMobile && (
-                <div className="flex justify-center">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={`/api/auth/bale-qr?start=signup${baleLinkToken ? `&token=${baleLinkToken}` : ''}`}
-                    alt="QR Code"
-                    className="size-48 rounded-lg border"
-                    crossOrigin="anonymous"
-                  />
-                </div>
-              )}
-              <div className="flex items-center gap-2">
-                <Button
-                  className="flex-1"
-                  variant="outline"
-                  onClick={() => {
-                    setHasInteractedWithBot(true);
-                    window.open(`${baleBotUrl}?start=${baleLinkToken ? `link_${baleLinkToken}` : 'signup'}`, '_blank', 'noopener');
-                  }}
-                >
-                  <span className="inline-flex items-center gap-2">
-                    <ExternalLink className="size-4" aria-hidden />
-                    {t('openBaleBot')}
-                  </span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="shrink-0 text-xs text-muted-foreground"
-                  onClick={() => {
-                    setHasInteractedWithBot(true);
-                    navigator.clipboard.writeText(`${baleBotUrl}?start=${baleLinkToken ? `link_${baleLinkToken}` : 'signup'}`);
-                    toast({ title: t('botUrlCopied') });
-                  }}
-                >
-                  <span className="inline-flex items-center gap-2">
-                    <Copy className="size-3" aria-hidden />
-                    {t('copyBotUrl')}
-                  </span>
-                </Button>
-              </div>
-            </>
-          )}
-          {hasInteractedWithBot && (
-            <Button
-              className="w-full"
-              onClick={handleBaleLogin}
-              disabled={countdown > 0 || isBaleLoggingIn}
-            >
-              {isBaleLoggingIn
-                ? t('verifying')
-                : countdown > 0
-                  ? `${t('joinedBale')} (${countdown})`
-                  : t('joinedBale')}
-            </Button>
-          )}
+          <BaleRequiredStep
+            baleBotUrl={baleBotUrl}
+            baleLinkToken={baleLinkToken}
+            isMobile={isMobile}
+            hasInteractedWithBot={hasInteractedWithBot}
+            countdown={countdown}
+            isBaleLoggingIn={isBaleLoggingIn}
+            onOpenBot={() => {
+              setHasInteractedWithBot(true);
+              window.open(`${baleBotUrl}?start=${baleLinkToken ? `link_${baleLinkToken}` : 'signup'}`, '_blank', 'noopener');
+            }}
+            onCopyBotUrl={() => {
+              setHasInteractedWithBot(true);
+              navigator.clipboard.writeText(`${baleBotUrl}?start=${baleLinkToken ? `link_${baleLinkToken}` : 'signup'}`);
+              toast({ title: t('botUrlCopied') });
+            }}
+            onBaleLogin={handleBaleLogin}
+          />
         </CardContent>
       ) : (
         <form ref={formRef} onSubmit={handleVerifyOtp} noValidate>
@@ -527,33 +442,19 @@ export function PhoneOtpLoginForm() {
                 onPaste={handleCodePaste}
                 dir="ltr"
               >
-                {Array.from({ length: CODE_LENGTH }, (_, index) => {
-                  const digit = code[index] ?? '';
-                  return (
-                    <div key={`code-slot-${index}`} className="flex items-center">
-                      <Input
-                        id={index === 0 ? 'code' : undefined}
-                        name="code"
-                        type="password"
-                        inputMode="numeric"
-                        autoComplete={index === 0 ? 'one-time-code' : 'off'}
-                        aria-label={t('codeLabel')}
-                        value={digit}
-                        onChange={handleCodeInput(index)}
-                        onKeyDown={handleCodeKeyDown(index)}
-                        disabled={isVerifying}
-                        required
-                        className="size-12 p-0 text-center text-lg font-semibold"
-                        ref={(element) => {
-                          codeInputRefs.current[index] = element;
-                        }}
-                      />
-                      {index < CODE_LENGTH - 1 ? (
-                        <span className="mx-2 text-sm text-muted-foreground">-</span>
-                      ) : null}
-                    </div>
-                  );
-                })}
+                {Array.from({ length: CODE_LENGTH }, (_, index) => (
+                  <CodeDigitSlot
+                    key={`code-slot-${index}`}
+                    index={index}
+                    code={code}
+                    disabled={isVerifying}
+                    onInput={handleCodeInput}
+                    onKeyDown={handleCodeKeyDown}
+                    onRef={(i, element) => {
+                      codeInputRefs.current[i] = element;
+                    }}
+                  />
+                ))}
               </div>
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2 text-sm">

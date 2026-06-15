@@ -32,92 +32,22 @@ import {
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/use-toast';
 
-type ProfileImageTexts = {
-  title: string;
-  callToAction: string;
-  helper: string;
-  select: string;
-  uploading: string;
-  remove: string;
-  successTitle: string;
-  successDescription: string;
-  errorTitle: string;
-  errorDescription: string;
-  unsupportedTitle: string;
-  unsupportedDescription: string;
-  modalTitle: string;
-  modalDescription: string;
-  confirm: string;
-  cancel: string;
-  zoomLabel: string;
-};
+import type {
+  ProfileImageTexts,
+  CropArea,
+  ImageInfo,
+  SelectionState,
+  TempUploadMetadata,
+} from './profile-image-uploader-types';
+import { CROP_SIZE, clamp, getCroppedImage } from './profile-image-uploader-types';
+import { CropSelectionOverlay } from './crop-selection-overlay';
+import { CropZoomSlider } from './crop-zoom-slider';
 
 type ProfileImageUploaderProps = {
   value: string | null;
   onChange: (value: string | null) => void;
   disabled?: boolean;
   texts: ProfileImageTexts;
-};
-
-type CropArea = {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-};
-
-type ImageInfo = {
-  naturalWidth: number;
-  naturalHeight: number;
-  renderWidth: number;
-  renderHeight: number;
-  offsetX: number;
-  offsetY: number;
-};
-
-type SelectionState = {
-  x: number;
-  y: number;
-  size: number;
-};
-
-type TempUploadMetadata = {
-  key: string;
-  url: string;
-  originalName?: string;
-};
-
-const cropSize = 320;
-
-const clamp = (value: number, min: number, max: number): number => Math.min(Math.max(value, min), max);
-
-const createImage = (url: string): Promise<HTMLImageElement> =>
-  new Promise((resolve, reject) => {
-    const image = new globalThis.Image();
-    image.addEventListener('load', () => resolve(image));
-    image.addEventListener('error', (error) => reject(error));
-    image.setAttribute('crossOrigin', 'anonymous');
-    image.src = url;
-  });
-
-const getCroppedImage = async (imageSrc: string, crop: CropArea): Promise<Blob | null> => {
-  const image = await createImage(imageSrc);
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  if (!ctx) {
-    return null;
-  }
-
-  const width = Math.max(1, Math.round(crop.width));
-  const height = Math.max(1, Math.round(crop.height));
-  canvas.width = width;
-  canvas.height = height;
-
-  ctx.drawImage(image, crop.x, crop.y, crop.width, crop.height, 0, 0, width, height);
-
-  return new Promise((resolve) => {
-    canvas.toBlob((blob) => resolve(blob ?? null), 'image/png');
-  });
 };
 
 export function ProfileImageUploader({
@@ -160,7 +90,7 @@ export function ProfileImageUploader({
 
   const selectionSizeLimits = useMemo(() => {
     if (!imageInfo) {
-      return { min: 96, max: cropSize };
+      return { min: 96, max: CROP_SIZE };
     }
     const max = Math.min(imageInfo.renderWidth, imageInfo.renderHeight);
     const min = Math.min(Math.max(max * 0.35, 64), max);
@@ -249,11 +179,11 @@ export function ProfileImageUploader({
 
       const naturalWidth = image.width;
       const naturalHeight = image.height;
-      const scale = Math.min(1, cropSize / naturalWidth, cropSize / naturalHeight);
+      const scale = Math.min(1, CROP_SIZE / naturalWidth, CROP_SIZE / naturalHeight);
       const renderWidth = naturalWidth * scale;
       const renderHeight = naturalHeight * scale;
-      const offsetX = (cropSize - renderWidth) / 2;
-      const offsetY = (cropSize - renderHeight) / 2;
+      const offsetX = (CROP_SIZE - renderWidth) / 2;
+      const offsetY = (CROP_SIZE - renderHeight) / 2;
       const maxSelectionSize = Math.min(renderWidth, renderHeight);
       const initialSize = Math.min(maxSelectionSize, Math.max(maxSelectionSize * 0.6, 120));
       const initialX = offsetX + (renderWidth - initialSize) / 2;
@@ -644,96 +574,25 @@ export function ProfileImageUploader({
                 <Loader2 className="size-8 animate-spin text-muted-foreground" aria-hidden />
               </div>
             ) : null}
-            {!busyWithTempUpload && cropImageSrc && imageInfo ? (
-              <>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={cropImageSrc}
-                  alt="Crop preview"
-                  draggable={false}
-                  className="pointer-events-none select-none"
-                  loading="lazy"
-                  style={{
-                    position: 'absolute',
-                    top: imageInfo.offsetY,
-                    left: imageInfo.offsetX,
-                    width: imageInfo.renderWidth,
-                    height: imageInfo.renderHeight,
-                    userSelect: 'none',
-                  }}
-                />
-                {selection ? (
-                  <>
-                    <div
-                      className="absolute border-2 border-primary/80 bg-transparent shadow-[0_0_0_9999px_rgba(15,23,42,0.35)]"
-                      style={{
-                        cursor: isCropping
-                          ? 'progress'
-                          : isSelectionDragging
-                            ? 'grabbing'
-                            : 'grab',
-                        width: selection.size,
-                        height: selection.size,
-                        left: selection.x,
-                        top: selection.y,
-                      }}
-                      onPointerDown={handleSelectionPointerDown}
-                    />
-                  </>
-                ) : null}
-                {selection ? (
-                  <>
-                    <div
-                      className="pointer-events-none absolute inset-x-0 bg-black/40"
-                      style={{ top: 0, height: selection.y }}
-                    />
-                    <div
-                      className="pointer-events-none absolute inset-x-0 bg-black/40"
-                      style={{
-                        top: selection.y + selection.size,
-                        bottom: 0,
-                      }}
-                    />
-                    <div
-                      className="pointer-events-none absolute bg-black/40"
-                      style={{
-                        top: selection.y,
-                        bottom: cropSize - (selection.y + selection.size),
-                        left: 0,
-                        width: selection.x,
-                      }}
-                    />
-                    <div
-                      className="pointer-events-none absolute bg-black/40"
-                      style={{
-                        top: selection.y,
-                        bottom: cropSize - (selection.y + selection.size),
-                        left: selection.x + selection.size,
-                        right: 0,
-                      }}
-                    />
-                  </>
-                ) : null}
-              </>
+            {!busyWithTempUpload && cropImageSrc && imageInfo && selection ? (
+              <CropSelectionOverlay
+                imageInfo={imageInfo}
+                selection={selection}
+                cropImageSrc={cropImageSrc}
+                isCropping={isCropping}
+                isSelectionDragging={isSelectionDragging}
+                onSelectionPointerDown={handleSelectionPointerDown}
+              />
             ) : null}
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-muted-foreground" htmlFor="crop-size">
-              {texts.zoomLabel}
-            </label>
-            <input
-              id="crop-size"
-              type="range"
-              min={Math.round(selectionSizeLimits.min)}
-              max={Math.round(selectionSizeLimits.max)}
-              step={1}
-              value={selection ? Math.round(selection.size) : Math.round(selectionSizeLimits.max)}
-              onChange={(event) => handleSelectionSizeChange(Number(event.target.value))}
-              disabled={isCropping || busyWithTempUpload || !selection}
-              className="h-2 w-full cursor-pointer rounded-full bg-muted accent-primary"
-            />
-            <p className="text-xs text-muted-foreground">{texts.modalDescription}</p>
-          </div>
+          <CropZoomSlider
+            selection={selection}
+            selectionSizeLimits={selectionSizeLimits}
+            disabled={isCropping || busyWithTempUpload}
+            zoomLabel={texts.zoomLabel}
+            modalDescription={texts.modalDescription}
+            onChange={handleSelectionSizeChange}
+          />
           <DialogFooter className="gap-2">
             <Button
               type="button"

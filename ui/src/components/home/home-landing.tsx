@@ -154,7 +154,7 @@ export async function HomeLanding() {
   const latestBlogs = await fetchLatestBlogs();
   const appBase = await resolveAppBase();
   return (
-    <div className="flex w-full flex-col gap-14">
+    <div className="flex w-full flex-col gap-14" suppressHydrationWarning>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       {slides.length > 0 ? (
         <div className="w-full">

@@ -72,7 +72,7 @@
 }
 
 body {
-  font-family: 'IRANSans', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'IRANSans', var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   line-height: 1.7;
   @apply bg-background text-foreground antialiased transition-colors;
 }

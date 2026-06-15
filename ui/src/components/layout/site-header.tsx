@@ -1,7 +1,6 @@
 'use client';
 import { useTranslations } from 'next-intl';
-import { useMemo, useState, useEffect, useLayoutEffect } from 'react';
-import { createPortal } from 'react-dom';
+import { useMemo, useState, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
 
@@ -50,6 +49,10 @@ import { useNotificationPreferences } from '@/features/notifications/useNotifica
 import { usePushSubscription } from '@/features/notifications/usePushSubscription';
 import { selectLatestNotificationTimestamp } from '@/features/notifications/notificationsSlice';
 import { CodeSearch } from '@/components/layout/code-search';
+import { MobileBottomNav } from '@/components/layout/mobile-bottom-nav';
+import { RingBinderNavDropdown } from '@/components/layout/ring-binder-nav-dropdown';
+import { ManualInstallDialog } from '@/components/layout/manual-install-dialog';
+import { InstalledNoticeDialog } from '@/components/layout/installed-notice-dialog';
 import { cn } from '@/lib/utils';
 
 type NavIconKey =
@@ -660,259 +663,9 @@ export function SiteHeader() {
   );
 }
 
-type MobileBottomNavProps = {
-  pathname: string;
-  isAuthenticated: boolean;
-  homeLabel: string;
-  dashboardLabel: string;
-  notificationsLabel: string;
-  loginLabel: string;
-  otherLabel: string;
-  onOpenMenu: () => void;
-  hasRecentNotifications: boolean;
-};
 
-function MobileBottomNav({
-  pathname,
-  isAuthenticated,
-  homeLabel,
-  dashboardLabel,
-  notificationsLabel,
-  loginLabel,
-  otherLabel,
-  onOpenMenu,
-  hasRecentNotifications,
-}: MobileBottomNavProps) {
-  const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null);
 
-  useLayoutEffect(() => {
-    setPortalRoot(document.body);
-  }, []);
 
-  const isHome = pathname === '/';
-  const isNotifications = pathname.startsWith('/dashboard/notifications');
-  const isDashboard = pathname.startsWith('/dashboard') && !isNotifications;
-  const isLogin = pathname.startsWith('/login');
-  const itemClass = (active: boolean) =>
-    cn(
-      'flex flex-col items-center justify-center gap-1 p-2 text-[11px] font-medium transition-colors',
-      active ? 'text-foreground' : 'text-muted-foreground',
-    );
-  const iconClass = (active: boolean) =>
-    cn('size-5 transition-colors', active ? 'text-foreground' : 'text-muted-foreground');
-
-  const nav = (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border/40 bg-background/75 backdrop-blur-xl backdrop-saturate-150 sm:hidden">
-      <div
-        className={cn(
-          'grid h-16 items-center px-4 pb-[env(safe-area-inset-bottom)]',
-          isAuthenticated ? 'grid-cols-4' : 'grid-cols-3',
-        )}
-      >
-        <Link href="/" className={itemClass(isHome)} aria-current={isHome ? 'page' : undefined}>
-          <Image
-            src="/fav/favicon-32x32.png"
-            alt={homeLabel}
-            width={20}
-            height={20}
-            className={cn('size-5', isHome ? 'opacity-100' : 'opacity-70')}
-            priority={false}
-          />
-          <span>{homeLabel}</span>
-        </Link>
-        {isAuthenticated ? (
-          <>
-            <Link
-              href="/dashboard"
-              className={itemClass(isDashboard)}
-              aria-current={isDashboard ? 'page' : undefined}
-            >
-              <LayoutDashboard className={iconClass(isDashboard)} aria-hidden />
-              <span>{dashboardLabel}</span>
-            </Link>
-            <Link
-              href="/dashboard/notifications"
-              className={itemClass(isNotifications)}
-              aria-current={isNotifications ? 'page' : undefined}
-            >
-              <span className="relative inline-flex items-center justify-center">
-                <Bell className={iconClass(isNotifications)} aria-hidden />
-                {hasRecentNotifications && (
-                  <span
-                    className="absolute -right-1 -top-1 size-2 rounded-full bg-destructive shadow"
-                    aria-hidden
-                  />
-                )}
-              </span>
-              <span>{notificationsLabel}</span>
-            </Link>
-          </>
-        ) : (
-          <Link
-            href="/login"
-            className={itemClass(isLogin)}
-            aria-current={isLogin ? 'page' : undefined}
-          >
-            <LogIn className={iconClass(isLogin)} aria-hidden />
-            <span>{loginLabel}</span>
-          </Link>
-        )}
-        <button
-          type="button"
-          onClick={onOpenMenu}
-          className={itemClass(false)}
-          aria-label={otherLabel}
-        >
-          <Menu className={iconClass(false)} aria-hidden />
-          <span>{otherLabel}</span>
-        </button>
-      </div>
-    </nav>
-  );
-
-  if (portalRoot) {
-    return createPortal(nav, portalRoot);
-  }
-
-  return nav;
-}
-
-type RingBinderNavDropdownProps = {
-  label: string;
-  manageLabel: string;
-  folders: RingBinderFolder[];
-  isLoading: boolean;
-  isError: boolean;
-  loadingLabel: string;
-  emptyLabel: string;
-  errorLabel: string;
-};
-
-function RingBinderNavDropdown({
-  label,
-  manageLabel,
-  folders,
-  isLoading,
-  isError,
-  loadingLabel,
-  emptyLabel,
-  errorLabel,
-}: RingBinderNavDropdownProps) {
-  const hasFolders = folders.length > 0;
-  const maxLabelLength = 15;
-  const truncateLabel = (name: string) =>
-    name.length > maxLabelLength ? `${name.slice(0, maxLabelLength)}...` : name;
-
-  return (
-    <div className="group relative">
-      <Link
-        href="/dashboard/ring-binder"
-        className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground"
-        aria-haspopup="menu"
-      >
-        {renderNavIcon('ringBinder', 'hidden lg:block')}
-        {label}
-      </Link>
-      <div className="absolute start-0 top-full z-50 hidden w-max min-w-48 border border-border/70 bg-background p-2 shadow-lg group-focus-within:block group-hover:block">
-        <div className="flex flex-col divide-y divide-border/70">
-          <Link
-            href="/dashboard/ring-binder"
-            className="flex items-center gap-2 whitespace-nowrap px-3 py-2 text-sm text-foreground transition-colors hover:bg-secondary/60"
-          >
-            {renderNavIcon('ringBinder', 'hidden lg:block')}
-            {manageLabel}
-          </Link>
-          {isLoading ? (
-            <div className="px-3 py-2 text-sm text-muted-foreground">{loadingLabel}</div>
-          ) : isError ? (
-            <div className="px-3 py-2 text-sm text-muted-foreground">{errorLabel}</div>
-          ) : hasFolders ? (
-            folders.map((folder) => (
-              <Link
-                key={folder.id}
-                href={`/dashboard?ringFolderId=${encodeURIComponent(folder.id)}`}
-                className="flex items-center gap-2 whitespace-nowrap px-3 py-2 text-sm text-foreground transition-colors hover:bg-secondary/60"
-                title={folder.name}
-              >
-                {renderNavIcon('ringBinder', 'hidden lg:block')}
-                {truncateLabel(folder.name)}
-              </Link>
-            ))
-          ) : (
-            <div className="px-3 py-2 text-sm text-muted-foreground">{emptyLabel}</div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-type ManualInstallDialogProps = {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-};
-
-function ManualInstallDialog({ open, onOpenChange }: ManualInstallDialogProps) {
-  const t = useTranslations('pwa.manualSteps');
-  const heading = useTranslations('pwa');
-  const platforms = [
-    {
-      key: 'android',
-      steps: ['step1', 'step2', 'step3'],
-    },
-    {
-      key: 'ios',
-      steps: ['step1', 'step2', 'step3'],
-    },
-  ] as const;
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{heading('manualTitle')}</DialogTitle>
-          <DialogDescription>{heading('manualDescription')}</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4">
-          {platforms.map((platform) => (
-            <div key={platform.key} className="rounded-lg border border-border/60 p-4">
-              <p className="text-sm font-semibold text-foreground">{t(`${platform.key}.title`)}</p>
-              <ol className="mt-2 list-inside list-decimal space-y-1 text-sm text-muted-foreground">
-                {platform.steps.map((step) => (
-                  <li key={step}>{t(`${platform.key}.${step}`)}</li>
-                ))}
-              </ol>
-            </div>
-          ))}
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-type InstalledNoticeDialogProps = {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onOpenApp: () => void;
-};
-
-function InstalledNoticeDialog({ open, onOpenChange, onOpenApp }: InstalledNoticeDialogProps) {
-  const t = useTranslations('pwa');
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>{t('alreadyInstalledTitle')}</DialogTitle>
-          <DialogDescription>{t('alreadyInstalledDescription')}</DialogDescription>
-        </DialogHeader>
-        <div className="flex justify-end">
-          <Button onClick={onOpenApp}>{t('openAppButton')}</Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 type MobileNavigationDrawerProps = {
   open: boolean;

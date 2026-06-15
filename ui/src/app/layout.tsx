@@ -149,8 +149,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: pwaInstallInitializer }} />
       </head>
       <body
-        className={`${inter.className} min-h-screen overflow-x-hidden bg-background text-foreground ${isDev ? 'border-t border-yellow-400' : ''}`}
+        className={`min-h-screen overflow-x-hidden bg-background text-foreground ${isDev ? 'border-t border-yellow-400' : ''}`}
         data-pathname={pathname}
+        suppressHydrationWarning
       >
         <script dangerouslySetInnerHTML={{ __html: themeInitializer }} />
         <div

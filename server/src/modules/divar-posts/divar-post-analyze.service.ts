@@ -8,18 +8,13 @@ import {
   type PostToAnalyzeQueue,
   type PostToReadQueue,
 } from '@prisma/client';
-import {
-  DivarPostParser,
-  type ParsedDivarPost,
-  type ParsedAttribute,
-  type ParsedMedia,
-} from './divar-post-parser';
+import { DivarPostParser } from './divar-post-parser';
+import type { ParsedDivarPost, ParsedAttribute, ParsedMedia } from './divar-post-parser-utils';
 import { schedulerCronExpressions } from '@app/platform/config/scheduler.config';
 
 const MAX_ANALYZE_ATTEMPTS = 5;
 const RATE_LIMIT_BATCH_SIZE = 50;
 const RATE_LIMIT_INTERVAL_MS = 1000;
-const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 interface AnalyzeJob extends PostToAnalyzeQueue {
   readQueue: PostToReadQueue & {

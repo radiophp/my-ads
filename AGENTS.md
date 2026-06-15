@@ -235,6 +235,16 @@ ui-typecheck ─┘
 | `test:e2e` | Playwright e2e |
 | `storybook` / `storybook:build` | Storybook dev/build |
 
+## File Splitting Pattern
+
+Large files are split by extracting pure utility functions/constants/types into separate modules:
+- **Backend**: Extract into `*-utils.ts`, `*-constants.ts`, `*-types.ts`, `*-builder.ts`, `*-filter-builder.ts` within the same module directory
+- **UI**: Extract sub-components into dedicated files within the same component directory
+- Extracted modules must pass typecheck and lint; service classes themselves stay intact
+- Currently split backend files: `divar-posts-admin.service.ts` (+filter builder), `divar-post-parser.ts` (+parser utils), `bale.service.ts` (+message builder, shared with telegram), `notifications.service.ts` (+utils), `divar-post-harvest.service.ts` (+types), `melkradar-to-divar.service.ts` (+constants)
+  - Extracted modules with unit tests: `notifications-utils.ts`, `bale-message-builder.ts`
+- Currently split UI files: `category-filters-preview.tsx` (→3 files), `divar-posts-feed.tsx` (→3), `profile-image-uploader.tsx` (→4), `phone-otp-login-form.tsx` (→3), `rich-text-editor.tsx` (→3), `active-filter-badges.tsx` (→2)
+
 ## Coding Style & Naming Conventions
 - TypeScript: ESLint + Prettier defaults (2-space indent, trailing commas, single quotes)
 - Files: kebab-case (`user-panel.module.ts`), classes: PascalCase, env vars: SCREAMING_SNAKE_CASE
@@ -269,6 +279,14 @@ ui-typecheck ─┘
 - Vitest for UI, Playwright for e2e
 - Avoid external network calls in specs
 - Server code coverage thresholds in `jest.config.js`
+- **Existing backend test suites (7 total)**:
+  - `src/tests/unit/notifications-utils.spec.ts` — 8 pure utility functions (castDecimal, parsePayload, computeJitteredDelay, etc.)
+  - `src/tests/unit/bale-message-builder.spec.ts` — 3 pure message builder functions (buildCaption, formatPriceLine, buildDashboardPostUrl)
+  - `src/tests/unit/public.health.service.spec.ts` — Health check with retry/failure cache
+  - `src/tests/unit/queue.service.spec.ts` — Queue service health
+  - `src/tests/unit/sanitize.pipe.spec.ts` — Input sanitization pipe
+  - `src/tests/integration/auth.service.integration.spec.ts` — Auth service (NestJS DI)
+  - `src/tests/e2e/app.e2e-spec.ts` — Full app E2E (health, favicon)
 
 ## Commit & PR Guidelines
 - Prefix: lowercase type (`add`, `fix`, `chore`, `docs`, `feat`) + imperative summary

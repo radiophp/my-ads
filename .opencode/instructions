@@ -17,13 +17,19 @@
 | `divar-posts/divar-posts.controller.ts` | GET /divar-posts (dashboard list, detail) |
 | `divar-posts/divar-posts-admin.controller.ts` | Admin CRUD for posts |
 | `divar-posts/divar-post-harvest.service.ts` | Harvest new posts from Divar |
+| `divar-posts/divar-post-harvest-types.ts` | Harvest types & constants (extracted from harvest service) |
 | `divar-posts/divar-post-fetch.service.ts` | Fetch post details from Divar |
 | `divar-posts/divar-post-analyze.service.ts` | Analyze post content |
 | `divar-posts/divar-post-media-sync.service.ts` | Sync media to MinIO |
 | `divar-posts/divar-contact-fetch.service.ts` | Fetch phone contacts |
 | `divar-posts/divar-post-stats.service.ts` | Post statistics aggregation |
 | `divar-posts/divar-post-parser.ts` | Divar HTML/JSON parser |
+| `divar-posts/divar-post-parser-utils.ts` | Parser types, constants & pure utility functions (extracted from parser) |
+| `divar-posts/divar-posts-admin.service.ts` | Admin CRUD (filter builder extracted to divar-post-filter-builder.ts) |
+| `divar-posts/divar-post-filter-builder.ts` | Filter query builder for admin listing (extracted from admin service) |
 | `divar-categories/*.ts` | Category tree sync + filter widgets |
+| `melkradar/melkradar-to-divar.service.ts` | MelkRadar to Divar conversion (constants extracted) |
+| `melkradar/melkradar-constants.ts` | MelkRadar interfaces & constants (extracted from to-divar service) |
 | `melkradar/*.ts` | MelkRadar archive, fetch, divar conversion |
 | `arka/*.ts` | Arka phone fetch, transfer, session admin |
 | `news/news.controller.ts` | Public news list/detail |
@@ -41,6 +47,7 @@
 | `featured-posts/*.ts` | Featured post management |
 | `notifications/notifications.controller.ts` | Notification listing/mark-read |
 | `notifications/notifications.service.ts` | Notification CRUD |
+| `notifications/notifications-utils.ts` | Notification utility functions (extracted from service) |
 | `notifications/notification-queue.processor.ts` | General notification queue |
 | `notifications/notification-matcher.service.ts` | Match notifications to users |
 | `notifications/push-notification.service.ts` | Push notification sending |
@@ -56,7 +63,10 @@
 | `subscriptions/*.ts` | User subscriptions |
 | `invite-codes/*.ts` | Referral codes |
 | `discount-codes/*.ts` | Discount codes |
+| `bale/bale.service.ts` | Bale bot service (message builder extracted to bale-message-builder.ts) |
+| `bale/bale-message-builder.ts` | Message caption/URL builder (shared with telegram.service.ts) |
 | `bale/*.ts` | Bale bot integration, WebSocket link gateway |
+| `telegram/telegram.service.ts` | Telegram bot service (uses bale-message-builder for captions) |
 | `telegram/*.ts` | Telegram bot integration |
 | `public/*.ts` | Health check, public endpoints |
 | `admin-divar-sessions/*.ts` | Divar crawl session admin |

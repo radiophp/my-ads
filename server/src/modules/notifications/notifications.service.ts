@@ -12,6 +12,14 @@ import { MetricsService } from '@app/platform/metrics/metrics.service';
 import type { DivarPostListItemDto } from '@app/modules/divar-posts/dto/divar-post.dto';
 import { NotificationDto, PaginatedNotificationsDto } from './dto/notification.dto';
 import type { StoredNotificationPayload, RealtimeNotificationPayload } from './notification.types';
+import {
+  castDecimal,
+  resolveMediaFromRelation,
+  parsePayload,
+  computeJitteredDelay,
+  resolvePreviewImage,
+  buildPayloadSnapshot,
+} from './notifications-utils';
 
 const NOTIFICATION_PAGE_LIMIT = 50;
 
@@ -146,22 +154,22 @@ export class NotificationsService {
 
     const postId = post.id;
 
-    const payload = this.buildPayloadSnapshot(
+    const payload = buildPayloadSnapshot(
       {
         id: post.id,
         code: post.code,
         externalId: '',
         title: post.title ?? null,
         description: post.description ?? null,
-        priceTotal: this.castDecimal(post.priceTotal),
-        rentAmount: this.castDecimal(post.rentAmount),
-        depositAmount: this.castDecimal(post.depositAmount),
+        priceTotal: castDecimal(post.priceTotal),
+        rentAmount: castDecimal(post.rentAmount),
+        depositAmount: castDecimal(post.depositAmount),
         dailyRateNormal: null,
         dailyRateWeekend: null,
         dailyRateHoliday: null,
         extraPersonFee: null,
-        pricePerSquare: this.castDecimal(post.pricePerSquare),
-        area: this.castDecimal(post.area),
+        pricePerSquare: castDecimal(post.pricePerSquare),
+        area: castDecimal(post.area),
         areaLabel: null,
         landArea: null,
         landAreaLabel: null,
@@ -345,7 +353,7 @@ export class NotificationsService {
     savedFilterName: string;
     post: DivarPostListItemDto;
   }): Promise<Notification | null> {
-    const snapshot = this.buildPayloadSnapshot(params.post, {
+    const snapshot = buildPayloadSnapshot(params.post, {
       id: params.savedFilterId,
       name: params.savedFilterName,
     });
@@ -457,7 +465,7 @@ export class NotificationsService {
   ): Promise<void> {
     const nextAttempt = notification.attemptCount + 1;
     const hasAttemptsLeft = nextAttempt < maxAttempts;
-    const delayMs = hasAttemptsLeft ? this.computeJitteredDelay(retryIntervalMs, jitterRatio) : 0;
+    const delayMs = hasAttemptsLeft ? computeJitteredDelay(retryIntervalMs, jitterRatio) : 0;
 
     await this.prisma.notification.update({
       where: { id: notification.id },
@@ -470,17 +478,6 @@ export class NotificationsService {
       },
     });
     this.metricsService.incrementNotificationRetries();
-  }
-
-  private computeJitteredDelay(baseMs: number, jitterRatio: number): number {
-    if (!Number.isFinite(baseMs) || baseMs <= 0) {
-      return 0;
-    }
-    const ratio = Math.min(Math.max(jitterRatio, 0), 1);
-    const jitter = baseMs * ratio;
-    const delta = (Math.random() * 2 - 1) * jitter;
-    const delay = Math.round(baseMs + delta);
-    return Math.max(0, delay);
   }
 
   async findDueNotifications(limit: number, now: Date): Promise<Notification[]> {
@@ -530,7 +527,7 @@ export class NotificationsService {
           savedFilter?: NotificationWithRelations['savedFilter'];
         }),
   ): RealtimeNotificationPayload {
-    const snapshot = this.parsePayload(record.payload);
+    const snapshot = parsePayload(record.payload);
     const fallbackFilter = record.savedFilter
       ? { id: record.savedFilter.id, name: record.savedFilter.name ?? '' }
       : { id: record.savedFilterId, name: '' };
@@ -540,17 +537,17 @@ export class NotificationsService {
           code: record.post.code ?? null,
           title: record.post.title ?? null,
           description: record.post.description ?? null,
-          priceTotal: this.castDecimal(record.post.priceTotal),
-          rentAmount: this.castDecimal(record.post.rentAmount),
-          depositAmount: this.castDecimal(record.post.depositAmount),
-          pricePerSquare: this.castDecimal(record.post.pricePerSquare),
-          area: this.castDecimal(record.post.area),
+          priceTotal: castDecimal(record.post.priceTotal),
+          rentAmount: castDecimal(record.post.rentAmount),
+          depositAmount: castDecimal(record.post.depositAmount),
+          pricePerSquare: castDecimal(record.post.pricePerSquare),
+          area: castDecimal(record.post.area),
           cityName: record.post.cityName ?? null,
           districtName: record.post.districtName ?? null,
           provinceName: record.post.provinceName ?? null,
           permalink: record.post.permalink ?? null,
           publishedAt: record.post.publishedAt ? record.post.publishedAt.toISOString() : null,
-          previewImageUrl: this.resolveMediaFromRelation(record.post.medias?.[0]),
+          previewImageUrl: resolveMediaFromRelation(record.post.medias?.[0]),
         }
       : {
           id: record.postId,
@@ -605,101 +602,13 @@ export class NotificationsService {
         provinceName: post.provinceName ?? null,
         permalink: post.permalink ?? null,
         publishedAt: post.publishedAt ? new Date(post.publishedAt).toISOString() : null,
-        previewImageUrl: this.resolvePreviewImage(post),
+        previewImageUrl: resolvePreviewImage(post),
       },
     };
-  }
-
-  private resolvePreviewImage(post: DivarPostListItemDto): string | null {
-    const media = post.medias?.[0];
-    if (!media) {
-      return null;
-    }
-    const enriched = media as typeof media & {
-      localUrl?: string | null;
-      localThumbnailUrl?: string | null;
-    };
-    return (
-      enriched.localThumbnailUrl ??
-      enriched.thumbnailUrl ??
-      enriched.localUrl ??
-      enriched.url ??
-      null
-    );
-  }
-
-  private parsePayload(payload: Prisma.JsonValue | null): StoredNotificationPayload | null {
-    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
-      return null;
-    }
-    const data = payload as Prisma.JsonObject;
-    const filter = data['filter'];
-    const post = data['post'];
-    if (!filter || typeof filter !== 'object' || Array.isArray(filter)) {
-      return null;
-    }
-    if (!post || typeof post !== 'object' || Array.isArray(post)) {
-      return null;
-    }
-    return {
-      filter: {
-        id:
-          typeof (filter as Prisma.JsonObject)['id'] === 'string'
-            ? ((filter as Prisma.JsonObject)['id'] as string)
-            : '',
-        name:
-          typeof (filter as Prisma.JsonObject)['name'] === 'string'
-            ? ((filter as Prisma.JsonObject)['name'] as string)
-            : '',
-      },
-      post: {
-        id:
-          typeof (post as Prisma.JsonObject)['id'] === 'string'
-            ? ((post as Prisma.JsonObject)['id'] as string)
-            : '',
-        code: this.parseNullableNumber(post, 'code'),
-        title: this.parseNullableString(post, 'title'),
-        description: this.parseNullableString(post, 'description'),
-        priceTotal: this.parseNullableNumber(post, 'priceTotal'),
-        rentAmount: this.parseNullableNumber(post, 'rentAmount'),
-        depositAmount: this.parseNullableNumber(post, 'depositAmount'),
-        pricePerSquare: this.parseNullableNumber(post, 'pricePerSquare'),
-        area: this.parseNullableNumber(post, 'area'),
-        cityName: this.parseNullableString(post, 'cityName'),
-        districtName: this.parseNullableString(post, 'districtName'),
-        provinceName: this.parseNullableString(post, 'provinceName'),
-        permalink: this.parseNullableString(post, 'permalink'),
-        publishedAt: this.parseNullableString(post, 'publishedAt'),
-        previewImageUrl: this.parseNullableString(post, 'previewImageUrl'),
-      },
-    };
-  }
-
-  private parseNullableString(source: Prisma.JsonValue, key: string): string | null {
-    if (!source || typeof source !== 'object' || Array.isArray(source)) {
-      return null;
-    }
-    const value = (source as Prisma.JsonObject)[key];
-    return typeof value === 'string' && value.length > 0 ? value : null;
-  }
-
-  private parseNullableNumber(source: Prisma.JsonValue, key: string): number | null {
-    if (!source || typeof source !== 'object' || Array.isArray(source)) {
-      return null;
-    }
-    const value = (source as Prisma.JsonObject)[key];
-    if (typeof value === 'number' && Number.isFinite(value)) {
-      return value;
-    }
-    if (typeof value === 'string' && value.trim().length > 0) {
-      const parsed = Number(value);
-      return Number.isFinite(parsed) ? parsed : null;
-    }
-    return null;
   }
 
   private mapRecordToDto(record: Notification): NotificationDto {
-    const snapshot = this.parsePayload(record.payload);
+    const snapshot = parsePayload(record.payload);
     return {
       id: record.id,
       status: record.status,
@@ -840,30 +749,5 @@ export class NotificationsService {
       where: { id: notificationId },
       data: { telegramError: error },
     });
-  }
-
-  private castDecimal(value: Prisma.Decimal | number | null | undefined): number | null {
-    if (value === null || typeof value === 'undefined') {
-      return null;
-    }
-    if (typeof value === 'number') {
-      return Number.isFinite(value) ? value : null;
-    }
-    if (value instanceof Prisma.Decimal) {
-      return Number(value.toString());
-    }
-    return null;
-  }
-
-  private resolveMediaFromRelation(media?: {
-    url: string | null;
-    thumbnailUrl: string | null;
-    localUrl: string | null;
-    localThumbnailUrl: string | null;
-  }): string | null {
-    if (!media) {
-      return null;
-    }
-    return media.localThumbnailUrl ?? media.thumbnailUrl ?? media.localUrl ?? media.url ?? null;
   }
 }

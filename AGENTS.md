@@ -11,7 +11,7 @@
 ## Backend Modules (`server/src/modules/*`)
 | Module | Purpose |
 | --- | --- |
-| `auth` | OTP login, JWT, guards |
+| `auth` | OTP login, JWT, guards, device management (sessions, challenger detection, WS push) |
 | `users` | CRUD, roles, admin management |
 | `admin-panel` | Admin dashboard stats/actions |
 | `user-panel` | User dashboard data |
@@ -256,7 +256,11 @@ Large files are split by extracting pure utility functions/constants/types into 
 
 ## Authentication & Security
 - **OTP login**: `POST /auth/request-otp` → `POST /auth/verify-otp` (returns JWT). Dev code `1234`
-- **Turnstile**: Cloudflare Turnstile gated by `ENABLE_TURNSTILE` admin toggle
+- **Device management**: `UserDevice` model with `userId_deviceId` compound unique. After OTP/Bale login, server returns `status: 'confirm_device'` with `pendingSessionToken` + `currentDevice` info. If no other active devices exist, client auto-confirms; otherwise a confirmation dialog shows the existing device. Device validation runs in `JwtAuthGuard`/`RefreshJwtGuard` after JWT validation — checks `tokenVersion` match, throws `DEVICE_CHANGED` with challenger device info.
+- **WebSocket push**: `io-server.ts` singleton (no DI, breaks circular deps) emits `device:challenged` to old device's `user:{userId}` room. Client listens via `useNotificationsSocket` and dispatches `deviceChanged`.
+- **UI dialogs**: `DeviceConfirmDialog` (approve new device), `DeviceChallengerDialog` (notified of challenger). Both rendered at root `providers.tsx` to avoid redirect races. No `AlertDialogDescription` (renders `<p>`, breaks nesting rules — use plain `<div>`).
+- **Session page**: `/dashboard/sessions` lists active devices with remove button, empty/error states.
+- **Turnstile**: Cloudflare Turnstile gated by `ENABLE_TURNSTILE` admin toggle. Button disabled with spinner while widget loads (min 300ms so spinner is visible even during client-side nav with cached script). On error, button stays disabled.
 - **Phone input**: Leading `0` preserved visually, stripped on submit (E.164 format)
 - **Bale linking**: `BaleUserLink` filtered by current bot ID (`BALE_BOT_TOKEN` numeric prefix) to avoid cross-env stale links
 - **CLOUDFLARE_API_TOKEN**: GitHub secret (not in .env.prod)

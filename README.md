@@ -16,7 +16,7 @@ The **My Ads** project is a NestJS + Fastify backend that powers a classified ad
 
 ### Core Domain Modules
 
-- **Auth Module (`modules/auth`)** — JWT access + refresh token flow, guards, strategies, login/register endpoints.
+- **Auth Module (`modules/auth`)** — JWT access + refresh token flow, guards, strategies, login/register endpoints, device management (session tracking, challenger detection, WebSocket push on new device login).
 - **Users Module (`modules/users`)** — CRUD services for user entities via Prisma.
 - **Public Module (`modules/public`)** — Health, info, and other publicly accessible routes. Rate limited by default.
 - **Uploads Module (`modules/uploads`)** — File upload orchestration layered over MinIO/S3 storage.

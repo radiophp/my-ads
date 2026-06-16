@@ -12,7 +12,7 @@ async function bootstrap() {
 
   const prisma = app.get(PrismaService);
   const service = app.get(ArkaPhoneFetchService);
-  const START_ID = 19015;
+  const START_ID = 383711;
   const latestId = await service.fetchLatestArkaId();
   if (typeof latestId !== 'number' || !Number.isFinite(latestId)) {
     logger.error('Unable to determine latest Arka id; aborting.');

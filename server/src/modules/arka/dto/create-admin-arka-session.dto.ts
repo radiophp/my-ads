@@ -16,4 +16,8 @@ export class CreateAdminArkaSessionDto {
   @IsOptional()
   @IsBoolean()
   locked?: boolean;
+
+  @IsOptional()
+  @IsString()
+  lastError?: string;
 }

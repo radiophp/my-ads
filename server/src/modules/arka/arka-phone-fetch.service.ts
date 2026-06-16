@@ -6,7 +6,7 @@ import { PrismaService } from '@app/platform/database/prisma.service';
 import { ArkaTransferStatus } from '@prisma/client';
 
 const LOCK_SECONDS = 0.2; // allow up to ~10 req/s when cron loops
-const START_FETCH_ID = 10000;
+const START_FETCH_ID = 383711;
 const RATE_LIMIT_BACKOFF_MS = 10_000;
 const GENERIC_BACKOFF_MS = 15_000;
 
@@ -24,11 +24,13 @@ const parseExternalId = (link?: string | null): string | null => {
 
 const buildHeaders = (headers: Record<string, string> | null): Record<string, string> => {
   if (!headers) return {};
-  // Ensure we always have JSON content-type
-  return {
+  const result: Record<string, string> = {
     ...headers,
     'Content-Type': headers['Content-Type'] ?? headers['content-type'] ?? 'application/json',
   };
+  delete result['Content-Length'];
+  delete result['content-length'];
+  return result;
 };
 
 const normalizeDigits = (value: string): string =>

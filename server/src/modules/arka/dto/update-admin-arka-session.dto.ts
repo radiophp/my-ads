@@ -16,4 +16,8 @@ export class UpdateAdminArkaSessionDto {
   @IsOptional()
   @IsBoolean()
   locked?: boolean;
+
+  @IsOptional()
+  @IsString()
+  lastError?: string;
 }

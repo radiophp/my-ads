@@ -50,11 +50,16 @@ export class ArkaPhoneTransferService {
       this.isRunning = false;
       this.runGuardTimer = null;
     }, 120_000);
-    await this.transferOne(false).catch((error) =>
-      this.logger.debug(
-        `Cron transfer error: ${error instanceof Error ? error.message : String(error)}`,
-      ),
-    );
+    for (let i = 0; i < 50; i += 1) {
+      const result = await this.transferOne(false).catch((error) => {
+        this.logger.debug(
+          `Cron transfer error: ${error instanceof Error ? error.message : String(error)}`,
+        );
+        return null;
+      });
+      if (!result) break;
+      if (result.kind !== 'transferred') break;
+    }
     if (this.runGuardTimer) {
       clearTimeout(this.runGuardTimer);
       this.runGuardTimer = null;
@@ -120,6 +125,22 @@ export class ArkaPhoneTransferService {
       const nextAttempt = new Date(now.getTime() + NO_POST_BACKOFF_MS);
       await this.deferRecord(record.id, 'post_not_found', nextAttempt, now);
       return { kind: 'deferred', reason: 'post_not_found', until: nextAttempt };
+    }
+
+    if (post.phoneNumber) {
+      await this.prisma.arkaPhoneRecord.update({
+        where: { id: record.id },
+        data: {
+          status: ArkaTransferStatus.TRANSFERRED,
+          transferredAt: now,
+          transferLockedUntil: null,
+          transferLastError: null,
+        },
+      });
+      this.logger.log(
+        `Arka transfer skipped (post already has phone): ${record.externalId} (arkaId=${record.arkaId})`,
+      );
+      return { kind: 'skipped', reason: 'post_already_has_phone' };
     }
 
     const phoneNumber = record.phoneNumber === '09000000000' ? null : (record.phoneNumber ?? null);

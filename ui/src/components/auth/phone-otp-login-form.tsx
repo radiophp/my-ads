@@ -58,8 +58,11 @@ export function PhoneOtpLoginForm() {
   const [baleLinkToken, setBaleLinkToken] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
-  const [turnstileReady, setTurnstileReady] = useState(false);
+  const [turnstileLoaded, setTurnstileLoaded] = useState(false);
+  const [turnstileLoading, setTurnstileLoading] = useState(true);
   const [turnstileTheme, setTurnstileTheme] = useState<'light' | 'dark'>('light');
+  const turnstileLoadStartRef = useRef(0);
+  const turnstileLoadTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [hasInteractedWithBot, setHasInteractedWithBot] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [pendingSessionToken, setPendingSessionToken] = useState<string | null>(null);
@@ -118,7 +121,7 @@ export function PhoneOtpLoginForm() {
   const [verifyOtp, { isLoading: isVerifying }] = useVerifyOtpMutation();
   const [confirmDevice] = useConfirmDeviceMutation();
   const [cancelDevice] = useCancelDeviceMutation();
-  const { data: websiteSettings } = useGetWebsiteSettingsQuery();
+  const { data: websiteSettings, isLoading: isWebsiteSettingsLoading } = useGetWebsiteSettingsQuery();
 
   const deviceInfoRef = useRef(getStructuredDeviceInfo());
 
@@ -129,16 +132,27 @@ export function PhoneOtpLoginForm() {
     codeRef.current = code;
   }, [code]);
 
+  const turnstileEnabled = websiteSettings?.turnstileEnabled && !!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+
   useEffect(() => {
     if (step === 'phone') {
       phoneInputRef.current?.focus();
+      if (turnstileEnabled) {
+        setTurnstileLoaded(false);
+        turnstileLoadStartRef.current = Date.now();
+        setTurnstileLoading(true);
+      }
     } else if (step === 'verify') {
       const digits = Array.from({ length: CODE_LENGTH }, (_, index) => codeRef.current[index] ?? '');
       const emptyIndex = digits.findIndex((digit) => !digit);
       const targetIndex = emptyIndex === -1 ? CODE_LENGTH - 1 : emptyIndex;
       codeInputRefs.current[targetIndex]?.focus();
     }
-  }, [step]);
+  }, [step, turnstileEnabled]);
+
+  useEffect(() => {
+    return () => clearTimeout(turnstileLoadTimerRef.current);
+  }, []);
 
   const handleCodeInput = useCallback(
     (index: number) => (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -280,20 +294,27 @@ export function PhoneOtpLoginForm() {
         userAgent: di.userAgent,
       }).unwrap();
 
-      if (response.status === 'confirm_device') {
-        setPendingSessionToken(response.pendingSessionToken);
-        setPendingCurrentDevice(response.currentDevice);
-        return;
-      }
+        if (response.status === 'confirm_device') {
+          if (!response.currentDevice) {
+            const confirmed = await confirmDevice({ pendingSessionToken: response.pendingSessionToken }).unwrap();
+            dispatch(setAuth(confirmed));
+            toast({ title: t('baleLoginSuccess') });
+            router.push('/dashboard');
+            return;
+          }
+          setPendingSessionToken(response.pendingSessionToken);
+          setPendingCurrentDevice(response.currentDevice);
+          return;
+        }
 
-      dispatch(setAuth(response));
-      toast({ title: t('baleLoginSuccess') });
-      router.push('/dashboard');
+        dispatch(setAuth(response));
+        toast({ title: t('baleLoginSuccess') });
+        router.push('/dashboard');
     } catch (error) {
       console.error('Bale login failed', error);
       toast({ title: t('baleLoginError'), variant: 'destructive' });
     }
-  }, [baleLogin, dispatch, lastRequestedPhoneLocal, phone, router, t, toast]);
+  }, [baleLogin, confirmDevice, dispatch, lastRequestedPhoneLocal, phone, router, t, toast]);
 
   useEffect(() => {
     baleLoginCallbackRef.current = handleBaleLogin;
@@ -333,6 +354,14 @@ export function PhoneOtpLoginForm() {
         }).unwrap();
 
         if (response.status === 'confirm_device') {
+          if (!response.currentDevice) {
+            const confirmed = await confirmDevice({ pendingSessionToken: response.pendingSessionToken }).unwrap();
+            dispatch(setAuth(confirmed));
+            toast({ title: t('successToast') });
+            setCode('');
+            router.push('/dashboard');
+            return;
+          }
           setPendingSessionToken(response.pendingSessionToken);
           setPendingCurrentDevice(response.currentDevice);
           return;
@@ -347,7 +376,7 @@ export function PhoneOtpLoginForm() {
         toast({ title: t('errors.verifyFailed'), variant: 'destructive' });
       }
     },
-    [code, dispatch, lastRequestedPhoneLocal, phone, router, t, toast, verifyOtp],
+    [code, confirmDevice, dispatch, lastRequestedPhoneLocal, phone, router, t, toast, verifyOtp],
   );
 
   const handleConfirmDevice = useCallback(async () => {
@@ -464,16 +493,29 @@ export function PhoneOtpLoginForm() {
                 <Turnstile
                   siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
                   onSuccess={setTurnstileToken}
-                  onWidgetLoad={() => setTurnstileReady(true)}
-                  onError={() => setTurnstileReady(true)}
+                  onWidgetLoad={() => {
+                    const elapsed = Date.now() - turnstileLoadStartRef.current;
+                    const remaining = 300 - elapsed;
+                    turnstileLoadTimerRef.current = setTimeout(() => {
+                      setTurnstileLoaded(true);
+                      setTurnstileLoading(false);
+                    }, Math.max(0, remaining));
+                  }}
+                  onError={() => {
+                    clearTimeout(turnstileLoadTimerRef.current);
+                    setTurnstileLoading(false);
+                  }}
                   options={{ theme: turnstileTheme, language: 'fa' }}
                 />
               </div>
             )}
           </CardContent>
           <CardFooter>
-            <Button type="submit" className="w-full" disabled={isRequesting || (!!websiteSettings?.turnstileEnabled && !turnstileReady)}>
-              {isRequesting ? t('requesting') : t('requestCode')}
+            <Button type="submit" className="w-full" disabled={isRequesting || isWebsiteSettingsLoading || (!!websiteSettings?.turnstileEnabled && !turnstileLoaded)}>
+              <div className="flex items-center gap-2">
+                {(isWebsiteSettingsLoading || (turnstileEnabled && turnstileLoading)) && <div className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />}
+                {isRequesting ? t('requesting') : t('requestCode')}
+              </div>
             </Button>
           </CardFooter>
         </form>

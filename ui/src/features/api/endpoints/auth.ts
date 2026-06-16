@@ -1,6 +1,6 @@
 import { apiSlice } from '../baseApi';
 
-import type { AuthResponse, CurrentUser, SuccessResponse } from '@/types/auth';
+import type { AuthResponse, CurrentUser, SuccessResponse, DeviceInfo } from '@/types/auth';
 
 type UpdateCurrentUserPayload = Partial<{
   email: string | null;
@@ -11,6 +11,40 @@ type UpdateCurrentUserPayload = Partial<{
   profileImageUrl: string | null;
 }>;
 
+type VerifyOtpPayload = {
+  phone: string;
+  code: string;
+  deviceId?: string;
+  deviceName?: string;
+  deviceType?: string;
+  userAgent?: string;
+};
+
+type ConfirmDevicePayload = {
+  pendingSessionToken: string;
+};
+
+type CancelDevicePayload = {
+  pendingSessionToken: string;
+};
+
+export type ConfirmDeviceResponse = {
+  status: 'confirm_device';
+  pendingSessionToken: string;
+  currentDevice: {
+    name: string | null;
+    type: string | null;
+    ipAddress: string | null;
+    lastActiveAt: string;
+  } | null;
+};
+
+export type AuthenticatedResponse = AuthResponse & {
+  status: 'authenticated';
+};
+
+export type VerifyOtpResponse = AuthenticatedResponse | ConfirmDeviceResponse;
+
 const authApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     requestOtp: builder.mutation<SuccessResponse, { phone: string; deviceInfo?: string; turnstileToken?: string }>({
@@ -20,7 +54,7 @@ const authApi = apiSlice.injectEndpoints({
         body,
       }),
     }),
-    baleLogin: builder.mutation<AuthResponse, { phone: string }>({
+    baleLogin: builder.mutation<VerifyOtpResponse, { phone: string; deviceId?: string; deviceName?: string; deviceType?: string; userAgent?: string }>({
       query: (body) => ({
         url: '/auth/bale-login',
         method: 'POST',
@@ -28,13 +62,28 @@ const authApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ['User'],
     }),
-    verifyOtp: builder.mutation<AuthResponse, { phone: string; code: string }>({
+    verifyOtp: builder.mutation<VerifyOtpResponse, VerifyOtpPayload>({
       query: (body) => ({
         url: '/auth/verify-otp',
         method: 'POST',
         body,
       }),
       invalidatesTags: ['User'],
+    }),
+    confirmDevice: builder.mutation<AuthenticatedResponse, ConfirmDevicePayload>({
+      query: (body) => ({
+        url: '/auth/confirm-device',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['User'],
+    }),
+    cancelDevice: builder.mutation<SuccessResponse, CancelDevicePayload>({
+      query: (body) => ({
+        url: '/auth/cancel-device',
+        method: 'POST',
+        body,
+      }),
     }),
     getCurrentUser: builder.query<CurrentUser, void>({
       query: () => '/auth/me',
@@ -56,6 +105,17 @@ const authApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ['User'],
     }),
+    getDevices: builder.query<DeviceInfo[], void>({
+      query: () => '/auth/devices',
+      providesTags: ['User'],
+    }),
+    deleteDevice: builder.mutation<SuccessResponse, string>({
+      query: (deviceId) => ({
+        url: `/auth/devices/${deviceId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['User'],
+    }),
   }),
 });
 
@@ -63,7 +123,11 @@ export const {
   useRequestOtpMutation,
   useBaleLoginMutation,
   useVerifyOtpMutation,
+  useConfirmDeviceMutation,
+  useCancelDeviceMutation,
   useGetCurrentUserQuery,
   useLogoutMutation,
   useUpdateCurrentUserMutation,
+  useGetDevicesQuery,
+  useDeleteDeviceMutation,
 } = authApi;

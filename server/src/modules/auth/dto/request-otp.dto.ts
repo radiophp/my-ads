@@ -1,6 +1,6 @@
 import { Transform } from 'class-transformer';
 import { IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 const PHONE_REGEX = /^\+?\d{10,15}$/;
 
@@ -16,6 +16,26 @@ export class RequestOtpDto {
   @IsOptional()
   @ApiProperty({ required: false })
   deviceInfo?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiPropertyOptional()
+  deviceId?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiPropertyOptional()
+  deviceName?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiPropertyOptional()
+  deviceType?: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiPropertyOptional()
+  userAgent?: string;
 
   @IsString()
   @IsOptional()

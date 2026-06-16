@@ -43,3 +43,14 @@ export type SuccessResponse = {
   baleBotUrl?: string;
   baleLinkToken?: string;
 };
+
+export type DeviceInfo = {
+  id: string;
+  deviceId: string;
+  name: string | null;
+  type: string | null;
+  ipAddress: string | null;
+  lastActiveAt: string;
+  createdAt: string;
+  isActive: boolean;
+};

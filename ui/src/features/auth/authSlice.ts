@@ -2,11 +2,20 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 import type { AuthenticatedUser } from '@/types/auth';
 
+export type ChallengerDevice = {
+  name: string | null;
+  type: string | null;
+  ipAddress: string | null;
+  lastActiveAt: string;
+};
+
 export type AuthState = {
   accessToken: string | null;
   refreshToken: string | null;
   user: AuthenticatedUser | null;
   hydrated: boolean;
+  deviceChanged: boolean;
+  challengerDevice: ChallengerDevice | null;
 };
 
 export type AuthPayload = {
@@ -22,6 +31,8 @@ const initialState: AuthState = {
   refreshToken: null,
   user: null,
   hydrated: false,
+  deviceChanged: false,
+  challengerDevice: null,
 };
 
 const readStoredAuth = (): AuthState | null => {
@@ -52,7 +63,7 @@ const persistAuthState = (state: AuthState): void => {
   }
 
   try {
-    const serializableState: Omit<AuthState, 'hydrated'> = {
+    const serializableState: Omit<AuthState, 'hydrated' | 'deviceChanged' | 'challengerDevice'> = {
       accessToken: state.accessToken,
       refreshToken: state.refreshToken,
       user: state.user,
@@ -97,6 +108,8 @@ const authSlice = createSlice({
       state.refreshToken = action.payload.refreshToken;
       state.user = action.payload.user;
       state.hydrated = true;
+      state.deviceChanged = false;
+      state.challengerDevice = null;
       persistAuthState(state);
     },
     clearAuth(state) {
@@ -112,10 +125,24 @@ const authSlice = createSlice({
         persistAuthState(state);
       }
     },
+    deviceChanged(state, action: PayloadAction<ChallengerDevice | null | undefined>) {
+      if (action.payload) {
+        state.accessToken = null;
+        state.refreshToken = null;
+        state.user = null;
+        state.hydrated = true;
+        state.deviceChanged = true;
+        state.challengerDevice = action.payload;
+        clearStoredAuth();
+      } else {
+        state.deviceChanged = false;
+        state.challengerDevice = null;
+      }
+    },
   },
 });
 
 export const hydrateAuthFromStorage = () => readStoredAuth();
 
-export const { hydrateAuthState, setAuth, clearAuth, updateUser } = authSlice.actions;
+export const { hydrateAuthState, setAuth, clearAuth, updateUser, deviceChanged } = authSlice.actions;
 export default authSlice.reducer;

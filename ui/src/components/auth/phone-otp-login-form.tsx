@@ -9,12 +9,16 @@ import {
   useRequestOtpMutation,
   useBaleLoginMutation,
   useVerifyOtpMutation,
+  useConfirmDeviceMutation,
+  useCancelDeviceMutation,
+  type ConfirmDeviceResponse,
 } from '@/features/api/endpoints/auth';
 import { useGetWebsiteSettingsQuery } from '@/features/api/endpoints/website-settings';
 import { setAuth } from '@/features/auth/authSlice';
 import { useBaleLinkSocket } from '@/features/bale/useBaleLinkSocket';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import { cn, getDeviceInfo } from '@/lib/utils';
+import { getDeviceInfo as getStructuredDeviceInfo } from '@/lib/device';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -34,6 +38,8 @@ import {
 import { AlreadySignedInCard } from './already-signed-in-card';
 import { BaleRequiredStep } from './bale-required-step';
 import { CodeDigitSlot } from './code-digit-slot';
+import { DeviceConfirmDialog } from './device-confirm-dialog';
+
 
 type Step = 'phone' | 'verify' | 'bale_required';
 
@@ -56,6 +62,9 @@ export function PhoneOtpLoginForm() {
   const [turnstileTheme, setTurnstileTheme] = useState<'light' | 'dark'>('light');
   const [hasInteractedWithBot, setHasInteractedWithBot] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const [pendingSessionToken, setPendingSessionToken] = useState<string | null>(null);
+  const [pendingCurrentDevice, setPendingCurrentDevice] = useState<ConfirmDeviceResponse['currentDevice']>(null);
+  const [isConfirmingDevice, setIsConfirmingDevice] = useState(false);
   const phoneInputRef = useRef<HTMLInputElement>(null);
   const baleLoginCallbackRef = useRef<() => void>(() => {});
   const formRef = useRef<HTMLFormElement>(null);
@@ -107,7 +116,11 @@ export function PhoneOtpLoginForm() {
   const [requestOtp, { isLoading: isRequesting }] = useRequestOtpMutation();
   const [baleLogin, { isLoading: isBaleLoggingIn }] = useBaleLoginMutation();
   const [verifyOtp, { isLoading: isVerifying }] = useVerifyOtpMutation();
+  const [confirmDevice] = useConfirmDeviceMutation();
+  const [cancelDevice] = useCancelDeviceMutation();
   const { data: websiteSettings } = useGetWebsiteSettingsQuery();
+
+  const deviceInfoRef = useRef(getStructuredDeviceInfo());
 
   const isAuthenticated = useMemo(() => Boolean(auth.accessToken), [auth.accessToken]);
   const displayPhone = formatDisplayIranPhone(lastRequestedPhoneLocal ?? phone) || '+98';
@@ -258,7 +271,21 @@ export function PhoneOtpLoginForm() {
     }
 
     try {
-      const response = await baleLogin({ phone: toInternationalIranPhone(localDigits) }).unwrap();
+      const di = deviceInfoRef.current;
+      const response = await baleLogin({
+        phone: toInternationalIranPhone(localDigits),
+        deviceId: di.deviceId,
+        deviceName: di.deviceName,
+        deviceType: di.deviceType,
+        userAgent: di.userAgent,
+      }).unwrap();
+
+      if (response.status === 'confirm_device') {
+        setPendingSessionToken(response.pendingSessionToken);
+        setPendingCurrentDevice(response.currentDevice);
+        return;
+      }
+
       dispatch(setAuth(response));
       toast({ title: t('baleLoginSuccess') });
       router.push('/dashboard');
@@ -295,10 +322,22 @@ export function PhoneOtpLoginForm() {
       }
 
       try {
+        const di = deviceInfoRef.current;
         const response = await verifyOtp({
           phone: toInternationalIranPhone(localDigits),
           code: sanitizedCode,
+          deviceId: di.deviceId,
+          deviceName: di.deviceName,
+          deviceType: di.deviceType,
+          userAgent: di.userAgent,
         }).unwrap();
+
+        if (response.status === 'confirm_device') {
+          setPendingSessionToken(response.pendingSessionToken);
+          setPendingCurrentDevice(response.currentDevice);
+          return;
+        }
+
         dispatch(setAuth(response));
         toast({ title: t('successToast') });
         setCode('');
@@ -310,6 +349,36 @@ export function PhoneOtpLoginForm() {
     },
     [code, dispatch, lastRequestedPhoneLocal, phone, router, t, toast, verifyOtp],
   );
+
+  const handleConfirmDevice = useCallback(async () => {
+    if (!pendingSessionToken) return;
+    setIsConfirmingDevice(true);
+    try {
+      const response = await confirmDevice({ pendingSessionToken }).unwrap();
+      dispatch(setAuth(response));
+      toast({ title: t('successToast') });
+      setCode('');
+      setPendingSessionToken(null);
+      setPendingCurrentDevice(null);
+      router.push('/dashboard');
+    } catch (error) {
+      console.error('Failed to confirm device', error);
+      toast({ title: t('errors.verifyFailed'), variant: 'destructive' });
+    } finally {
+      setIsConfirmingDevice(false);
+    }
+  }, [pendingSessionToken, confirmDevice, dispatch, router, t, toast]);
+
+  const handleCancelDevice = useCallback(async () => {
+    if (!pendingSessionToken) return;
+    try {
+      await cancelDevice({ pendingSessionToken }).unwrap();
+    } catch {
+      // Ignore cancellation errors
+    }
+    setPendingSessionToken(null);
+    setPendingCurrentDevice(null);
+  }, [pendingSessionToken, cancelDevice]);
 
   const handleResend = useCallback(async () => {
     const localDigits = sanitizeIranLocalPhone(lastRequestedPhoneLocal ?? phone);
@@ -487,6 +556,13 @@ export function PhoneOtpLoginForm() {
           </CardContent>
         </form>
       )}
+      <DeviceConfirmDialog
+        open={!!pendingSessionToken}
+        currentDevice={pendingCurrentDevice}
+        onConfirm={handleConfirmDevice}
+        onCancel={handleCancelDevice}
+        isLoading={isConfirmingDevice}
+      />
     </Card>
   );
 }

@@ -2,6 +2,7 @@ import { Test } from '@nestjs/testing';
 import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthService } from '@app/modules/auth/auth.service';
+import { DeviceService } from '@app/modules/auth/device.service';
 import { UsersService } from '@app/modules/users/users.service';
 import { OtpService } from '@app/platform/otp/otp.service';
 import { PrismaService } from '@app/platform/database/prisma.service';
@@ -66,6 +67,20 @@ describe('AuthService (integration)', () => {
           provide: BaleBotService,
           useValue: {},
         },
+        {
+          provide: DeviceService,
+          useValue: {
+            findOrCreatePending: jest
+              .fn()
+              .mockResolvedValue({ isNewDevice: false, currentDevice: null }),
+            confirmDevice: jest.fn(),
+            cancelDevice: jest.fn(),
+            getUserDevices: jest.fn().mockResolvedValue([]),
+            deactivateDevice: jest.fn(),
+            deactivateAllDevices: jest.fn(),
+            getCurrentTokenVersion: jest.fn().mockResolvedValue(0),
+          },
+        },
       ],
     }).compile();
 
@@ -124,6 +139,10 @@ describe('AuthService (integration)', () => {
     mockUsersService.updateRefreshToken.mockResolvedValueOnce(undefined);
 
     const response = await authService.verifyOtp({ phone: user.phone, code: '123456' });
+
+    if (response.status === 'confirm_device') {
+      throw new Error('Unexpected confirm_device response');
+    }
 
     expect(response.accessToken).toBeDefined();
     expect(response.refreshToken).toBeDefined();

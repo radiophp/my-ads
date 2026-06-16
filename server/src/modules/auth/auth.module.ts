@@ -1,12 +1,13 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
+import { DeviceService } from './device.service';
 import { UsersModule } from '@app/modules/users/users.module';
 import { BaleModule } from '@app/modules/bale/bale.module';
-import { PrismaService } from '@app/platform/database/prisma.service';
+
 import { JwtAccessStrategy } from './strategies/jwt-access.strategy';
 import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -16,6 +17,7 @@ import { RateLimitModule } from '@app/common/guards/rate-limit/rate-limit.module
 import { OtpModule } from '@app/platform/otp/otp.module';
 import type { JwtConfig } from '@app/platform/config/jwt.config';
 
+@Global()
 @Module({
   imports: [
     ConfigModule,
@@ -44,13 +46,13 @@ import type { JwtConfig } from '@app/platform/config/jwt.config';
   controllers: [AuthController],
   providers: [
     AuthService,
-    PrismaService,
+    DeviceService,
     JwtAccessStrategy,
     JwtRefreshStrategy,
     JwtAuthGuard,
     RefreshJwtGuard,
     RolesGuard,
   ],
-  exports: [AuthService, JwtAuthGuard, RefreshJwtGuard, RolesGuard],
+  exports: [AuthService, JwtAuthGuard, RefreshJwtGuard, RolesGuard, DeviceService],
 })
 export class AuthModule {}

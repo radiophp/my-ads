@@ -2,6 +2,7 @@ import {
   ConnectedSocket,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
@@ -10,9 +11,10 @@ import { Logger, UnauthorizedException } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { AuthService } from '@app/modules/auth/auth.service';
 import type { JsonValue } from '@app/common/types/json.type';
+import { setServer } from './io-server';
 
 @WebSocketGateway({ namespace: '/ws', cors: { origin: true, credentials: true } })
-export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit {
   @WebSocketServer()
   server!: Server;
 
@@ -22,6 +24,10 @@ export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnec
   private warnedAboutMissingServer = false;
 
   constructor(private readonly authService: AuthService) {}
+
+  afterInit(): void {
+    setServer(this.server);
+  }
 
   async handleConnection(client: Socket): Promise<void> {
     try {

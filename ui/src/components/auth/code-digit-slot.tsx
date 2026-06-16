@@ -7,8 +7,8 @@ type CodeDigitSlotProps = {
   index: number;
   code: string;
   disabled: boolean;
-  onInput: (index: number, event: React.ChangeEvent<HTMLInputElement>) => void;
-  onKeyDown: (index: number, event: React.KeyboardEvent<HTMLInputElement>) => void;
+  onInput: (index: number) => (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onKeyDown: (index: number) => (event: React.KeyboardEvent<HTMLInputElement>) => void;
   onRef: (index: number, element: HTMLInputElement | null) => void;
 };
 
@@ -24,8 +24,8 @@ export function CodeDigitSlot({ index, code, disabled, onInput, onKeyDown, onRef
         autoComplete={index === 0 ? 'one-time-code' : 'off'}
         aria-label="کد تأیید"
         value={digit}
-        onChange={(event) => onInput(index, event)}
-        onKeyDown={(event) => onKeyDown(index, event)}
+        onChange={onInput(index)}
+        onKeyDown={onKeyDown(index)}
         disabled={disabled}
         required
         className="size-12 p-0 text-center text-lg font-semibold"

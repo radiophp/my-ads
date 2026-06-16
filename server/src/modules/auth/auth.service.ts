@@ -9,7 +9,6 @@ import { randomBytes } from 'crypto';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Prisma } from '@prisma/client';
-import { AuthResponseDto } from './dto/auth-response.dto';
 import { UsersService } from '@app/modules/users/users.service';
 import { PrismaService } from '@app/platform/database/prisma.service';
 import { RedisService } from '@app/platform/cache/redis.service';
@@ -18,7 +17,8 @@ import { Role } from '@app/common/decorators/roles.decorator';
 import type { JwtConfig } from '@app/platform/config/jwt.config';
 import { OtpService } from '@app/platform/otp/otp.service';
 import { BaleBotService } from '@app/modules/bale/bale.service';
-import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { DeviceService } from './device.service';
+import type { VerifyOtpDto } from './dto/verify-otp.dto';
 import { CurrentUserDto } from './dto/current-user.dto';
 import { UpdateCurrentUserDto } from './dto/update-current-user.dto';
 
@@ -26,11 +26,51 @@ export type JwtPayload = {
   sub: string;
   phone: string;
   role: Role;
+  deviceId: string;
+  tokenVersion: number;
 };
 
 type UserWithRelations = Prisma.UserGetPayload<{
   include: { city: { include: { province: true } } };
 }>;
+
+type DeviceInfo = {
+  deviceId: string;
+  deviceName?: string;
+  deviceType?: string;
+  userAgent?: string;
+};
+
+type ConfirmDeviceResponse = {
+  status: 'confirm_device';
+  pendingSessionToken: string;
+  currentDevice: {
+    name: string | null;
+    type: string | null;
+    ipAddress: string | null;
+    lastActiveAt: Date;
+  } | null;
+};
+
+type AuthenticatedResponse = {
+  status: 'authenticated';
+  accessToken: string;
+  refreshToken: string;
+  user: {
+    id: string;
+    phone: string;
+    email: string | null;
+    firstName: string | null;
+    lastName: string | null;
+    provinceId: number | null;
+    province: string | null;
+    cityId: number | null;
+    city: string | null;
+    profileImageUrl: string | null;
+    role: Role;
+    isActive: boolean;
+  };
+};
 
 @Injectable()
 export class AuthService {
@@ -44,6 +84,7 @@ export class AuthService {
     private readonly prismaService: PrismaService,
     private readonly redisService: RedisService,
     private readonly baleBotService: BaleBotService,
+    private readonly deviceService: DeviceService,
   ) {}
 
   async requestOtp(
@@ -104,7 +145,10 @@ export class AuthService {
     };
   }
 
-  async baleLogin(phone: string): Promise<AuthResponseDto> {
+  async baleLogin(
+    phone: string,
+    deviceInfo?: DeviceInfo,
+  ): Promise<AuthenticatedResponse | ConfirmDeviceResponse> {
     const user = await this.usersService.findByPhone(phone);
     if (!user) {
       throw new UnauthorizedException('User not found.');
@@ -118,7 +162,26 @@ export class AuthService {
       throw new UnauthorizedException('Bale account not linked. Please join our Bale bot first.');
     }
 
-    return this.buildAuthResponse(user);
+    if (deviceInfo) {
+      const result = await this.deviceService.findOrCreatePending(
+        user.id,
+        deviceInfo.deviceId,
+        deviceInfo.deviceName,
+        deviceInfo.deviceType,
+        deviceInfo.userAgent,
+      );
+
+      if (result.isNewDevice) {
+        return {
+          status: 'confirm_device',
+          pendingSessionToken: result.pendingSessionToken!,
+          currentDevice: result.currentDevice,
+        };
+      }
+    }
+
+    const tokens = await this.buildAuthResponse(user, deviceInfo?.deviceId ?? '');
+    return { status: 'authenticated', ...tokens };
   }
 
   private async findBaleLinkByPhone(phone: string) {
@@ -181,7 +244,10 @@ export class AuthService {
     }
   }
 
-  async verifyOtp(dto: VerifyOtpDto): Promise<AuthResponseDto> {
+  async verifyOtp(
+    dto: VerifyOtpDto,
+    ipAddress?: string,
+  ): Promise<AuthenticatedResponse | ConfirmDeviceResponse> {
     const isValid = await this.otpService.verifyCode(dto.phone, dto.code);
     if (!isValid) {
       throw new UnauthorizedException('Invalid verification code.');
@@ -195,10 +261,49 @@ export class AuthService {
       throw new UnauthorizedException('User account is disabled.');
     }
 
-    return this.buildAuthResponse(user);
+    if (dto.deviceId) {
+      const result = await this.deviceService.findOrCreatePending(
+        user.id,
+        dto.deviceId,
+        dto.deviceName,
+        dto.deviceType,
+        dto.userAgent,
+        ipAddress,
+      );
+
+      if (result.isNewDevice) {
+        return {
+          status: 'confirm_device',
+          pendingSessionToken: result.pendingSessionToken!,
+          currentDevice: result.currentDevice,
+        };
+      }
+    }
+
+    const tokens = await this.buildAuthResponse(user, dto.deviceId ?? '');
+    return { status: 'authenticated', ...tokens };
   }
 
-  async refreshTokens(userId: string): Promise<AuthResponseDto> {
+  async confirmDevice(pendingSessionToken: string): Promise<AuthenticatedResponse> {
+    const { userId, deviceId } = await this.deviceService.confirmDevice(pendingSessionToken);
+
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('User not found.');
+    }
+    if (!user.isActive) {
+      throw new UnauthorizedException('User account is disabled.');
+    }
+
+    const tokens = await this.buildAuthResponse(user, deviceId);
+    return { status: 'authenticated', ...tokens };
+  }
+
+  async cancelDevice(pendingSessionToken: string): Promise<void> {
+    await this.deviceService.cancelDevice(pendingSessionToken);
+  }
+
+  async refreshTokens(userId: string, deviceId: string): Promise<AuthenticatedResponse> {
     const user = await this.usersService.findById(userId);
     if (!user) {
       throw new UnauthorizedException('User not found.');
@@ -208,20 +313,32 @@ export class AuthService {
       throw new UnauthorizedException('User account is disabled.');
     }
 
-    return this.buildAuthResponse(user);
+    const tokens = await this.buildAuthResponse(user, deviceId);
+    return { status: 'authenticated', ...tokens };
   }
 
-  private async buildAuthResponse(user: UserWithRelations): Promise<AuthResponseDto> {
-    const payload: JwtPayload = {
-      sub: user.id,
-      phone: user.phone,
-      role: user.role as Role,
-    };
-
+  private async buildAuthResponse(
+    user: UserWithRelations,
+    deviceId: string,
+  ): Promise<{
+    accessToken: string;
+    refreshToken: string;
+    user: AuthenticatedResponse['user'];
+  }> {
     const jwtConfig = this.configService.get<JwtConfig>('jwt', { infer: true });
     if (!jwtConfig) {
       throw new Error('JWT configuration is missing.');
     }
+
+    const tokenVersion = user.tokenVersion;
+
+    const payload: JwtPayload = {
+      sub: user.id,
+      phone: user.phone,
+      role: user.role as Role,
+      deviceId,
+      tokenVersion,
+    };
 
     const accessToken = await this.jwtService.signAsync(payload, {
       expiresIn: jwtConfig.accessTokenTtl,
@@ -251,7 +368,7 @@ export class AuthService {
         role: user.role as Role,
         isActive: user.isActive,
       },
-    } as AuthResponseDto;
+    };
   }
 
   async validateRefreshToken(userId: string, token: string): Promise<boolean> {
@@ -261,6 +378,11 @@ export class AuthService {
     }
 
     return comparePassword(token, user.hashedRefreshToken);
+  }
+
+  async logout(userId: string): Promise<void> {
+    await this.deviceService.deactivateAllDevices(userId);
+    await this.usersService.updateRefreshToken(userId, null);
   }
 
   async getCurrentUser(userId: string): Promise<CurrentUserDto> {

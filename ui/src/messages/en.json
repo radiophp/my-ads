@@ -35,7 +35,8 @@
     "mobileMenuClose": "Close menu",
     "mobileMenuTitle": "Menu",
     "menu": {
-      "profile": "Profile"
+      "profile": "Profile",
+      "sessions": "Sessions"
     },
     "installApp": "Install app",
     "search": {
@@ -53,7 +54,8 @@
     "new": "New",
     "posts": "Posts",
     "preview": "Preview",
-    "offline": "Offline"
+    "offline": "Offline",
+    "sessions": "Sessions"
   },
   "landing": {
     "title": "Welcome to Mahan File",
@@ -2405,5 +2407,35 @@
     "loginAction": "Sign in",
     "loginClose": "Not now",
     "empty": "No listings were found for this area."
+  },
+  "auth": {
+    "deviceConfirm": {
+      "title": "New device login",
+      "description": "You are currently logged in on the following device. Logging in here will sign out the other device.",
+      "noDevice": "No other active devices found.",
+      "ip": "IP",
+      "lastActive": "Last active",
+      "cancel": "Cancel",
+      "confirm": "Sign out other device & continue",
+      "loading": "Confirming…"
+    },
+    "deviceChallenger": {
+      "title": "Signed out",
+      "description": "You have been signed out because a new device logged into your account.",
+      "ip": "IP",
+      "time": "Login time",
+      "ok": "OK"
+    },
+    "sessions": {
+      "title": "Active Sessions",
+      "description": "Devices signed in to your account.",
+      "current": "Current",
+      "lastActive": "Last active",
+      "remove": "Sign out device",
+      "deleted": "Device signed out successfully.",
+      "deleteError": "Failed to sign out device.",
+      "empty": "No devices registered.",
+      "loadError": "Failed to load sessions."
+    }
   }
 }

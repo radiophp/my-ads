@@ -11,6 +11,7 @@ import {
   setNotificationError,
   resetNotifications,
 } from './notificationsSlice';
+import { deviceChanged, type ChallengerDevice } from '@/features/auth/authSlice';
 import { showNativeNotificationIfPermitted } from './nativeNotifications';
 
 const SOCKET_PATH = '/socket.io';
@@ -94,6 +95,9 @@ export function useNotificationsSocket(options?: NotificationsSocketOptions): vo
       void showNativeNotificationIfPermitted(payload);
       optionsRef.current?.onNotification?.(payload);
     });
+    socket.on('device:challenged', (payload: ChallengerDevice) => {
+      dispatch(deviceChanged(payload));
+    });
 
     return () => {
       socket.off('connect');
@@ -101,6 +105,7 @@ export function useNotificationsSocket(options?: NotificationsSocketOptions): vo
       socket.off('notifications:new');
       socket.off('notifications:error');
       socket.off('connect_error');
+      socket.off('device:challenged');
       socket.disconnect();
       socketRef.current = null;
     };

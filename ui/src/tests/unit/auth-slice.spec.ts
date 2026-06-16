@@ -64,6 +64,8 @@ describe('authSlice', () => {
           refreshToken: 'saved-refresh',
           user: mockUser,
           hydrated: true,
+          deviceChanged: false,
+          challengerDevice: null,
         }),
       );
       const state = store.getState().auth;

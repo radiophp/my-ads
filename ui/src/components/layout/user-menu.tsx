@@ -3,7 +3,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocale } from 'next-intl';
-import { Bell, BellOff, LogOut, Settings, UserRound } from 'lucide-react';
+import { Bell, BellOff, LogOut, Monitor, Settings, UserRound } from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,8 @@ type UserMenuProps = {
   notificationLabel: string;
   notificationButtonClass: string;
   onToggleNotifications: () => void;
+  sessionsLabel?: string;
+  sessionsHref?: string;
 };
 
 export function UserMenu({
@@ -44,6 +46,8 @@ export function UserMenu({
   notificationLabel,
   notificationButtonClass,
   onToggleNotifications,
+  sessionsLabel = '',
+  sessionsHref = '',
 }: UserMenuProps) {
   const [open, setOpen] = useState(false);
   const [avatarError, setAvatarError] = useState(false);
@@ -160,6 +164,20 @@ export function UserMenu({
             <UserRound className="size-4" aria-hidden />
             <span>{profileLabel}</span>
           </Link>
+          {sessionsLabel && sessionsHref ? (
+            <Link
+              href={sessionsHref}
+              className={cn(
+                'flex w-full items-center gap-2 px-3 py-2 text-left transition-colors',
+                'hover:bg-secondary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+              )}
+              role="menuitem"
+              onClick={() => setOpen(false)}
+            >
+              <Monitor className="size-4" aria-hidden />
+              <span>{sessionsLabel}</span>
+            </Link>
+          ) : null}
           {isAdmin ? (
             <Link
               href={adminHref}

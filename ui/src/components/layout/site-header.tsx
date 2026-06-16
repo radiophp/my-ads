@@ -43,6 +43,7 @@ import {
   BookOpen,
   Info,
   LogIn,
+  Monitor,
 } from 'lucide-react';
 import { useNotificationsSocket } from '@/features/notifications/useNotificationsSocket';
 import { useNotificationPreferences } from '@/features/notifications/useNotificationPreferences';
@@ -569,6 +570,8 @@ export function SiteHeader() {
               notificationLabel={notificationLabel}
               notificationButtonClass={notificationButtonClass}
               onToggleNotifications={handleToggleNotifications}
+              sessionsLabel={t('header.menu.sessions')}
+              sessionsHref="/dashboard/sessions"
             />
           ) : null}
         </div>
@@ -598,6 +601,8 @@ export function SiteHeader() {
         ringBinderLoadingLabel={t('dashboard.filters.ringBinder.loading')}
         ringBinderEmptyLabel={t('ringBinder.list.emptyTitle')}
         ringBinderErrorLabel={t('ringBinder.list.error')}
+        sessionsLabel={t('header.menu.sessions')}
+        sessionsHref="/dashboard/sessions"
         menuTitle={t('header.mobileMenuTitle')}
         closeLabel={t('header.mobileMenuClose')}
         notificationsEnabled={notificationsEnabled}
@@ -685,6 +690,8 @@ type MobileNavigationDrawerProps = {
   logoutLabel: string;
   profileHref: string;
   profileLabel: string;
+  sessionsLabel: string;
+  sessionsHref: string;
   menuTitle: string;
   closeLabel: string;
   ringBinderFolders: RingBinderFolder[];
@@ -719,6 +726,8 @@ function MobileNavigationDrawer({
   logoutLabel,
   profileHref,
   profileLabel,
+  sessionsLabel,
+  sessionsHref,
   menuTitle,
   closeLabel,
   ringBinderFolders,
@@ -825,6 +834,14 @@ function MobileNavigationDrawer({
                   <span>{adminLabel}</span>
                 </Link>
               ) : null}
+                <Link
+                  href={sessionsHref}
+                  className="mt-2 flex items-center gap-2 rounded-lg px-2 py-1 text-sm text-muted-foreground transition hover:bg-secondary/60 hover:text-foreground"
+                  onClick={() => onOpenChange(false)}
+                >
+                  <Monitor className="size-4" aria-hidden />
+                  <span>{sessionsLabel}</span>
+                </Link>
             </div>
           ) : null}
           <nav className="flex flex-col gap-2 p-4">

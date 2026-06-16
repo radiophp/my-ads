@@ -1,8 +1,8 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
 
-import { clearAuth, setAuth } from '@/features/auth/authSlice';
-import type { AuthState } from '@/features/auth/authSlice';
+import { clearAuth, setAuth, deviceChanged } from '@/features/auth/authSlice';
+import type { AuthState, ChallengerDevice } from '@/features/auth/authSlice';
 import type { AuthResponse } from '@/types/auth';
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:6200/api';
@@ -42,6 +42,13 @@ const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, FetchBaseQue
   let result = await rawBaseQuery(args, api, extraOptions);
 
   if (result.error && result.error.status === 401) {
+    const errorBody = result.error.data as Record<string, unknown> | undefined;
+    const msgBody = errorBody?.message as Record<string, unknown> | undefined;
+    if (msgBody?.code === 'DEVICE_CHANGED') {
+      api.dispatch(deviceChanged(msgBody.currentDevice as ChallengerDevice | null | undefined));
+      return result;
+    }
+
     const state = api.getState() as { auth?: AuthState };
     const refreshToken = state?.auth?.refreshToken;
 

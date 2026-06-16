@@ -90,6 +90,7 @@ export function Breadcrumbs({ className, force = false }: BreadcrumbsProps) {
     about: navT('about'),
     login: navT('login'),
     profile: profileT('title'),
+    sessions: breadcrumbT('sessions'),
     posts: breadcrumbT('posts'),
     preview: breadcrumbT('preview'),
     offline: breadcrumbT('offline'),

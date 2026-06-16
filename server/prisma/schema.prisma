@@ -98,6 +98,7 @@ model User {
   role               Role     @default(USER)
   isActive           Boolean  @default(true)
   hashedRefreshToken String?
+  tokenVersion       Int      @default(0)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
   ringBinderFolders  RingBinderFolder[]
@@ -112,8 +113,27 @@ model User {
   discountRedemptions DiscountCodeRedemption[]
   subscriptions      UserSubscription[]
   pendingBonusDays   Int @default(0)
+  devices            UserDevice[]
 
   @@index([cityId])
+}
+
+model UserDevice {
+  id           String   @id @default(uuid())
+  userId       String
+  deviceId     String
+  name         String?
+  type         String?
+  userAgent    String?
+  ipAddress    String?
+  lastActiveAt DateTime @default(now())
+  createdAt    DateTime @default(now())
+  isActive     Boolean  @default(false)
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, deviceId])
+  @@index([userId, isActive])
 }
 
 model City {

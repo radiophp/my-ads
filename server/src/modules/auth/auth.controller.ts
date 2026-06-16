@@ -1,8 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   NotFoundException,
+  Param,
   Patch,
   Post,
   Query,
@@ -11,13 +13,16 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { Request } from 'express';
-import type { FastifyReply } from 'fastify';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 import * as QRCode from 'qrcode';
-import { AuthService } from './auth.service';
+import { AuthService, type JwtPayload } from './auth.service';
+import { DeviceService } from './device.service';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { RequestOtpDto } from './dto/request-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { ConfirmDeviceDto } from './dto/confirm-device.dto';
+import { CancelDeviceDto } from './dto/cancel-device.dto';
 import { BaleLoginDto } from './dto/bale-login.dto';
 import { RateLimit } from '@app/common/decorators/rate-limit.decorator';
 import { RateLimitGuard } from '@app/common/guards/rate-limit/rate-limit.guard';
@@ -49,6 +54,7 @@ const qrCache = new Map<string, { buffer: Buffer; expiresAt: number }>();
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
+    private readonly deviceService: DeviceService,
     private readonly usersService: UsersService,
     private readonly prismaService: PrismaService,
   ) {}
@@ -97,8 +103,18 @@ export class AuthController {
   @ApiOperation({ summary: 'Login via linked Bale account (no OTP)' })
   @ApiOkResponse({ type: AuthResponseDto })
   @ApiUnauthorizedResponse({ description: 'Bale account not linked' })
-  async baleLogin(@Body() dto: BaleLoginDto): Promise<AuthResponseDto> {
-    return this.authService.baleLogin(dto.phone);
+  async baleLogin(@Body() dto: BaleLoginDto): Promise<unknown> {
+    return this.authService.baleLogin(
+      dto.phone,
+      dto.deviceId
+        ? {
+            deviceId: dto.deviceId,
+            deviceName: dto.deviceName,
+            deviceType: dto.deviceType,
+            userAgent: dto.userAgent,
+          }
+        : undefined,
+    );
   }
 
   @Get('bale-qr')
@@ -152,8 +168,26 @@ export class AuthController {
   @ApiOperation({ summary: 'Verify the received OTP and obtain JWT tokens' })
   @ApiOkResponse({ type: AuthResponseDto })
   @ApiUnauthorizedResponse({ description: 'Invalid or expired OTP code' })
-  async verifyOtp(@Body() dto: VerifyOtpDto): Promise<AuthResponseDto> {
-    return this.authService.verifyOtp(dto);
+  async verifyOtp(@Body() dto: VerifyOtpDto, @Req() request: FastifyRequest): Promise<unknown> {
+    const ipAddress = request.ip;
+    return this.authService.verifyOtp(dto, ipAddress);
+  }
+
+  @Post('confirm-device')
+  @Public()
+  @RateLimit({ limit: 5, ttlSeconds: 60 })
+  @ApiOperation({ summary: 'Confirm login on a new device' })
+  async confirmDevice(@Body() dto: ConfirmDeviceDto): Promise<unknown> {
+    return this.authService.confirmDevice(dto.pendingSessionToken);
+  }
+
+  @Post('cancel-device')
+  @Public()
+  @RateLimit({ limit: 5, ttlSeconds: 60 })
+  @ApiOperation({ summary: 'Cancel login on a new device' })
+  async cancelDevice(@Body() dto: CancelDeviceDto): Promise<SuccessResponseDto> {
+    await this.authService.cancelDevice(dto.pendingSessionToken);
+    return { success: true };
   }
 
   @Post('refresh')
@@ -164,20 +198,42 @@ export class AuthController {
   @ApiOkResponse({ type: AuthResponseDto })
   @ApiUnauthorizedResponse({ description: 'Refresh token is invalid or revoked' })
   @ApiBody({ type: RefreshTokenDto })
-  async refresh(@Body() dto: RefreshTokenDto, @Req() request: Request): Promise<AuthResponseDto> {
-    const userId = (request.user as { sub: string })?.sub;
-    return this.authService.refreshTokens(userId);
+  async refresh(@Body() dto: RefreshTokenDto, @Req() request: Request): Promise<unknown> {
+    const payload = request.user as JwtPayload;
+    return this.authService.refreshTokens(payload.sub, payload.deviceId ?? '');
   }
 
   @Post('logout')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Invalidate the current refresh token' })
+  @ApiOperation({ summary: 'Invalidate all refresh tokens and deactivate all devices' })
   @ApiOkResponse({ type: SuccessResponseDto })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid access token' })
   async logout(@Req() request: Request): Promise<SuccessResponseDto> {
     const userId = (request.user as { sub: string })?.sub;
-    await this.usersService.updateRefreshToken(userId, null);
+    await this.authService.logout(userId);
+    return { success: true };
+  }
+
+  @Get('devices')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'List all known devices for the current user' })
+  async listDevices(@Req() request: Request): Promise<unknown> {
+    const userId = (request.user as { sub: string })?.sub;
+    return this.deviceService.getUserDevices(userId);
+  }
+
+  @Delete('devices/:deviceId')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Deactivate a specific device' })
+  async deleteDevice(
+    @Req() request: Request,
+    @Param('deviceId') deviceId: string,
+  ): Promise<SuccessResponseDto> {
+    const userId = (request.user as { sub: string })?.sub;
+    await this.deviceService.deactivateDevice(userId, deviceId);
     return { success: true };
   }
 }

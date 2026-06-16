@@ -6,7 +6,6 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -42,31 +41,31 @@ export function DeviceConfirmDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{t('title')}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {currentDevice ? (
-              <>
-                <div className="mb-2">{t('description')}</div>
-                <div className="rounded-md bg-muted p-3 text-sm">
-                  <p className="font-medium">
-                    {getDeviceDescription(currentDevice.name, currentDevice.type)}
-                  </p>
-                  {currentDevice.ipAddress && (
-                    <p className="mt-1 text-muted-foreground">
-                      {t('ip')}: {currentDevice.ipAddress}
-                    </p>
-                  )}
-                  {currentDevice.lastActiveAt && (
-                    <p className="text-muted-foreground">
-                      {t('lastActive')}: {new Date(currentDevice.lastActiveAt).toLocaleString()}
-                    </p>
-                  )}
-                </div>
-              </>
-            ) : (
-              <p>{t('noDevice')}</p>
-            )}
-          </AlertDialogDescription>
         </AlertDialogHeader>
+        <div className="px-6 pb-6 text-sm text-muted-foreground">
+          {currentDevice ? (
+            <>
+              <div className="mb-2">{t('description')}</div>
+              <div className="rounded-md bg-muted p-3 text-sm">
+                <div className="font-medium">
+                  {getDeviceDescription(currentDevice.name, currentDevice.type)}
+                </div>
+                {currentDevice.ipAddress && (
+                  <div className="mt-1 text-muted-foreground">
+                    {t('ip')}: {currentDevice.ipAddress}
+                  </div>
+                )}
+                {currentDevice.lastActiveAt && (
+                  <div className="text-muted-foreground">
+                    {t('lastActive')}: {new Date(currentDevice.lastActiveAt).toLocaleString()}
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <div>{t('noDevice')}</div>
+          )}
+        </div>
         <AlertDialogFooter>
           <AlertDialogCancel onClick={onCancel} disabled={isLoading}>
             {t('cancel')}

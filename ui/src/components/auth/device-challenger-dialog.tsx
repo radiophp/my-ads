@@ -5,7 +5,6 @@ import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogContent,
-  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -31,25 +30,25 @@ export function DeviceChallengerDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{t('title')}</AlertDialogTitle>
-          <AlertDialogDescription>
-            <div className="mb-2">{t('description')}</div>
-            {challengerDevice && (
-              <div className="rounded-md bg-muted p-3 text-sm">
-                <p className="font-medium">
-                  {getDeviceDescription(challengerDevice.name, challengerDevice.type)}
-                </p>
-                {challengerDevice.ipAddress && (
-                  <p className="mt-1 text-muted-foreground">
-                    {t('ip')}: {challengerDevice.ipAddress}
-                  </p>
-                )}
-                <p className="text-muted-foreground">
-                  {t('time')}: {new Date(challengerDevice.lastActiveAt).toLocaleString()}
-                </p>
-              </div>
-            )}
-          </AlertDialogDescription>
         </AlertDialogHeader>
+        <div className="px-6 pb-6 text-sm text-muted-foreground">
+          <div className="mb-2">{t('description')}</div>
+          {challengerDevice && (
+            <div className="rounded-md bg-muted p-3 text-sm">
+              <div className="font-medium">
+                {getDeviceDescription(challengerDevice.name, challengerDevice.type)}
+              </div>
+              {challengerDevice.ipAddress && (
+                <div className="mt-1 text-muted-foreground">
+                  {t('ip')}: {challengerDevice.ipAddress}
+                </div>
+              )}
+              <div className="text-muted-foreground">
+                {t('time')}: {new Date(challengerDevice.lastActiveAt).toLocaleString()}
+              </div>
+            </div>
+          )}
+        </div>
         <AlertDialogFooter>
           <AlertDialogAction onClick={onClose}>
             {t('ok')}

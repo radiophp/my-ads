@@ -350,6 +350,7 @@ model DivarPost {
   notifications   Notification[]
   notificationsChecked Boolean  @default(false)
   notificationsCheckedAt DateTime?
+  archivedAt           DateTime?
 
   @@index([categoryId])
   @@index([categorySlug])

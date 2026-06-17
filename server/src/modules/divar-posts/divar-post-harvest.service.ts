@@ -275,12 +275,15 @@ export class DivarPostHarvestService {
         });
 
         if (existing.length > 0) {
-          const publishTimestamps = await this.prisma.divarPost.findMany({
+          const divarPosts = await this.prisma.divarPost.findMany({
             where: { externalId: { in: existing.map((record) => record.externalId) } },
-            select: { externalId: true, publishedAt: true },
+            select: { externalId: true, publishedAt: true, archivedAt: true },
           });
           const publishLookup = new Map(
-            publishTimestamps.map((record) => [record.externalId, record.publishedAt ?? null]),
+            divarPosts.map((record) => [record.externalId, record.publishedAt ?? null]),
+          );
+          const archivedTokens = new Set(
+            divarPosts.filter((p) => p.archivedAt !== null).map((p) => p.externalId),
           );
           const now = new Date();
           const threshold = now.getTime() - this.refetchWindowMs;
@@ -294,6 +297,12 @@ export class DivarPostHarvestService {
             if (record.status === PostQueueStatus.PROCESSING) {
               this.logger.debug(
                 `Duplicate token currently processing, skipping reactivation | token=${record.externalId} | category=${category.slug} | location=${location.label}`,
+              );
+              return;
+            }
+            if (archivedTokens.has(record.externalId)) {
+              this.logger.log(
+                `Skipping archived post | token=${record.externalId} | category=${category.slug} | location=${location.label}`,
               );
               return;
             }

@@ -260,55 +260,58 @@ export class ArkaPhoneTransferService {
 
       const postByExternalId = new Map(posts.map((p) => [p.externalId, p]));
 
-      await this.prisma.$transaction(async (tx) => {
-        for (const record of arkaRecords) {
-          const post = record.externalId ? postByExternalId.get(record.externalId) : undefined;
-          if (!post || !record.phoneNumber || record.phoneNumber === '09000000000') {
-            continue;
-          }
-          const phoneNumber = record.phoneNumber;
-          const ownerName = record.malkName ?? null;
-          await tx.divarPost.update({
-            where: { id: post.id },
-            data: {
-              phoneNumber,
-              ownerName: ownerName ?? undefined,
-              phoneFetchStatus: PhoneFetchStatus.DONE,
-              phoneFetchLockedUntil: null,
-              phoneFetchLeaseId: null,
-              phoneFetchWorker: null,
-              phoneFetchLastError: null,
-            },
-          });
-          if (post.businessRef) {
-            await tx.businessPhoneCache.upsert({
-              where: { businessRef: post.businessRef },
-              update: {
+      await this.prisma.$transaction(
+        async (tx) => {
+          for (const record of arkaRecords) {
+            const post = record.externalId ? postByExternalId.get(record.externalId) : undefined;
+            if (!post || !record.phoneNumber || record.phoneNumber === '09000000000') {
+              continue;
+            }
+            const phoneNumber = record.phoneNumber;
+            const ownerName = record.malkName ?? null;
+            await tx.divarPost.update({
+              where: { id: post.id },
+              data: {
                 phoneNumber,
-                fetchedAt: now,
-                lockedUntil: null,
-                updatedAt: now,
-              },
-              create: {
-                businessRef: post.businessRef,
-                phoneNumber,
-                fetchedAt: now,
-                lockedUntil: null,
+                ownerName: ownerName ?? undefined,
+                phoneFetchStatus: PhoneFetchStatus.DONE,
+                phoneFetchLockedUntil: null,
+                phoneFetchLeaseId: null,
+                phoneFetchWorker: null,
+                phoneFetchLastError: null,
               },
             });
+            if (post.businessRef) {
+              await tx.businessPhoneCache.upsert({
+                where: { businessRef: post.businessRef },
+                update: {
+                  phoneNumber,
+                  fetchedAt: now,
+                  lockedUntil: null,
+                  updatedAt: now,
+                },
+                create: {
+                  businessRef: post.businessRef,
+                  phoneNumber,
+                  fetchedAt: now,
+                  lockedUntil: null,
+                },
+              });
+            }
+            await tx.arkaPhoneRecord.update({
+              where: { id: record.id },
+              data: {
+                status: ArkaTransferStatus.TRANSFERRED,
+                transferredAt: now,
+                transferLockedUntil: null,
+                transferLastError: null,
+              },
+            });
+            total += 1;
           }
-          await tx.arkaPhoneRecord.update({
-            where: { id: record.id },
-            data: {
-              status: ArkaTransferStatus.TRANSFERRED,
-              transferredAt: now,
-              transferLockedUntil: null,
-              transferLastError: null,
-            },
-          });
-          total += 1;
-        }
-      });
+        },
+        { maxWait: 30_000, timeout: 120_000 },
+      );
     }
 
     if (total === 0) {

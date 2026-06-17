@@ -9,11 +9,15 @@ import {
   type Prisma,
 } from '@prisma/client';
 import { schedulerCronExpressions } from '@app/platform/config/scheduler.config';
+import { ProxyAgent } from 'undici';
 
 const DIVAR_POST_DETAILS_URL = 'https://api.divar.ir/v8/posts-v2/web';
 const DEFAULT_BATCH_SIZE = 3;
-const MAX_ATTEMPTS = 5;
-const MIN_BATCH_INTERVAL_MS = 1000;
+const DEFAULT_MAX_ATTEMPTS = 5;
+const DEFAULT_BATCH_INTERVAL_MS = 1500;
+const DEFAULT_FETCH_DELAY_MS = 1200;
+const DEFAULT_JITTER_MIN_MS = 200;
+const DEFAULT_JITTER_MAX_MS = 800;
 const DEFAULT_RATE_LIMIT_SLEEP_MS = 5000;
 const DEFAULT_PROCESSING_TIMEOUT_MINUTES = 1;
 const BROWSER_USER_AGENTS: readonly string[] = [
@@ -78,11 +82,18 @@ export class DivarPostFetchService {
   private readonly logger = new Logger(DivarPostFetchService.name);
   private readonly sessionCookie?: string;
   private readonly batchSize: number;
+  private readonly maxAttempts: number;
+  private readonly batchIntervalMs: number;
+  private readonly fetchDelayMs: number;
+  private readonly jitterMinMs: number;
+  private readonly jitterMaxMs: number;
   private readonly requestTimeoutMs: number;
   private readonly processingTimeoutMs: number;
   private fetchRunning = false;
   private readonly schedulerEnabled: boolean;
   private readonly userAgents = BROWSER_USER_AGENTS;
+  private readonly proxies: (string | null)[] = [];
+  private proxyIndex = 0;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -92,11 +103,38 @@ export class DivarPostFetchService {
     this.batchSize =
       this.configService.get<number>('DIVAR_POST_FETCH_BATCH_SIZE', { infer: true }) ??
       DEFAULT_BATCH_SIZE;
+    this.maxAttempts =
+      this.configService.get<number>('DIVAR_POST_FETCH_MAX_ATTEMPTS', { infer: true }) ??
+      DEFAULT_MAX_ATTEMPTS;
+    this.batchIntervalMs =
+      this.configService.get<number>('DIVAR_POST_FETCH_BATCH_INTERVAL_MS', { infer: true }) ??
+      DEFAULT_BATCH_INTERVAL_MS;
+    this.fetchDelayMs =
+      this.configService.get<number>('DIVAR_POST_FETCH_DELAY_MS', { infer: true }) ??
+      DEFAULT_FETCH_DELAY_MS;
+    this.jitterMinMs =
+      this.configService.get<number>('DIVAR_POST_FETCH_JITTER_MIN_MS', { infer: true }) ??
+      DEFAULT_JITTER_MIN_MS;
+    this.jitterMaxMs =
+      this.configService.get<number>('DIVAR_POST_FETCH_JITTER_MAX_MS', { infer: true }) ??
+      DEFAULT_JITTER_MAX_MS;
     this.requestTimeoutMs =
       this.configService.get<number>('DIVAR_POST_FETCH_TIMEOUT_MS', { infer: true }) ?? 15000;
     this.processingTimeoutMs = DEFAULT_PROCESSING_TIMEOUT_MINUTES * 60 * 1000;
     this.schedulerEnabled =
       this.configService.get<boolean>('scheduler.enabled', { infer: true }) ?? false;
+
+    const proxyList = this.configService.get<string>('DIVAR_FETCH_PROXIES');
+    if (proxyList) {
+      const parsed = proxyList
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      if (parsed.length > 0) {
+        this.proxies.push(null, ...parsed);
+        this.logger.log(`Proxy rotation enabled with ${parsed.length} proxy/proxies`);
+      }
+    }
   }
 
   @Cron(schedulerCronExpressions.divarFetch, {
@@ -136,12 +174,16 @@ export class DivarPostFetchService {
       summary.attempted += batch.length;
 
       this.logger.log(
-        `Fetching ${batch.length} posts in parallel (tokens: ${batch
-          .map((job) => job.externalId)
-          .join(', ')})`,
+        `Fetching ${batch.length} posts (tokens: ${batch.map((job) => job.externalId).join(', ')})`,
       );
 
-      const results = await Promise.all(batch.map((job) => this.processJob(job)));
+      const results = [];
+      for (let i = 0; i < batch.length; i++) {
+        results.push(await this.processJob(batch[i]));
+        if (i < batch.length - 1 && this.fetchDelayMs > 0) {
+          await this.sleep(this.fetchDelayMs);
+        }
+      }
 
       const batchSuccess = results.filter((result) => result.success).length;
       const batchFailure = results.length - batchSuccess;
@@ -157,8 +199,8 @@ export class DivarPostFetchService {
       }
 
       const elapsed = Date.now() - batchStart;
-      if (elapsed < MIN_BATCH_INTERVAL_MS) {
-        await this.sleep(MIN_BATCH_INTERVAL_MS - elapsed);
+      if (elapsed < this.batchIntervalMs) {
+        await this.sleep(this.batchIntervalMs - elapsed);
       }
     }
 
@@ -254,6 +296,11 @@ export class DivarPostFetchService {
         await this.sleep(retryAfter);
       }
 
+      if (error instanceof DivarHttpError && error.status === 404) {
+        await this.handleArchived(job);
+        return { job, success: true };
+      }
+
       await this.markFailure(job, error as Error);
       return { job, success: false };
     }
@@ -265,6 +312,15 @@ export class DivarPostFetchService {
     const userAgent = this.pickUserAgent();
     await this.delayJitter();
 
+    const proxyUrl =
+      this.proxies.length > 1 ? this.proxies[this.proxyIndex++ % this.proxies.length] : null;
+
+    const dispatcher: any = proxyUrl ? new ProxyAgent(proxyUrl) : undefined;
+
+    this.logger.debug(
+      proxyUrl ? `Fetching ${token} via proxy ${proxyUrl}` : `Fetching ${token} directly`,
+    );
+
     try {
       const response = await fetch(`${DIVAR_POST_DETAILS_URL}/${token}`, {
         method: 'GET',
@@ -275,6 +331,7 @@ export class DivarPostFetchService {
           Origin: 'https://divar.ir',
           ...(this.sessionCookie ? { Cookie: this.sessionCookie } : {}),
         },
+        ...(dispatcher ? { dispatcher } : {}),
         signal: controller.signal,
       });
 
@@ -295,9 +352,29 @@ export class DivarPostFetchService {
     }
   }
 
+  private async handleArchived(job: PostToReadQueue): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      await tx.postToReadQueue.update({
+        where: { id: job.id },
+        data: {
+          status: PostQueueStatus.COMPLETED,
+          lastFetchedAt: new Date(),
+        },
+      });
+
+      await tx.divarPost.updateMany({
+        where: { externalId: job.externalId, archivedAt: null },
+        data: { archivedAt: new Date() },
+      });
+    });
+
+    this.logger.log(`Post ${job.externalId} returned 404 — marked as archived.`);
+  }
+
   private async markFailure(job: PostToReadQueue, error: Error): Promise<void> {
     const nextAttempts = job.fetchAttempts + 1;
-    const status = nextAttempts >= MAX_ATTEMPTS ? PostQueueStatus.FAILED : PostQueueStatus.PENDING;
+    const status =
+      nextAttempts >= this.maxAttempts ? PostQueueStatus.FAILED : PostQueueStatus.PENDING;
 
     await this.prisma.postToReadQueue.update({
       where: { id: job.id },
@@ -310,7 +387,7 @@ export class DivarPostFetchService {
 
     const level = status === PostQueueStatus.FAILED ? 'error' : 'warn';
     this.logger[level](
-      `Post ${job.externalId} fetch failed (attempt ${nextAttempts}/${MAX_ATTEMPTS}). Status=${status}. Error: ${error.message}`,
+      `Post ${job.externalId} fetch failed (attempt ${nextAttempts}/${this.maxAttempts}). Status=${status}. Error: ${error.message}`,
     );
   }
 
@@ -327,9 +404,8 @@ export class DivarPostFetchService {
   }
 
   private async delayJitter(): Promise<void> {
-    const min = 50;
-    const max = 150;
-    const jitter = Math.floor(Math.random() * (max - min + 1)) + min;
+    const jitter =
+      Math.floor(Math.random() * (this.jitterMaxMs - this.jitterMinMs + 1)) + this.jitterMinMs;
     await this.sleep(jitter);
   }
 }

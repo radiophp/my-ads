@@ -180,106 +180,109 @@ export class DivarPostAnalyzeService {
       return Math.trunc(value);
     };
 
-    await this.prisma.$transaction(async (tx) => {
-      const commonData = {
-        source: job.source,
-        externalId: job.externalId,
-        categoryId,
-        categorySlug,
-        cat1: parsed.cat1 ?? null,
-        cat2: parsed.cat2 ?? null,
-        cat3: parsed.cat3 ?? categorySlug,
-        title: parsed.title ?? null,
-        seoTitle: parsed.seoTitle ?? null,
-        seoDescription: parsed.seoDescription ?? null,
-        displayTitle: parsed.displayTitle ?? null,
-        displaySubtitle: parsed.displaySubtitle ?? null,
-        shareTitle: parsed.shareTitle ?? null,
-        shareUrl: parsed.shareUrl ?? null,
-        permalink: parsed.permalink ?? parsed.shareUrl ?? null,
-        description: parsed.description ?? null,
-        contactUuid: parsed.contactUuid ?? null,
-        businessType: parsed.businessType ?? null,
-        conversionType: parsed.conversionType ?? null,
-        expiresAt: parsed.expiresAt ?? null,
-        publishedAt,
-        publishedAtJalali,
-        status: PostAnalysisStatus.COMPLETED,
-        priceTotal: decimal(parsed.priceTotal),
-        pricePerSquare: decimal(parsed.pricePerSquare),
-        depositAmount: decimal(parsed.depositAmount),
-        rentAmount: decimal(parsed.rentAmount),
-        dailyRateNormal: decimal(parsed.dailyRateNormal),
-        dailyRateWeekend: decimal(parsed.dailyRateWeekend),
-        dailyRateHoliday: decimal(parsed.dailyRateHoliday),
-        extraPersonFee: decimal(parsed.extraPersonFee),
-        area: toInt(parsed.area),
-        areaLabel: parsed.areaLabel ?? null,
-        landArea: toInt(parsed.landArea),
-        landAreaLabel: parsed.landAreaLabel ?? null,
-        rooms: toInt(parsed.rooms),
-        roomsLabel: parsed.roomsLabel ?? null,
-        floor: toInt(parsed.floor),
-        floorLabel: parsed.floorLabel ?? null,
-        floorsCount: toInt(parsed.floorsCount),
-        unitPerFloor: toInt(parsed.unitPerFloor),
-        yearBuilt: toInt(parsed.yearBuilt),
-        yearBuiltLabel: parsed.yearBuiltLabel ?? null,
-        capacity: toInt(parsed.capacity),
-        capacityLabel: parsed.capacityLabel ?? null,
-        hasParking: parsed.hasParking ?? null,
-        hasElevator: parsed.hasElevator ?? null,
-        hasWarehouse: parsed.hasWarehouse ?? null,
-        hasBalcony: parsed.hasBalcony ?? null,
-        isRebuilt: parsed.isRebuilt ?? null,
-        photosVerified: parsed.photosVerified ?? null,
-        imageCount: parsed.imageCount ?? (parsed.medias.length > 0 ? parsed.medias.length : null),
-        latitude: decimal(parsed.latitude),
-        longitude: decimal(parsed.longitude),
-        provinceId,
-        provinceName,
-        cityId,
-        citySlug,
-        cityName,
-        districtId,
-        districtSlug: parsed.districtSlug ?? null,
-        districtName: parsed.districtName ?? null,
-        rawPayload: job.payload as Prisma.InputJsonValue,
-        updatedAt: new Date(),
-      };
-
-      const record = await tx.divarPost.upsert({
-        where: { readQueueId: job.readQueueId },
-        create: {
-          readQueueId: job.readQueueId,
-          ...commonData,
-        },
-        update: commonData,
-      });
-
-      await tx.divarPostMedia.deleteMany({ where: { postId: record.id } });
-      if (parsed.medias.length > 0) {
-        await tx.divarPostMedia.createMany({
-          data: parsed.medias.map((media, index) => this.mapMedia(record.id, media, index)),
-        });
-      }
-
-      await tx.divarPostAttribute.deleteMany({ where: { postId: record.id } });
-      if (parsed.attributes.length > 0) {
-        await tx.divarPostAttribute.createMany({
-          data: parsed.attributes.map((attribute) => this.mapAttribute(record.id, attribute)),
-        });
-      }
-
-      await tx.postToAnalyzeQueue.update({
-        where: { id: job.id },
-        data: {
+    await this.prisma.$transaction(
+      async (tx) => {
+        const commonData = {
+          source: job.source,
+          externalId: job.externalId,
+          categoryId,
+          categorySlug,
+          cat1: parsed.cat1 ?? null,
+          cat2: parsed.cat2 ?? null,
+          cat3: parsed.cat3 ?? categorySlug,
+          title: parsed.title ?? null,
+          seoTitle: parsed.seoTitle ?? null,
+          seoDescription: parsed.seoDescription ?? null,
+          displayTitle: parsed.displayTitle ?? null,
+          displaySubtitle: parsed.displaySubtitle ?? null,
+          shareTitle: parsed.shareTitle ?? null,
+          shareUrl: parsed.shareUrl ?? null,
+          permalink: parsed.permalink ?? parsed.shareUrl ?? null,
+          description: parsed.description ?? null,
+          contactUuid: parsed.contactUuid ?? null,
+          businessType: parsed.businessType ?? null,
+          conversionType: parsed.conversionType ?? null,
+          expiresAt: parsed.expiresAt ?? null,
+          publishedAt,
+          publishedAtJalali,
           status: PostAnalysisStatus.COMPLETED,
-          retryCount: 0,
-          errorMessage: null,
-        },
-      });
-    });
+          priceTotal: decimal(parsed.priceTotal),
+          pricePerSquare: decimal(parsed.pricePerSquare),
+          depositAmount: decimal(parsed.depositAmount),
+          rentAmount: decimal(parsed.rentAmount),
+          dailyRateNormal: decimal(parsed.dailyRateNormal),
+          dailyRateWeekend: decimal(parsed.dailyRateWeekend),
+          dailyRateHoliday: decimal(parsed.dailyRateHoliday),
+          extraPersonFee: decimal(parsed.extraPersonFee),
+          area: toInt(parsed.area),
+          areaLabel: parsed.areaLabel ?? null,
+          landArea: toInt(parsed.landArea),
+          landAreaLabel: parsed.landAreaLabel ?? null,
+          rooms: toInt(parsed.rooms),
+          roomsLabel: parsed.roomsLabel ?? null,
+          floor: toInt(parsed.floor),
+          floorLabel: parsed.floorLabel ?? null,
+          floorsCount: toInt(parsed.floorsCount),
+          unitPerFloor: toInt(parsed.unitPerFloor),
+          yearBuilt: toInt(parsed.yearBuilt),
+          yearBuiltLabel: parsed.yearBuiltLabel ?? null,
+          capacity: toInt(parsed.capacity),
+          capacityLabel: parsed.capacityLabel ?? null,
+          hasParking: parsed.hasParking ?? null,
+          hasElevator: parsed.hasElevator ?? null,
+          hasWarehouse: parsed.hasWarehouse ?? null,
+          hasBalcony: parsed.hasBalcony ?? null,
+          isRebuilt: parsed.isRebuilt ?? null,
+          photosVerified: parsed.photosVerified ?? null,
+          imageCount: parsed.imageCount ?? (parsed.medias.length > 0 ? parsed.medias.length : null),
+          latitude: decimal(parsed.latitude),
+          longitude: decimal(parsed.longitude),
+          provinceId,
+          provinceName,
+          cityId,
+          citySlug,
+          cityName,
+          districtId,
+          districtSlug: parsed.districtSlug ?? null,
+          districtName: parsed.districtName ?? null,
+          rawPayload: job.payload as Prisma.InputJsonValue,
+          updatedAt: new Date(),
+        };
+
+        const record = await tx.divarPost.upsert({
+          where: { readQueueId: job.readQueueId },
+          create: {
+            readQueueId: job.readQueueId,
+            ...commonData,
+          },
+          update: commonData,
+        });
+
+        await tx.divarPostMedia.deleteMany({ where: { postId: record.id } });
+        if (parsed.medias.length > 0) {
+          await tx.divarPostMedia.createMany({
+            data: parsed.medias.map((media, index) => this.mapMedia(record.id, media, index)),
+          });
+        }
+
+        await tx.divarPostAttribute.deleteMany({ where: { postId: record.id } });
+        if (parsed.attributes.length > 0) {
+          await tx.divarPostAttribute.createMany({
+            data: parsed.attributes.map((attribute) => this.mapAttribute(record.id, attribute)),
+          });
+        }
+
+        await tx.postToAnalyzeQueue.update({
+          where: { id: job.id },
+          data: {
+            status: PostAnalysisStatus.COMPLETED,
+            retryCount: 0,
+            errorMessage: null,
+          },
+        });
+      },
+      { maxWait: 30_000, timeout: 120_000 },
+    );
   }
 
   private mapMedia(postId: string, media: ParsedMedia, fallbackIndex: number) {

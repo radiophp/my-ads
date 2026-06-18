@@ -715,8 +715,10 @@ services:
       - .env.prod
     environment:
       CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN}
+    configs:
+      - source: caddyfile
+        target: /etc/caddy/Caddyfile
     volumes:
-      - ./Caddyfile.prod:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
@@ -764,6 +766,10 @@ networks:
   app_net:
     driver: overlay
     attachable: true
+
+configs:
+  caddyfile:
+    file: ./Caddyfile.prod
 
 volumes:
   postgres_data:

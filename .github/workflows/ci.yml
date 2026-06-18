@@ -510,7 +510,9 @@ jobs:
           PROMETHEUS_PORT: ${{ vars.PROMETHEUS_PORT || '6322' }}
           GRAFANA_PORT: ${{ vars.GRAFANA_PORT || '6323' }}
           LOKI_PORT: ${{ vars.LOKI_PORT || '6319' }}
-        run: docker stack deploy -c docker-compose-prod.yml "$STACK_NAME" --resolve-image never
+        run: |
+          docker config rm "${STACK_NAME}_caddyfile" 2>/dev/null || true
+          docker stack deploy -c docker-compose-prod.yml "$STACK_NAME" --resolve-image never
 
       - name: Wait for PostgreSQL to be ready
         env:

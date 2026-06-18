@@ -769,6 +769,7 @@ networks:
 
 configs:
   caddyfile:
+    name: ${CADDY_CONFIG_NAME:-caddyfile}
     file: ./Caddyfile.prod
 
 volumes:

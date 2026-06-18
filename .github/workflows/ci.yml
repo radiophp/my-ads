@@ -511,7 +511,9 @@ jobs:
           GRAFANA_PORT: ${{ vars.GRAFANA_PORT || '6323' }}
           LOKI_PORT: ${{ vars.LOKI_PORT || '6319' }}
         run: |
-          docker config rm "${STACK_NAME}_caddyfile" 2>/dev/null || true
+          # Use unique config name per deploy (Docker configs are immutable)
+          CADDY_CONFIG_NAME="${STACK_NAME}_caddyfile-$(date +%s)"
+          export CADDY_CONFIG_NAME
           docker stack deploy -c docker-compose-prod.yml "$STACK_NAME" --resolve-image never
 
       - name: Wait for PostgreSQL to be ready

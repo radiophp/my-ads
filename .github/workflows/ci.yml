@@ -521,9 +521,10 @@ jobs:
           POSTGRES_USER: ${{ vars.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           POSTGRES_DB: ${{ vars.POSTGRES_DB }}
+          POSTGRES_PORT: ${{ vars.POSTGRES_PORT || '6301' }}
         run: |
           for i in $(seq 1 60); do
-            docker run --rm --network "${STACK_NAME}_app_net" -e PGPASSWORD="${POSTGRES_PASSWORD}" postgres:16-alpine pg_isready -h postgres -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" 2>/dev/null && break
+            docker run --rm -e PGPASSWORD="${POSTGRES_PASSWORD}" postgres:16-alpine pg_isready -h host.docker.internal -p "${POSTGRES_PORT}" -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" 2>/dev/null && break
             echo "Waiting for PostgreSQL... ($i/60)"
             sleep 2
           done
@@ -533,10 +534,11 @@ jobs:
           POSTGRES_DB: ${{ vars.POSTGRES_DB }}
           POSTGRES_USER: ${{ vars.POSTGRES_USER }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_PORT: ${{ vars.POSTGRES_PORT || '6301' }}
         run: |
-          docker run --rm --network "${STACK_NAME}_app_net" \
-            -e DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public" \
-            -e DATABASE_DIRECT_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public" \
+          docker run --rm \
+            -e DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@host.docker.internal:${POSTGRES_PORT}/${POSTGRES_DB}?schema=public" \
+            -e DATABASE_DIRECT_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@host.docker.internal:${POSTGRES_PORT}/${POSTGRES_DB}?schema=public" \
             -v "$(pwd)/server/prisma:/app/prisma" \
             -w /app \
             node:22-alpine sh -c "npm install prisma@6 && npx prisma migrate deploy"

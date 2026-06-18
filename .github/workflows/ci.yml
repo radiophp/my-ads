@@ -284,8 +284,8 @@ jobs:
             --cache-from type=local,src=/tmp/docker-cache \
             --cache-to type=local,dest=/tmp/docker-cache,mode=max \
             -t my-ads-api:latest \
-            --build-arg NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL || 'https://mahanfile.com' }} \
-            --build-arg NEXT_PUBLIC_API_BASE_URL=${{ vars.NEXT_PUBLIC_API_BASE_URL || 'https://mahanfile.com/api' }} \
+            --build-arg NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL || 'https://mahanfile.ir' }} \
+            --build-arg NEXT_PUBLIC_API_BASE_URL=${{ vars.NEXT_PUBLIC_API_BASE_URL || 'https://mahanfile.ir/api' }} \
             -f server/Dockerfile server
 
   build-backup-image:
@@ -343,9 +343,9 @@ jobs:
             --cache-from type=local,src=/tmp/docker-cache \
             --cache-to type=local,dest=/tmp/docker-cache,mode=max \
             -t my-ads-ui:latest \
-            --build-arg NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL || 'https://mahanfile.com' }} \
-            --build-arg NEXT_PUBLIC_API_BASE_URL=${{ vars.NEXT_PUBLIC_API_BASE_URL || 'https://mahanfile.com/api' }} \
-            --build-arg NEXT_PUBLIC_WS_BASE_URL=${{ vars.NEXT_PUBLIC_WS_BASE_URL || 'wss://mahanfile.com/socket.io' }} \
+            --build-arg NEXT_PUBLIC_APP_URL=${{ vars.NEXT_PUBLIC_APP_URL || 'https://mahanfile.ir' }} \
+            --build-arg NEXT_PUBLIC_API_BASE_URL=${{ vars.NEXT_PUBLIC_API_BASE_URL || 'https://mahanfile.ir/api' }} \
+            --build-arg NEXT_PUBLIC_WS_BASE_URL=${{ vars.NEXT_PUBLIC_WS_BASE_URL || 'wss://mahanfile.ir/socket.io' }} \
             --build-arg NEXT_PUBLIC_MAP_TILE_BASE_URL=${{ vars.NEXT_PUBLIC_MAP_TILE_BASE_URL || '/map' }} \
             --build-arg NEXT_PUBLIC_VAPID_PUBLIC_KEY=${{ secrets.NEXT_PUBLIC_VAPID_PUBLIC_KEY || vars.NEXT_PUBLIC_VAPID_PUBLIC_KEY }} \
             --build-arg NEXT_PUBLIC_TURNSTILE_SITE_KEY=${{ vars.NEXT_PUBLIC_TURNSTILE_SITE_KEY }} \
@@ -395,8 +395,8 @@ jobs:
           VAPID_SUBJECT: ${{ secrets.VAPID_SUBJECT || vars.VAPID_SUBJECT }}
           NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${{ secrets.NEXT_PUBLIC_VAPID_PUBLIC_KEY || vars.NEXT_PUBLIC_VAPID_PUBLIC_KEY }}
           PUSH_NOTIFICATION_TIMEOUT_MS: ${{ vars.PUSH_NOTIFICATION_TIMEOUT_MS || secrets.PUSH_NOTIFICATION_TIMEOUT_MS }}
-          NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL || 'https://mahanfile.com' }}
-          NEXT_PUBLIC_API_BASE_URL: ${{ vars.NEXT_PUBLIC_API_BASE_URL || 'https://mahanfile.com/api' }}
+          NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL || 'https://mahanfile.ir' }}
+          NEXT_PUBLIC_API_BASE_URL: ${{ vars.NEXT_PUBLIC_API_BASE_URL || 'https://mahanfile.ir/api' }}
           BALE_BOT_USERNAME: ${{ vars.BALE_BOT_USERNAME }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
@@ -494,8 +494,8 @@ jobs:
           LOG_PRETTY: ${{ vars.LOG_PRETTY }}
           PRISMA_LOG_QUERIES: ${{ vars.PRISMA_LOG_QUERIES }}
           NEXT_UI_PORT: ${{ vars.NEXT_UI_PORT }}
-          NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL || 'https://mahanfile.com' }}
-          NEXT_PUBLIC_API_BASE_URL: ${{ vars.NEXT_PUBLIC_API_BASE_URL || 'https://mahanfile.com/api' }}
+          NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL || 'https://mahanfile.ir' }}
+          NEXT_PUBLIC_API_BASE_URL: ${{ vars.NEXT_PUBLIC_API_BASE_URL || 'https://mahanfile.ir/api' }}
           NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
           TELEGRAM_BOT_REPLICAS: ${{ vars.TELEGRAM_BOT_REPLICAS || '1' }}
           API_REPLICAS: ${{ vars.API_REPLICAS }}

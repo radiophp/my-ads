@@ -5,6 +5,8 @@ const STORAGE_HOSTS = new Set([
   'mahanfile.com',
   'www.mahanfile.com',
   'dev.mahanfile.com',
+  'mahanfile.ir',
+  'www.mahanfile.ir',
   'minio',
 ]);
 

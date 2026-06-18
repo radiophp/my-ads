@@ -50,7 +50,7 @@ export function PostLocationMap({
     if (typeof window !== 'undefined' && window.location.hostname.includes('dev')) {
       return 'https://dev.mahanfile.com/map';
     }
-    return 'https://map.mahanfile.com';
+    return '/map';
   }, []);
 
   const isCdnMode = useMemo(

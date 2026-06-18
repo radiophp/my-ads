@@ -16,3 +16,4 @@ server/tmp/
 /backup/*.sql
 .fastembed_cache/
 scripts/.pw-firefox-profile/
+*.tsbuildinfo

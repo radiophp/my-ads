@@ -29,17 +29,17 @@ if (!process.env.NEXT_UI_PORT) {
 }
 const defaultAppUrl =
   process.env.NODE_ENV === 'production'
-    ? 'https://mahanfile.com'
+    ? 'https://mahanfile.ir'
     : 'https://dev.mahanfile.com';
 const defaultApiBaseUrl =
   process.env.NODE_ENV === 'production'
-    ? 'https://mahanfile.com/api'
+    ? 'https://mahanfile.ir/api'
     : 'https://dev.mahanfile.com/api';
 
 const mapTileBaseUrl =
   process.env.NEXT_PUBLIC_MAP_TILE_BASE_URL ??
   (process.env.NODE_ENV === 'production'
-    ? 'https://map.mahanfile.com'
+    ? '/map'
     : '/map');
 
 if (!process.env.NEXT_PUBLIC_APP_URL) {
@@ -82,7 +82,7 @@ const withPWA = withPWAInit({
           if (url.pathname.startsWith('/map/') || url.pathname === '/map') {
             return true;
           }
-          const hosts = ['map.mahanfile.com'];
+          const hosts: string[] = [];
           try {
             const mapHost = new URL(mapTileBaseUrl).hostname;
             if (!hosts.includes(mapHost)) {
@@ -108,11 +108,6 @@ const imageRemotePatterns = [
   {
     protocol: 'https',
     hostname: 'dev.mahanfile.com',
-    pathname: '/storage/**',
-  },
-  {
-    protocol: 'https',
-    hostname: 'mahanfile.com',
     pathname: '/storage/**',
   },
   {

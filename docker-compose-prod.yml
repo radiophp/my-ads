@@ -46,7 +46,7 @@ services:
       PGBACKREST_REPO1_CIPHER_TYPE: aes-256-cbc
       PGBACKREST_REPO1_CIPHER_PASS: Ghader
       PGBACKREST_REPO1_S3_BUCKET: db-backup
-      PGBACKREST_REPO1_S3_ENDPOINT: ${PGBACKREST_REPO1_S3_ENDPOINT:-storage.mahanfile.com:443}
+      PGBACKREST_REPO1_S3_ENDPOINT: ${PGBACKREST_REPO1_S3_ENDPOINT:-storage.mahanfile.ir:443}
       PGBACKREST_REPO1_S3_REGION: ${MINIO_REGION}
       PGBACKREST_REPO1_S3_KEY: ${MINIO_ACCESS_KEY:?MINIO_ACCESS_KEY not set}
       PGBACKREST_REPO1_S3_KEY_SECRET: ${MINIO_SECRET_KEY:?MINIO_SECRET_KEY not set}
@@ -70,7 +70,7 @@ services:
       - postgres_socket:/var/run/postgresql
       # - ./scripts/pgbackrest/postgres-entrypoint.sh:/usr/local/bin/pgbackrest-entrypoint.sh:ro
     extra_hosts:
-      - 'storage.mahanfile.com:host-gateway'
+      - 'storage.mahanfile.ir:host-gateway'
     networks:
       - app_net
     deploy:
@@ -111,7 +111,7 @@ services:
       PGBACKREST_REPO1_CIPHER_TYPE: aes-256-cbc
       PGBACKREST_REPO1_CIPHER_PASS: Ghader
       PGBACKREST_REPO1_S3_BUCKET: db-backup
-      PGBACKREST_REPO1_S3_ENDPOINT: ${PGBACKREST_REPO1_S3_ENDPOINT:-storage.mahanfile.com:443}
+      PGBACKREST_REPO1_S3_ENDPOINT: ${PGBACKREST_REPO1_S3_ENDPOINT:-storage.mahanfile.ir:443}
       PGBACKREST_REPO1_S3_REGION: ${MINIO_REGION}
       PGBACKREST_REPO1_S3_KEY: ${MINIO_ACCESS_KEY:?MINIO_ACCESS_KEY not set}
       PGBACKREST_REPO1_S3_KEY_SECRET: ${MINIO_SECRET_KEY:?MINIO_SECRET_KEY not set}
@@ -130,7 +130,7 @@ services:
       - postgres_socket:/var/run/postgresql
       - ./backup/run-backup.sh:/opt/backup/run-backup.sh:ro
     extra_hosts:
-      - 'storage.mahanfile.com:host-gateway'
+      - 'storage.mahanfile.ir:host-gateway'
     depends_on:
       - postgres
       - minio
@@ -745,22 +745,22 @@ services:
         constraints:
           - node.role == manager
 
-  cloudflared:
-    image: cloudflare/cloudflared:latest
-    restart: unless-stopped
-    command: ["tunnel", "--no-prechecks", "--config", "/etc/cloudflared/config.yml", "run", "df7e3d2c-483a-4978-9e61-eb4d02e34f94"]
-    environment:
-      TZ: ${BACKUP_TZ:-Asia/Tehran}
-      TUNNEL_CRED_FILE: /etc/cloudflared/tunnel.json
-    volumes:
-      - ./cloudflare/production:/etc/cloudflared
-    networks:
-      - app_net
-    deploy:
-      replicas: 1
-      placement:
-        constraints:
-          - node.role == manager
+#   cloudflared:
+#     image: cloudflare/cloudflared:latest
+#     restart: unless-stopped
+#     command: ["tunnel", "--no-prechecks", "--config", "/etc/cloudflared/config.yml", "run", "df7e3d2c-483a-4978-9e61-eb4d02e34f94"]
+#     environment:
+#       TZ: ${BACKUP_TZ:-Asia/Tehran}
+#       TUNNEL_CRED_FILE: /etc/cloudflared/tunnel.json
+#     volumes:
+#       - ./cloudflare/production:/etc/cloudflared
+#     networks:
+#       - app_net
+#     deploy:
+#       replicas: 1
+#       placement:
+#         constraints:
+#           - node.role == manager
 
 networks:
   app_net:

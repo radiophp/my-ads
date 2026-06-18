@@ -708,6 +708,8 @@ services:
     image: ghcr.io/caddybuilds/caddy-cloudflare:alpine
     restart: unless-stopped
     ports:
+      - "80:80"
+      - "443:443"
       - "2015:2015"
     env_file:
       - .env.prod

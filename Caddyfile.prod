@@ -1,18 +1,4 @@
-mahanfile.com, www.mahanfile.com {
-	tls {
-		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
-		protocols tls1.2 tls1.3
-	}
-	log {
-		output stdout
-		format json
-	}
-	header {
-		Access-Control-Allow-Origin *
-		Access-Control-Allow-Methods "GET, OPTIONS"
-		Access-Control-Allow-Headers *
-	}
-
+(common-routes) {
 	handle_path /storage* {
 		header {
 			Access-Control-Allow-Origin "*"
@@ -29,6 +15,36 @@ mahanfile.com, www.mahanfile.com {
 	reverse_proxy /socket.io/* api:6300
 	reverse_proxy /api/* api:6300
 	reverse_proxy ui:6306
+}
+
+mahanfile.com, www.mahanfile.com {
+	tls {
+		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		protocols tls1.2 tls1.3
+	}
+	log {
+		output stdout
+		format json
+	}
+	header {
+		Access-Control-Allow-Origin *
+		Access-Control-Allow-Methods "GET, OPTIONS"
+		Access-Control-Allow-Headers *
+	}
+	import common-routes
+}
+
+http://mahanfile.ir, http://www.mahanfile.ir {
+	log {
+		output stdout
+		format json
+	}
+	header {
+		Access-Control-Allow-Origin *
+		Access-Control-Allow-Methods "GET, OPTIONS"
+		Access-Control-Allow-Headers *
+	}
+	import common-routes
 }
 
 map.mahanfile.com {

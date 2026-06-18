@@ -115,6 +115,11 @@ const imageRemotePatterns = [
     hostname: 'mahanfile.com',
     pathname: '/storage/**',
   },
+  {
+    protocol: 'https',
+    hostname: 'mahanfile.ir',
+    pathname: '/storage/**',
+  },
 ] as const satisfies NonNullable<NextConfig['images']>['remotePatterns'];
 
 const nextConfig: NextConfig = {
@@ -128,7 +133,7 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: imageRemotePatterns,
   },
-  allowedDevOrigins: process.env.NODE_ENV === 'development' ? ['dev.mahanfile.com'] : undefined,
+  allowedDevOrigins: process.env.NODE_ENV === 'development' ? ['dev.mahanfile.com', 'mahanfile.ir'] : undefined,
   webpack(config) {
     config.resolve ??= {};
     config.resolve.alias ??= {};

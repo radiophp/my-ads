@@ -47,6 +47,20 @@ http://mahanfile.ir, http://www.mahanfile.ir {
 	import common-routes
 }
 
+https://mahanfile.ir, https://www.mahanfile.ir {
+	tls internal
+	log {
+		output stdout
+		format json
+	}
+	header {
+		Access-Control-Allow-Origin *
+		Access-Control-Allow-Methods "GET, OPTIONS"
+		Access-Control-Allow-Headers *
+	}
+	import common-routes
+}
+
 map.mahanfile.com {
 	tls {
 		dns cloudflare {env.CLOUDFLARE_API_TOKEN}

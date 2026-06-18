@@ -223,15 +223,7 @@ jobs:
       - name: Run unit tests
         run: npm test -- --run
 
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps
-
-      - name: Run Playwright tests
-        if: ${{ false }}
-        run: npm run test:e2e -- --reporter=list
-        env:
-          PLAYWRIGHT_BASE_URL: http://localhost:6005
-          NEXT_UI_PORT: 6005
+      # Playwright steps removed — no e2e test files exist
 
   ui-build:
     if: needs.changes.outputs.ui == 'true'
@@ -514,6 +506,14 @@ jobs:
           # Use unique config name per deploy (Docker configs are immutable)
           CADDY_CONFIG_NAME="${STACK_NAME}_caddyfile-$(date +%s)"
           export CADDY_CONFIG_NAME
+
+          # Ensure overlay network exists before deploying (first run or after cleanup)
+          NETWORK_NAME="${STACK_NAME}_app_net"
+          if ! docker network inspect "$NETWORK_NAME" >/dev/null 2>&1; then
+            echo "Creating network $NETWORK_NAME..."
+            docker network create --driver overlay --attachable "$NETWORK_NAME"
+          fi
+
           docker stack deploy -c docker-compose-prod.yml "$STACK_NAME" --resolve-image never
 
       - name: Wait for PostgreSQL to be ready

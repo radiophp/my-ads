@@ -280,7 +280,7 @@ export function PostDetailView({
     <div className="space-y-8 overflow-x-hidden">
       <div className="flex min-w-0 flex-col gap-6 lg:flex-row">
         <div className="order-2 flex min-w-0 flex-1 flex-col gap-6 px-6 lg:order-1 lg:px-0">
-          <div className="flex w-full flex-col gap-2">
+          <div className="hidden w-full flex-col gap-2 lg:flex">
           <div
             className={cn(
               'flex w-full flex-wrap gap-0 divide-x divide-border/40',
@@ -448,6 +448,107 @@ export function PostDetailView({
             </div>
           ) : null}
           <AmenitiesSection post={post} t={t} />
+          <div className="flex w-full flex-col gap-2 lg:hidden">
+          <div
+            className={cn(
+              'flex w-full flex-wrap gap-0 divide-x divide-border/40',
+              isRTL && 'divide-x-reverse',
+            )}
+          >
+              {onShareWhatsapp || onShareTelegram || smsHref || onCopyLink ? (
+                <>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    className={actionButtonClass}
+                    onClick={() => setShareDialogOpen(true)}
+                  >
+                    <Share2 className="size-3.5" aria-hidden="true" />
+                    <span>{t('sharePost')}</span>
+                  </Button>
+                </>
+              ) : null}
+              {post.hasContactInfo ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  className={actionButtonClass}
+                  onClick={onRequestContactInfo}
+                  disabled={!onRequestContactInfo || contactLoading}
+                >
+                  {contactLoading ? (
+                  <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                  <Phone className="size-3.5" />
+                  )}
+                  <span>{t('contactInfo.button')}</span>
+                </Button>
+              ) : null}
+              {hasDownloadableMedia ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  className={actionButtonClass}
+                  onClick={onRequestDownload}
+                >
+                  <Download className="size-3.5" aria-hidden="true" />
+                  <span>{t('downloadPhotos')}</span>
+                </Button>
+              ) : null}
+            </div>
+            <div
+              className={cn(
+                'flex w-full flex-wrap gap-0 divide-x divide-border/40',
+                isRTL && 'divide-x-reverse',
+              )}
+            >
+              <Button
+                type="button"
+                variant={isSaved ? 'outline' : 'secondary'}
+                size="sm"
+                className={cn(
+                  actionButtonClass,
+                  isSaved && 'border-emerald-500 text-emerald-600 hover:bg-emerald-50',
+                )}
+                onClick={handleSaveButtonClick}
+              >
+                {isSaved ? (
+                  <>
+                    <BookmarkCheck className="size-3.5" />
+                    <span>{t('saveToFolder')}</span>
+                  </>
+                ) : (
+                  <>
+                    <Bookmark className="size-3.5" />
+                    <span>{t('saveToFolder')}</span>
+                  </>
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => setNoteEditTrigger((prev) => prev + 1)}
+                className={actionButtonClass}
+              >
+                <Pencil className="size-3.5" aria-hidden="true" />
+                <span>{t('noteSection.buttonLabel')}</span>
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                className={actionButtonClass}
+                onClick={handlePrint}
+              >
+                <Printer className="size-3.5" aria-hidden="true" />
+                <span>{t('print')}</span>
+              </Button>
+            </div>
+          </div>
           <dl className="grid gap-3 text-sm text-muted-foreground sm:grid-cols-2">
             {detailData.descriptionLines ? (
               <div className="col-span-full space-y-1">

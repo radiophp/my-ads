@@ -19,6 +19,7 @@ describe('search-filter utils', () => {
         elevator: { kind: 'boolean', value: true },
       },
     },
+    dateQuarter: '',
     ringBinderFolderId: 'folder-1',
     noteFilter: 'has',
   };

@@ -19,6 +19,7 @@ import {
   setCategoryFilterValue,
   setCategorySelection,
   setCitySelectionMode,
+  setDateQuarter,
   setDistrictSelectionMode,
   setNoteFilter,
   setProvince,
@@ -32,6 +33,7 @@ import { cn } from '@/lib/utils';
 import type { BadgeEntry } from './active-filter-badges-utils';
 import { normalizeWidgetLabelKey, formatCategoryFilterValue } from './active-filter-badges-utils';
 import { useCategoryFilterMeta } from './use-category-filter-meta';
+import { formatQuarterLabel, DEFAULT_QUARTER_VALUE } from '@/features/search-filter/date-quarter-utils';
 
 type ActiveFilterBadgesProps = {
   className?: string;
@@ -51,6 +53,7 @@ export function ActiveFilterBadges({ className }: ActiveFilterBadgesProps) {
     categoryFilters,
     ringBinderFolderId,
     noteFilter,
+    dateQuarter,
   } = useAppSelector((state) => state.searchFilter);
   const categorySlug = categorySelection.slug;
   const categoryFilterSlug = categorySlug ?? Object.keys(categoryFilters)[0] ?? null;
@@ -206,6 +209,18 @@ export function ActiveFilterBadges({ className }: ActiveFilterBadgesProps) {
         kind: 'noteFilter',
       });
     }
+    if (dateQuarter) {
+      const parts = dateQuarter.split('-');
+      const year = parseInt(parts[0], 10);
+      const quarter = parseInt(parts[1], 10);
+      if (Number.isFinite(year) && Number.isFinite(quarter)) {
+        entries.push({
+          key: 'dateQuarter',
+          label: formatQuarterLabel(year, quarter),
+          kind: 'dateQuarter',
+        });
+      }
+    }
     const seenCategoryFilters = new Set<string>();
     Object.entries(categoryFilters).forEach(([slug, bucket]) => {
       Object.entries(bucket).forEach(([key, value]) => {
@@ -246,6 +261,7 @@ export function ActiveFilterBadges({ className }: ActiveFilterBadgesProps) {
     isRTL,
     normalizedCategoryOptions,
     noteFilter,
+    dateQuarter,
     provinceButtonLabel,
     provinceId,
     ringBinderFolderId,
@@ -287,6 +303,10 @@ export function ActiveFilterBadges({ className }: ActiveFilterBadgesProps) {
           break;
         case 'noteFilter':
           dispatch(setNoteFilter('all'));
+          didChange = true;
+          break;
+        case 'dateQuarter':
+          dispatch(setDateQuarter(DEFAULT_QUARTER_VALUE));
           didChange = true;
           break;
         case 'categoryFilter': {

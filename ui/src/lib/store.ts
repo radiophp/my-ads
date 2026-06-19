@@ -89,6 +89,10 @@ const loadSearchFilterState = (): SearchFilterSliceState => {
           : null,
       noteFilter:
         parsed.noteFilter === 'has' || parsed.noteFilter === 'none' ? parsed.noteFilter : 'all',
+      dateQuarter:
+        typeof parsed.dateQuarter === 'string' && parsed.dateQuarter.length > 0
+          ? parsed.dateQuarter
+          : '',
       persistNonce: 0,
     };
   } catch {

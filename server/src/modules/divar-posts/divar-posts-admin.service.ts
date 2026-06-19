@@ -1,6 +1,7 @@
 import { BadRequestException, Inject, Injectable, Logger } from '@nestjs/common';
 import type { ConfigType } from '@nestjs/config';
 import { PrismaService } from '@app/platform/database/prisma.service';
+import { getPersianQuarterDateRange } from '@common/utils/date.utils';
 import { RedisService } from '@app/platform/cache/redis.service';
 import cacheConfig from '@app/platform/config/cache.config';
 import { PostAnalysisStatus, Prisma } from '@prisma/client';
@@ -172,6 +173,7 @@ export class DivarPostsAdminService {
       ringFolderId?: string;
       userId?: string | null;
       noteFilter?: 'has' | 'none';
+      dateQuarter?: string;
       postIds?: string[];
       createdAfter?: Date;
     } = {},
@@ -244,6 +246,17 @@ export class DivarPostsAdminService {
               },
             };
       this.appendAndCondition(where, condition);
+    }
+    if (options.dateQuarter) {
+      const parts = options.dateQuarter.split('-');
+      const year = parseInt(parts[0], 10);
+      const quarter = parseInt(parts[1], 10);
+      if (Number.isFinite(year) && Number.isFinite(quarter) && quarter >= 1 && quarter <= 4) {
+        const { startDate, endDate } = getPersianQuarterDateRange(year, quarter);
+        this.appendAndCondition(where, {
+          publishedAt: { gte: startDate, lte: endDate },
+        });
+      }
     }
     if (options.postIds && options.postIds.length > 0) {
       where.id = { in: options.postIds };

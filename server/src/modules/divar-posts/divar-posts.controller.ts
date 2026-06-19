@@ -65,6 +65,7 @@ export class DivarPostsController {
     @Query('filters') filtersParam?: string,
     @Query('ringFolderId') ringFolderId?: string,
     @Query('noteFilter') noteFilter?: string,
+    @Query('dateQuarter') dateQuarter?: string,
   ): Promise<PaginatedDivarPostsDto> {
     const parsedLimit = Number(limitParam);
     const limit = Number.isFinite(parsedLimit) ? parsedLimit : undefined;
@@ -109,6 +110,7 @@ export class DivarPostsController {
       filters: parsedFilters,
       ringFolderId: ringFolderId?.trim() ? ringFolderId.trim() : undefined,
       noteFilter: normalizedNoteFilter,
+      dateQuarter: dateQuarter?.trim() ? dateQuarter.trim() : undefined,
       userId: request.user?.sub,
     });
   }

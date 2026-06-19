@@ -34,6 +34,7 @@ const divarPostsApi = apiSlice.injectEndpoints({
         filters?: Record<string, unknown>;
         ringFolderId?: string | null;
         noteFilter?: 'has' | 'none';
+        dateQuarter?: string;
       } | void
     >({
       query: (params) => {
@@ -67,6 +68,9 @@ const divarPostsApi = apiSlice.injectEndpoints({
         }
         if (params?.noteFilter === 'has' || params?.noteFilter === 'none') {
           searchParams.set('noteFilter', params.noteFilter);
+        }
+        if (params?.dateQuarter) {
+          searchParams.set('dateQuarter', params.dateQuarter);
         }
         const qs = searchParams.toString();
         return `/divar-posts${qs ? `?${qs}` : ''}`;

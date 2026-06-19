@@ -1,5 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { createSelector } from '@reduxjs/toolkit';
+import { DEFAULT_QUARTER_VALUE } from './date-quarter-utils';
 
 export type SelectionMode = 'all' | 'custom';
 
@@ -30,6 +31,7 @@ export type SearchFilterState = {
   categoryFilters: CategoryFilterBuckets;
   ringBinderFolderId: string | null;
   noteFilter: NoteFilterOption;
+  dateQuarter: string;
 };
 
 export type SearchFilterSliceState = SearchFilterState & {
@@ -53,6 +55,7 @@ const initialFilterState: SearchFilterState = {
   categoryFilters: {},
   ringBinderFolderId: null,
   noteFilter: 'all',
+  dateQuarter: DEFAULT_QUARTER_VALUE,
 };
 
 const initialState: SearchFilterSliceState = {
@@ -106,6 +109,9 @@ const searchFilterSlice = createSlice({
     setNoteFilter(state, action: PayloadAction<NoteFilterOption>) {
       state.noteFilter = action.payload;
     },
+    setDateQuarter(state, action: PayloadAction<string>) {
+      state.dateQuarter = action.payload;
+    },
     setCategoryFilterValue(
       state,
       action: PayloadAction<{
@@ -146,6 +152,7 @@ const searchFilterSlice = createSlice({
       state.categoryFilters = initialFilterState.categoryFilters;
       state.ringBinderFolderId = initialFilterState.ringBinderFolderId;
       state.noteFilter = initialFilterState.noteFilter;
+      state.dateQuarter = initialFilterState.dateQuarter;
     },
     hydrateFromSaved: (state, action: PayloadAction<SearchFilterState>) => {
       state.provinceId = action.payload.provinceId;
@@ -155,6 +162,7 @@ const searchFilterSlice = createSlice({
       state.categoryFilters = action.payload.categoryFilters;
       state.ringBinderFolderId = action.payload.ringBinderFolderId;
       state.noteFilter = action.payload.noteFilter;
+      state.dateQuarter = action.payload.dateQuarter;
     },
     commitAppliedFilters: (state) => {
       state.persistNonce += 1;
@@ -173,6 +181,7 @@ export const {
   clearCategoryFilters,
   setRingBinderFolder,
   setNoteFilter,
+  setDateQuarter,
   resetSearchFilter,
   hydrateFromSaved,
   commitAppliedFilters,

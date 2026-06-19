@@ -12,6 +12,7 @@ export type BadgeEntry = {
     | 'district'
     | 'ringBinder'
     | 'noteFilter'
+    | 'dateQuarter'
     | 'categoryFilter';
   categorySlug?: string;
   filterKey?: string;

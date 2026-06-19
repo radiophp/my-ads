@@ -40,6 +40,10 @@ export function cloneSearchFilterState(state: SearchFilterState): SearchFilterSt
         ? state.ringBinderFolderId
         : null,
     noteFilter: state.noteFilter === 'has' || state.noteFilter === 'none' ? state.noteFilter : 'all',
+    dateQuarter:
+      typeof state.dateQuarter === 'string' && state.dateQuarter.length > 0
+        ? state.dateQuarter
+        : '',
   };
 }
 

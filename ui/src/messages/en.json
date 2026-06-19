@@ -387,6 +387,8 @@
       "districtModalCancel": "Cancel",
       "districtModalConfirm": "Select",
       "close": "Close",
+      "dateQuarter": "Quarter",
+      "dateQuarterAll": "All dates",
       "clear": "Clear filters",
       "editFilters": "Edit filters",
       "applyFilters": "Apply filters",

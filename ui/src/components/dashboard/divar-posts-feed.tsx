@@ -74,6 +74,7 @@ export function DivarPostsFeed(): JSX.Element {
     categoryFilters,
     ringBinderFolderId,
     noteFilter,
+    dateQuarter,
   } = useAppSelector((state) => state.searchFilter);
   const categorySlug = categorySelection.slug;
   const categoryDepth = categorySelection.depth;
@@ -143,6 +144,7 @@ export function DivarPostsFeed(): JSX.Element {
       filters: categoryFilterPayload,
       ringFolderId: ringBinderFolderId ?? undefined,
       noteFilter: noteFilter !== 'all' ? noteFilter : undefined,
+      dateQuarter: dateQuarter || undefined,
     };
   }, [
     provinceId,
@@ -153,6 +155,7 @@ export function DivarPostsFeed(): JSX.Element {
     categoryFilterPayload,
     ringBinderFolderId,
     noteFilter,
+    dateQuarter,
   ]);
 
   useEffect(() => {
@@ -172,6 +175,7 @@ export function DivarPostsFeed(): JSX.Element {
       filters: filterArgs.filters,
       ringFolderId: filterArgs.ringFolderId,
       noteFilter: filterArgs.noteFilter,
+      dateQuarter: filterArgs.dateQuarter,
     })
       .unwrap()
       .then((result) => {
@@ -212,6 +216,7 @@ export function DivarPostsFeed(): JSX.Element {
         filters: filterArgs.filters,
         ringFolderId: filterArgs.ringFolderId,
         noteFilter: filterArgs.noteFilter,
+        dateQuarter: filterArgs.dateQuarter,
       }).unwrap();
       setPosts((prev) => [...prev, ...result.items]);
       setNextCursor(result.nextCursor);

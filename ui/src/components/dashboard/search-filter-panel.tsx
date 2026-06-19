@@ -25,6 +25,7 @@ import {
   setCategorySelection,
   setRingBinderFolder,
   setNoteFilter,
+  setDateQuarter,
   type NoteFilterOption,
   resetSearchFilter,
   searchFilterInitialState,
@@ -54,8 +55,10 @@ import type { SavedFilter } from '@/types/saved-filters';
 import { SaveFilterDialog } from '@/components/dashboard/save-filter-dialog';
 import { SavedFiltersDialog } from '@/components/dashboard/saved-filters-dialog';
 import { LocationDialog } from '@/components/dashboard/location-dialog';
+import { QuarterSelectDialog } from '@/components/dashboard/quarter-select-dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { cloneSearchFilterState, mergeSavedFilterState } from '@/features/search-filter/utils';
+import { formatQuarterLabel } from '@/features/search-filter/date-quarter-utils';
 import { DesktopCategorySection } from './desktop-category-section';
 import { DesktopRegionSelectors } from './desktop-region-selectors';
 import { CodeSearch } from '@/components/layout/code-search';
@@ -77,6 +80,7 @@ export function DashboardSearchFilterPanel() {
     categoryFilters,
     ringBinderFolderId,
     noteFilter,
+    dateQuarter,
     persistNonce,
   } = useAppSelector((state) => state.searchFilter);
   const categorySlug = categorySelection.slug;
@@ -135,6 +139,7 @@ export function DashboardSearchFilterPanel() {
 
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [savedFiltersModalOpen, setSavedFiltersModalOpen] = useState(false);
+  const [quarterDialogOpen, setQuarterDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!filterModalOpen) return;
@@ -781,6 +786,19 @@ export function DashboardSearchFilterPanel() {
   const categorySummaryLabel =
     selectedCategory?.name ?? baseCategory?.name ?? t('categories.all');
 
+  const quarterLabel = useMemo(() => {
+    if (!dateQuarter) {
+      return t('dateQuarterAll');
+    }
+    const parts = dateQuarter.split('-');
+    const year = parseInt(parts[0], 10);
+    const quarter = parseInt(parts[1], 10);
+    if (Number.isFinite(year) && Number.isFinite(quarter)) {
+      return formatQuarterLabel(year, quarter);
+    }
+    return dateQuarter;
+  }, [dateQuarter, t]);
+
   const handleOpenCategoryModal = () => setCategoryModalOpen(true);
 
   const handleCategorySelect = (slug: string | null, depth: number | null = null) => {
@@ -805,6 +823,7 @@ export function DashboardSearchFilterPanel() {
         categoryFilters,
         ringBinderFolderId,
         noteFilter,
+        dateQuarter,
       }),
     [
       provinceId,
@@ -814,6 +833,7 @@ export function DashboardSearchFilterPanel() {
       categoryFilters,
       ringBinderFolderId,
       noteFilter,
+      dateQuarter,
     ],
   );
 
@@ -894,6 +914,7 @@ export function DashboardSearchFilterPanel() {
       categoryFilters,
       ringBinderFolderId,
       noteFilter,
+      dateQuarter,
     }),
     [
       provinceId,
@@ -903,6 +924,7 @@ export function DashboardSearchFilterPanel() {
       categoryFilters,
       ringBinderFolderId,
       noteFilter,
+      dateQuarter,
     ],
   );
 
@@ -1104,7 +1126,7 @@ export function DashboardSearchFilterPanel() {
               categorySlug={categorySlug ?? baseCategory?.slug ?? null}
               locale={locale}
               isRTL={isRTL}
-              includeKeys={['addon_service_tags', 'recent_ads', 'has-video', 'has_video']}
+              includeKeys={['addon_service_tags', 'has-video', 'has_video']}
             />
             <CategoryFiltersPreview
               categorySlug={categorySlug ?? baseCategory?.slug ?? null}
@@ -1188,6 +1210,32 @@ export function DashboardSearchFilterPanel() {
             />
           </div>
         </div>
+        ) : null}
+
+        {!filterModalOpen ? (
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-medium text-foreground">{t('dateQuarter')}</p>
+            <Button
+              type="button"
+              variant="secondary"
+              className="w-full justify-between text-sm"
+              onClick={() => setQuarterDialogOpen(true)}
+            >
+              <span
+                dir={isRTL ? 'rtl' : 'ltr'}
+                className="flex w-full flex-row items-center justify-between gap-3"
+              >
+                <span className={cn('flex-1 truncate', isRTL ? 'text-right' : 'text-left')}>
+                  {quarterLabel}
+                </span>
+                {isRTL ? (
+                  <ChevronLeft className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                ) : (
+                  <ChevronRight className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                )}
+              </span>
+            </Button>
+          </div>
         ) : null}
 
         {!filterModalOpen ? (
@@ -1474,10 +1522,32 @@ export function DashboardSearchFilterPanel() {
 			                          />
 			                        </div>
 			                      </div>
-			                      ) : null}
+                      ) : null}
 
-			                      <div className="py-0">
-			                        <CategoryFiltersPreview
+                      <div className="py-0">
+                        <div className="flex flex-col gap-1">
+                          <p className="block px-4 text-sm font-medium text-foreground">{t('dateQuarter')}</p>
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            className="w-full justify-between text-sm"
+                            onClick={() => setQuarterDialogOpen(true)}
+                          >
+                            <span
+                              dir={isRTL ? 'rtl' : 'ltr'}
+                              className="flex w-full flex-row items-center justify-between gap-3"
+                            >
+                              <span className={cn('flex-1 truncate text-right')}>
+                                {quarterLabel}
+                              </span>
+                              <ChevronLeft className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                            </span>
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="py-0">
+                        <CategoryFiltersPreview
 			                          categorySlug={categorySlug ?? baseCategory?.slug ?? null}
 			                          locale={locale}
 			                          isRTL={isRTL}
@@ -1501,7 +1571,7 @@ export function DashboardSearchFilterPanel() {
 			                      categorySlug={categorySlug ?? baseCategory?.slug ?? null}
 			                      locale={locale}
 			                      isRTL={isRTL}
-			                      includeKeys={['addon_service_tags', 'recent_ads', 'has-video', 'has_video']}
+              includeKeys={['addon_service_tags', 'has-video', 'has_video']}
 			                    />
 			                    <CategoryFiltersPreview
 			                      categorySlug={categorySlug ?? baseCategory?.slug ?? null}
@@ -1721,6 +1791,13 @@ export function DashboardSearchFilterPanel() {
         savedFiltersLimit={savedFiltersLimit}
         handleApplySavedFilter={handleApplySavedFilter}
         locale={locale}
+      />
+
+      <QuarterSelectDialog
+        open={quarterDialogOpen}
+        onClose={() => setQuarterDialogOpen(false)}
+        value={dateQuarter}
+        onSelect={(next) => dispatch(setDateQuarter(next))}
       />
     </>
   );

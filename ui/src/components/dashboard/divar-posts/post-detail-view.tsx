@@ -480,7 +480,7 @@ export function PostDetailView({
             cityDistrict={cityDistrict}
             t={t}
           />
-          <div className="mb-3 lg:hidden">
+          <div className="mb-3 px-6 lg:hidden">
             <div className="flex w-full overflow-hidden rounded-md border border-border/70 bg-muted/40 text-foreground">
               <button
                 type="button"

@@ -94,15 +94,15 @@ export function PostDetailPageClient({ postId }: PostDetailPageClientProps): JSX
     if (!post) {
       return null;
     }
-    if (post.publishedAt) {
-      return dateFormatter.format(new Date(post.publishedAt));
-    }
     if (post.publishedAtJalali) {
       return post.publishedAtJalali.replace(/^(\d{4})/, (match) => {
         const year = parseInt(match, 10);
         if (year >= 1400) return match.slice(1);
         return match.slice(2);
       });
+    }
+    if (post.publishedAt) {
+      return dateFormatter.format(new Date(post.publishedAt));
     }
     return t('labels.notAvailable');
   }, [post, dateFormatter, t]);

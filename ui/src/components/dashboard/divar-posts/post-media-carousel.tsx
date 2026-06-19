@@ -384,74 +384,70 @@ export function PostMediaCarousel({
         </DialogContent>
       </Dialog>
       {mediaCount > 1 ? (
-        <>
-          <div className="hidden lg:relative lg:mx-auto lg:block lg:w-full lg:max-w-[400px]">
-            <div className="flex flex-nowrap gap-2 overflow-x-auto pb-1 pr-8">
-              {post.medias.map((media, index) => (
-                <button
-                  key={media.id}
-                  type="button"
-                  onClick={() => {
-                    if (swiperRef.current) {
-                      const swiper = swiperRef.current;
-                      if (swiper.params.loop) {
-                        swiper.slideToLoop(index);
-                      } else {
-                        swiper.slideTo(index);
-                      }
+        <div className="hidden lg:relative lg:mx-auto lg:block lg:w-full lg:max-w-[400px]">
+          <div className="flex flex-nowrap gap-2 overflow-x-auto pb-1 pr-8">
+            {post.medias.map((media, index) => (
+              <button
+                key={media.id}
+                type="button"
+                onClick={() => {
+                  if (swiperRef.current) {
+                    const swiper = swiperRef.current;
+                    if (swiper.params.loop) {
+                      swiper.slideToLoop(index);
                     } else {
-                      setActiveIndex(index);
+                      swiper.slideTo(index);
                     }
-                  }}
-                  className={`shrink-0 overflow-hidden rounded-md border ${
-                    index === activeIndex
-                      ? 'border-primary'
-                      : 'border-border hover:border-border/80'
-                  }`}
-                >
-                  <img
-                    src={media.thumbnailUrl ?? media.url}
-                    alt={media.alt ?? media.id}
-                    className="size-16 object-cover"
-                    loading="lazy"
-                  />
-                </button>
-              ))}
-            </div>
-            {showThumbnailScrollHint ? (
-              <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-background to-transparent" />
-            ) : null}
-          </div>
-          {hasMultiplePhotos ? (
-            <div className="flex items-center justify-center gap-1.5 py-2 lg:hidden">
-              {post.medias.map((_, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  onClick={() => {
-                    if (swiperRef.current) {
-                      const swiper = swiperRef.current;
-                      if (swiper.params.loop) {
-                        swiper.slideToLoop(index);
-                      } else {
-                        swiper.slideTo(index);
-                      }
-                    } else {
-                      setActiveIndex(index);
-                    }
-                  }}
-                  className={`size-2 rounded-full transition-all ${
-                    index === activeIndex
-                      ? 'w-5 bg-primary'
-                      : 'bg-muted-foreground/50 hover:bg-muted-foreground/70'
-                  }`}
-                  aria-label={`${isRTL ? 'عکس' : 'Photo'} ${index + 1}`}
+                  } else {
+                    setActiveIndex(index);
+                  }
+                }}
+                className={`shrink-0 overflow-hidden rounded-md border ${
+                  index === activeIndex
+                    ? 'border-primary'
+                    : 'border-border hover:border-border/80'
+                }`}
+              >
+                <img
+                  src={media.thumbnailUrl ?? media.url}
+                  alt={media.alt ?? media.id}
+                  className="size-16 object-cover"
+                  loading="lazy"
                 />
-              ))}
-            </div>
+              </button>
+            ))}
+          </div>
+          {showThumbnailScrollHint ? (
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-background to-transparent" />
           ) : null}
-        </>
+        </div>
       ) : null}
+      <div className="flex items-center justify-center gap-1.5 py-2 lg:hidden">
+        {post.medias.map((_, index) => (
+          <button
+            key={index}
+            type="button"
+            onClick={() => {
+              if (swiperRef.current) {
+                const swiper = swiperRef.current;
+                if (swiper.params.loop) {
+                  swiper.slideToLoop(index);
+                } else {
+                  swiper.slideTo(index);
+                }
+              } else {
+                setActiveIndex(index);
+              }
+            }}
+            className={`size-2 rounded-full transition-all ${
+              index === activeIndex
+                ? 'w-5 bg-primary'
+                : 'bg-muted-foreground/50 hover:bg-muted-foreground/70'
+            }`}
+            aria-label={`${isRTL ? 'عکس' : 'Photo'} ${index + 1}`}
+          />
+        ))}
+      </div>
     </div>
   );
 }

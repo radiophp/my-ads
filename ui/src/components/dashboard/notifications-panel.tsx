@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { ChevronDown, Loader2, RefreshCw } from 'lucide-react';
+import { ChevronDown, RefreshCw } from 'lucide-react';
+import { LoadingLogo } from '@/components/ui/loading-logo';
 
 import {
   useFetchPostContactInfoMutation,
@@ -569,7 +570,7 @@ export function NotificationsPanel() {
                   isRTL ? 'md:order-1' : 'md:order-2',
                 )}
               >
-                <RefreshCw className={cn('size-4', busy && 'animate-spin')} aria-hidden />
+                {busy ? <LoadingLogo size="sm" className="size-4" /> : <RefreshCw className="size-4" />}
                 {busy ? t('refreshing') : t('refresh')}
               </Button>
             </div>
@@ -610,7 +611,7 @@ export function NotificationsPanel() {
           <div ref={loadMoreRef} className="flex justify-center py-6">
             {isLoadingMore ? (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="size-4 animate-spin" aria-hidden />
+                <LoadingLogo size="sm" />
                 <span>{t('loadingMore')}</span>
               </div>
             ) : null}

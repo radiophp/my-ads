@@ -2,7 +2,8 @@
 
 import type { JSX } from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ExternalLink, Loader2 } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
+import { LoadingLogo } from '@/components/ui/loading-logo';
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
@@ -137,7 +138,7 @@ export function PostDetailPageClient({ postId }: PostDetailPageClientProps): JSX
       return (
         <div className="flex flex-1 items-center justify-center py-24">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="size-4 animate-spin" aria-hidden />
+            <LoadingLogo size="sm" />
             <span>{t('loading')}</span>
           </div>
         </div>

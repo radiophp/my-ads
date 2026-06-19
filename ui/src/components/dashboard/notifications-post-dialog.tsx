@@ -2,7 +2,8 @@
 
 import type { JSX } from 'react';
 import { useTranslations } from 'next-intl';
-import { ExternalLink, Loader2 } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
+import { LoadingLogo } from '@/components/ui/loading-logo';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DownloadPhotosDialog } from '@/components/dashboard/divar-posts/download-photos-dialog';
@@ -82,7 +83,7 @@ export function NotificationsPostDialog({
               {postLoading ? (
                 <div className="flex flex-1 items-center justify-center py-24">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="size-4 animate-spin" aria-hidden />
+                    <LoadingLogo size="sm" />
                     <span>{t('loading')}</span>
                   </div>
                 </div>

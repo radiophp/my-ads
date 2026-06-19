@@ -1,7 +1,8 @@
 /* eslint-disable @next/next/no-img-element, tailwindcss/classnames-order */
 import type { JSX } from 'react';
 import { useCallback, useMemo, useState } from 'react';
-import { Download, ImageIcon, Loader2 } from 'lucide-react';
+import { Download, ImageIcon } from 'lucide-react';
+import { LoadingLogo } from '@/components/ui/loading-logo';
 
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -184,7 +185,7 @@ export function DownloadPhotosDialog({
                     }}
                   >
                   {downloadingId === 'zip' ? (
-                    <Loader2 className="mr-2 size-4 animate-spin" aria-hidden />
+                    <LoadingLogo size="sm" className="mr-2" />
                   ) : (
                     <Download className="mr-2 size-4" aria-hidden />
                   )}

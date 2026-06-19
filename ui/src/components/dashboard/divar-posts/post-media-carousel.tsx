@@ -9,6 +9,7 @@ import {
   MapPin,
   X,
 } from 'lucide-react';
+import { LoadingLogo } from '@/components/ui/loading-logo';
 import type { useTranslations } from 'next-intl';
 import type { Swiper as SwiperInstance } from 'swiper';
 import { Navigation, Zoom, Keyboard, A11y, Mousewheel } from 'swiper/modules';
@@ -230,7 +231,7 @@ export function PostMediaCarousel({
           {imageLoading && !imageFailed ? (
             <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <ImageIcon className="size-5 animate-pulse" aria-hidden />
+                <LoadingLogo size="sm" />
                 <span className="animate-pulse">{t('loading')}</span>
               </div>
             </div>
@@ -282,7 +283,7 @@ export function PostMediaCarousel({
         {imageLoading && !imageFailed ? (
           <div className="absolute inset-0 flex items-center justify-center bg-muted/40">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <ImageIcon className="size-5 animate-pulse" aria-hidden />
+              <LoadingLogo size="sm" />
               <span className="animate-pulse">{t('loading')}</span>
             </div>
           </div>

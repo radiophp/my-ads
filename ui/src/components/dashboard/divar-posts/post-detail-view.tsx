@@ -19,7 +19,6 @@ import {
   Share2,
   Phone,
   Copy,
-  Loader2,
   Printer,
   Clock3,
 } from 'lucide-react';
@@ -33,6 +32,7 @@ import {
 } from '@/features/api/endpoints/ring-binder';
 import { useGetPublicDivarCategoryFilterQuery } from '@/features/api/endpoints/divar-category-filters';
 import { toast } from '@/components/ui/use-toast';
+import { LoadingLogo } from '@/components/ui/loading-logo';
 import { cn } from '@/lib/utils';
 import { AMENITY_CONFIG } from './post-detail-sections';
 import { createPostPrintContent } from './post-print-utils';
@@ -321,7 +321,7 @@ export function PostDetailView({
                   disabled={!onRequestContactInfo || contactLoading}
                 >
                   {contactLoading ? (
-                  <Loader2 className="size-3.5 animate-spin" />
+                  <LoadingLogo size="sm" />
                   ) : (
                   <Phone className="size-3.5" />
                   )}
@@ -479,7 +479,7 @@ export function PostDetailView({
                   disabled={!onRequestContactInfo || contactLoading}
                 >
                   {contactLoading ? (
-                  <Loader2 className="size-3.5 animate-spin" />
+                  <LoadingLogo size="sm" />
                   ) : (
                   <Phone className="size-3.5" />
                   )}

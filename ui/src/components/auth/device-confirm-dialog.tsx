@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { LoadingLogo } from '@/components/ui/loading-logo';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -71,7 +72,12 @@ export function DeviceConfirmDialog({
             {t('cancel')}
           </AlertDialogCancel>
           <AlertDialogAction onClick={onConfirm} disabled={isLoading}>
-            {isLoading ? t('loading') : t('confirm')}
+            {isLoading ? (
+              <span className="inline-flex items-center gap-2">
+                <LoadingLogo size="sm" />
+                {t('loading')}
+              </span>
+            ) : t('confirm')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

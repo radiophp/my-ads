@@ -3,7 +3,8 @@
 
 import type { JSX } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, ExternalLink, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
+import { LoadingLogo } from '@/components/ui/loading-logo';
 import { useLocale, useTranslations } from 'next-intl';
 import Image from 'next/image';
 
@@ -649,7 +650,7 @@ export function DivarPostsFeed(): JSX.Element {
               <div ref={loadMoreRef} className="flex justify-center py-4">
                 {loadingMore ? (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="size-4 animate-spin" aria-hidden />
+                    <LoadingLogo size="sm" />
                     <span>{t('loading')}</span>
                   </div>
                 ) : (

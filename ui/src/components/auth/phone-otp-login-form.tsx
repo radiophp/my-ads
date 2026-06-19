@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { ArrowRight } from 'lucide-react';
+import { LoadingLogo } from '@/components/ui/loading-logo';
 
 import {
   useRequestOtpMutation,
@@ -513,7 +514,7 @@ export function PhoneOtpLoginForm() {
           <CardFooter>
             <Button type="submit" className="w-full" disabled={isRequesting || isWebsiteSettingsLoading || (!!websiteSettings?.turnstileEnabled && !turnstileLoaded)}>
               <div className="flex items-center gap-2">
-                {(isWebsiteSettingsLoading || (turnstileEnabled && turnstileLoading)) && <div className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />}
+                {(isWebsiteSettingsLoading || (turnstileEnabled && turnstileLoading)) && <LoadingLogo size="sm" />}
                 {isRequesting ? t('requesting') : t('requestCode')}
               </div>
             </Button>

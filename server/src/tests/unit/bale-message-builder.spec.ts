@@ -68,7 +68,11 @@ describe('bale-message-builder', () => {
     });
 
     it('falls through to deposit/rent when priceTotal is 0', () => {
-      const result = formatPriceLine({ priceTotal: 0, depositAmount: 200000000, rentAmount: 5000000 });
+      const result = formatPriceLine({
+        priceTotal: 0,
+        depositAmount: 200000000,
+        rentAmount: 5000000,
+      });
       expect(result).toContain('ودیعه');
       expect(result).toContain('اجاره');
       expect(result).not.toContain('قیمت');

@@ -734,7 +734,7 @@ export function DivarPostsFeed(): JSX.Element {
                 </DialogHeader>
               </div>
 
-              <div ref={detailScrollRef} className="flex-1 overflow-y-auto py-4 sm:p-0">
+              <div ref={detailScrollRef} className="flex-1 overflow-y-auto pb-4 sm:p-0">
                 {detailData ? (
                   <>
                     <PostDetailView

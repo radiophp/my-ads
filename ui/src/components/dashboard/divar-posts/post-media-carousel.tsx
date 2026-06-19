@@ -384,7 +384,7 @@ export function PostMediaCarousel({
       </Dialog>
       {mediaCount > 1 ? (
         <>
-          <div className="relative mx-auto w-full lg:max-w-[400px]">
+          <div className="hidden lg:relative lg:mx-auto lg:block lg:w-full lg:max-w-[400px]">
             <div className="flex flex-nowrap gap-2 overflow-x-auto pb-1 pr-8">
               {post.medias.map((media, index) => (
                 <button
@@ -420,6 +420,32 @@ export function PostMediaCarousel({
             {showThumbnailScrollHint ? (
               <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-background to-transparent" />
             ) : null}
+          </div>
+          <div className="flex items-center justify-center gap-1.5 py-2 lg:hidden">
+            {post.medias.map((_, index) => (
+              <button
+                key={index}
+                type="button"
+                onClick={() => {
+                  if (swiperRef.current) {
+                    const swiper = swiperRef.current;
+                    if (swiper.params.loop) {
+                      swiper.slideToLoop(index);
+                    } else {
+                      swiper.slideTo(index);
+                    }
+                  } else {
+                    setActiveIndex(index);
+                  }
+                }}
+                className={`size-2 rounded-full transition-all ${
+                  index === activeIndex
+                    ? 'w-5 bg-primary'
+                    : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
+                }`}
+                aria-label={`${isRTL ? 'عکس' : 'Photo'} ${index + 1}`}
+              />
+            ))}
           </div>
         </>
       ) : null}

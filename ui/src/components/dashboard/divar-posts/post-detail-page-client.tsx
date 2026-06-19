@@ -102,7 +102,22 @@ export function PostDetailPageClient({ postId }: PostDetailPageClientProps): JSX
       });
     }
     if (post.publishedAt) {
-      return dateFormatter.format(new Date(post.publishedAt));
+      const persianToLatin: Record<string, string> = {
+        '۰': '0', '۱': '1', '۲': '2', '۳': '3', '۴': '4',
+        '۵': '5', '۶': '6', '۷': '7', '۸': '8', '۹': '9',
+      };
+      const parts = dateFormatter.formatToParts(new Date(post.publishedAt));
+      return parts.map((part) => {
+        if (part.type === 'year' && part.value.length === 4) {
+          const latin = part.value.replace(/[۰-۹]/g, (d) => persianToLatin[d] ?? d);
+          const year = parseInt(latin, 10);
+          if (!Number.isNaN(year)) {
+            if (year >= 1400) return part.value.slice(1);
+            return part.value.slice(2);
+          }
+        }
+        return part.value;
+      }).join('');
     }
     return t('labels.notAvailable');
   }, [post, dateFormatter, t]);

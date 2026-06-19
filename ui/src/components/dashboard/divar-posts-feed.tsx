@@ -361,7 +361,11 @@ export function DivarPostsFeed(): JSX.Element {
       }
 
       if (fallbackJalali) {
-        return fallbackJalali;
+        return fallbackJalali.replace(/^(\d{4})/, (match) => {
+          const year = parseInt(match, 10);
+          if (year >= 1400) return match.slice(1);
+          return match.slice(2);
+        });
       }
 
       return null;

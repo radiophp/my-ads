@@ -279,7 +279,7 @@ export function PostDetailView({
   return (
     <div className="space-y-8 overflow-x-hidden">
       <div className="flex min-w-0 flex-col gap-6 lg:flex-row">
-        <div className="order-2 flex min-w-0 flex-1 flex-col gap-6 lg:order-1">
+        <div className="order-2 flex min-w-0 flex-1 flex-col gap-6 px-6 lg:order-1 lg:px-0">
           <div className="flex w-full flex-col gap-2">
           <div
             className={cn(

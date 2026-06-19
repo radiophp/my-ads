@@ -78,7 +78,7 @@ export function NotificationsPostDialog({
                 <DialogDescription className="sr-only">{dialogTitle}</DialogDescription>
               </DialogHeader>
             </div>
-            <div className="flex-1 overflow-y-auto px-6 py-4 sm:p-0">
+            <div className="flex-1 overflow-y-auto py-4 sm:p-0">
               {postLoading ? (
                 <div className="flex flex-1 items-center justify-center py-24">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">

@@ -103,7 +103,7 @@ export function PostDetailPageClient({ postId }: PostDetailPageClientProps): JSX
     }
     if (post.publishedAt) {
       const formatted = dateFormatter.format(new Date(post.publishedAt));
-      return formatted.replace(/([۰-۹]{4})/g, (match) => {
+      return formatted.replace(/([0-9۰-۹]{4})/g, (match) => {
         const latin = match.replace(/[۰-۹]/g, (d) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)));
         const year = parseInt(latin, 10);
         if (!Number.isNaN(year)) {

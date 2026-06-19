@@ -465,6 +465,7 @@ jobs:
           MINIO_PUBLIC_ENDPOINT: ${{ vars.MINIO_PUBLIC_ENDPOINT }}
           MINIO_PUBLIC_PORT: ${{ vars.MINIO_PUBLIC_PORT }}
           MINIO_PUBLIC_USE_SSL: ${{ vars.MINIO_PUBLIC_USE_SSL }}
+          MINIO_PUBLIC_READ: ${{ vars.MINIO_PUBLIC_READ || 'true' }}
           BACKUP_TZ: ${{ vars.BACKUP_TZ || 'Asia/Tehran' }}
           BACKUP_CRON: ${{ vars.BACKUP_CRON || '0 2 * * *' }}
           BACKUP_TELEGRAM_PHONES: ${{ vars.BACKUP_TELEGRAM_PHONES || '+989038923989,+989195043739' }}

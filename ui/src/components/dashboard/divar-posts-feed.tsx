@@ -626,7 +626,7 @@ export function DivarPostsFeed(): JSX.Element {
 
   return (
     <Card className="flex size-full flex-col overflow-hidden border-0 shadow-sm">
-      <CardContent className="w-full min-w-0 flex-1 space-y-4 overflow-y-auto p-4">
+      <CardContent className="w-full min-w-0 flex-1 space-y-4 overflow-y-auto px-2 py-4 sm:px-4">
         <ActiveFilterBadges className="pb-2" />
         {initializing ? (
           <div className="grid w-full auto-rows-fr grid-cols-1 gap-4 sm:grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">

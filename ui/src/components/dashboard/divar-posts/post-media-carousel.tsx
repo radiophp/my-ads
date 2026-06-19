@@ -214,7 +214,7 @@ export function PostMediaCarousel({
   const renderMediaBlock = (): JSX.Element => {
     if (mediaCount === 0) {
       return (
-        <div className="relative overflow-hidden rounded-lg border border-border/60">
+        <div className="relative overflow-hidden lg:rounded-lg border border-border/60">
           {renderTopBadges()}
           {currentMediaSrc ? (
             <img
@@ -247,7 +247,7 @@ export function PostMediaCarousel({
     }
 
     return (
-      <div className="relative overflow-hidden rounded-lg border border-border/60">
+      <div className="relative overflow-hidden lg:rounded-lg border border-border/60">
         {renderTopBadges()}
         <div className="relative h-64 w-full overflow-hidden">
           <Swiper

@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Eraser,
   Folder,
+  X,
 } from 'lucide-react';
 
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
@@ -979,18 +980,6 @@ export function DashboardSearchFilterPanel() {
 	        >
           {filterModalOpen ? (
             <div className="sticky top-0 z-20 -mx-4 border-b border-border bg-background px-4 lg:hidden">
-              <div className="flex items-center justify-end gap-2 py-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="inline-flex items-center gap-1 text-destructive hover:bg-destructive/10"
-                  onClick={handleResetFilters}
-                >
-                  <Eraser className="size-4" />
-                  {t('clear')}
-                </Button>
-              </div>
               <div className="-mx-4" dir={isRTL ? 'rtl' : 'ltr'}>
                 {(() => {
                   const tabs = [
@@ -1634,33 +1623,14 @@ export function DashboardSearchFilterPanel() {
 		          </div>
 		        ) : null}
 	        </div>
-	        {filterModalOpen ? (
+        {filterModalOpen ? (
 	          <div className="z-10 mt-auto flex shrink-0 flex-col justify-end gap-3 border-t border-border bg-background p-4 lg:hidden">
             <div className="flex flex-row gap-3">
-              <div className="flex-1" onClick={() => {
-                if (!modalHasPendingChanges) {
-                  toast({ title: t('noChanges') });
-                }
-              }}>
-                <Button
-                  type="button"
-                  className="w-full"
-                  onClick={() => {
-                    dispatch(commitAppliedFilters());
-                    setFilterModalOpen(false);
-                  }}
-                  disabled={!modalHasPendingChanges}
-                >
-                  <span className="flex items-center justify-center gap-2">
-                    <Check className="size-4" aria-hidden="true" />
-                    <span>{t('applyFilters')}</span>
-                  </span>
-                </Button>
-              </div>
               <Button
                 type="button"
-                variant="secondary"
-                className="shrink-0"
+                variant="ghost"
+                size="sm"
+                className="inline-flex items-center gap-1"
                 disabled={!hasActiveFilters || saveLimitReached || isCreatingSavedFilter}
                 onClick={() => setSaveDialogOpen(true)}
                 title={
@@ -1671,12 +1641,44 @@ export function DashboardSearchFilterPanel() {
                       : undefined
                 }
               >
-                <span className="flex items-center justify-center gap-2">
-                  <BookmarkPlus className="size-4" />
-                  <span>{savedFiltersT('saveButton')}</span>
-                </span>
+                <BookmarkPlus className="size-4" />
+                <span>{savedFiltersT('saveButton')}</span>
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="inline-flex flex-1 items-center justify-center gap-1 text-muted-foreground"
+                onClick={() => setFilterModalOpen(false)}
+              >
+                <X className="size-4" />
+                <span>{t('close')}</span>
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="inline-flex items-center gap-1 text-destructive hover:bg-destructive/10"
+                onClick={handleResetFilters}
+              >
+                <Eraser className="size-4" />
+                {t('clear')}
               </Button>
             </div>
+            <Button
+              type="button"
+              className="w-full"
+              onClick={() => {
+                dispatch(commitAppliedFilters());
+                setFilterModalOpen(false);
+              }}
+              disabled={!modalHasPendingChanges}
+            >
+              <span className="flex items-center justify-center gap-2">
+                <Check className="size-4" aria-hidden="true" />
+                <span>{t('applyFilters')}</span>
+              </span>
+            </Button>
           </div>
         ) : null}
       </section>

@@ -473,6 +473,13 @@ export function PostDetailView({
           </dl>
         </div>
         <div className="order-1 min-w-0 lg:order-2 lg:w-2/5">
+          <PostMediaCarousel
+            post={post}
+            isRTL={isRTL}
+            businessBadge={businessBadge}
+            cityDistrict={cityDistrict}
+            t={t}
+          />
           <div className="mb-3 lg:hidden">
             <div className="flex w-full overflow-hidden rounded-md border border-border/70 bg-muted/40 text-foreground">
               <button
@@ -507,13 +514,6 @@ export function PostDetailView({
               ) : null}
             </div>
           </div>
-          <PostMediaCarousel
-            post={post}
-            isRTL={isRTL}
-            businessBadge={businessBadge}
-            cityDistrict={cityDistrict}
-            t={t}
-          />
           {hasLocation ? (
             <div className={cn('hidden lg:block', mapWrapperClassName)}>
               <PostLocationMap

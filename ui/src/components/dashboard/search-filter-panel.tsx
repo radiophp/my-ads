@@ -979,15 +979,7 @@ export function DashboardSearchFilterPanel() {
 	        >
           {filterModalOpen ? (
             <div className="sticky top-0 z-20 -mx-4 border-b border-border bg-background px-4 lg:hidden">
-              <div className="flex items-center justify-between gap-2 py-2">
-                <p
-                  className={cn(
-                    'flex-1 text-base font-semibold text-foreground',
-                    isRTL ? 'text-right' : 'text-left',
-                  )}
-                >
-                  {t('title')}
-                </p>
+              <div className="flex items-center justify-end gap-2 py-2">
                 <Button
                   type="button"
                   variant="ghost"

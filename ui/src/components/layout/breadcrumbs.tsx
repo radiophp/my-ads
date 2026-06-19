@@ -175,6 +175,7 @@ export function Breadcrumbs({ className, force = false }: BreadcrumbsProps) {
     pathname === '/' ||
     pathname === '' ||
     segments.length === 0 ||
+    isDashboardPath ||
     (!force &&
       (segments.length === 1 &&
         (segments[0] === 'news' ||

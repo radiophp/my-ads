@@ -66,6 +66,17 @@ describe('bale-message-builder', () => {
       expect(formatPriceLine({ priceTotal: NaN })).toBeNull();
       expect(formatPriceLine({ priceTotal: Infinity })).toBeNull();
     });
+
+    it('falls through to deposit/rent when priceTotal is 0', () => {
+      const result = formatPriceLine({ priceTotal: 0, depositAmount: 200000000, rentAmount: 5000000 });
+      expect(result).toContain('ودیعه');
+      expect(result).toContain('اجاره');
+      expect(result).not.toContain('قیمت');
+    });
+
+    it('ignores zero priceTotal when deposit and rent are also 0', () => {
+      expect(formatPriceLine({ priceTotal: 0, depositAmount: 0, rentAmount: 0 })).toBeNull();
+    });
   });
 
   describe('buildCaption', () => {

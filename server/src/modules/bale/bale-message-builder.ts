@@ -9,7 +9,7 @@ export function formatPriceLine(post: Record<string, unknown>): string | null {
   const fmt = (value: unknown) => {
     if (value === null || value === undefined) return null;
     const num = Number(value);
-    if (!Number.isFinite(num)) return null;
+    if (!Number.isFinite(num) || num <= 0) return null;
     return num.toLocaleString('fa-IR');
   };
 

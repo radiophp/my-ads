@@ -441,7 +441,7 @@ export function PostMediaCarousel({
                 className={`size-2 rounded-full transition-all ${
                   index === activeIndex
                     ? 'w-5 bg-primary'
-                    : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
+                    : 'bg-muted-foreground/50 hover:bg-muted-foreground/70'
                 }`}
                 aria-label={`${isRTL ? 'عکس' : 'Photo'} ${index + 1}`}
               />

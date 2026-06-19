@@ -97,7 +97,14 @@ export function PostDetailPageClient({ postId }: PostDetailPageClientProps): JSX
     if (post.publishedAt) {
       return dateFormatter.format(new Date(post.publishedAt));
     }
-    return post.publishedAtJalali ?? t('labels.notAvailable');
+    if (post.publishedAtJalali) {
+      return post.publishedAtJalali.replace(/^(\d{4})/, (match) => {
+        const year = parseInt(match, 10);
+        if (year >= 1400) return match.slice(1);
+        return match.slice(2);
+      });
+    }
+    return t('labels.notAvailable');
   }, [post, dateFormatter, t]);
 
   const cityDistrict = useMemo(() => {

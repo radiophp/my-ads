@@ -422,32 +422,34 @@ export function PostMediaCarousel({
               <div className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-background to-transparent" />
             ) : null}
           </div>
-          <div className="flex items-center justify-center gap-1.5 py-2 lg:hidden">
-            {post.medias.map((_, index) => (
-              <button
-                key={index}
-                type="button"
-                onClick={() => {
-                  if (swiperRef.current) {
-                    const swiper = swiperRef.current;
-                    if (swiper.params.loop) {
-                      swiper.slideToLoop(index);
+          {hasMultiplePhotos ? (
+            <div className="flex items-center justify-center gap-1.5 py-2 lg:hidden">
+              {post.medias.map((_, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => {
+                    if (swiperRef.current) {
+                      const swiper = swiperRef.current;
+                      if (swiper.params.loop) {
+                        swiper.slideToLoop(index);
+                      } else {
+                        swiper.slideTo(index);
+                      }
                     } else {
-                      swiper.slideTo(index);
+                      setActiveIndex(index);
                     }
-                  } else {
-                    setActiveIndex(index);
-                  }
-                }}
-                className={`size-2 rounded-full transition-all ${
-                  index === activeIndex
-                    ? 'w-5 bg-primary'
-                    : 'bg-muted-foreground/50 hover:bg-muted-foreground/70'
-                }`}
-                aria-label={`${isRTL ? 'عکس' : 'Photo'} ${index + 1}`}
-              />
-            ))}
-          </div>
+                  }}
+                  className={`size-2 rounded-full transition-all ${
+                    index === activeIndex
+                      ? 'w-5 bg-primary'
+                      : 'bg-muted-foreground/50 hover:bg-muted-foreground/70'
+                  }`}
+                  aria-label={`${isRTL ? 'عکس' : 'Photo'} ${index + 1}`}
+                />
+              ))}
+            </div>
+          ) : null}
         </>
       ) : null}
     </div>

@@ -40,6 +40,8 @@ import { AlreadySignedInCard } from './already-signed-in-card';
 import { BaleRequiredStep } from './bale-required-step';
 import { CodeDigitSlot } from './code-digit-slot';
 import { DeviceConfirmDialog } from './device-confirm-dialog';
+import { DeviceSelectDialog } from './device-select-dialog';
+import type { ActiveDeviceInfo } from '@/features/api/endpoints/auth';
 
 
 type Step = 'phone' | 'verify' | 'bale_required';
@@ -68,6 +70,8 @@ export function PhoneOtpLoginForm() {
   const [countdown, setCountdown] = useState(0);
   const [pendingSessionToken, setPendingSessionToken] = useState<string | null>(null);
   const [pendingCurrentDevice, setPendingCurrentDevice] = useState<ConfirmDeviceResponse['currentDevice']>(null);
+  const [pendingActiveDevices, setPendingActiveDevices] = useState<ActiveDeviceInfo[]>([]);
+  const [requiresDeviceSelection, setRequiresDeviceSelection] = useState(false);
   const [isConfirmingDevice, setIsConfirmingDevice] = useState(false);
   const phoneInputRef = useRef<HTMLInputElement>(null);
   const baleLoginCallbackRef = useRef<() => void>(() => {});
@@ -296,7 +300,7 @@ export function PhoneOtpLoginForm() {
       }).unwrap();
 
         if (response.status === 'confirm_device') {
-          if (!response.currentDevice) {
+          if (!response.currentDevice && !response.requiresDeviceSelection) {
             const confirmed = await confirmDevice({ pendingSessionToken: response.pendingSessionToken }).unwrap();
             dispatch(setAuth(confirmed));
             toast({ title: t('baleLoginSuccess') });
@@ -305,6 +309,13 @@ export function PhoneOtpLoginForm() {
           }
           setPendingSessionToken(response.pendingSessionToken);
           setPendingCurrentDevice(response.currentDevice);
+          if (response.requiresDeviceSelection && response.activeDevices) {
+            setPendingActiveDevices(response.activeDevices);
+            setRequiresDeviceSelection(true);
+          } else {
+            setPendingActiveDevices([]);
+            setRequiresDeviceSelection(false);
+          }
           return;
         }
 
@@ -355,7 +366,7 @@ export function PhoneOtpLoginForm() {
         }).unwrap();
 
         if (response.status === 'confirm_device') {
-          if (!response.currentDevice) {
+          if (!response.currentDevice && !response.requiresDeviceSelection) {
             const confirmed = await confirmDevice({ pendingSessionToken: response.pendingSessionToken }).unwrap();
             dispatch(setAuth(confirmed));
             toast({ title: t('successToast') });
@@ -365,6 +376,13 @@ export function PhoneOtpLoginForm() {
           }
           setPendingSessionToken(response.pendingSessionToken);
           setPendingCurrentDevice(response.currentDevice);
+          if (response.requiresDeviceSelection && response.activeDevices) {
+            setPendingActiveDevices(response.activeDevices);
+            setRequiresDeviceSelection(true);
+          } else {
+            setPendingActiveDevices([]);
+            setRequiresDeviceSelection(false);
+          }
           return;
         }
 
@@ -380,16 +398,18 @@ export function PhoneOtpLoginForm() {
     [code, confirmDevice, dispatch, lastRequestedPhoneLocal, phone, router, t, toast, verifyOtp],
   );
 
-  const handleConfirmDevice = useCallback(async () => {
+  const handleConfirmDevice = useCallback(async (deviceToReplace?: string) => {
     if (!pendingSessionToken) return;
     setIsConfirmingDevice(true);
     try {
-      const response = await confirmDevice({ pendingSessionToken }).unwrap();
+      const response = await confirmDevice({ pendingSessionToken, deviceToReplace }).unwrap();
       dispatch(setAuth(response));
       toast({ title: t('successToast') });
       setCode('');
       setPendingSessionToken(null);
       setPendingCurrentDevice(null);
+      setPendingActiveDevices([]);
+      setRequiresDeviceSelection(false);
       router.push('/dashboard');
     } catch (error) {
       console.error('Failed to confirm device', error);
@@ -408,6 +428,8 @@ export function PhoneOtpLoginForm() {
     }
     setPendingSessionToken(null);
     setPendingCurrentDevice(null);
+    setPendingActiveDevices([]);
+    setRequiresDeviceSelection(false);
   }, [pendingSessionToken, cancelDevice]);
 
   const handleResend = useCallback(async () => {
@@ -600,9 +622,16 @@ export function PhoneOtpLoginForm() {
         </form>
       )}
       <DeviceConfirmDialog
-        open={!!pendingSessionToken}
+        open={!!pendingSessionToken && !requiresDeviceSelection}
         currentDevice={pendingCurrentDevice}
-        onConfirm={handleConfirmDevice}
+        onConfirm={() => handleConfirmDevice()}
+        onCancel={handleCancelDevice}
+        isLoading={isConfirmingDevice}
+      />
+      <DeviceSelectDialog
+        open={!!pendingSessionToken && requiresDeviceSelection}
+        activeDevices={pendingActiveDevices}
+        onConfirm={(deviceToReplace) => handleConfirmDevice(deviceToReplace)}
         onCancel={handleCancelDevice}
         isLoading={isConfirmingDevice}
       />

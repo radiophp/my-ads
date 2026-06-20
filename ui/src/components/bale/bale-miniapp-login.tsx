@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Smartphone, Loader2, CheckCircle2 } from 'lucide-react';
 
-import { useBaleMiniAppAuthMutation, useConfirmDeviceMutation } from '@/features/api/endpoints/auth';
+import { useBaleMiniAppAuthMutation, useConfirmDeviceMutation, type ActiveDeviceInfo } from '@/features/api/endpoints/auth';
 import { setAuth, setBaleMiniApp } from '@/features/auth/authSlice';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import { getDeviceInfo } from '@/lib/device';
@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import { DeviceConfirmDialog } from '@/components/auth/device-confirm-dialog';
+import { DeviceSelectDialog } from '@/components/auth/device-select-dialog';
 
 export function BaleMiniAppLogin() {
   const dispatch = useAppDispatch();
@@ -24,6 +25,8 @@ export function BaleMiniAppLogin() {
   const [confirmDevice] = useConfirmDeviceMutation();
   const [pendingSessionToken, setPendingSessionToken] = useState<string | null>(null);
   const [currentDevice, setCurrentDevice] = useState<{ name: string | null; type: string | null; ipAddress: string | null; lastActiveAt: string } | null>(null);
+  const [pendingActiveDevices, setPendingActiveDevices] = useState<ActiveDeviceInfo[]>([]);
+  const [requiresDeviceSelection, setRequiresDeviceSelection] = useState(false);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [showDeviceDialog, setShowDeviceDialog] = useState(false);
   const [redirected, setRedirected] = useState(false);
@@ -59,6 +62,13 @@ export function BaleMiniAppLogin() {
       if (result.status === 'confirm_device') {
         setPendingSessionToken(result.pendingSessionToken);
         setCurrentDevice(result.currentDevice);
+        if (result.requiresDeviceSelection && result.activeDevices) {
+          setPendingActiveDevices(result.activeDevices);
+          setRequiresDeviceSelection(true);
+        } else {
+          setPendingActiveDevices([]);
+          setRequiresDeviceSelection(false);
+        }
         setShowDeviceDialog(true);
         return true;
       }
@@ -110,16 +120,20 @@ export function BaleMiniAppLogin() {
     requestContact();
   }, [requestContact]);
 
-  const handleConfirmDevice = useCallback(async () => {
+  const handleConfirmDevice = useCallback(async (deviceToReplace?: string) => {
     if (!pendingSessionToken) return;
     try {
-      const result = await confirmDevice({ pendingSessionToken }).unwrap();
+      const result = await confirmDevice({ pendingSessionToken, deviceToReplace }).unwrap();
       dispatch(setAuth({
         accessToken: result.accessToken,
         refreshToken: result.refreshToken,
         user: result.user,
       }));
       setShowDeviceDialog(false);
+      setPendingSessionToken(null);
+      setCurrentDevice(null);
+      setPendingActiveDevices([]);
+      setRequiresDeviceSelection(false);
       setRedirected(true);
     } catch {
       toast({ title: 'خطا', description: 'تأیید دستگاه با مشکل مواجه شد.' });
@@ -130,6 +144,8 @@ export function BaleMiniAppLogin() {
     setShowDeviceDialog(false);
     setPendingSessionToken(null);
     setCurrentDevice(null);
+    setPendingActiveDevices([]);
+    setRequiresDeviceSelection(false);
   }, []);
 
   if (!hydrated) {
@@ -214,9 +230,16 @@ export function BaleMiniAppLogin() {
       )}
 
       <DeviceConfirmDialog
-        open={showDeviceDialog}
+        open={showDeviceDialog && !requiresDeviceSelection}
         currentDevice={currentDevice}
-        onConfirm={handleConfirmDevice}
+        onConfirm={() => handleConfirmDevice()}
+        onCancel={handleCancelDevice}
+        isLoading={isAuthLoading}
+      />
+      <DeviceSelectDialog
+        open={showDeviceDialog && requiresDeviceSelection}
+        activeDevices={pendingActiveDevices}
+        onConfirm={(deviceToReplace) => handleConfirmDevice(deviceToReplace)}
         onCancel={handleCancelDevice}
         isLoading={isAuthLoading}
       />

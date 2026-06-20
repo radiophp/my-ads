@@ -34,21 +34,13 @@ export class DeviceGuard {
       throw new UnauthorizedException('Device information missing from token.');
     }
 
-    const currentTokenVersion = await this.deviceService.getCurrentTokenVersion(userId);
+    const currentTokenVersion = await this.deviceService.getDeviceTokenVersion(userId, deviceId);
 
     if (tokenVersion !== currentTokenVersion) {
-      const activeDevice = await this.deviceService.getActiveDeviceInfo(userId);
       throw new UnauthorizedException({
         code: 'DEVICE_CHANGED',
-        message: 'Logged in from another device.',
-        currentDevice: activeDevice
-          ? {
-              name: activeDevice.name,
-              type: activeDevice.type,
-              ipAddress: activeDevice.ipAddress,
-              lastActiveAt: activeDevice.lastActiveAt,
-            }
-          : null,
+        message: 'This device has been deactivated.',
+        currentDevice: null,
       });
     }
 

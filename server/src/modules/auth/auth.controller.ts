@@ -179,7 +179,7 @@ export class AuthController {
   @RateLimit({ limit: 5, ttlSeconds: 60 })
   @ApiOperation({ summary: 'Confirm login on a new device' })
   async confirmDevice(@Body() dto: ConfirmDeviceDto): Promise<unknown> {
-    return this.authService.confirmDevice(dto.pendingSessionToken);
+    return this.authService.confirmDevice(dto.pendingSessionToken, dto.deviceToReplace);
   }
 
   @Post('cancel-device')
@@ -211,8 +211,8 @@ export class AuthController {
   @ApiOkResponse({ type: SuccessResponseDto })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid access token' })
   async logout(@Req() request: Request): Promise<SuccessResponseDto> {
-    const userId = (request.user as { sub: string })?.sub;
-    await this.authService.logout(userId);
+    const user = request.user as { sub: string; deviceId?: string };
+    await this.authService.logout(user.sub, user.deviceId);
     return { success: true };
   }
 

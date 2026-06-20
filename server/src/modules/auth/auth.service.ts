@@ -51,6 +51,14 @@ type ConfirmDeviceResponse = {
     ipAddress: string | null;
     lastActiveAt: Date;
   } | null;
+  requiresDeviceSelection?: boolean;
+  activeDevices?: {
+    deviceId: string;
+    name: string | null;
+    type: string | null;
+    ipAddress: string | null;
+    lastActiveAt: Date;
+  }[];
 };
 
 type AuthenticatedResponse = {
@@ -177,6 +185,8 @@ export class AuthService {
           status: 'confirm_device',
           pendingSessionToken: result.pendingSessionToken!,
           currentDevice: result.currentDevice,
+          requiresDeviceSelection: result.requiresDeviceSelection,
+          activeDevices: result.activeDevices,
         };
       }
     }
@@ -261,6 +271,8 @@ export class AuthService {
           status: 'confirm_device',
           pendingSessionToken: result.pendingSessionToken!,
           currentDevice: result.currentDevice,
+          requiresDeviceSelection: result.requiresDeviceSelection,
+          activeDevices: result.activeDevices,
         };
       }
     }
@@ -361,6 +373,8 @@ export class AuthService {
           status: 'confirm_device',
           pendingSessionToken: result.pendingSessionToken!,
           currentDevice: result.currentDevice,
+          requiresDeviceSelection: result.requiresDeviceSelection,
+          activeDevices: result.activeDevices,
         };
       }
     }
@@ -369,8 +383,14 @@ export class AuthService {
     return { status: 'authenticated', ...tokens };
   }
 
-  async confirmDevice(pendingSessionToken: string): Promise<AuthenticatedResponse> {
-    const { userId, deviceId } = await this.deviceService.confirmDevice(pendingSessionToken);
+  async confirmDevice(
+    pendingSessionToken: string,
+    deviceToReplace?: string,
+  ): Promise<AuthenticatedResponse> {
+    const { userId, deviceId } = await this.deviceService.confirmDevice(
+      pendingSessionToken,
+      deviceToReplace,
+    );
 
     const user = await this.usersService.findById(userId);
     if (!user) {
@@ -415,7 +435,16 @@ export class AuthService {
       throw new Error('JWT configuration is missing.');
     }
 
-    const tokenVersion = user.tokenVersion;
+    let tokenVersion = 0;
+    if (deviceId) {
+      try {
+        tokenVersion = await this.deviceService.getDeviceTokenVersion(user.id, deviceId);
+      } catch {
+        tokenVersion = user.tokenVersion;
+      }
+    } else {
+      tokenVersion = user.tokenVersion;
+    }
 
     const payload: JwtPayload = {
       sub: user.id,
@@ -465,8 +494,12 @@ export class AuthService {
     return comparePassword(token, user.hashedRefreshToken);
   }
 
-  async logout(userId: string): Promise<void> {
-    await this.deviceService.deactivateAllDevices(userId);
+  async logout(userId: string, deviceId?: string): Promise<void> {
+    if (deviceId) {
+      await this.deviceService.deactivateDevice(userId, deviceId);
+    } else {
+      await this.deviceService.deactivateAllDevices(userId);
+    }
     await this.usersService.updateRefreshToken(userId, null);
   }
 

@@ -36,7 +36,7 @@ export class RefreshJwtGuard extends AuthGuard('jwt-refresh') {
     const { sub: userId, deviceId, tokenVersion } = request.user;
 
     if (deviceId && tokenVersion !== undefined) {
-      const currentTokenVersion = await this.deviceService.getCurrentTokenVersion(userId);
+      const currentTokenVersion = await this.deviceService.getDeviceTokenVersion(userId, deviceId);
       if (tokenVersion !== currentTokenVersion) {
         throw new UnauthorizedException({
           code: 'DEVICE_CHANGED',

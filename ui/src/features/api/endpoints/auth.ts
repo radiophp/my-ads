@@ -2,10 +2,24 @@ import { apiSlice } from '../baseApi';
 
 import type { AuthResponse, CurrentUser, SuccessResponse, DeviceInfo } from '@/types/auth';
 
+export type ActiveDeviceInfo = {
+  deviceId: string;
+  name: string | null;
+  type: string | null;
+  ipAddress: string | null;
+  lastActiveAt: string;
+};
+
 export type BaleMiniAppAuthResponse =
   | { status: 'phone_required'; baleUserId?: number }
   | (AuthResponse & { status: 'authenticated' })
-  | { status: 'confirm_device'; pendingSessionToken: string; currentDevice: { name: string | null; type: string | null; ipAddress: string | null; lastActiveAt: string } | null };
+  | {
+      status: 'confirm_device';
+      pendingSessionToken: string;
+      currentDevice: { name: string | null; type: string | null; ipAddress: string | null; lastActiveAt: string } | null;
+      requiresDeviceSelection?: boolean;
+      activeDevices?: ActiveDeviceInfo[];
+    };
 
 type UpdateCurrentUserPayload = Partial<{
   email: string | null;
@@ -27,6 +41,7 @@ type VerifyOtpPayload = {
 
 type ConfirmDevicePayload = {
   pendingSessionToken: string;
+  deviceToReplace?: string;
 };
 
 type CancelDevicePayload = {
@@ -42,6 +57,8 @@ export type ConfirmDeviceResponse = {
     ipAddress: string | null;
     lastActiveAt: string;
   } | null;
+  requiresDeviceSelection?: boolean;
+  activeDevices?: ActiveDeviceInfo[];
 };
 
 export type AuthenticatedResponse = AuthResponse & {

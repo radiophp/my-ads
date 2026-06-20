@@ -58,7 +58,11 @@ export function getDeviceName(): string {
     os = `iOS ${match?.[1].replace(/_/g, '.') ?? ''}`;
   } else if (ua.includes('Linux')) os = 'Linux';
 
-  return `${browser} / ${os}`;
+  const isBaleMiniApp =
+    typeof window !== 'undefined' && localStorage.getItem('my-ads-bale-miniapp') === '1';
+  const suffix = isBaleMiniApp ? ' (Bale)' : '';
+
+  return `${browser} / ${os}${suffix}`;
 }
 
 export function getDeviceInfo() {

@@ -3,8 +3,18 @@ import { randomUUID } from 'crypto';
 import { PrismaService } from '@app/platform/database/prisma.service';
 import { RedisService } from '@app/platform/cache/redis.service';
 import { emitToUser } from '@app/platform/websocket/io-server';
+
 const PENDING_TTL_MS = 300_000;
 const TOKEN_VERSION_CACHE_TTL_S = 300;
+const MAX_ACTIVE_DEVICES = 2;
+
+type ActiveDeviceInfo = {
+  deviceId: string;
+  name: string | null;
+  type: string | null;
+  ipAddress: string | null;
+  lastActiveAt: Date;
+};
 
 @Injectable()
 export class DeviceService {
@@ -24,12 +34,9 @@ export class DeviceService {
     ipAddress?: string,
   ): Promise<{
     isNewDevice: boolean;
-    currentDevice: {
-      name: string | null;
-      type: string | null;
-      ipAddress: string | null;
-      lastActiveAt: Date;
-    } | null;
+    currentDevice: ActiveDeviceInfo | null;
+    activeDevices: ActiveDeviceInfo[];
+    requiresDeviceSelection: boolean;
     pendingSessionToken?: string;
   }> {
     const existing = await this.prismaService.userDevice.findUnique({
@@ -37,13 +44,21 @@ export class DeviceService {
     });
 
     if (existing?.isActive) {
-      return { isNewDevice: false, currentDevice: null };
+      return {
+        isNewDevice: false,
+        currentDevice: null,
+        activeDevices: [],
+        requiresDeviceSelection: false,
+      };
     }
 
-    const activeDevice = await this.prismaService.userDevice.findFirst({
+    const activeDevices = await this.prismaService.userDevice.findMany({
       where: { userId, isActive: true },
-      select: { name: true, type: true, ipAddress: true, lastActiveAt: true },
+      select: { deviceId: true, name: true, type: true, ipAddress: true, lastActiveAt: true },
+      orderBy: { lastActiveAt: 'desc' },
     });
+
+    const requiresDeviceSelection = activeDevices.length >= MAX_ACTIVE_DEVICES;
 
     if (existing) {
       await this.prismaService.userDevice.update({
@@ -69,10 +84,19 @@ export class DeviceService {
       payload,
     );
 
-    return { isNewDevice: true, currentDevice: activeDevice ?? null, pendingSessionToken };
+    return {
+      isNewDevice: true,
+      currentDevice: activeDevices[0] ?? null,
+      activeDevices,
+      requiresDeviceSelection,
+      pendingSessionToken,
+    };
   }
 
-  async confirmDevice(pendingSessionToken: string): Promise<{
+  async confirmDevice(
+    pendingSessionToken: string,
+    deviceToReplace?: string,
+  ): Promise<{
     userId: string;
     deviceId: string;
   }> {
@@ -93,23 +117,22 @@ export class DeviceService {
     const { userId, deviceId } = parsed;
 
     await this.prismaService.$transaction(async (tx) => {
-      await tx.userDevice.updateMany({
-        where: { userId, isActive: true },
-        data: { isActive: false },
-      });
+      if (deviceToReplace) {
+        await tx.userDevice.update({
+          where: { userId_deviceId: { userId, deviceId: deviceToReplace } },
+          data: { isActive: false, tokenVersion: { increment: 1 } },
+        });
+      }
 
       await tx.userDevice.update({
         where: { userId_deviceId: { userId, deviceId } },
         data: { isActive: true, lastActiveAt: new Date() },
       });
-
-      await tx.user.update({
-        where: { id: userId },
-        data: { tokenVersion: { increment: 1 } },
-      });
     });
 
-    await this.redisService.del(`device:tv:${userId}`);
+    if (deviceToReplace) {
+      await this.redisService.del(`device:tv:${userId}:${deviceToReplace}`);
+    }
 
     await this.emitDeviceChallenged(userId, deviceId);
 
@@ -169,63 +192,54 @@ export class DeviceService {
     await this.prismaService.$transaction(async (tx) => {
       await tx.userDevice.update({
         where: { id: device.id },
-        data: { isActive: false },
-      });
-
-      await tx.user.update({
-        where: { id: userId },
-        data: { tokenVersion: { increment: 1 } },
+        data: { isActive: false, tokenVersion: { increment: 1 } },
       });
     });
 
-    await this.redisService.del(`device:tv:${userId}`);
+    await this.redisService.del(`device:tv:${userId}:${deviceId}`);
   }
 
   async deactivateAllDevices(userId: string): Promise<void> {
     await this.prismaService.$transaction(async (tx) => {
+      const devices = await tx.userDevice.findMany({
+        where: { userId, isActive: true },
+        select: { deviceId: true },
+      });
+
       await tx.userDevice.updateMany({
         where: { userId, isActive: true },
-        data: { isActive: false },
+        data: { isActive: false, tokenVersion: { increment: 1 } },
       });
 
-      await tx.user.update({
-        where: { id: userId },
-        data: { tokenVersion: { increment: 1 } },
-      });
+      for (const d of devices) {
+        await this.redisService.del(`device:tv:${userId}:${d.deviceId}`);
+      }
     });
-
-    await this.redisService.del(`device:tv:${userId}`);
   }
 
-  async getCurrentTokenVersion(userId: string): Promise<number> {
-    const cached = await this.redisService.get(`device:tv:${userId}`);
+  async getDeviceTokenVersion(userId: string, deviceId: string): Promise<number> {
+    const cached = await this.redisService.get(`device:tv:${userId}:${deviceId}`);
     if (cached !== null) {
       const num = Number(cached);
       if (!Number.isNaN(num)) return num;
     }
 
-    const user = await this.prismaService.user.findUnique({
-      where: { id: userId },
+    const device = await this.prismaService.userDevice.findUnique({
+      where: { userId_deviceId: { userId, deviceId } },
       select: { tokenVersion: true },
     });
 
-    if (!user) {
-      throw new UnauthorizedException('User not found.');
+    if (!device) {
+      throw new UnauthorizedException('Device not found.');
     }
 
-    await this.redisService.set(`device:tv:${userId}`, String(user.tokenVersion));
-    await this.redisService.expire(`device:tv:${userId}`, TOKEN_VERSION_CACHE_TTL_S);
+    await this.redisService.set(`device:tv:${userId}:${deviceId}`, String(device.tokenVersion));
+    await this.redisService.expire(`device:tv:${userId}:${deviceId}`, TOKEN_VERSION_CACHE_TTL_S);
 
-    return user.tokenVersion;
+    return device.tokenVersion;
   }
 
-  async getActiveDeviceInfo(userId: string): Promise<{
-    deviceId: string | null;
-    name: string | null;
-    type: string | null;
-    ipAddress: string | null;
-    lastActiveAt: Date | null;
-  } | null> {
+  async getActiveDeviceInfo(userId: string): Promise<ActiveDeviceInfo | null> {
     const active = await this.prismaService.userDevice.findFirst({
       where: { userId, isActive: true },
       select: { deviceId: true, name: true, type: true, ipAddress: true, lastActiveAt: true },

@@ -2420,7 +2420,9 @@
       "lastActive": "Last active",
       "cancel": "Cancel",
       "confirm": "Sign out other device & continue",
-      "loading": "Confirming…"
+      "loading": "Confirming…",
+      "selectDevice": "You are already logged in on 2 devices. Please select which device to replace:",
+      "replace": "Replace selected device"
     },
     "deviceChallenger": {
       "title": "Signed out",

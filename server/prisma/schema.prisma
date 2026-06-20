@@ -129,6 +129,7 @@ model UserDevice {
   lastActiveAt DateTime @default(now())
   createdAt    DateTime @default(now())
   isActive     Boolean  @default(false)
+  tokenVersion Int      @default(0)
 
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 

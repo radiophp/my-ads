@@ -743,6 +743,10 @@ function MobileNavigationDrawer({
   notificationButtonClass,
   onToggleNotifications,
 }: MobileNavigationDrawerProps) {
+  const [isBaleMiniApp, setIsBaleMiniApp] = useState(false);
+  useEffect(() => {
+    setIsBaleMiniApp(!!window.Bale?.WebApp);
+  }, []);
   const [ringBinderExpanded, setRingBinderExpanded] = useState(false);
   const maxLabelLength = 15;
   const truncateLabel = (name: string) =>
@@ -954,7 +958,7 @@ function MobileNavigationDrawer({
               </Button>
             ) : null}
           </div>
-          {isAuthenticated ? (
+          {isAuthenticated && !isBaleMiniApp ? (
             <div className="mt-auto border-t border-border/60 p-4">
               <Button
                 type="button"

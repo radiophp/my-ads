@@ -109,6 +109,12 @@ export function UserMenu({
     };
   }, [open]);
 
+  const [isBaleMiniApp, setIsBaleMiniApp] = useState(false);
+
+  useEffect(() => {
+    setIsBaleMiniApp(!!window.Bale?.WebApp);
+  }, []);
+
   const handleToggle = useCallback(() => {
     setOpen((prev) => !prev);
   }, []);
@@ -192,18 +198,20 @@ export function UserMenu({
               <span>{adminLabel}</span>
             </Link>
           ) : null}
-          <button
-            type="button"
-            onClick={handleLogout}
-            disabled={isLoggingOut}
-            className={cn(
-              'flex w-full items-center gap-2 px-3 py-2 text-left transition-colors',
-              'hover:bg-secondary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:opacity-70',
-            )}
-          >
-            <LogOut className="size-4" aria-hidden />
-            <span>{logoutLabel}</span>
-          </button>
+          {!isBaleMiniApp ? (
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className={cn(
+                'flex w-full items-center gap-2 px-3 py-2 text-left transition-colors',
+                'hover:bg-secondary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:opacity-70',
+              )}
+            >
+              <LogOut className="size-4" aria-hidden />
+              <span>{logoutLabel}</span>
+            </button>
+          ) : null}
           <div className="flex items-center justify-end gap-2 px-3 py-2">
             <Button
               type="button"

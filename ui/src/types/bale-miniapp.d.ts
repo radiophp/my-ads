@@ -15,6 +15,14 @@ interface BaleWebAppInitData {
   hash: string;
 }
 
+interface BackButton {
+  show(): void;
+  hide(): void;
+  onClick(callback: () => void): void;
+  offClick(callback: () => void): void;
+  isVisible: boolean;
+}
+
 interface BaleWebApp {
   initData: string;
   initDataUnsafe: BaleWebAppInitData;
@@ -33,6 +41,7 @@ interface BaleWebApp {
   sendData(data: string): void;
   openLink(url: string): void;
   version: string;
+  BackButton: BackButton;
 }
 
 interface BaleSdk {

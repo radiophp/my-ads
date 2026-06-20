@@ -17,6 +17,7 @@ import { Role } from '@app/common/decorators/roles.decorator';
 import type { JwtConfig } from '@app/platform/config/jwt.config';
 import { OtpService } from '@app/platform/otp/otp.service';
 import { BaleBotService } from '@app/modules/bale/bale.service';
+import { validateInitData } from '@app/modules/bale/bale-miniapp-utils';
 import { DeviceService } from './device.service';
 import type { VerifyOtpDto } from './dto/verify-otp.dto';
 import { CurrentUserDto } from './dto/current-user.dto';
@@ -163,6 +164,90 @@ export class AuthService {
     }
 
     if (deviceInfo) {
+      const result = await this.deviceService.findOrCreatePending(
+        user.id,
+        deviceInfo.deviceId,
+        deviceInfo.deviceName,
+        deviceInfo.deviceType,
+        deviceInfo.userAgent,
+      );
+
+      if (result.isNewDevice) {
+        return {
+          status: 'confirm_device',
+          pendingSessionToken: result.pendingSessionToken!,
+          currentDevice: result.currentDevice,
+        };
+      }
+    }
+
+    const tokens = await this.buildAuthResponse(user, deviceInfo?.deviceId ?? '');
+    return { status: 'authenticated', ...tokens };
+  }
+
+  async baleMiniAppAuth(
+    initData: string,
+    phone?: string,
+    deviceInfo?: DeviceInfo,
+  ): Promise<
+    | { status: 'phone_required'; baleUserId?: number }
+    | AuthenticatedResponse
+    | ConfirmDeviceResponse
+  > {
+    const botToken = this.configService.get<string>('BALE_BOT_TOKEN');
+    if (!botToken) {
+      throw new UnauthorizedException('Bale mini app not configured.');
+    }
+
+    const parsed = validateInitData(initData, botToken, 86400);
+    if (!parsed) {
+      throw new UnauthorizedException('Invalid or expired init data.');
+    }
+
+    const baleUserId = String(parsed.user?.id);
+    if (!baleUserId) {
+      throw new UnauthorizedException('User ID not found in init data.');
+    }
+
+    const botId = botToken.split(':')[0];
+    const link = await this.prismaService.baleUserLink.findFirst({
+      where: { baleId: baleUserId, botId },
+      include: { user: { include: { city: { include: { province: true } } } } },
+    });
+
+    let user = link?.user ?? null;
+
+    if (!user) {
+      if (!phone) {
+        return { status: 'phone_required', baleUserId: parsed.user?.id };
+      }
+
+      const digits = phone.replace(/\D+/g, '');
+      const phoneCandidates = [phone, digits, `+${digits}`];
+      user = await this.prismaService.user.findFirst({
+        where: { phone: { in: phoneCandidates } },
+        include: { city: { include: { province: true } } },
+      });
+
+      if (!user) {
+        user = await this.usersService.createUser({
+          phone: digits,
+          firstName: parsed.user?.first_name ?? null,
+        });
+      }
+
+      await this.prismaService.baleUserLink.upsert({
+        where: { baleId: baleUserId },
+        update: { botId, phone: digits, userId: user.id },
+        create: { baleId: baleUserId, botId, chatId: baleUserId, phone: digits, userId: user.id },
+      });
+    }
+
+    if (!user.isActive) {
+      throw new UnauthorizedException('User account is disabled.');
+    }
+
+    if (deviceInfo?.deviceId) {
       const result = await this.deviceService.findOrCreatePending(
         user.id,
         deviceInfo.deviceId,

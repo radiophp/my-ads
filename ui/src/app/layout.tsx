@@ -145,6 +145,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       <head>
         <link rel="apple-touch-startup-image" href="/logo-mahan-file.png" />
         <link rel="manifest" href="/manifest.webmanifest" />
+        <script src="https://tapi.bale.ai/miniapp.js?3" async></script>
         <script dangerouslySetInnerHTML={{ __html: pwaSplashInitializer }} />
         <script dangerouslySetInnerHTML={{ __html: pwaInstallInitializer }} />
       </head>

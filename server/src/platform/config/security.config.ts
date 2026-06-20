@@ -17,10 +17,17 @@ export default registerAs<SecurityConfig>('security', () => {
     corsOrigin: corsOriginRaw ? corsOriginRaw.split(',').map((origin) => origin.trim()) : true,
     csp: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", 'https://tapi.bale.ai'],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", 'data:', 'blob:'],
-      connectSrc: ["'self'", 'https://challenges.cloudflare.com'],
+      connectSrc: [
+        "'self'",
+        'https://challenges.cloudflare.com',
+        'https://*.bale.ai',
+        'wss://*.bale.ai',
+      ],
+      frameSrc: ["'self'", 'https://*.bale.ai'],
+      frameAncestors: ["'self'", 'https://*.bale.ai'],
     },
     rateLimit: {
       ttlSeconds: Number(env['RATE_LIMIT_TTL'] ?? 60),

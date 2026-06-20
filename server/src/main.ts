@@ -72,6 +72,7 @@ async function bootstrap(): Promise<void> {
 
   const helmetOptions: FastifyHelmetOptions = {
     crossOriginEmbedderPolicy: false,
+    xFrameOptions: false,
   };
 
   if (typeof securityConfig?.csp !== 'undefined') {

@@ -24,6 +24,7 @@ import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { ConfirmDeviceDto } from './dto/confirm-device.dto';
 import { CancelDeviceDto } from './dto/cancel-device.dto';
 import { BaleLoginDto } from './dto/bale-login.dto';
+import { BaleMiniAppAuthDto } from './dto/bale-miniapp-auth.dto';
 import { RateLimit } from '@app/common/decorators/rate-limit.decorator';
 import { RateLimitGuard } from '@app/common/guards/rate-limit/rate-limit.guard';
 import { RefreshJwtGuard } from './guards/refresh-jwt.guard';
@@ -235,5 +236,24 @@ export class AuthController {
     const userId = (request.user as { sub: string })?.sub;
     await this.deviceService.deactivateDevice(userId, deviceId);
     return { success: true };
+  }
+
+  @Post('bale-miniapp/auth')
+  @Public()
+  @RateLimit({ limit: 10, ttlSeconds: 60 })
+  @ApiOperation({ summary: 'Validate Bale mini app init data, check link, and issue JWT' })
+  async baleMiniAppAuth(@Body() dto: BaleMiniAppAuthDto): Promise<unknown> {
+    return this.authService.baleMiniAppAuth(
+      dto.initData,
+      dto.phone,
+      dto.deviceId
+        ? {
+            deviceId: dto.deviceId,
+            deviceName: dto.deviceName,
+            deviceType: dto.deviceType,
+            userAgent: dto.userAgent,
+          }
+        : undefined,
+    );
   }
 }

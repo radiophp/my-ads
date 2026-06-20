@@ -2,6 +2,11 @@ import { apiSlice } from '../baseApi';
 
 import type { AuthResponse, CurrentUser, SuccessResponse, DeviceInfo } from '@/types/auth';
 
+export type BaleMiniAppAuthResponse =
+  | { status: 'phone_required'; baleUserId?: number }
+  | (AuthResponse & { status: 'authenticated' })
+  | { status: 'confirm_device'; pendingSessionToken: string; currentDevice: { name: string | null; type: string | null; ipAddress: string | null; lastActiveAt: string } | null };
+
 type UpdateCurrentUserPayload = Partial<{
   email: string | null;
   firstName: string | null;
@@ -78,6 +83,14 @@ const authApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ['User'],
     }),
+    baleMiniAppAuth: builder.mutation<BaleMiniAppAuthResponse, { initData: string; phone?: string; deviceId?: string; deviceName?: string; deviceType?: string; userAgent?: string }>({
+      query: (body) => ({
+        url: '/auth/bale-miniapp/auth',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['User'],
+    }),
     cancelDevice: builder.mutation<SuccessResponse, CancelDevicePayload>({
       query: (body) => ({
         url: '/auth/cancel-device',
@@ -125,6 +138,7 @@ export const {
   useVerifyOtpMutation,
   useConfirmDeviceMutation,
   useCancelDeviceMutation,
+  useBaleMiniAppAuthMutation,
   useGetCurrentUserQuery,
   useLogoutMutation,
   useUpdateCurrentUserMutation,

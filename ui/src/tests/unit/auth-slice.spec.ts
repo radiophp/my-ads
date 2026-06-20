@@ -66,6 +66,7 @@ describe('authSlice', () => {
           hydrated: true,
           deviceChanged: false,
           challengerDevice: null,
+          isBaleMiniApp: false,
         }),
       );
       const state = store.getState().auth;

@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Smartphone, Loader2, CheckCircle2 } from 'lucide-react';
 
 import { useBaleMiniAppAuthMutation, useConfirmDeviceMutation } from '@/features/api/endpoints/auth';
-import { setAuth } from '@/features/auth/authSlice';
+import { setAuth, setBaleMiniApp } from '@/features/auth/authSlice';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import { getDeviceInfo } from '@/lib/device';
 import { useBaleMiniApp } from '@/hooks/use-bale-miniapp';
@@ -19,7 +19,7 @@ export function BaleMiniAppLogin() {
   const { toast } = useToast();
 
   const { initData, phone, contactStatus, requestContact } = useBaleMiniApp();
-  const accessToken = useAppSelector((s) => s.auth.accessToken);
+  const { accessToken, hydrated } = useAppSelector((s) => s.auth);
   const [baleMiniAppAuth, { isLoading: isAuthLoading }] = useBaleMiniAppAuthMutation();
   const [confirmDevice] = useConfirmDeviceMutation();
   const [pendingSessionToken, setPendingSessionToken] = useState<string | null>(null);
@@ -28,6 +28,11 @@ export function BaleMiniAppLogin() {
   const [showDeviceDialog, setShowDeviceDialog] = useState(false);
   const [redirected, setRedirected] = useState(false);
   const authSentRef = useRef(false);
+
+  useEffect(() => {
+    localStorage.setItem('my-ads-bale-miniapp', '1');
+    dispatch(setBaleMiniApp(true));
+  }, [dispatch]);
 
   const callAuth = useCallback(async (id: string, phoneNumber?: string | null, deviceInfo?: ReturnType<typeof getDeviceInfo>) => {
     try {
@@ -127,12 +132,22 @@ export function BaleMiniAppLogin() {
     setCurrentDevice(null);
   }, []);
 
+  if (!hydrated) {
+    return (
+      <Card className="w-full">
+        <CardHeader className="text-center">
+          <CardTitle className="text-xl">در حال بارگذاری...</CardTitle>
+        </CardHeader>
+      </Card>
+    );
+  }
+
   return (
     <>
       {redirected || accessToken ? (
         <Card className="w-full">
           <CardHeader className="text-center">
-            <CheckCircle2 className="mx-auto h-12 w-12 text-green-500" />
+            <CheckCircle2 className="mx-auto size-12 text-green-500" />
             <CardTitle className="text-xl">ورود موفق</CardTitle>
             <CardDescription>شما با موفقیت وارد شدید</CardDescription>
           </CardHeader>
@@ -156,14 +171,14 @@ export function BaleMiniAppLogin() {
           <CardContent className="space-y-4">
             {contactStatus === 'requesting' ? (
               <div className="flex flex-col items-center gap-3 py-4">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <Loader2 className="size-8 animate-spin text-primary" />
                 <p className="text-sm text-muted-foreground">
                   در حال ارسال درخواست به بله...
                 </p>
               </div>
             ) : contactStatus === 'sent' ? (
               <div className="flex flex-col items-center gap-3 py-4">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <Loader2 className="size-8 animate-spin text-primary" />
                 <p className="text-sm text-muted-foreground">
                   شماره تماس ارسال شد. در حال برقراری ارتباط...
                 </p>
@@ -184,7 +199,7 @@ export function BaleMiniAppLogin() {
                 onClick={handleSharePhone}
                 disabled={isAuthLoading}
               >
-                <Smartphone className="h-5 w-5" />
+                <Smartphone className="size-5" />
                 اشتراک‌گذاری شماره تماس
               </Button>
             )}

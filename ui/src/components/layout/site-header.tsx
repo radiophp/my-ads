@@ -743,10 +743,7 @@ function MobileNavigationDrawer({
   notificationButtonClass,
   onToggleNotifications,
 }: MobileNavigationDrawerProps) {
-  const [isBaleMiniApp, setIsBaleMiniApp] = useState(false);
-  useEffect(() => {
-    setIsBaleMiniApp(!!window.Bale?.WebApp);
-  }, []);
+  const isBaleMiniApp = useAppSelector((s) => s.auth.isBaleMiniApp);
   const [ringBinderExpanded, setRingBinderExpanded] = useState(false);
   const maxLabelLength = 15;
   const truncateLabel = (name: string) =>

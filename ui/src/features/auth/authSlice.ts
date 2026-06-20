@@ -16,6 +16,7 @@ export type AuthState = {
   hydrated: boolean;
   deviceChanged: boolean;
   challengerDevice: ChallengerDevice | null;
+  isBaleMiniApp: boolean;
 };
 
 export type AuthPayload = {
@@ -33,6 +34,7 @@ const initialState: AuthState = {
   hydrated: false,
   deviceChanged: false,
   challengerDevice: null,
+  isBaleMiniApp: false,
 };
 
 const readStoredAuth = (): AuthState | null => {
@@ -63,7 +65,7 @@ const persistAuthState = (state: AuthState): void => {
   }
 
   try {
-    const serializableState: Omit<AuthState, 'hydrated' | 'deviceChanged' | 'challengerDevice'> = {
+    const serializableState: Omit<AuthState, 'hydrated' | 'deviceChanged' | 'challengerDevice' | 'isBaleMiniApp'> = {
       accessToken: state.accessToken,
       refreshToken: state.refreshToken,
       user: state.user,
@@ -125,6 +127,9 @@ const authSlice = createSlice({
         persistAuthState(state);
       }
     },
+    setBaleMiniApp(state, action: PayloadAction<boolean>) {
+      state.isBaleMiniApp = action.payload;
+    },
     deviceChanged(state, action: PayloadAction<ChallengerDevice | null | undefined>) {
       if (action.payload) {
         state.accessToken = null;
@@ -144,5 +149,5 @@ const authSlice = createSlice({
 
 export const hydrateAuthFromStorage = () => readStoredAuth();
 
-export const { hydrateAuthState, setAuth, clearAuth, updateUser, deviceChanged } = authSlice.actions;
+export const { hydrateAuthState, setAuth, clearAuth, updateUser, deviceChanged, setBaleMiniApp } = authSlice.actions;
 export default authSlice.reducer;

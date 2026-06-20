@@ -57,7 +57,7 @@ export function useBaleMiniApp() {
       clearInterval(interval);
       clearTimeout(timeout);
     };
-  }, []);
+  }, [initData]);
 
   const requestContact = useCallback(() => {
     const sdk = window.Bale?.WebApp;

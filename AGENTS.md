@@ -11,7 +11,7 @@
 ## Backend Modules (`server/src/modules/*`)
 | Module | Purpose |
 | --- | --- |
-| `auth` | OTP login, JWT, guards, device management (sessions, challenger detection, WS push) |
+| `auth` | OTP login, Bale mini app auth, JWT, guards, device management (sessions, challenger detection, WS push) |
 | `users` | CRUD, roles, admin management |
 | `admin-panel` | Admin dashboard stats/actions |
 | `user-panel` | User dashboard data |
@@ -35,7 +35,7 @@
 | `subscriptions` | User subscriptions |
 | `invite-codes` | Referral codes |
 | `discount-codes` | Discount code management |
-| `bale` | Bale messenger bot integration |
+| `bale` | Bale messenger bot integration, mini app auth utils (HMAC validation) |
 | `telegram` | Telegram bot integration |
 | `public` | Health check, public endpoints |
 | `admin-divar-sessions` | Divar crawl session management |
@@ -256,13 +256,16 @@ Large files are split by extracting pure utility functions/constants/types into 
 
 ## Authentication & Security
 - **OTP login**: `POST /auth/request-otp` → `POST /auth/verify-otp` (returns JWT). Dev code `1234`
-- **Device management**: `UserDevice` model with `userId_deviceId` compound unique. After OTP/Bale login, server returns `status: 'confirm_device'` with `pendingSessionToken` + `currentDevice` info. If no other active devices exist, client auto-confirms; otherwise a confirmation dialog shows the existing device. Device validation runs in `JwtAuthGuard`/`RefreshJwtGuard` after JWT validation — checks `tokenVersion` match, throws `DEVICE_CHANGED` with challenger device info.
+- **Bale mini app auth**: `POST /auth/bale-miniapp/auth` — HMAC-SHA256 validation of init data via `bale-miniapp-utils.ts`. Accepts `initData`, `phone?`, `deviceInfo?`. Validates against `BALE_BOT_TOKEN`, checks `auth_date` freshness (up to 24h), uses `formUrlDecode` (replaces `+` with space) for Persian text support. Fuzzy phone matching + user creation if no existing `BaleUserLink`. See `docs/bale-mini-app-auth.md` for full flow.
+- **Device management**: `UserDevice` model with `userId_deviceId` compound unique. After OTP/Bale/BaleMiniApp login, server returns `status: 'confirm_device'` with `pendingSessionToken` + `currentDevice` info. If no other active devices exist, client auto-confirms; otherwise a confirmation dialog shows the existing device. Device validation runs in `JwtAuthGuard`/`RefreshJwtGuard` after JWT validation — checks `tokenVersion` match, throws `DEVICE_CHANGED` with challenger device info.
 - **WebSocket push**: `io-server.ts` singleton (no DI, breaks circular deps) emits `device:challenged` to old device's `user:{userId}` room. Client listens via `useNotificationsSocket` and dispatches `deviceChanged`.
 - **UI dialogs**: `DeviceConfirmDialog` (approve new device), `DeviceChallengerDialog` (notified of challenger). Both rendered at root `providers.tsx` to avoid redirect races. No `AlertDialogDescription` (renders `<p>`, breaks nesting rules — use plain `<div>`).
 - **Session page**: `/dashboard/sessions` lists active devices with remove button, empty/error states.
 - **Turnstile**: Cloudflare Turnstile gated by `ENABLE_TURNSTILE` admin toggle. Button disabled with spinner while widget loads (min 300ms so spinner is visible even during client-side nav with cached script). On error, button stays disabled.
 - **Phone input**: Leading `0` preserved visually, stripped on submit (E.164 format)
 - **Bale linking**: `BaleUserLink` filtered by current bot ID (`BALE_BOT_TOKEN` numeric prefix) to avoid cross-env stale links
+- **Mini app detection**: localStorage flag `my-ads-bale-miniapp` set by `BaleMiniAppLogin`, read by `AuthInitializer` in `useLayoutEffect` and dispatched to Redux (`s.auth.isBaleMiniApp`). `MobileNavigationDrawer` and `UserMenu` hide logout button when `isBaleMiniApp` is true. Hydration guard in `BaleMiniAppLogin` prevents server/client mismatch. See `docs/bale-mini-app-auth.md`.
+- **CSP for Bale**: `frame-ancestors https://*.bale.ai`, Bale SDK sources in `scriptSrc`/`connectSrc`, `xFrameOptions: false`
 - **CLOUDFLARE_API_TOKEN**: GitHub secret (not in .env.prod)
 
 ## Pagination Strategy (Divar Dashboard)

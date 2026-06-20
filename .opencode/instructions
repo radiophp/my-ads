@@ -9,8 +9,9 @@
 ### Modules (`server/src/modules/*`)
 | File | Purpose |
 | --- | --- |
-| `auth/auth.controller.ts` | POST /auth/request-otp, /auth/verify-otp |
-| `auth/auth.service.ts` | OTP generate/validate, JWT sign |
+| `auth/auth.controller.ts` | POST /auth/request-otp, /auth/verify-otp, /auth/bale-miniapp/auth |
+| `auth/auth.service.ts` | OTP generate/validate, JWT sign, baleMiniAppAuth (HMAC + user link) |
+| `auth/dto/bale-miniapp-auth.dto.ts` | DTO for bale mini app auth (initData, phone?, deviceId?) |
 | `users/users.*.ts` | User CRUD, roles, admin management |
 | `admin-panel/*.ts` | Admin dashboard stats/endpoints |
 | `user-panel/*.ts` | User dashboard endpoints |
@@ -65,7 +66,8 @@
 | `discount-codes/*.ts` | Discount codes |
 | `bale/bale.service.ts` | Bale bot service (message builder extracted to bale-message-builder.ts) |
 | `bale/bale-message-builder.ts` | Message caption/URL builder (shared with telegram.service.ts) |
-| `bale/*.ts` | Bale bot integration, WebSocket link gateway |
+| `bale/bale-miniapp-utils.ts` | HMAC-SHA256 initData validation, parseInitData, formUrlDecode |
+| `bale/*.ts` | Bale bot integration, WebSocket link gateway, mini app auth |
 | `telegram/telegram.service.ts` | Telegram bot service (uses bale-message-builder for captions) |
 | `telegram/*.ts` | Telegram bot integration |
 | `public/*.ts` | Health check, public endpoints |
@@ -113,7 +115,7 @@
 | `dashboard/` | User dashboard pages (posts, ring binders, etc.) |
 | `blog/` | Public blog pages (SSR, revalidate=300) |
 | `news/` | Public news pages (SSR, revalidate=300) |
-| `login/` | Login page |
+| `login/` | Login page (server-side bale_miniapp param detection → BaleMiniAppLogin) |
 | `about/` | About page |
 | `preview/` | Post preview (SSR) |
 | `offline/` | Offline fallback page |
@@ -128,7 +130,8 @@
 | `admin/` | Admin panel components |
 | `blog/` | Blog components |
 | `news/` | News components |
-| `auth/` | Auth components (login form, OTP) |
+| `auth/` | Auth components (login form, OTP, device confirm, auth initializer) |
+| `bale/` | Bale mini app login component |
 | `forms/` | Form components |
 | `editor/` | Rich text editor |
 | `home/` | Homepage components |
@@ -142,7 +145,7 @@
 | --- | --- |
 | `api/baseApi.ts` | RTK Query base slice (fetchBaseQuery + tag types) |
 | `api/apiSlice.ts` | Re-exports all endpoint hooks |
-| `api/endpoints/auth.ts` | Auth API (login, verify, refresh) |
+| `api/endpoints/auth.ts` | Auth API (login, verify, refresh, bale-miniapp/auth) |
 | `api/endpoints/divar-posts.ts` | Divar post API (list, detail, admin CRUD) |
 | `api/endpoints/divar-categories.ts` | Category tree API |
 | `api/endpoints/divar-category-filters.ts` | Filter widgets API |
@@ -172,6 +175,16 @@
 | `notifications/nativeNotifications.ts` | Browser notification helper |
 | `search-filter/searchFilterSlice.ts` | Search/filter Redux slice |
 | `bale/useBaleLinkSocket.ts` | Bale WebSocket link hook |
+
+### Hooks (`ui/src/hooks/`)
+| File | Purpose |
+| --- | --- |
+| `use-bale-miniapp.ts` | Bale mini app hook (initData extraction, phone capture, SDK polling) |
+
+### Types (`ui/src/types/`)
+| File | Purpose |
+| --- | --- |
+| `bale-miniapp.d.ts` | BaleWebApp/BaleSdk/Window type declarations |
 
 ### Key Config Files
 | File | Purpose |
@@ -218,6 +231,7 @@
 | --- | --- | --- |
 | POST | /auth/request-otp | auth |
 | POST | /auth/verify-otp | auth |
+| POST | /auth/bale-miniapp/auth | auth (Bale mini app HMAC auth) |
 | GET | /divar-posts | divar-posts (paginated, filtered) |
 | GET | /divar-posts/:code | divar-posts (detail) |
 | GET | /divar-categories | divar-categories (tree) |

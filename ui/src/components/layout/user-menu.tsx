@@ -8,6 +8,7 @@ import { Bell, BellOff, LogOut, Monitor, Settings, UserRound } from 'lucide-reac
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useAppSelector } from '@/lib/hooks';
 import { Link } from '@/i18n/routing';
 import type { AuthenticatedUser } from '@/types/auth';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -109,11 +110,7 @@ export function UserMenu({
     };
   }, [open]);
 
-  const [isBaleMiniApp, setIsBaleMiniApp] = useState(false);
-
-  useEffect(() => {
-    setIsBaleMiniApp(!!window.Bale?.WebApp);
-  }, []);
+  const isBaleMiniApp = useAppSelector((s) => s.auth.isBaleMiniApp);
 
   const handleToggle = useCallback(() => {
     setOpen((prev) => !prev);

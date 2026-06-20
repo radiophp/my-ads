@@ -6,8 +6,11 @@ import {
   AUTH_STORAGE_KEY,
   hydrateAuthFromStorage,
   hydrateAuthState,
+  setBaleMiniApp,
 } from '@/features/auth/authSlice';
 import { useAppDispatch } from '@/lib/hooks';
+
+const BALE_MINIAPP_KEY = 'my-ads-bale-miniapp';
 
 export function AuthInitializer(): null {
   const dispatch = useAppDispatch();
@@ -15,6 +18,8 @@ export function AuthInitializer(): null {
   useLayoutEffect(() => {
     const storedState = hydrateAuthFromStorage();
     dispatch(hydrateAuthState(storedState));
+    const isMiniApp = localStorage.getItem(BALE_MINIAPP_KEY) === '1';
+    dispatch(setBaleMiniApp(isMiniApp));
   }, [dispatch]);
 
   useEffect(() => {

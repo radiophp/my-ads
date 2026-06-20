@@ -17,8 +17,9 @@ function getRawHashParam(name: string): string | null {
 export type ContactRequestStatus = 'idle' | 'requesting' | 'sent' | 'cancelled' | 'unavailable';
 
 export function useBaleMiniApp() {
-  const [initData] = useState<string | null>(() => {
+  const [initData, setInitData] = useState<string | null>(() => {
     if (typeof window === 'undefined') return null;
+    if (window.Bale?.WebApp?.initData) return window.Bale.WebApp.initData;
     return getRawHashParam('tgWebAppData') ?? null;
   });
   const [contactStatus, setContactStatus] = useState<ContactRequestStatus>('idle');
@@ -29,6 +30,9 @@ export function useBaleMiniApp() {
     const fullSdk = window.Bale?.WebApp;
     if (fullSdk && typeof fullSdk.requestContact === 'function') {
       setSdkReady(true);
+      if (fullSdk.initData && fullSdk.initData !== initData) {
+        setInitData(fullSdk.initData);
+      }
       return;
     }
 
@@ -36,6 +40,9 @@ export function useBaleMiniApp() {
       const sdk = window.Bale?.WebApp;
       if (sdk && typeof sdk.requestContact === 'function') {
         setSdkReady(true);
+        if (sdk.initData && sdk.initData !== initData) {
+          setInitData(sdk.initData);
+        }
         clearInterval(interval);
         clearTimeout(timeout);
       }

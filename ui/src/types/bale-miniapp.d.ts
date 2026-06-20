@@ -13,6 +13,7 @@ interface BaleWebAppInitData {
   user?: BaleWebAppUser;
   auth_date: number;
   hash: string;
+  start_param?: string;
 }
 
 interface BackButton {

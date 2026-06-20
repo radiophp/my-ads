@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Smartphone, Loader2, CheckCircle2 } from 'lucide-react';
 
@@ -21,7 +21,7 @@ export function BaleMiniAppLogin() {
   const { toast } = useToast();
   const t = useTranslations('auth.bale.login');
 
-  const { initData, phone, contactStatus, requestContact } = useBaleMiniApp();
+  const { initData, phone, contactStatus, requestContact, startParam } = useBaleMiniApp();
   const { accessToken, hydrated } = useAppSelector((s) => s.auth);
   const [baleMiniAppAuth, { isLoading: isAuthLoading }] = useBaleMiniAppAuthMutation();
   const [confirmDevice] = useConfirmDeviceMutation();
@@ -33,6 +33,11 @@ export function BaleMiniAppLogin() {
   const [showDeviceDialog, setShowDeviceDialog] = useState(false);
   const [redirected, setRedirected] = useState(false);
   const authSentRef = useRef(false);
+
+  const deepLinkPostId = useMemo(() => {
+    const sp = startParam || (typeof window !== 'undefined' ? window.Bale?.WebApp?.initDataUnsafe?.start_param : null);
+    return sp?.startsWith('post_') ? sp.slice(5) : null;
+  }, [startParam]);
 
   useEffect(() => {
     localStorage.setItem('my-ads-bale-miniapp', '1');
@@ -171,10 +176,10 @@ export function BaleMiniAppLogin() {
           </CardHeader>
           <CardContent className="text-center">
             <Link
-              href="/dashboard"
+              href={deepLinkPostId ? `/dashboard/posts/${deepLinkPostId}` : '/dashboard'}
               className="inline-block rounded-md bg-primary px-6 py-3 text-primary-foreground hover:bg-primary/90"
             >
-              {t('goToDashboard')}
+              {deepLinkPostId ? t('viewPost') : t('goToDashboard')}
             </Link>
           </CardContent>
         </Card>

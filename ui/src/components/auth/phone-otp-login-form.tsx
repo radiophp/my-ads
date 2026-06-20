@@ -15,7 +15,7 @@ import {
   type ConfirmDeviceResponse,
 } from '@/features/api/endpoints/auth';
 import { useGetWebsiteSettingsQuery } from '@/features/api/endpoints/website-settings';
-import { setAuth } from '@/features/auth/authSlice';
+import { setAuth, clearPendingDeepLink } from '@/features/auth/authSlice';
 import { useBaleLinkSocket } from '@/features/bale/useBaleLinkSocket';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import { cn, getDeviceInfo } from '@/lib/utils';
@@ -53,6 +53,7 @@ export function PhoneOtpLoginForm() {
   const { toast } = useToast();
 
   const auth = useAppSelector((state) => state.auth);
+  const pendingDeepLink = auth.pendingDeepLink;
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
   const [step, setStep] = useState<Step>('phone');
@@ -132,6 +133,8 @@ export function PhoneOtpLoginForm() {
 
   const isAuthenticated = useMemo(() => Boolean(auth.accessToken), [auth.accessToken]);
   const displayPhone = formatDisplayIranPhone(lastRequestedPhoneLocal ?? phone) || '+98';
+  const deepLinkPostId = pendingDeepLink?.startsWith('post_') ? pendingDeepLink.slice(5) : null;
+  const redirectAfterAuth = deepLinkPostId ? `/dashboard/posts/${deepLinkPostId}` : '/dashboard';
 
   useEffect(() => {
     codeRef.current = code;
@@ -304,7 +307,8 @@ export function PhoneOtpLoginForm() {
             const confirmed = await confirmDevice({ pendingSessionToken: response.pendingSessionToken }).unwrap();
             dispatch(setAuth(confirmed));
             toast({ title: t('baleLoginSuccess') });
-            router.push('/dashboard');
+            dispatch(clearPendingDeepLink());
+            router.push(redirectAfterAuth);
             return;
           }
           setPendingSessionToken(response.pendingSessionToken);
@@ -321,12 +325,13 @@ export function PhoneOtpLoginForm() {
 
         dispatch(setAuth(response));
         toast({ title: t('baleLoginSuccess') });
-        router.push('/dashboard');
+        dispatch(clearPendingDeepLink());
+        router.push(redirectAfterAuth);
     } catch (error) {
       console.error('Bale login failed', error);
       toast({ title: t('baleLoginError'), variant: 'destructive' });
     }
-  }, [baleLogin, confirmDevice, dispatch, lastRequestedPhoneLocal, phone, router, t, toast]);
+  }, [baleLogin, confirmDevice, dispatch, lastRequestedPhoneLocal, phone, router, t, toast, redirectAfterAuth]);
 
   useEffect(() => {
     baleLoginCallbackRef.current = handleBaleLogin;
@@ -371,7 +376,8 @@ export function PhoneOtpLoginForm() {
             dispatch(setAuth(confirmed));
             toast({ title: t('successToast') });
             setCode('');
-            router.push('/dashboard');
+            dispatch(clearPendingDeepLink());
+            router.push(redirectAfterAuth);
             return;
           }
           setPendingSessionToken(response.pendingSessionToken);
@@ -389,13 +395,14 @@ export function PhoneOtpLoginForm() {
         dispatch(setAuth(response));
         toast({ title: t('successToast') });
         setCode('');
-        router.push('/dashboard');
+        dispatch(clearPendingDeepLink());
+        router.push(redirectAfterAuth);
       } catch (error) {
         console.error('Failed to verify OTP', error);
         toast({ title: t('errors.verifyFailed'), variant: 'destructive' });
       }
     },
-    [code, confirmDevice, dispatch, lastRequestedPhoneLocal, phone, router, t, toast, verifyOtp],
+    [code, confirmDevice, dispatch, lastRequestedPhoneLocal, phone, router, t, toast, verifyOtp, redirectAfterAuth],
   );
 
   const handleConfirmDevice = useCallback(async (deviceToReplace?: string) => {
@@ -410,14 +417,15 @@ export function PhoneOtpLoginForm() {
       setPendingCurrentDevice(null);
       setPendingActiveDevices([]);
       setRequiresDeviceSelection(false);
-      router.push('/dashboard');
+      dispatch(clearPendingDeepLink());
+      router.push(redirectAfterAuth);
     } catch (error) {
       console.error('Failed to confirm device', error);
       toast({ title: t('errors.verifyFailed'), variant: 'destructive' });
     } finally {
       setIsConfirmingDevice(false);
     }
-  }, [pendingSessionToken, confirmDevice, dispatch, router, t, toast]);
+  }, [pendingSessionToken, confirmDevice, dispatch, router, t, toast, redirectAfterAuth]);
 
   const handleCancelDevice = useCallback(async () => {
     if (!pendingSessionToken) return;

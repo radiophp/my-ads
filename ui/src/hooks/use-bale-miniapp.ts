@@ -25,6 +25,7 @@ export function useBaleMiniApp() {
   const [contactStatus, setContactStatus] = useState<ContactRequestStatus>('idle');
   const [phone, setPhone] = useState<string | null>(null);
   const [sdkReady, setSdkReady] = useState(false);
+  const [startParam, setStartParam] = useState<string | null>(null);
 
   useEffect(() => {
     const fullSdk = window.Bale?.WebApp;
@@ -32,6 +33,9 @@ export function useBaleMiniApp() {
       setSdkReady(true);
       if (fullSdk.initData && fullSdk.initData !== initData) {
         setInitData(fullSdk.initData);
+      }
+      if (fullSdk.initDataUnsafe?.start_param) {
+        setStartParam(fullSdk.initDataUnsafe.start_param);
       }
       return;
     }
@@ -42,6 +46,9 @@ export function useBaleMiniApp() {
         setSdkReady(true);
         if (sdk.initData && sdk.initData !== initData) {
           setInitData(sdk.initData);
+        }
+        if (sdk.initDataUnsafe?.start_param) {
+          setStartParam(sdk.initDataUnsafe.start_param);
         }
         clearInterval(interval);
         clearTimeout(timeout);
@@ -93,5 +100,5 @@ export function useBaleMiniApp() {
     setPhone(null);
   }, []);
 
-  return { initData, phone, sdkReady, contactStatus, requestContact, resetContactStatus } as const;
+  return { initData, phone, sdkReady, contactStatus, requestContact, resetContactStatus, startParam } as const;
 }

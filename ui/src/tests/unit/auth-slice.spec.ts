@@ -67,6 +67,7 @@ describe('authSlice', () => {
           deviceChanged: false,
           challengerDevice: null,
           isBaleMiniApp: false,
+          pendingDeepLink: null,
         }),
       );
       const state = store.getState().auth;

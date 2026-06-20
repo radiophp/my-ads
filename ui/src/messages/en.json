@@ -2458,6 +2458,7 @@
         "openInBale": "Please open this page inside the Bale messenger app.",
         "sharePhone": "Share phone number",
         "checking": "Checking your info...",
+        "viewPost": "View post",
         "confirmErrorTitle": "Error",
         "confirmErrorMessage": "Device confirmation failed."
       }

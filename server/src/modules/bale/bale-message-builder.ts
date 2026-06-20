@@ -5,6 +5,10 @@ export function buildDashboardPostUrl(appBaseUrl: string, postId: string): strin
   return `${appBaseUrl}/dashboard/posts/${postId}`;
 }
 
+export function buildBaleDeepLink(botUsername: string, postId: string): string {
+  return `https://ble.ir/${botUsername}?startapp=post_${postId}`;
+}
+
 export function formatPriceLine(post: Record<string, unknown>): string | null {
   const fmt = (value: unknown) => {
     if (value === null || value === undefined) return null;
@@ -31,6 +35,7 @@ export function buildCaption(
   post: Record<string, unknown>,
   appBaseUrl: string,
   customMessage?: string,
+  baleBotUsername?: string,
 ): string {
   const url =
     (post['shareUrl'] as string) ||
@@ -43,9 +48,12 @@ export function buildCaption(
   if (post['code']) {
     lines.push(`🆔 کد آگهی: ${post['code']}`);
   }
-  const dashboardUrl = buildDashboardPostUrl(appBaseUrl, post['id'] as string);
-  if (dashboardUrl) {
-    lines.push(`🔗 ${dashboardUrl}`);
+  const postId = post['id'] as string;
+  const link = baleBotUsername
+    ? buildBaleDeepLink(baleBotUsername, postId)
+    : buildDashboardPostUrl(appBaseUrl, postId);
+  if (link) {
+    lines.push(`🔗 ${link}`);
   }
 
   if (post['cityName'] || post['districtName'] || post['provinceName']) {

@@ -17,6 +17,7 @@ export type AuthState = {
   deviceChanged: boolean;
   challengerDevice: ChallengerDevice | null;
   isBaleMiniApp: boolean;
+  pendingDeepLink: string | null;
 };
 
 export type AuthPayload = {
@@ -35,6 +36,7 @@ const initialState: AuthState = {
   deviceChanged: false,
   challengerDevice: null,
   isBaleMiniApp: false,
+  pendingDeepLink: null,
 };
 
 const readStoredAuth = (): AuthState | null => {
@@ -69,6 +71,7 @@ const persistAuthState = (state: AuthState): void => {
       accessToken: state.accessToken,
       refreshToken: state.refreshToken,
       user: state.user,
+      pendingDeepLink: state.pendingDeepLink,
     };
     window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(serializableState));
   } catch {
@@ -97,6 +100,7 @@ const authSlice = createSlice({
         state.accessToken = action.payload.accessToken;
         state.refreshToken = action.payload.refreshToken;
         state.user = action.payload.user;
+        state.pendingDeepLink = action.payload.pendingDeepLink;
         state.hydrated = true;
       } else {
         state.accessToken = null;
@@ -144,10 +148,16 @@ const authSlice = createSlice({
         state.challengerDevice = null;
       }
     },
+    setPendingDeepLink(state, action: PayloadAction<string | null>) {
+      state.pendingDeepLink = action.payload;
+    },
+    clearPendingDeepLink(state) {
+      state.pendingDeepLink = null;
+    },
   },
 });
 
 export const hydrateAuthFromStorage = () => readStoredAuth();
 
-export const { hydrateAuthState, setAuth, clearAuth, updateUser, deviceChanged, setBaleMiniApp } = authSlice.actions;
+export const { hydrateAuthState, setAuth, clearAuth, updateUser, deviceChanged, setBaleMiniApp, setPendingDeepLink, clearPendingDeepLink } = authSlice.actions;
 export default authSlice.reducer;

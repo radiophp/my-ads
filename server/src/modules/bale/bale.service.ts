@@ -5,7 +5,7 @@ import type { InlineKeyboardMarkup } from '@telegraf/types';
 import { PrismaService } from '../../platform/database/prisma.service';
 import { RedisService } from '../../platform/cache/redis.service';
 import { BaleLinkGateway } from './bale-link.gateway';
-import { buildCaption, buildDashboardPostUrl } from './bale-message-builder';
+import { buildCaption, buildDashboardPostUrl, buildBaleDeepLink } from './bale-message-builder';
 
 const BALE_API_ROOT = 'https://tapi.bale.ai';
 
@@ -35,6 +35,7 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
   private readonly sendPhotos: boolean;
   private readonly appBaseUrl: string;
   private readonly apiBaseUrl: string;
+  private readonly baleBotUsername: string;
   private sendRateLimitChain: Promise<void> = Promise.resolve();
   private sendRateLimitTimestamps: number[] = [];
   private sendRateLimitUntil = 0;
@@ -81,6 +82,7 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
       this.configService.get<string>('NEXT_PUBLIC_API_BASE_URL') ??
         (this.appBaseUrl ? `${this.appBaseUrl}/api` : ''),
     );
+    this.baleBotUsername = this.configService.get<string>('BALE_BOT_USERNAME') ?? '';
   }
 
   onModuleInit(): void {
@@ -648,7 +650,7 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
     }
 
     const dashboardUrl = buildDashboardPostUrl(this.appBaseUrl, post.id);
-    const caption = buildCaption(post, this.appBaseUrl, customMessage);
+    const caption = buildCaption(post, this.appBaseUrl, customMessage, this.baleBotUsername);
 
     const photos = (post.medias ?? [])
       .map((m) => m.localUrl || m.url || m.thumbnailUrl)
@@ -659,6 +661,7 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
       post.code,
       dashboardUrl,
       photos.length > 0 ? post.id : null,
+      this.baleBotUsername,
     );
     const extra = {
       link_preview_options: { is_disabled: true },
@@ -784,9 +787,14 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
     code?: number | null,
     url?: string | null,
     postId?: string | null,
+    baleBotUsername?: string,
   ): InlineKeyboardMarkup | undefined {
     const rows: InlineKeyboardMarkup['inline_keyboard'] = [];
-    if (url) {
+    if (url && baleBotUsername) {
+      rows.push([
+        { text: 'مشاهده آگهی', web_app: { url: buildBaleDeepLink(baleBotUsername, postId ?? '') } },
+      ]);
+    } else if (url) {
       rows.push([{ text: 'مشاهده آگهی', url }]);
     }
     if (code) {

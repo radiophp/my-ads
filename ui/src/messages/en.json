@@ -78,6 +78,7 @@
       "codeInfo": "We sent a code to {phone}.",
       "codeDescription": "Enter the 4-digit code sent to {phone}.",
       "codeLabel": "Verification code",
+      "codeDigitAria": "Verification code",
       "codePlaceholder": "1234",
       "verifyCode": "Verify & continue",
       "verifying": "Verifying…",
@@ -2441,6 +2442,24 @@
       "deleteError": "Failed to sign out device.",
       "empty": "No devices registered.",
       "loadError": "Failed to load sessions."
+    },
+    "bale": {
+      "login": {
+        "loading": "Loading...",
+        "successTitle": "Signed in",
+        "successDescription": "You have signed in successfully.",
+        "goToDashboard": "Go to dashboard",
+        "title": "Sign in with Bale",
+        "description": "Share your phone number via Bale to sign in to Mahan File.",
+        "requesting": "Requesting phone number from Bale...",
+        "sent": "Phone number shared. Connecting...",
+        "unavailable": "Contact sharing service is unavailable.",
+        "openInBale": "Please open this page inside the Bale messenger app.",
+        "sharePhone": "Share phone number",
+        "checking": "Checking your info...",
+        "confirmErrorTitle": "Error",
+        "confirmErrorMessage": "Device confirmation failed."
+      }
     }
   }
 }

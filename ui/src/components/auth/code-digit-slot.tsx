@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { Input } from '@/components/ui/input';
 import { CODE_LENGTH } from '@/lib/phone-utils';
 
@@ -13,6 +14,7 @@ type CodeDigitSlotProps = {
 };
 
 export function CodeDigitSlot({ index, code, disabled, onInput, onKeyDown, onRef }: CodeDigitSlotProps) {
+  const t = useTranslations('landing.login');
   const digit = code[index] ?? '';
   return (
     <div className="flex items-center">
@@ -22,7 +24,7 @@ export function CodeDigitSlot({ index, code, disabled, onInput, onKeyDown, onRef
         type="password"
         inputMode="numeric"
         autoComplete={index === 0 ? 'one-time-code' : 'off'}
-        aria-label="کد تأیید"
+        aria-label={t('codeDigitAria')}
         value={digit}
         onChange={onInput(index)}
         onKeyDown={onKeyDown(index)}

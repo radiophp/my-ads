@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Smartphone, Loader2, CheckCircle2 } from 'lucide-react';
 
 import { useBaleMiniAppAuthMutation, useConfirmDeviceMutation, type ActiveDeviceInfo } from '@/features/api/endpoints/auth';
@@ -18,6 +19,7 @@ import { DeviceSelectDialog } from '@/components/auth/device-select-dialog';
 export function BaleMiniAppLogin() {
   const dispatch = useAppDispatch();
   const { toast } = useToast();
+  const t = useTranslations('auth.bale.login');
 
   const { initData, phone, contactStatus, requestContact } = useBaleMiniApp();
   const { accessToken, hydrated } = useAppSelector((s) => s.auth);
@@ -136,9 +138,9 @@ export function BaleMiniAppLogin() {
       setRequiresDeviceSelection(false);
       setRedirected(true);
     } catch {
-      toast({ title: 'خطا', description: 'تأیید دستگاه با مشکل مواجه شد.' });
+      toast({ title: t('confirmErrorTitle'), description: t('confirmErrorMessage') });
     }
-  }, [pendingSessionToken, confirmDevice, dispatch, toast]);
+  }, [pendingSessionToken, confirmDevice, dispatch, toast, t]);
 
   const handleCancelDevice = useCallback(() => {
     setShowDeviceDialog(false);
@@ -152,7 +154,7 @@ export function BaleMiniAppLogin() {
     return (
       <Card className="w-full">
         <CardHeader className="text-center">
-          <CardTitle className="text-xl">در حال بارگذاری...</CardTitle>
+          <CardTitle className="text-xl">{t('loading')}</CardTitle>
         </CardHeader>
       </Card>
     );
@@ -164,24 +166,24 @@ export function BaleMiniAppLogin() {
         <Card className="w-full">
           <CardHeader className="text-center">
             <CheckCircle2 className="mx-auto size-12 text-green-500" />
-            <CardTitle className="text-xl">ورود موفق</CardTitle>
-            <CardDescription>شما با موفقیت وارد شدید</CardDescription>
+            <CardTitle className="text-xl">{t('successTitle')}</CardTitle>
+            <CardDescription>{t('successDescription')}</CardDescription>
           </CardHeader>
           <CardContent className="text-center">
             <Link
               href="/dashboard"
               className="inline-block rounded-md bg-primary px-6 py-3 text-primary-foreground hover:bg-primary/90"
             >
-              ورود به داشبورد
+              {t('goToDashboard')}
             </Link>
           </CardContent>
         </Card>
       ) : (
         <Card className="w-full">
           <CardHeader className="text-center">
-            <CardTitle className="text-xl">ورود با پیام‌رسان بله</CardTitle>
+            <CardTitle className="text-xl">{t('title')}</CardTitle>
             <CardDescription>
-              برای ورود به ماهان فایل، شماره تماس خود را از طریق بله ارسال کنید
+              {t('description')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -189,23 +191,23 @@ export function BaleMiniAppLogin() {
               <div className="flex flex-col items-center gap-3 py-4">
                 <Loader2 className="size-8 animate-spin text-primary" />
                 <p className="text-sm text-muted-foreground">
-                  در حال ارسال درخواست به بله...
+                  {t('requesting')}
                 </p>
               </div>
             ) : contactStatus === 'sent' ? (
               <div className="flex flex-col items-center gap-3 py-4">
                 <Loader2 className="size-8 animate-spin text-primary" />
                 <p className="text-sm text-muted-foreground">
-                  شماره تماس ارسال شد. در حال برقراری ارتباط...
+                  {t('sent')}
                 </p>
               </div>
             ) : contactStatus === 'unavailable' ? (
               <div className="space-y-3 text-center">
                 <p className="text-sm text-muted-foreground">
-                  سرویس اشتراک‌گذاری شماره در دسترس نیست.
+                  {t('unavailable')}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  لطفاً صفحه را از داخل پیام‌رسان بله باز کنید
+                  {t('openInBale')}
                 </p>
               </div>
             ) : (
@@ -216,13 +218,13 @@ export function BaleMiniAppLogin() {
                 disabled={isAuthLoading}
               >
                 <Smartphone className="size-5" />
-                اشتراک‌گذاری شماره تماس
+                {t('sharePhone')}
               </Button>
             )}
 
             {isAuthLoading && (
               <p className="text-center text-xs text-muted-foreground">
-                در حال بررسی اطلاعات...
+                {t('checking')}
               </p>
             )}
           </CardContent>

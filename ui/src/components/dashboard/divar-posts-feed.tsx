@@ -16,6 +16,7 @@ import {
   useFetchPostPhoneMutation,
   useFetchPostContactInfoMutation,
 } from '@/features/api/endpoints/divar-posts';
+import { useSharePostOnBaleMutation } from '@/features/api/endpoints/bale';
 import type { DivarPostContactInfo, DivarPostSummary } from '@/types/divar-posts';
 import { useAppSelector } from '@/lib/hooks';
 import { DownloadPhotosDialog } from '@/components/dashboard/divar-posts/download-photos-dialog';
@@ -64,6 +65,7 @@ export function DivarPostsFeed(): JSX.Element {
   const [fetchPosts] = useLazyGetDivarPostsQuery();
   const [fetchPhone] = useFetchPostPhoneMutation();
   const [fetchContactInfo] = useFetchPostContactInfoMutation();
+  const [sharePostOnBale, { isLoading: shareBaleLoading }] = useSharePostOnBaleMutation();
   const [contactInfo, setContactInfo] = useState<DivarPostContactInfo | null>(null);
   const [contactLoading, setContactLoading] = useState(false);
   const {
@@ -564,6 +566,16 @@ export function DivarPostsFeed(): JSX.Element {
     void appendPhoneAndShare('copy');
   }, [appendPhoneAndShare]);
 
+  const handleShareBale = useCallback(async () => {
+    if (!selectedPost || shareBaleLoading) return;
+    try {
+      await sharePostOnBale({ postId: selectedPost.id }).unwrap();
+      window.Bale?.WebApp?.close();
+    } catch {
+      // loading resets automatically on error
+    }
+  }, [selectedPost, sharePostOnBale, shareBaleLoading]);
+
   const handleFetchContactInfo = useCallback(async () => {
     if (!selectedPost) {
       return;
@@ -759,6 +771,8 @@ export function DivarPostsFeed(): JSX.Element {
                       detailData={detailData}
                       onShareWhatsapp={sharePayload ? handleShareWhatsapp : undefined}
                       onShareTelegram={sharePayload ? handleShareTelegram : undefined}
+                      onShareBale={sharePayload ? handleShareBale : undefined}
+                      shareBaleLoading={shareBaleLoading}
                       smsHref={sharePayload?.smsHref ?? null}
                       onCopyLink={sharePayload ? handleCopyLink : undefined}
                       copyLinkLabel={t('copyLink')}

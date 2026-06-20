@@ -39,7 +39,7 @@ interface BaleWebApp {
   onEvent(eventType: string, callback: (...args: unknown[]) => void): void;
   offEvent(eventType: string, callback: (...args: unknown[]) => void): void;
   sendData(data: string): void;
-  openLink(url: string): void;
+  openLink(url: string, options?: { try_instant_view?: boolean }): void;
   version: string;
   BackButton: BackButton;
 }

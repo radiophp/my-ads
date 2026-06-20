@@ -52,6 +52,8 @@ export type PostDetailViewProps = {
   detailData: PostDetailData;
   onShareWhatsapp?: () => void;
   onShareTelegram?: () => void;
+  onShareBale?: () => void;
+  shareBaleLoading?: boolean;
   smsHref?: string | null;
   onCopyLink?: () => void;
   copyLinkLabel?: string;
@@ -76,6 +78,8 @@ export function PostDetailView({
   detailData,
   onShareWhatsapp,
   onShareTelegram,
+  onShareBale,
+  shareBaleLoading,
   smsHref,
   onCopyLink,
   copyLinkLabel,
@@ -287,7 +291,7 @@ export function PostDetailView({
               isRTL && 'divide-x-reverse',
             )}
           >
-              {onShareWhatsapp || onShareTelegram || smsHref || onCopyLink ? (
+              {onShareWhatsapp || onShareTelegram || onShareBale || smsHref || onCopyLink ? (
                 <>
                   <Button
                     type="button"
@@ -305,6 +309,8 @@ export function PostDetailView({
                     t={t}
                     onShareWhatsapp={onShareWhatsapp}
                     onShareTelegram={onShareTelegram}
+                    onShareBale={onShareBale}
+                    shareBaleLoading={shareBaleLoading}
                     smsHref={smsHref}
                     onCopyLink={onCopyLink}
                     copyLinkLabel={copyLinkLabel}
@@ -455,7 +461,7 @@ export function PostDetailView({
               isRTL && 'divide-x-reverse',
             )}
           >
-              {onShareWhatsapp || onShareTelegram || smsHref || onCopyLink ? (
+              {onShareWhatsapp || onShareTelegram || onShareBale || smsHref || onCopyLink ? (
                 <>
                   <Button
                     type="button"

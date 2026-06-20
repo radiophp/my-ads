@@ -262,6 +262,32 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
         }
       });
 
+      this.bot.on('message', async (ctx: BotContext, next) => {
+        const msg = ctx.message as any;
+        if (msg?.web_app_data) {
+          try {
+            const data = JSON.parse(msg.web_app_data.data);
+            if (data.action === 'share_post' && data.postId) {
+              const chatId = ctx.chat?.id;
+              if (chatId) {
+                this.sendPostInternal({
+                  chatId: String(chatId),
+                  postId: data.postId,
+                  retryMissingPhone: false,
+                  forceSendPhotos: true,
+                }).catch((err) =>
+                  this.logger.error(`Failed to send shared post: ${(err as Error).message}`),
+                );
+              }
+            }
+          } catch (err) {
+            this.logger.warn(`Failed to parse web_app_data: ${(err as Error).message}`);
+          }
+          return;
+        }
+        return next();
+      });
+
       this.bot.on('text', async (ctx: BotContext, next) => {
         if (await this.getPhone(ctx)) {
           return next();
@@ -566,18 +592,40 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
     return null;
   }
 
+  async sharePostToUser(
+    userId: string,
+    postId: string,
+  ): Promise<{ success: boolean; error?: string }> {
+    const chatLink = await this.findChatLink({ userId });
+    if (!chatLink) {
+      return { success: false, error: 'Bale chat not found' };
+    }
+    try {
+      const ok = await this.sendPostInternal({
+        chatId: chatLink.chatId,
+        postId,
+        retryMissingPhone: false,
+        forceSendPhotos: true,
+      });
+      return { success: ok };
+    } catch (err) {
+      return { success: false, error: (err as Error).message };
+    }
+  }
+
   private async sendPostInternal(params: {
     chatId: string;
     postId: string;
     retryMissingPhone: boolean;
     customMessage?: string;
+    forceSendPhotos?: boolean;
   }): Promise<boolean> {
     await this.ensureSender();
     if (!this.sender) {
       this.logger.warn('Bale sender is not available.');
       return false;
     }
-    const { chatId, postId, retryMissingPhone, customMessage } = params;
+    const { chatId, postId, retryMissingPhone, customMessage, forceSendPhotos } = params;
 
     const post = await this.prisma.divarPost.findUnique({
       where: { id: postId },
@@ -605,7 +653,8 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
     const photos = (post.medias ?? [])
       .map((m) => m.localUrl || m.url || m.thumbnailUrl)
       .filter(Boolean) as string[];
-    const limitedPhotos = this.sendPhotos ? photos.slice(0, 10) : [];
+    const shouldSendPhotos = this.sendPhotos || forceSendPhotos;
+    const limitedPhotos = shouldSendPhotos ? photos.slice(0, 10) : [];
     const replyMarkup = this.buildPostMetaMarkup(
       post.code,
       dashboardUrl,
@@ -656,44 +705,22 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
       }
     }
 
-    const batches: string[][] = [limitedPhotos];
-
-    for (let b = 0; b < batches.length; b++) {
-      const batch = batches[b].map((url) => ({
-        type: 'photo',
-        media: url,
-        caption: undefined,
-      })) as any[];
-
-      try {
-        await this.sendWithRetry(
-          `sendMediaGroup(${b + 1}/${batches.length})`,
-          () => this.sender!.sendMediaGroup(chatId, batch),
-          {
-            chatId,
-            cost: batch.length,
-            timeoutMs: this.mediaGroupTimeoutMs(batch.length),
-            perChatCost: 1,
-          },
-        );
-      } catch (err) {
-        const errMsg = `Failed to send batch ${b + 1}/${batches.length} for post ${postId} to chat ${chatId}: ${String(
-          (err as any)?.response?.description ?? (err as Error).message,
-        )}`;
-        this.logger.error(errMsg);
-        return false;
-      }
-    }
+    const batch = limitedPhotos.map((url, i) => ({
+      type: 'photo',
+      media: url,
+      ...(i === 0 ? { caption: caption || 'جزئیات آگهی' } : {}),
+    })) as any[];
 
     try {
-      await this.sendWithRetry(
-        'sendMessage',
-        () => this.sender!.sendMessage(chatId, caption || 'جزئیات آگهی', extra),
-        { chatId },
-      );
+      await this.sendWithRetry('sendMediaGroup', () => this.sender!.sendMediaGroup(chatId, batch), {
+        chatId,
+        cost: batch.length,
+        timeoutMs: this.mediaGroupTimeoutMs(batch.length),
+        perChatCost: 1,
+      });
     } catch (err) {
       this.logger.error(
-        `Failed to send caption message for post ${postId} to chat ${chatId}: ${String(
+        `Failed to send media group for post ${postId} to chat ${chatId}: ${String(
           (err as any)?.response?.description ?? (err as Error).message,
         )}`,
       );

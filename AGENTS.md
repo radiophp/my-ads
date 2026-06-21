@@ -68,6 +68,13 @@
 | `hooks/` | Custom React hooks |
 | `messages/` | i18n locale JSON files |
 | `public/map-assets/` | Self-hosted map style, sprites, RTL plugin |
+| `components/ui/searchable-select.tsx` | Reusable searchable select — button triggers dropdown with search input + filtered option list; `Option` supports `searchText` for slug-based search |
+| `components/ui/location-cascade.tsx` | Reusable province → city → district cascade using `SearchableSelect` with cascading disabled states |
+
+## Admin Pages
+| Route | Component | Description |
+| --- | --- | --- |
+| `/admin/divar-posts-with-phones` | `AdminPostsWithPhonesManager` | Table of DivarPosts with phone numbers from 3 sources (Divar, Arka, MelkRadar). Filters: location cascade (province/city/district with search by name+slug), category select (depth 3, active, allowPosting, shows cat2 > cat3), businessType (personal/business), phoneFilter (has/none). Page-based pagination (20/page). Default province 895, default businessType personal. |
 
 ## Docker Compose Services
 

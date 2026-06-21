@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Cron } from '@nestjs/schedule';
 import { ArkaTransferStatus, PhoneFetchStatus } from '@prisma/client';
 import { PrismaService } from '@app/platform/database/prisma.service';
 
@@ -36,7 +36,7 @@ export class ArkaPhoneTransferService {
       (process.env['ENABLE_ARKA_TRANSFER_CRON'] ?? 'true').toLowerCase() === 'true';
   }
 
-  @Cron(CronExpression.EVERY_5_SECONDS, { name: 'arka-phone-transfer' })
+  @Cron('0 */2 * * * *', { name: 'arka-phone-transfer' })
   async cronTick() {
     if (this.isRunning) {
       return;
@@ -49,7 +49,7 @@ export class ArkaPhoneTransferService {
       this.logger.warn('Transfer cron guard timeout elapsed; releasing running flag.');
       this.isRunning = false;
       this.runGuardTimer = null;
-    }, 120_000);
+    }, 300_000);
     for (let i = 0; i < 50; i += 1) {
       const result = await this.transferOne(false).catch((error) => {
         this.logger.debug(

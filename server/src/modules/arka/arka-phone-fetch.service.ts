@@ -157,9 +157,9 @@ export class ArkaPhoneFetchService {
     for (let page = 1; page <= maxPages; page++) {
       this.logger.log(`Search page ${page}/${maxPages}...`);
 
-      // Throttle: 500ms between page requests
+      // Throttle: 200ms between page requests
       if (page > 1) {
-        await sleep(500);
+        await sleep(200);
       }
 
       let res;
@@ -206,16 +206,12 @@ export class ArkaPhoneFetchService {
       this.logger.log(`Search page ${page}: ${posts.length} posts found`);
       let pageRefetched = 0;
       let pageSkipped = 0;
+      let phoneFetchesInPage = 0;
 
       for (const post of posts) {
         processed++;
         const arkaId: number | undefined = post?.id;
         const token: string | undefined = post?.token;
-
-        // Throttle: 250ms between individual phone detail requests
-        if (processed > 1) {
-          await sleep(250);
-        }
         if (!arkaId || typeof arkaId !== 'number') {
           this.logger.debug(`Search post missing id; skipping`);
           errors++;
@@ -252,6 +248,12 @@ export class ArkaPhoneFetchService {
         } else {
           this.logger.log(`[P${page}] id=${arkaId} token=${token ?? '?'} new, fetching phone...`);
         }
+
+        // Throttle: 100ms between phone detail requests (not for skipped posts)
+        if (phoneFetchesInPage > 0) {
+          await sleep(100);
+        }
+        phoneFetchesInPage++;
 
         const success = await this.fetchAndStorePhoneDetails(arkaId, token ?? null, headers);
         if (success) {

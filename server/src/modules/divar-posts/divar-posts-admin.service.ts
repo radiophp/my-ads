@@ -7,6 +7,10 @@ import cacheConfig from '@app/platform/config/cache.config';
 import { PostAnalysisStatus, Prisma } from '@prisma/client';
 import type { PaginatedPostsToAnalyzeDto, PostToAnalyzeItemDto } from './dto/post-to-analyze.dto';
 import type { PaginatedDivarPostsDto, DivarPostListItemDto } from './dto/divar-post.dto';
+import type {
+  PaginatedPostsWithPhonesDto,
+  PostsWithPhonesQueryDto,
+} from './dto/posts-with-phones.dto';
 import { applyCategoryFilters } from './divar-post-filter-builder';
 
 const PAGE_SIZE_LIMIT = 100;
@@ -565,6 +569,126 @@ export class DivarPostsAdminService {
         ownerName: true,
       },
     });
+  }
+
+  async listPostsWithPhones(dto: PostsWithPhonesQueryDto): Promise<PaginatedPostsWithPhonesDto> {
+    const page = Math.max(dto.page ?? 1, 1);
+    const pageSize = Math.min(Math.max(dto.pageSize ?? 20, 1), 100);
+    const offset = (page - 1) * pageSize;
+
+    const conditions: string[] = [];
+    const params: (string | number | boolean)[] = [];
+
+    if (dto.provinceId) {
+      conditions.push(`dp."provinceId" = $${params.length + 1}`);
+      params.push(dto.provinceId);
+    }
+    if (dto.cityId) {
+      conditions.push(`dp."cityId" = $${params.length + 1}`);
+      params.push(dto.cityId);
+    }
+    if (dto.districtId) {
+      conditions.push(`dp."districtId" = $${params.length + 1}`);
+      params.push(dto.districtId);
+    }
+    if (dto.cat3) {
+      conditions.push(`dp."cat3" = $${params.length + 1}`);
+      params.push(dto.cat3);
+    }
+    if (dto.businessType === 'personal') {
+      conditions.push('dp."businessRef" IS NULL');
+    } else if (dto.businessType === 'business') {
+      conditions.push('dp."businessRef" IS NOT NULL');
+    }
+    if (dto.phoneFilter === 'has') {
+      conditions.push(
+        '(dp."phoneNumber" IS NOT NULL OR apr."phoneNumber" IS NOT NULL OR mpr."phoneNumber" IS NOT NULL)',
+      );
+    } else if (dto.phoneFilter === 'none') {
+      conditions.push(
+        '(dp."phoneNumber" IS NULL AND apr."phoneNumber" IS NULL AND mpr."phoneNumber" IS NULL)',
+      );
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+    const baseQuery = `
+      FROM "DivarPost" dp
+      LEFT JOIN "ArkaPhoneRecord" apr ON apr."externalId" = dp."externalId"
+      LEFT JOIN "MelkradarPhoneRecord" mpr ON mpr."externalId" = dp."externalId"
+      ${whereClause}
+    `;
+
+    const countResult = await this.prisma.$queryRawUnsafe<{ count: bigint }[]>(
+      `SELECT COUNT(*)::bigint as count ${baseQuery}`,
+      ...params,
+    );
+    const totalItems = Number(countResult[0]?.count ?? 0);
+
+    const rows = await this.prisma.$queryRawUnsafe<
+      {
+        id: string;
+        code: number;
+        externalId: string;
+        title: string | null;
+        cat3: string | null;
+        provinceName: string | null;
+        cityName: string | null;
+        districtName: string | null;
+        contactPhone: string | null;
+        arkaPhone: string | null;
+        melkradarPhone: string | null;
+        businessRef: string | null;
+      }[]
+    >(
+      `SELECT
+        dp.id,
+        dp.code,
+        dp."externalId",
+        dp.title,
+        dp.cat3,
+        dp."provinceName",
+        dp."cityName",
+        dp."districtName",
+        dp."phoneNumber" AS "contactPhone",
+        apr."phoneNumber" AS "arkaPhone",
+        mpr."phoneNumber" AS "melkradarPhone",
+        dp."businessRef"
+      ${baseQuery}
+      ORDER BY dp.code DESC
+      LIMIT $${params.length + 1}
+      OFFSET $${params.length + 2}`,
+      ...params,
+      pageSize,
+      offset,
+    );
+
+    const totalPages = totalItems === 0 ? 0 : Math.ceil(totalItems / pageSize);
+
+    return {
+      items: rows.map((row) => ({
+        id: row.id,
+        code: row.code,
+        externalId: row.externalId,
+        title: row.title ?? null,
+        cat3: row.cat3 ?? null,
+        provinceName: row.provinceName ?? null,
+        cityName: row.cityName ?? null,
+        districtName: row.districtName ?? null,
+        contactPhone: row.contactPhone ?? null,
+        arkaPhone: row.arkaPhone ?? null,
+        melkradarPhone: row.melkradarPhone ?? null,
+        businessRef: row.businessRef ?? null,
+      })),
+      meta: {
+        page,
+        pageSize,
+        totalItems,
+        totalPages,
+        hasPreviousPage: page > 1,
+        hasNextPage: page < totalPages,
+      },
+    };
   }
 
   private appendAndCondition(

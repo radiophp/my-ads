@@ -928,6 +928,10 @@
         "melkradarSessions": {
           "title": "هدرهای ملک رادار",
           "description": "هدرهای API ملک رادار برای دریافت اطلاعات ملک را مدیریت کنید."
+        },
+        "postsWithPhones": {
+"title": "وضعیت اطلاعات تماس",
+          "description": "آگهی‌های دیوار به همراه شماره تلفن از منابع مختلف را مشاهده کنید."
         }
       }
     },
@@ -1894,6 +1898,51 @@
         "note": "اگر مرورگر اجازه‌ی نمایش پیش‌نمایش را ندهد، با دکمه‌ی زیر آگهی را در تب جدید باز کنید."
       },
       "untitled": "بدون عنوان ({externalId})"
+    },
+    "postsWithPhones": {
+      "title": "آگهی‌های دارای تلفن",
+      "description": "لیست آگهی‌های دیوار به همراه شماره تلفن از منابع مختلف (دیوار، آرکا، ملک رادار).",
+      "loading": "در حال بارگذاری…",
+      "empty": "آگهی‌ای یافت نشد.",
+      "actions": {
+        "filter": "اعمال فیلتر",
+        "reset": "پاک کردن فیلترها",
+        "refresh": "تازه‌سازی"
+      },
+      "filters": {
+        "all": "همه",
+        "location": "موقعیت",
+        "allProvinces": "همه استان‌ها",
+        "allCities": "همه شهرها",
+        "allDistricts": "همه مناطق",
+        "provinceSearch": "جستجوی استان…",
+        "citySearch": "جستجوی شهر…",
+        "districtSearch": "جستجوی منطقه…",
+        "cat3": "دسته",
+        "cat3Placeholder": "انتخاب دسته",
+        "cat3Search": "جستجوی دسته…",
+        "businessType": "نوع",
+        "personal": "شخصی",
+        "business": "تجاری",
+        "phoneFilter": "تلفن",
+        "hasPhone": "دارد",
+        "noPhone": "ندارد"
+      },
+      "columns": {
+        "code": "کد",
+        "externalId": "شناسه دیوار",
+        "title": "عنوان",
+        "cat3": "دسته ۳",
+        "location": "موقعیت",
+        "contactPhone": "تلفن تماس",
+        "arkaPhone": "تلفن آرکا",
+        "melkradarPhone": "تلفن ملک رادار"
+      },
+      "pagination": {
+        "label": "صفحه {page} از {totalPages} • {totalItems} آگهی",
+        "previous": "قبلی",
+        "next": "بعدی"
+      }
     },
     "locations": {
       "provinces": {

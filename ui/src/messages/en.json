@@ -927,6 +927,10 @@
         "melkradarSessions": {
           "title": "MelkRadar headers",
           "description": "Manage MelkRadar API headers used to fetch property data."
+        },
+        "postsWithPhones": {
+          "title": "Posts with Phones",
+          "description": "View Divar posts with phone numbers from various sources."
         }
       }
     },
@@ -1893,6 +1897,51 @@
         "note": "If the preview cannot load because of browser restrictions, use the button below to open the ad in a new tab."
       },
       "untitled": "Untitled ({externalId})"
+    },
+    "postsWithPhones": {
+      "title": "Posts with Phone Numbers",
+      "description": "Divar posts with phone numbers from various sources (Divar, Arka, MelkRadar).",
+      "loading": "Loading…",
+      "empty": "No posts found.",
+      "actions": {
+        "filter": "Apply Filters",
+        "reset": "Reset Filters",
+        "refresh": "Refresh"
+      },
+      "filters": {
+        "all": "All",
+        "location": "Location",
+        "allProvinces": "All provinces",
+        "allCities": "All cities",
+        "allDistricts": "All districts",
+        "provinceSearch": "Search province…",
+        "citySearch": "Search city…",
+        "districtSearch": "Search district…",
+        "cat3": "Category",
+        "cat3Placeholder": "Select category",
+        "cat3Search": "Search category…",
+        "businessType": "Type",
+        "personal": "Personal",
+        "business": "Business",
+        "phoneFilter": "Phone",
+        "hasPhone": "Has phone",
+        "noPhone": "No phone"
+      },
+      "columns": {
+        "code": "Code",
+        "externalId": "External ID",
+        "title": "Title",
+        "cat3": "Cat 3",
+        "location": "Location",
+        "contactPhone": "Contact Phone",
+        "arkaPhone": "Arka Phone",
+        "melkradarPhone": "MelkRadar Phone"
+      },
+      "pagination": {
+        "label": "Page {page} of {totalPages} • {totalItems} posts",
+        "previous": "Previous",
+        "next": "Next"
+      }
     },
     "locations": {
       "provinces": {

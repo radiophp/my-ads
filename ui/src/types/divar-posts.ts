@@ -115,3 +115,30 @@ export type DivarPostCategoryCount = {
   businessCount: number;
   count: number;
 };
+
+export type PostsWithPhonesItem = {
+  id: string;
+  code: number;
+  externalId: string;
+  title: string | null;
+  cat3: string | null;
+  provinceName: string | null;
+  cityName: string | null;
+  districtName: string | null;
+  contactPhone: string | null;
+  arkaPhone: string | null;
+  melkradarPhone: string | null;
+  businessRef: string | null;
+};
+
+export type PaginatedPostsWithPhones = {
+  items: PostsWithPhonesItem[];
+  meta: {
+    page: number;
+    pageSize: number;
+    totalItems: number;
+    totalPages: number;
+    hasPreviousPage: boolean;
+    hasNextPage: boolean;
+  };
+};

@@ -23,6 +23,7 @@ import {
   TicketPercent,
   UserPlus,
   Radar,
+  Phone,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -203,6 +204,11 @@ export function AdminDashboard() {
       title: t('cards.melkradarSessions.title'),
       countKey: 'adminMelkradarSessions',
     },
+    postsWithPhones: {
+      href: '/admin/divar-posts-with-phones',
+      icon: <Phone className="size-8 text-primary" aria-hidden />,
+      title: t('cards.postsWithPhones.title'),
+    },
   } satisfies Record<string, DashboardNavItem>;
 
   const sections: DashboardSection[] = [
@@ -243,6 +249,7 @@ export function AdminDashboard() {
         items.divarReports,
         items.postsToAnalyze,
         items.divarSessions,
+        items.postsWithPhones,
       ],
     },
     {

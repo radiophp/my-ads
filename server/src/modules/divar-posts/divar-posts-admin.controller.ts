@@ -5,6 +5,8 @@ import { RolesGuard } from '@app/modules/auth/guards/roles.guard';
 import { Roles, Role } from '@app/common/decorators/roles.decorator';
 import { DivarPostsAdminService } from './divar-posts-admin.service';
 import type { PaginatedPostsToAnalyzeDto } from './dto/post-to-analyze.dto';
+import type { PaginatedPostsWithPhonesDto } from './dto/posts-with-phones.dto';
+import { PostsWithPhonesQueryDto } from './dto/posts-with-phones.dto';
 import { DivarPostStatsService } from './divar-post-stats.service';
 import { DivarDistrictPriceReportRowDto } from './dto/divar-post-district-report.dto';
 
@@ -24,6 +26,15 @@ export class DivarPostsAdminController {
   async listPending(@Query('page') pageParam?: string): Promise<PaginatedPostsToAnalyzeDto> {
     const page = Number(pageParam) || 1;
     return this.divarPostsAdminService.listPostsToAnalyze(page);
+  }
+
+  @Get('with-phones')
+  @ApiOperation({ summary: 'List posts with phone numbers from all sources' })
+  @ApiOkResponse({ description: 'Paginated posts with phone info.' })
+  async listPostsWithPhones(
+    @Query() query: PostsWithPhonesQueryDto,
+  ): Promise<PaginatedPostsWithPhonesDto> {
+    return this.divarPostsAdminService.listPostsWithPhones(query);
   }
 
   @Get('district-prices')

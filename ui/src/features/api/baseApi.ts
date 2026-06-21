@@ -129,6 +129,7 @@ export const apiSlice = createApi({
     'AdminFeaturedPosts',
     'AdminSeoSettings',
     'AdminWebsiteSettings',
+    'PostsWithPhones',
   ],
   endpoints: () => ({}),
 });

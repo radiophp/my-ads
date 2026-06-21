@@ -6,6 +6,7 @@ import type {
   DivarPostListResponse,
   DivarPostSummary,
   PaginatedPostsToAnalyze,
+  PaginatedPostsWithPhones,
 } from '@/types/divar-posts';
 import type { DivarDistrictPriceReportRow } from '@/types/divar-reports';
 
@@ -115,6 +116,33 @@ const divarPostsApi = apiSlice.injectEndpoints({
         return `/admin/divar-posts/district-prices?${searchParams.toString()}`;
       },
     }),
+    getPostsWithPhones: builder.query<
+      PaginatedPostsWithPhones,
+      {
+        page?: number;
+        pageSize?: number;
+        provinceId?: number;
+        cityId?: number;
+        districtId?: number;
+        cat3?: string;
+        businessType?: string;
+        phoneFilter?: string;
+      }
+    >({
+      query: (params) => {
+        const searchParams = new URLSearchParams();
+        if (params.page) searchParams.set('page', String(params.page));
+        if (params.pageSize) searchParams.set('pageSize', String(params.pageSize));
+        if (params.provinceId) searchParams.set('provinceId', String(params.provinceId));
+        if (params.cityId) searchParams.set('cityId', String(params.cityId));
+        if (params.districtId) searchParams.set('districtId', String(params.districtId));
+        if (params.cat3) searchParams.set('cat3', params.cat3);
+        if (params.businessType) searchParams.set('businessType', params.businessType);
+        if (params.phoneFilter) searchParams.set('phoneFilter', params.phoneFilter);
+        return `/admin/divar-posts/with-phones?${searchParams.toString()}`;
+      },
+      providesTags: ['PostsWithPhones'],
+    }),
     fetchPostPhone: builder.mutation<{ phoneNumber: string | null }, { postId: string }>({
       query: ({ postId }) => ({
         url: `/divar-posts/${postId}/share-phone`,
@@ -141,6 +169,8 @@ export const {
   useLazyGetDivarPostByCodeQuery,
   useGetDivarPostCategoryCountsQuery,
   useLazyGetDivarDistrictPriceReportQuery,
+  useGetPostsWithPhonesQuery,
+  useLazyGetPostsWithPhonesQuery,
   useFetchPostPhoneMutation,
   useFetchPostContactInfoMutation,
 } = divarPostsApi;

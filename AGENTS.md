@@ -218,7 +218,11 @@ ui-typecheck ─┘
 | `divar:analyze-posts` | Analyze post content |
 | `divar:sync-media` | Sync post media to MinIO |
 | `divar:fetch-contacts` | Fetch phone contacts from Divar |
-| `melkradar:*` | MelkRadar archive, fetch, divar conversion |
+| `melkradar:get-archives` | Fetch MelkRadar archive folders |
+| `melkradar:fetch-posts` | Fetch MelkRadar posts from archives |
+| `melkradar:to-divar` | Convert MelkRadar posts to DivarPost |
+| `melkradar:phone-fetch` | MelkRadar listing-based phone fetch (default 10 pages, set `MAX_PAGE=XXX`) |
+| `melkradar:phone-transfer` | Transfer fetched MelkRadar phones to DivarPost |
 | `arka:fetch` | Arka search-based phone fetch (default 10 pages, set `MAX_PAGE=XXX`) |
 | `arka:transfer` | Transfer fetched Arka phones to DivarPost |
 | `news:crawl:*` | Eghtesad, Khabaronline, Asriran crawlers |
@@ -335,6 +339,43 @@ Replaced the old sequential brute-force approach (trying every integer ID from 3
 
 ### Old sequential fetch
 The old `fetchNext()` / `fetchLatestArkaId()` / `releaseCursor()` methods remain in the code for backward compatibility but are no longer triggered by the cron scheduler.
+
+## MelkRadar Phone Fetch Flow (`melkradar-phone-fetch.service.ts`)
+
+### Architecture
+Same pattern as Arka but simpler — MelkRadar's listing API returns phone numbers directly, no second fetch needed:
+
+1. **Manual script** (`melkradar:phone-fetch`): calls `fetchFromListingPages(maxPages)`
+2. **Listing**: `POST https://realtorpanel.melkradar.com/odata/ClientApp/realtorEstateMarker/getRealtorEstateMarkers` with `{PageSize: 20, PageNumber: N}` — phone numbers in `ContactPhone` field
+3. **For each item**: check `MelkradarPhoneRecord` by `melkradarId`:
+   - No record → store directly with phone, externalId, radarCode, full payload
+   - Already has phone → skip
+4. **Rate limiting**: 200ms between page requests, 100ms between store operations
+5. **Auth**: Uses `AdminMelkradarSessionsService.getActiveSession()` (Cookie-based auth)
+
+### CLI Commands
+- `npm run melkradar:phone-fetch` — default 10 pages
+- `MAX_PAGE=500 npm run melkradar:phone-fetch` — large backfill
+- `npm run melkradar:phone-transfer` — transfer phones to DivarPost
+
+### API Endpoints (existing)
+- `GET /admin/melkradar-sessions` — list sessions
+- `POST /admin/melkradar-sessions` — create session (`headersRaw`, `label?`, `active?`, `locked?`)
+- `PATCH /admin/melkradar-sessions/:id` — update session
+
+### Prisma Models
+| Model | Key Fields |
+| --- | --- |
+| `AdminMelkradarSession` | `headersRaw`, `headers` (JSON), `active`, `locked`, `lastError` |
+| `MelkradarPhoneRecord` | `melkradarId` (unique), `externalId`, `phoneNumber`, `radarCode`, `payload`, `status`, `fetchedAt` |
+
+### Key differences from Arka
+| Aspect | Arka | MelkRadar |
+| --- | --- | --- |
+| Auth header | `Authorization: Bearer` | `Cookie: access_token=...` |
+| Fetch steps | 1) Search page 2) Phone detail (second call) | 1) Listing page (phone included) |
+| Model unique key | `arkaId` (int) | `melkradarId` (string UUID) |
+| Cron | `EVERY_5_MINUTES` | None (manual only) |
 
 ## Commit & PR Guidelines
 - Prefix: lowercase type (`add`, `fix`, `chore`, `docs`, `feat`) + imperative summary

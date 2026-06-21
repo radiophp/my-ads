@@ -32,6 +32,8 @@
     "melkradar:get-archives": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-melkradar-get-archives.ts",
     "melkradar:fetch-posts": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-melkradar-fetch-posts.ts",
     "melkradar:to-divar": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-melkradar-to-divar.ts",
+    "melkradar:phone-fetch": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-melkradar-phone-fetch.ts",
+    "melkradar:phone-transfer": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-melkradar-phone-transfer.ts",
     "phone-fetch:worker": "node ../scripts/phone-fetch-worker.js",
     "business:title-refresh": "ENABLE_CRON_JOBS=true dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-business-title-refresh.ts",
     "arka:fetch": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-arka-phone-fetch.ts",

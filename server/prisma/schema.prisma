@@ -203,6 +203,7 @@ model DivarCategory {
 
   @@index([parentId])
   @@index([isActive])
+  @@index([depth, isActive, allowPosting], map: "DivarCategory_depth_active_posting_idx")
 }
 
 model DivarCategoryFilter {
@@ -241,6 +242,7 @@ model PostToReadQueue {
   @@index([categoryId])
   @@index([provinceId])
   @@index([cityId])
+  @@index([status, requestedAt], map: "PostToReadQueue_status_requestedAt_idx")
 }
 
 model PostToAnalyzeQueue {
@@ -361,13 +363,15 @@ model DivarPost {
   @@index([createdAt])
   @@index([categorySlug, createdAt, districtId])
   @@index([cat3, createdAt, districtId])
+  @@index([cat1], map: "DivarPost_cat1_idx")
+  @@index([cat2], map: "DivarPost_cat2_idx")
   @@index([businessRef])
   @@index([phoneNumber])
   @@index([contactUuid, phoneNumber])
   @@index([notificationsChecked, createdAt])
-  @@index([provinceId, cityId, publishedAt(sort: Desc), createdAt(sort: Desc), id(sort: Desc)])
-  @@index([provinceId, publishedAt(sort: Desc), createdAt(sort: Desc), id(sort: Desc)])
-  @@index([cityId, publishedAt(sort: Desc), createdAt(sort: Desc), id(sort: Desc)])
+  @@index([provinceId, cityId, publishedAt(sort: Desc), createdAt(sort: Desc), id(sort: Desc)], map: "DivarPost_provinceId_cityId_publishedAt_idx")
+  @@index([provinceId, publishedAt(sort: Desc), createdAt(sort: Desc), id(sort: Desc)], map: "DivarPost_provinceId_publishedAt_idx")
+  @@index([cityId, publishedAt(sort: Desc), createdAt(sort: Desc), id(sort: Desc)], map: "DivarPost_cityId_publishedAt_idx")
 }
 
 model DivarPostMedia {
@@ -805,6 +809,33 @@ model AdminMelkradarPost {
   @@unique([source, externalId])
   @@index([archiveFolderId])
   @@index([source, externalId])
+}
+
+enum MelkradarTransferStatus {
+  NOT_TRANSFERRED
+  IN_PROGRESS
+  TRANSFERRED
+}
+
+model MelkradarPhoneRecord {
+  id                    String                   @id @default(uuid())
+  melkradarId           String                   @unique
+  externalId            String?
+  phoneNumber           String?
+  radarCode             String?
+  payload               Json?
+  status                MelkradarTransferStatus   @default(NOT_TRANSFERRED)
+  fetchedAt             DateTime                 @default(now())
+  transferredAt         DateTime?
+  transferLockedUntil   DateTime?
+  transferAttemptCount  Int                      @default(0)
+  nextTransferAttemptAt DateTime?
+  transferLastError     String?
+  updatedAt             DateTime                 @updatedAt
+
+  @@index([status, fetchedAt])
+  @@index([externalId])
+  @@index([transferLockedUntil])
 }
 
 model AdminArkaSession {

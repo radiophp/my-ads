@@ -263,13 +263,13 @@ class ParserState {
       });
   }
 
-  private processWidgetList(widgets: unknown[]): void {
+  private processWidgetList(widgets: unknown[], processDescription = true): void {
     for (const widget of widgets) {
-      this.processWidget(widget);
+      this.processWidget(widget, processDescription);
     }
   }
 
-  private processWidget(widget: unknown): void {
+  private processWidget(widget: unknown, processDescription = true): void {
     const widgetObj = asObject(widget);
     if (!widgetObj) {
       return;
@@ -305,7 +305,9 @@ class ParserState {
         break;
       }
       case 'type.googleapis.com/widgets.DescriptionRowData':
-        this.handleDescriptionRow(data);
+        if (processDescription) {
+          this.handleDescriptionRow(data);
+        }
         break;
       case 'type.googleapis.com/widgets.ImageCarouselData':
         this.handleImageCarousel(data);
@@ -522,7 +524,7 @@ class ParserState {
   private processModalPage(page: JsonObject): void {
     const widgets = asArray(page['widget_list']);
     if (widgets.length > 0) {
-      this.processWidgetList(widgets);
+      this.processWidgetList(widgets, false);
     }
   }
 

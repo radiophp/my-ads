@@ -35,7 +35,7 @@
 | `subscriptions` | User subscriptions |
 | `invite-codes` | Referral codes |
 | `discount-codes` | Discount code management |
-| `bale` | Bale messenger bot integration, mini app auth utils (HMAC validation) |
+| `bale` | Bale messenger bot integration, mini app auth utils (HMAC validation), share-post API, deep link builder, web_app_data handler, `forceSendPhotos` for share flow |
 | `telegram` | Telegram bot integration |
 | `public` | Health check, public endpoints |
 | `admin-divar-sessions` | Divar crawl session management |
@@ -79,9 +79,9 @@
 | `redis` | redis:7-alpine | 6379 | 6202 | Caching |
 | `minio` | minio/minio | 9000/9001 | 6204/6205 | Object storage |
 | `rabbitmq` | rabbitmq:3.13-management | 5672/15672 | 6213/6214 | Message queue |
-| `api` | my-ads-api:latest | 6300 | 6200 | NestJS backend |
+| `api` | my-ads-api:latest | 6300 | 6200 | NestJS backend (has `BALE_BOT_USERNAME` for deep links) |
 | `telegram-bot` | my-ads-api:latest | — | — | Telegram bot process |
-| `bale-bot` | my-ads-api:latest | — | — | Bale bot process |
+| `bale-bot` | my-ads-api:latest | — | — | Bale bot process (has `BALE_BOT_USERNAME` for deep links) |
 | `pgbackrest-backup` | my-ads-backup:latest | — | — | DB backup to MinIO |
 | `tileserver` | maptiler/tileserver-gl:v4.8.0 | 8080 | 7235 | Map tile server |
 | `otel-collector` | otel/opentelemetry-collector-contrib:0.99.0 | 4318/4317 | 6317/6318 | Trace collector |
@@ -200,6 +200,8 @@ ui-typecheck ─┘
 | `phone-fetch-worker.js` | Phone fetch worker process |
 | `fetch_divar_phones.sh` | Divar phone number harvester launcher |
 | `pgbackrest/` | pgBackRest configuration |
+| `backup/manual-backup.sh` | Manual DB backup with timestamped filename |
+| `backup/restore-latest.sh` | Interactive DB restore — lists backups (newest first), lets user pick one, restores with verbose progress |
 
 ### Server Scripts (`npm run` from `server/`)
 | Command | Purpose |
@@ -265,6 +267,10 @@ Large files are split by extracting pure utility functions/constants/types into 
 - **Phone input**: Leading `0` preserved visually, stripped on submit (E.164 format)
 - **Bale linking**: `BaleUserLink` filtered by current bot ID (`BALE_BOT_TOKEN` numeric prefix) to avoid cross-env stale links
 - **Mini app detection**: localStorage flag `my-ads-bale-miniapp` set by `BaleMiniAppLogin`, read by `AuthInitializer` in `useLayoutEffect` and dispatched to Redux (`s.auth.isBaleMiniApp`). `MobileNavigationDrawer` and `UserMenu` hide logout button when `isBaleMiniApp` is true. Hydration guard in `BaleMiniAppLogin` prevents server/client mismatch. See `docs/bale-mini-app-auth.md`.
+- **Share post via bot**: `POST /bale/share-post` (JWT-guarded) calls `sharePostToUser(userId, postId)` → `sendPostInternal` with `forceSendPhotos` to bypass `BALE_SEND_PHOTOS` config. Frontend RTK mutation `sharePostOnBale` in `features/api/endpoints/bale.ts`. Share dialog shows Bale button with proper SVG logo, loading spinner during API call, `window.Bale?.WebApp?.close()` on success.
+- **Deep linking**: `buildBaleDeepLink(botUsername, postId)` → `https://ble.ir/<bot_username>?startapp=post_<id>`. Used in both caption `🔗` line and inline keyboard `web_app` button via `buildPostMetaMarkup()`. `buildCaption()` accepts optional `baleBotUsername` to render deep link. `BALE_BOT_USERNAME` read from env in `bale.service.ts`, must be set in both `api` and `bale-bot` docker-compose services.
+- **`pendingDeepLink` persistence**: `authSlice.ts` stores `pendingDeepLink` in Redux, **persisted to localStorage** (removed from `Omit` exclusion, hydrated on load) so it survives Bale WebView kill/reload. `deepLinkPostId` computed via `useMemo` reading `startParam` directly from SDK (bypasses Redux timing race). `phone-otp-login-form.tsx` uses `redirectAfterAuth` (checks `pendingDeepLink`) instead of hardcoded `router.push('/dashboard')`.
+- **Device management**: Per-device `tokenVersion` on `UserDevice` (not user-level) — deactivating one device doesn't invalidate others. Cap of 2 concurrent active devices; at 3rd device → dialog asks which to replace. `confirmDevice()` accepts optional `deviceToReplace` — deactivates only that device. `logout()` deactivates only current device.
 - **CSP for Bale**: `frame-ancestors https://*.bale.ai`, Bale SDK sources in `scriptSrc`/`connectSrc`, `xFrameOptions: false`
 - **CLOUDFLARE_API_TOKEN**: GitHub secret (not in .env.prod)
 

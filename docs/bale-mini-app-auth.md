@@ -96,13 +96,6 @@ Bale WebView blocks `window.location.href` and `router.push`. Uses ternary rende
 - **Success**: clickable `<Link href="/dashboard">` (user-initiated `<a>` click works)
 - **Login**: phone share button + status messages
 
-## Device Management
-
-- Device ID persisted in `localStorage` (`my-ads-device-id`), NOT cleared on logout
-- `DEVICE_CHANGED` error thrown when `tokenVersion` in JWT doesn't match current version
-- `confirm_device` flow asks user to approve new device
-- WebSocket push notifies old device about challenger
-
 ## Mini App Detection (localStorage + Redux)
 
 To hide UI elements (logout button, login links) when inside the Bale mini app:
@@ -128,6 +121,72 @@ if (!hydrated) {
 }
 return redirected || accessToken ? <SuccessCard /> : <LoginCard />;
 ```
+
+## Deep Linking (`ble.ir?startapp=post_<id>`)
+
+Users can open the mini app directly to a specific post via:
+
+```
+https://ble.ir/<bot_username>?startapp=post_<id>
+```
+
+### Flow
+
+1. **SDK receives `startParam`** — `window.Bale.WebApp.initDataUnsafe.start_param` contains `post_<id>`
+2. **`useBaleMiniApp` hook** captures `startParam` and makes it available via `deepLinkPostId`
+3. **Pre-auth persistence** — `BaleMiniAppLogin` reads `deepLinkPostId` via `useMemo` directly from SDK (not Redux, to avoid timing race), stores it in Redux `pendingDeepLink` which is **persisted to localStorage** so it survives WebView kill/reload
+4. **Post-auth redirect** — `phone-otp-login-form.tsx` replaces all `router.push('/dashboard')` with `redirectAfterAuth()` which checks `pendingDeepLink` first. `AuthInitializer` watches + consumes `pendingDeepLink` after hydration
+5. **Success card** — Button text is contextual: "View Post" / "مشاهده آگهی" when deep link exists, otherwise "Go to Dashboard"
+
+### Key files
+
+| File | Purpose |
+| --- | --- |
+| `hooks/use-bale-miniapp.ts` | Exposes `startParam` from SDK `initDataUnsafe.start_param` |
+| `components/bale/bale-miniapp-login.tsx` | `deepLinkPostId` via `useMemo` from SDK, contextual button text |
+| `features/auth/authSlice.ts` | `pendingDeepLink` state, persisted to localStorage |
+| `components/auth/phone-otp-login-form.tsx` | `redirectAfterAuth()` checks `pendingDeepLink` |
+| `components/auth/auth-initializer.tsx` | Watches + consumes `pendingDeepLink` after hydration |
+
+## Share Post via Bot
+
+Users can share a post to their Bale chat via the bot:
+
+### Backend Flow
+
+1. **`POST /bale/share-post`** (JWT-guarded) — accepts `{ userId, postId }`
+2. **`sharePostToUser(userId, postId)`** — looks up `BaleUserLink` for the user, calls `sendPostInternal`
+3. **`sendPostInternal`** — sends a media group (up to 10 photos) with caption on the first photo, using `forceSendPhotos: true` to bypass `BALE_SEND_PHOTOS` config. Falls back to text-only when no photos
+4. **Deep link in content** — `buildBaleDeepLink(botUsername, postId)` → `https://ble.ir/<bot_username>?startapp=post_<id>` appears in both caption `🔗` line and inline keyboard `web_app` button
+
+### Frontend Flow
+
+1. User clicks "Share on Bale" in `PostShareDialog`
+2. RTK mutation `sharePostOnBale` fires `POST /bale/share-post`
+3. Loading spinner shown while API processes
+4. On success: `window.Bale?.WebApp?.close()` (only in Bale WebView)
+
+### Key files
+
+| File | Purpose |
+| --- | --- |
+| `modules/bale/bale.service.ts` | `sharePostToUser`, `sendPostInternal` with `forceSendPhotos`, `buildPostMetaMarkup` with deep link |
+| `modules/bale/bale.controller.ts` | `POST /bale/share-post` endpoint |
+| `modules/bale/bale-message-builder.ts` | `buildBaleDeepLink`, `buildCaption` accepts `baleBotUsername` |
+| `features/api/endpoints/bale.ts` | `sharePostOnBale` RTK mutation |
+| `components/dashboard/divar-posts/post-share-dialog.tsx` | Bale button, logo, loading spinner |
+| `docker-compose-prod.yml` | `BALE_BOT_USERNAME` in `api` and `bale-bot` services |
+
+## Device Management
+
+- Device ID persisted in `localStorage` (`my-ads-device-id`), NOT cleared on logout
+- Per-device `tokenVersion` on `UserDevice` (not user-level) — deactivating one device doesn't invalidate others
+- Cap of 2 concurrent active devices; at 3rd device → dialog asks which to replace
+- `confirmDevice()` accepts optional `deviceToReplace` — deactivates only that device
+- `logout()` deactivates only current device — other sessions stay active
+- `DEVICE_CHANGED` error thrown when `tokenVersion` in JWT doesn't match current version
+- `confirm_device` flow asks user to approve new device
+- WebSocket push notifies old device about challenger
 
 ## HMAC Validation Details (`bale-miniapp-utils.ts`)
 

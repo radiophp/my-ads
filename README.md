@@ -1,3 +1,10 @@
+<!--
+  docs-last-commit: 091fd59
+  Last docs update: 2026-06-21
+  When updating documentation, update this marker with the latest commit hash.
+  To find what changed since last docs update: git log --oneline docs-last-commit..HEAD
+-->
+
 # My Ads Platform — Backend Overview
 
 The **My Ads** project is a NestJS + Fastify backend that powers a classified adverts platform. It ships with production-ready modules for authentication, user management, uploads, public APIs, metrics, observability, queues, storage, and websocket delivery. This document explains how the system fits together, how to run it locally or in containers, and what configuration is required.
@@ -22,7 +29,7 @@ The **My Ads** project is a NestJS + Fastify backend that powers a classified ad
 - **Uploads Module (`modules/uploads`)** — File upload orchestration layered over MinIO/S3 storage.
 - **User Panel & Admin Panel (`modules/user-panel`, `modules/admin-panel`)** — Domain-specific APIs protected by role guards.
 - **Telegram Module (`modules/telegram`)** — Bot entrypoint to collect user phone via contact share and deliver posts (albums) to users.
-- **Bale Module (`modules/bale`)** — Bale messenger bot integration for OTP delivery and post notifications. Outbound sends work from the `api` container; polling runs in the `bale-bot` service. All `BaleUserLink` records scoped by `botId` for cross-environment safety.
+- **Bale Module (`modules/bale`)** — Bale messenger bot integration for OTP delivery, post notifications, mini app auth (HMAC validation), share-post API, deep link builder, and `web_app_data` handler. Outbound sends work from the `api` container; polling runs in the `bale-bot` service. All `BaleUserLink` records scoped by `botId` for cross-environment safety. Share flow uses `forceSendPhotos` to bypass `BALE_SEND_PHOTOS` config.
 - **News Module (`modules/news`)** — News categories/tags plus public list/detail endpoints and admin CRUD for publishing updates.
 - **Blog Module (`modules/blog`)** — Blog categories/tags plus public list/detail endpoints and admin CRUD for long-form articles.
 - **Slides Module (`modules/slides`)** — Hero slides for the homepage with admin CRUD and ordering.

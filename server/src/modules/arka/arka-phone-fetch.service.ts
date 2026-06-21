@@ -16,6 +16,14 @@ type FetchResult =
   | { kind: 'backoff'; until: Date; reason: string }
   | { kind: 'error'; reason: string };
 
+type SearchFetchSummary = {
+  processed: number;
+  stored: number;
+  skipped: number;
+  refetched: number;
+  errors: number;
+};
+
 const parseExternalId = (link?: string | null): string | null => {
   if (!link) return null;
   const match = link.match(/\/v\/([^/?#]+)/i);
@@ -37,6 +45,8 @@ const normalizeDigits = (value: string): string =>
   value
     .replace(/[۰-۹]/g, (d) => String((d.charCodeAt(0) - '۰'.charCodeAt(0)) % 10))
     .replace(/[٠-٩]/g, (d) => String((d.charCodeAt(0) - '٠'.charCodeAt(0)) % 10));
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 @Injectable()
 export class ArkaPhoneFetchService {
@@ -121,9 +131,161 @@ export class ArkaPhoneFetchService {
     }
   }
 
-  @Cron(CronExpression.EVERY_5_SECONDS, { name: 'arka-phone-fetch' })
+  async fetchFromSearchPages(maxPages: number = 10): Promise<SearchFetchSummary> {
+    const startTime = Date.now();
+    let processed = 0;
+    let stored = 0;
+    let skipped = 0;
+    let refetched = 0;
+    let errors = 0;
+
+    const session = await this.prisma.adminArkaSession.findFirst({
+      where: { active: true, locked: false },
+      orderBy: { updatedAt: 'desc' },
+      select: { id: true, headers: true },
+    });
+    const headers = buildHeaders((session?.headers as Record<string, string> | null) ?? null);
+    if (!headers || Object.keys(headers).length === 0) {
+      this.logger.warn('No Arka headers available for search fetch.');
+      return { processed: 0, stored: 0, skipped: 0, refetched: 0, errors: 0 };
+    }
+    if (!headers['Authorization'] && !headers['authorization']) {
+      this.logger.warn('Arka headers missing Authorization; cannot search.');
+      return { processed: 0, stored: 0, skipped: 0, refetched: 0, errors: 0 };
+    }
+
+    for (let page = 1; page <= maxPages; page++) {
+      this.logger.log(`Search page ${page}/${maxPages}...`);
+
+      // Throttle: 500ms between page requests
+      if (page > 1) {
+        await sleep(500);
+      }
+
+      let res;
+      try {
+        res = await axios.post(
+          'https://back.arkafile.info/Search/FullDetails',
+          { page },
+          { headers, timeout: 15_000, validateStatus: () => true },
+        );
+      } catch (error) {
+        this.logger.warn(
+          `Search page ${page} request failed: ${error instanceof Error ? error.message : String(error)}`,
+        );
+        errors++;
+        continue;
+      }
+
+      if (res.status < 200 || res.status >= 300) {
+        this.logger.warn(`Search page ${page} returned http=${res.status}`);
+        if (session?.id && (res.status === 401 || res.status === 403)) {
+          await this.prisma.adminArkaSession.update({
+            where: { id: session.id },
+            data: {
+              active: false,
+              lastError: 'auth_failed',
+              lastErrorAt: new Date(),
+              updatedAt: new Date(),
+            },
+          });
+          this.logger.error('Arka auth failed; deactivating session and stopping.');
+          break;
+        }
+        errors++;
+        continue;
+      }
+
+      const data = res.data as any;
+      const posts: any[] = Array.isArray(data?.posts) ? data.posts : [];
+      if (posts.length === 0) {
+        this.logger.log(`Search page ${page} has no posts; stopping.`);
+        break;
+      }
+
+      this.logger.log(`Search page ${page}: ${posts.length} posts found`);
+      let pageRefetched = 0;
+      let pageSkipped = 0;
+
+      for (const post of posts) {
+        processed++;
+        const arkaId: number | undefined = post?.id;
+        const token: string | undefined = post?.token;
+
+        // Throttle: 250ms between individual phone detail requests
+        if (processed > 1) {
+          await sleep(250);
+        }
+        if (!arkaId || typeof arkaId !== 'number') {
+          this.logger.debug(`Search post missing id; skipping`);
+          errors++;
+          continue;
+        }
+
+        const existing = await this.prisma.arkaPhoneRecord.findUnique({
+          where: { arkaId },
+          select: { phoneNumber: true },
+        });
+
+        if (existing) {
+          if (existing.phoneNumber === '09000000000') {
+            this.logger.log(
+              `[P${page}] id=${arkaId} token=${token ?? '?'} has dummy phone, refetching`,
+            );
+            refetched++;
+            pageRefetched++;
+          } else if (existing.phoneNumber == null) {
+            this.logger.debug(
+              `[P${page}] id=${arkaId} token=${token ?? '?'} no phone (already checked), skipping`,
+            );
+            skipped++;
+            pageSkipped++;
+            continue;
+          } else {
+            this.logger.debug(
+              `[P${page}] id=${arkaId} token=${token ?? '?'} already has phone ${existing.phoneNumber}, skipping`,
+            );
+            skipped++;
+            pageSkipped++;
+            continue;
+          }
+        } else {
+          this.logger.log(`[P${page}] id=${arkaId} token=${token ?? '?'} new, fetching phone...`);
+        }
+
+        const success = await this.fetchAndStorePhoneDetails(arkaId, token ?? null, headers);
+        if (success) {
+          stored++;
+        } else {
+          errors++;
+        }
+      }
+
+      this.logger.log(
+        `Search page ${page} done: ${posts.length} posts, ${pageRefetched} refetched, ${pageSkipped} skipped`,
+      );
+
+      const pagination = data?.pagination;
+      if (pagination && pagination.next_page == null) {
+        this.logger.log(`No more pages after page ${page}; stopping.`);
+        break;
+      }
+    }
+
+    const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+    this.logger.log(
+      `Search fetch completed: ${processed} processed, ${stored} stored, ${refetched} refetched, ${skipped} skipped, ${errors} errors in ${duration}s`,
+    );
+
+    return { processed, stored, skipped, refetched, errors };
+  }
+
+  @Cron(CronExpression.EVERY_5_MINUTES, { name: 'arka-phone-fetch' })
   async cronTick() {
     if (this.isRunning) {
+      return;
+    }
+    if (!this.schedulerEnabled || !this.arkaFetchCronEnabled) {
       return;
     }
     this.isRunning = true;
@@ -134,18 +296,18 @@ export class ArkaPhoneFetchService {
       this.logger.warn('Fetch cron guard timeout elapsed; releasing running flag.');
       this.isRunning = false;
       this.runGuardTimer = null;
-    }, 120_000);
-    for (let i = 0; i < 10; i += 1) {
-      const result = await this.fetchNext(false).catch((error) => {
-        this.logger.debug(
-          `Cron fetch error: ${error instanceof Error ? error.message : String(error)}`,
-        );
-        return null;
-      });
-      if (!result) break;
-      if (result.kind === 'backoff' || result.kind === 'error' || result.kind === 'skipped') {
-        break;
-      }
+    }, 600_000);
+    this.logger.log('Cron tick: starting search-based fetch (maxPages=10)');
+    const summary = await this.fetchFromSearchPages(10).catch((error) => {
+      this.logger.error(
+        `Cron fetchFromSearchPages failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return null;
+    });
+    if (summary) {
+      this.logger.log(
+        `Cron tick done: ${summary.processed} processed, ${summary.stored} stored, ${summary.refetched} refetched, ${summary.skipped} skipped, ${summary.errors} errors`,
+      );
     }
     if (this.runGuardTimer) {
       clearTimeout(this.runGuardTimer);
@@ -349,6 +511,124 @@ export class ArkaPhoneFetchService {
       `Arka fetch stored: id=${arkaId} externalId=${externalId ?? 'n/a'} phone=${phoneNormalized ?? 'n/a'}`,
     );
     return { kind: 'stored', arkaId, externalId };
+  }
+
+  private async fetchAndStorePhoneDetails(
+    arkaId: number,
+    token: string | null,
+    headers: Record<string, string>,
+  ): Promise<boolean> {
+    try {
+      const res = await axios
+        .post(
+          `https://back.arkafile.info/Search/FullDetails/Phone/${arkaId}`,
+          {},
+          { headers, timeout: 10_000, validateStatus: () => true },
+        )
+        .catch((error: any) => {
+          this.logger.warn(
+            `Phone details request failed for id=${arkaId}: ${error?.message ?? error}`,
+          );
+          return { status: 0, data: null };
+        });
+
+      const status = (res as any).status ?? 0;
+      const data = (res as any).data as any;
+
+      if (status === 0) {
+        this.logger.warn(`Phone details network error for id=${arkaId}`);
+        return false;
+      }
+
+      if (status === 404) {
+        this.logger.debug(`Phone details not found for id=${arkaId} — storing with null phone`);
+        await this.prisma.arkaPhoneRecord.upsert({
+          where: { arkaId },
+          update: {
+            externalId: token ?? undefined,
+            phoneNumber: null,
+            malkName: null,
+            status: ArkaTransferStatus.NOT_TRANSFERRED,
+            transferAttemptCount: 0,
+            transferLastError: null,
+            nextTransferAttemptAt: null,
+          },
+          create: {
+            arkaId,
+            externalId: token ?? undefined,
+          },
+        });
+        return true;
+      }
+
+      if (status === 429) {
+        this.logger.warn(`Phone details rate limited for id=${arkaId}`);
+        return false;
+      }
+
+      if (status === 401 || status === 403) {
+        this.logger.warn(
+          `Phone details auth failed id=${arkaId} status=${status}; deactivating session`,
+        );
+        await this.prisma.adminArkaSession.updateMany({
+          where: { active: true, locked: false },
+          data: {
+            active: false,
+            lastError: 'auth_failed',
+            lastErrorAt: new Date(),
+            updatedAt: new Date(),
+          },
+        });
+        return false;
+      }
+
+      if (status < 200 || status >= 300) {
+        this.logger.warn(
+          `Phone details failed id=${arkaId} status=${status} body=${typeof data === 'string' ? data : JSON.stringify(data ?? {}).slice(0, 200)}`,
+        );
+        return false;
+      }
+
+      const record = data?.data ?? null;
+      const link = typeof record?.link === 'string' ? record.link : null;
+      const externalId = token ?? parseExternalId(link);
+      const phoneRaw = typeof record?.phone === 'string' ? record.phone : null;
+      const malkName = typeof record?.malk_name === 'string' ? record.malk_name : null;
+      const phoneNormalized = phoneRaw ? normalizeDigits(phoneRaw).replace(/[^0-9]/g, '') : null;
+
+      await this.prisma.arkaPhoneRecord.upsert({
+        where: { arkaId },
+        update: {
+          divarLink: link ?? undefined,
+          externalId: externalId ?? undefined,
+          phoneNumber: phoneNormalized ?? undefined,
+          malkName: malkName ?? undefined,
+          payload: record ?? data ?? undefined,
+          status: ArkaTransferStatus.NOT_TRANSFERRED,
+          transferAttemptCount: 0,
+          transferLastError: null,
+          nextTransferAttemptAt: null,
+        },
+        create: {
+          arkaId,
+          divarLink: link ?? undefined,
+          externalId: externalId ?? undefined,
+          phoneNumber: phoneNormalized ?? undefined,
+          malkName: malkName ?? undefined,
+          payload: record ?? data ?? undefined,
+        },
+      });
+
+      this.logger.log(
+        `Stored phone for arkaId=${arkaId} token=${externalId ?? 'n/a'} phone=${phoneNormalized ?? 'n/a'}`,
+      );
+      return true;
+    } catch (error) {
+      this.logger.warn(
+        `Error in fetchAndStorePhoneDetails for arkaId=${arkaId}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+      return false;
+    }
   }
 
   private async releaseCursor(

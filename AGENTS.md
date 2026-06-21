@@ -18,7 +18,7 @@
 | `divar-posts` | Harvest, fetch, analyze, media sync, contact fetch, stats; admin CRUD |
 | `divar-categories` | Category tree sync, filter widgets |
 | `melkradar` | MelkRadar archive, post fetch, divar conversion |
-| `arka` | Arka phone fetch, transfer, session management |
+| `arka` | Arka phone fetch (search-based discovery), phone fetch + store, transfer to DivarPost, session management |
 | `news` | Categories, tags, crawlers (Eghtesad/Khabaronline/Asriran), CRUD |
 | `blog` | Categories, tags, sources, CRUD |
 | `cities` / `provinces` / `districts` | Location data CRUD |
@@ -219,7 +219,8 @@ ui-typecheck ─┘
 | `divar:sync-media` | Sync post media to MinIO |
 | `divar:fetch-contacts` | Fetch phone contacts from Divar |
 | `melkradar:*` | MelkRadar archive, fetch, divar conversion |
-| `arka:*` | Arka phone fetch & transfer |
+| `arka:fetch` | Arka search-based phone fetch (default 10 pages, set `MAX_PAGE=XXX`) |
+| `arka:transfer` | Transfer fetched Arka phones to DivarPost |
 | `news:crawl:*` | Eghtesad, Khabaronline, Asriran crawlers |
 | `telegram:bot` / `telegram:bot:dev` | Telegram bot (prod/dev) |
 | `bale:bot` / `bale:bot:dev` | Bale bot (prod/dev) |
@@ -300,6 +301,40 @@ Large files are split by extracting pure utility functions/constants/types into 
   - `src/tests/unit/sanitize.pipe.spec.ts` — Input sanitization pipe
   - `src/tests/integration/auth.service.integration.spec.ts` — Auth service (NestJS DI)
   - `src/tests/e2e/app.e2e-spec.ts` — Full app E2E (health, favicon)
+
+## Arka Phone Fetch Flow (`arka-phone-fetch.service.ts`)
+
+### Architecture
+Replaced the old sequential brute-force approach (trying every integer ID from 383711 upwards via `POST /Search/FullDetails/Phone/{id}`). Now uses **search-based discovery**:
+
+1. **Cron** (`@Cron(EVERY_5_MINUTES)`, gated by `ENABLE_ARKA_FETCH_CRON`): calls `fetchFromSearchPages(10)`
+2. **Search**: `POST https://back.arkafile.info/Search/FullDetails` with `{page: N}` — returns 12 posts/page sorted by ID descending (newest first)
+3. **For each post**: check `ArkaPhoneRecord` by `arkaId`:
+   - No record → fetch phone from `POST /Search/FullDetails/Phone/{id}`, store
+   - Phone = `09000000000` (dummy) → re-fetch and update
+   - Phone = `null` → skip (already checked, no phone)
+   - Has valid phone → skip
+4. **Rate limiting**: 500ms between page requests, 250ms between phone detail requests
+
+### CLI Backfill
+- `npm run arka:fetch` — default 10 pages
+- `MAX_PAGE=500 npm run arka:fetch` — large backfill (6000 posts)
+- Reads `process.env['MAX_PAGE']` (default 10)
+
+### API Endpoints
+- `GET /admin/arka-sessions` — list sessions
+- `POST /admin/arka-sessions` — create session (`headersRaw`, `label?`, `active?`, `locked?`)
+- `PATCH /admin/arka-sessions/:id` — update session
+
+### Prisma Models
+| Model | Key Fields |
+| --- | --- |
+| `AdminArkaSession` | `headersRaw`, `headers` (JSON), `active`, `locked`, `lastError` |
+| `ArkaPhoneCursor` | `nextFetchId`, `backoffUntil`, `lockedUntil` (legacy, kept for backward compat) |
+| `ArkaPhoneRecord` | `arkaId` (unique), `externalId`, `phoneNumber`, `malkName`, `status`, `fetchedAt` |
+
+### Old sequential fetch
+The old `fetchNext()` / `fetchLatestArkaId()` / `releaseCursor()` methods remain in the code for backward compatibility but are no longer triggered by the cron scheduler.
 
 ## Commit & PR Guidelines
 - Prefix: lowercase type (`add`, `fix`, `chore`, `docs`, `feat`) + imperative summary

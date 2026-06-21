@@ -836,6 +836,7 @@ model MelkradarPhoneRecord {
   @@index([status, fetchedAt])
   @@index([externalId])
   @@index([transferLockedUntil])
+  @@index([phoneNumber])
 }
 
 model AdminArkaSession {
@@ -884,6 +885,7 @@ model ArkaPhoneRecord {
   @@index([status, fetchedAt])
   @@index([externalId])
   @@index([transferLockedUntil])
+  @@index([phoneNumber])
 }
 
 model NewsCategory {

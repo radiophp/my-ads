@@ -1925,13 +1925,18 @@
         "business": "Business",
         "phoneFilter": "Phone",
         "hasPhone": "Has phone",
-        "noPhone": "No phone"
+        "noPhone": "No phone",
+        "phoneSearch": "Phone Number Search",
+        "phoneSearchPlaceholder": "Enter phone (e.g. 09123456789)",
+        "phoneSearchError": "Enter a valid mobile number (11 digits, starts with 09)",
+        "phoneSearchButton": "Search"
       },
       "columns": {
         "code": "Code",
         "externalId": "External ID",
         "title": "Title",
-        "cat3": "Cat 3",
+        "cat3": "Category",
+        "publishedAt": "Published At",
         "location": "Location",
         "contactPhone": "Contact Phone",
         "arkaPhone": "Arka Phone",

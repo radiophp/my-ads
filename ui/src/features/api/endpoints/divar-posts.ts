@@ -127,6 +127,7 @@ const divarPostsApi = apiSlice.injectEndpoints({
         cat3?: string;
         businessType?: string;
         phoneFilter?: string;
+        phone?: string;
       }
     >({
       query: (params) => {
@@ -139,6 +140,7 @@ const divarPostsApi = apiSlice.injectEndpoints({
         if (params.cat3) searchParams.set('cat3', params.cat3);
         if (params.businessType) searchParams.set('businessType', params.businessType);
         if (params.phoneFilter) searchParams.set('phoneFilter', params.phoneFilter);
+        if (params.phone) searchParams.set('phone', params.phone);
         return `/admin/divar-posts/with-phones?${searchParams.toString()}`;
       },
       providesTags: ['PostsWithPhones'],

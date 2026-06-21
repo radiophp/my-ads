@@ -609,6 +609,12 @@ export class DivarPostsAdminService {
         '(dp."phoneNumber" IS NULL AND apr."phoneNumber" IS NULL AND mpr."phoneNumber" IS NULL)',
       );
     }
+    if (dto.phone) {
+      conditions.push(
+        `(dp."phoneNumber" = $${params.length + 1} OR apr."phoneNumber" = $${params.length + 2} OR mpr."phoneNumber" = $${params.length + 3})`,
+      );
+      params.push(dto.phone, dto.phone, dto.phone);
+    }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
@@ -638,6 +644,7 @@ export class DivarPostsAdminService {
         contactPhone: string | null;
         arkaPhone: string | null;
         melkradarPhone: string | null;
+        publishedAt: Date | null;
         businessRef: string | null;
       }[]
     >(
@@ -653,6 +660,7 @@ export class DivarPostsAdminService {
         dp."phoneNumber" AS "contactPhone",
         apr."phoneNumber" AS "arkaPhone",
         mpr."phoneNumber" AS "melkradarPhone",
+        dp."publishedAt",
         dp."businessRef"
       ${baseQuery}
       ORDER BY dp.code DESC
@@ -678,6 +686,7 @@ export class DivarPostsAdminService {
         contactPhone: row.contactPhone ?? null,
         arkaPhone: row.arkaPhone ?? null,
         melkradarPhone: row.melkradarPhone ?? null,
+        publishedAt: row.publishedAt ? row.publishedAt.toISOString() : null,
         businessRef: row.businessRef ?? null,
       })),
       meta: {

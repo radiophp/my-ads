@@ -1,13 +1,14 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { ExternalLink, Loader2, RefreshCw } from 'lucide-react';
+import { ExternalLink, Loader2, RefreshCw, Search } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { useGetPostsWithPhonesQuery } from '@/features/api/endpoints/divar-posts';
 import { useGetDivarCategoriesQuery } from '@/features/api/endpoints/divar-categories';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Link } from '@/i18n/routing';
 import { LocationCascade } from '@/components/ui/location-cascade';
 import { SearchableSelect } from '@/components/ui/searchable-select';
@@ -21,6 +22,9 @@ export function AdminPostsWithPhonesManager() {
   const [cat3Filter, setCat3Filter] = useState('');
   const [businessFilter, setBusinessFilter] = useState('personal');
   const [phoneFilter, setPhoneFilter] = useState('all');
+  const [phoneSearch, setPhoneSearch] = useState('');
+  const [phoneSearchError, setPhoneSearchError] = useState('');
+  const [phoneSearchQuery, setPhoneSearchQuery] = useState('');
   const [page, setPage] = useState(1);
 
   const { data: categories = [] } = useGetDivarCategoriesQuery();
@@ -55,7 +59,8 @@ export function AdminPostsWithPhonesManager() {
     cat3: cat3Filter || undefined,
     businessType: businessFilter !== 'all' ? businessFilter : undefined,
     phoneFilter: phoneFilter !== 'all' ? phoneFilter : undefined,
-  }), [page, selectedProvinceId, selectedCityId, selectedDistrictId, cat3Filter, businessFilter, phoneFilter]);
+    phone: phoneSearchQuery || undefined,
+  }), [page, selectedProvinceId, selectedCityId, selectedDistrictId, cat3Filter, businessFilter, phoneFilter, phoneSearchQuery]);
 
   const { data, isFetching, isLoading, refetch } = useGetPostsWithPhonesQuery(queryParams);
 
@@ -69,7 +74,32 @@ export function AdminPostsWithPhonesManager() {
     setCat3Filter('');
     setBusinessFilter('personal');
     setPhoneFilter('all');
+    setPhoneSearch('');
+    setPhoneSearchError('');
+    setPhoneSearchQuery('');
     setPage(1);
+  };
+
+  const persianToEnglish = (str: string) =>
+    str.replace(/[۰-۹]/g, (d) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)))
+       .replace(/[٠-٩]/g, (d) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)));
+
+  const handlePhoneSubmit = () => {
+    const normalized = persianToEnglish(phoneSearch).replace(/\D/g, '');
+    if (!normalized) {
+      setPhoneSearchQuery('');
+      setPhoneSearchError('');
+      setPage(1);
+      return;
+    }
+    if (/^09[0-9]{9}$/.test(normalized)) {
+      setPhoneSearch(normalized);
+      setPhoneSearchQuery(normalized);
+      setPhoneSearchError('');
+      setPage(1);
+    } else {
+      setPhoneSearchError(t('filters.phoneSearchError'));
+    }
   };
 
   return (
@@ -160,6 +190,44 @@ export function AdminPostsWithPhonesManager() {
             </div>
           </div>
 
+          <div className="mb-6 flex flex-col gap-0">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-muted-foreground">
+                {t('filters.phoneSearch')}
+              </label>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Input
+                    className="h-9"
+                    placeholder={t('filters.phoneSearchPlaceholder')}
+                    value={phoneSearch}
+                    onChange={(e) => {
+                      setPhoneSearch(e.target.value);
+                      setPhoneSearchError('');
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handlePhoneSubmit();
+                    }}
+                  />
+                  {phoneSearchError && (
+                    <span className="absolute -bottom-5 left-0 text-xs text-destructive">
+                      {phoneSearchError}
+                    </span>
+                  )}
+                </div>
+                <Button
+                  size="sm"
+                  variant="default"
+                  className="h-9"
+                  onClick={handlePhoneSubmit}
+                >
+                  <Search className="ml-1 size-4" />
+                  {t('filters.phoneSearchButton')}
+                </Button>
+              </div>
+            </div>
+          </div>
+
           <div className="mb-4 grid grid-cols-2 gap-2 sm:flex">
             <Button variant="outline" size="sm" onClick={handleReset}>
               {t('actions.reset')}
@@ -195,10 +263,13 @@ export function AdminPostsWithPhonesManager() {
                       {t('columns.title')}
                     </th>
                     <th className="whitespace-nowrap py-3 pr-4 font-medium text-muted-foreground">
-                      {t('columns.cat3')}
+                      {t('columns.category')}
                     </th>
                     <th className="whitespace-nowrap py-3 pr-4 font-medium text-muted-foreground">
                       {t('columns.location')}
+                    </th>
+                    <th className="whitespace-nowrap py-3 pr-4 font-medium text-muted-foreground">
+                      {t('columns.publishedAt')}
                     </th>
                     <th className="whitespace-nowrap py-3 pr-4 font-medium text-muted-foreground">
                       {t('columns.contactPhone')}
@@ -248,11 +319,22 @@ export function AdminPostsWithPhonesManager() {
                           .filter(Boolean)
                           .join(' / ') || '—'}
                       </td>
+                      <td className="whitespace-nowrap py-3 pr-4 text-muted-foreground">
+                        {item.publishedAt
+                          ? new Date(item.publishedAt).toLocaleString('fa-IR', {
+                              year: 'numeric',
+                              month: '2-digit',
+                              day: '2-digit',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })
+                          : '—'}
+                      </td>
                       <td className="whitespace-nowrap py-3 pr-4 font-medium text-foreground">
                         {item.contactPhone ?? '—'}
                       </td>
                       <td className="whitespace-nowrap py-3 pr-4 text-foreground">
-                        {item.arkaPhone ?? '—'}
+                        {item.arkaPhone && item.arkaPhone !== '09000000000' ? item.arkaPhone : '—'}
                       </td>
                       <td className="whitespace-nowrap py-3 pr-4 text-foreground">
                         {item.melkradarPhone ?? '—'}

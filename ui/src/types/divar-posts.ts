@@ -128,6 +128,7 @@ export type PostsWithPhonesItem = {
   contactPhone: string | null;
   arkaPhone: string | null;
   melkradarPhone: string | null;
+  publishedAt: string | null;
   businessRef: string | null;
 };
 

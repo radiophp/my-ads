@@ -41,6 +41,11 @@ export class PostsWithPhonesQueryDto {
 
   @ApiPropertyOptional()
   @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
@@ -87,6 +92,9 @@ export class PostWithPhoneItemDto {
 
   @ApiProperty()
   melkradarPhone!: string | null;
+
+  @ApiProperty()
+  publishedAt!: string | null;
 
   @ApiProperty()
   businessRef!: string | null;

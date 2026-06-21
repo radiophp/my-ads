@@ -266,6 +266,7 @@ services:
       NEXT_UI_PORT: ${NEXT_UI_PORT}
       BALE_BOT_TOKEN: ${BALE_BOT_TOKEN:?BALE_BOT_TOKEN not set}
       BALE_BOT_AUTOSTART: 'false'
+      BALE_BOT_USERNAME: ${BALE_BOT_USERNAME}
     ports:
       - target: ${APP_PORT}
         published: ${APP_PORT}
@@ -588,6 +589,7 @@ services:
       PRISMA_LOG_QUERIES: ${PRISMA_LOG_QUERIES}
       BALE_BOT_TOKEN: ${BALE_BOT_TOKEN:?BALE_BOT_TOKEN not set}
       BALE_BOT_AUTOSTART: ${BALE_BOT_AUTOSTART:-true}
+      BALE_BOT_USERNAME: ${BALE_BOT_USERNAME}
       BALE_SEND_PHOTOS: ${BALE_SEND_PHOTOS:-false}
     depends_on:
       - postgres

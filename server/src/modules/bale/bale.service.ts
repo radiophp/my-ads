@@ -791,9 +791,7 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
   ): InlineKeyboardMarkup | undefined {
     const rows: InlineKeyboardMarkup['inline_keyboard'] = [];
     if (url && baleBotUsername) {
-      rows.push([
-        { text: 'مشاهده آگهی', web_app: { url: buildBaleDeepLink(baleBotUsername, postId ?? '') } },
-      ]);
+      rows.push([{ text: 'مشاهده آگهی', url: buildBaleDeepLink(baleBotUsername, postId ?? '') }]);
     } else if (url) {
       rows.push([{ text: 'مشاهده آگهی', url }]);
     }

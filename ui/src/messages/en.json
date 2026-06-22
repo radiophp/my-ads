@@ -123,6 +123,17 @@
       "description": "Hand-picked listings curated by the Mahan File team.",
       "empty": "No featured listings yet."
     },
+    "packages": {
+      "title": "Subscription packages",
+      "description": "Choose a plan that fits your needs and unlock premium features.",
+      "more": "View all packages",
+      "features": "Features",
+      "buy": "Buy package",
+      "trial": "Try free",
+      "freeDays": "+{days} bonus days",
+      "users": "{count, plural, one {{count} user} other {{count} users}}",
+      "duration": "{days, plural, one {{days} day} other {{days} days}}"
+    },
     "news": {
       "title": "Latest market news",
       "description": "Stay updated with fresh housing headlines and market shifts.",
@@ -2103,17 +2114,30 @@
           "durationDays": "Duration (days)",
           "freeDays": "Bonus days",
           "includedUsers": "Included users",
-          "savedFiltersLimit": "Saved filters limit",
-          "allowDiscountCodes": "Allow discount codes",
-          "allowDiscountCodesHint": "Lets this package accept discount codes at checkout.",
-          "allowInviteCodes": "Allow invite codes",
-          "allowInviteCodesHint": "Lets this package accept invite codes for bonus days.",
           "isTrial": "Trial package",
           "isTrialHint": "Mark this package as a trial offer.",
           "trialOncePerUser": "Trial once per user",
           "trialOncePerUserHint": "Prevents users from activating this trial more than once.",
           "actualPrice": "List price",
           "discountedPrice": "Discounted price"
+        },
+        "capabilities": {
+          "title": "Capabilities",
+          "hint": "Configure the features and limits for this package."
+        },
+        "capabilityLabels": {
+          "saved_filters_limit": "Save up to {count} filters",
+          "allow_discount_codes": "Use discount codes",
+          "allow_invite_codes": "Use invite codes",
+          "ring_binders_limit": "Create up to {count} ring binders",
+          "districts_limit": "Access {count} districts",
+          "notifications_limit": "Get notifications for {count} filters",
+          "zip_downloads_per_day": "Download {count} ZIP files per day",
+          "divar_drafts_per_day": "Create {count} Divar drafts per day",
+          "ai_edits_limit": "Edit {count} ads with AI",
+          "channels_limit": "Auto-send ads to {count} channels",
+          "share_ring_binder": "Share ring binders",
+          "builders_archive": "Access builders archive"
         },
         "createSubmit": "Save package",
         "updateSubmit": "Update package",
@@ -2134,16 +2158,16 @@
         "searchLabel": "Search",
         "searchPlaceholder": "Search packages…",
         "searchEmpty": "No packages match your search.",
-        "columns": {
-          "package": "Package",
-          "duration": "Duration",
-          "users": "Users",
-          "pricing": "Pricing",
-          "savedFilters": "Saved filters",
-          "status": "Status",
-          "actions": "Actions"
-        },
+          "columns": {
+            "package": "Package",
+            "duration": "Duration",
+            "users": "Users",
+            "pricing": "Pricing",
+            "status": "Status",
+            "actions": "Actions"
+          },
         "add": "Add package",
+        "showDeactivated": "Show deactivated",
         "loading": "Loading packages…",
         "empty": "No packages defined yet. Create the first package above.",
         "actions": {

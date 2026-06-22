@@ -3,9 +3,11 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { HomeCategoryKpis } from '@/components/home/home-category-kpis';
 import { HomeSlider } from '@/components/home/home-slider';
 import { HomeFeaturedPosts } from '@/components/home/home-featured-posts';
+import { HomePackagesSection } from '@/components/home/home-packages-section';
 import type { NewsItem, NewsListResponse } from '@/types/news';
 import type { BlogItem, BlogListResponse } from '@/types/blog';
 import type { Slide } from '@/types/slide';
+import type { SubscriptionPackage } from '@/types/packages';
 import type { FeaturedPostsResponse } from '@/types/featured-posts';
 import { Link } from '@/i18n/routing';
 import { Button } from '@/components/ui/button';
@@ -116,6 +118,24 @@ const fetchFeaturedPosts = async (): Promise<FeaturedPostsResponse> => {
   }
 };
 
+const fetchPackages = async (): Promise<SubscriptionPackage[]> => {
+  const apiBase = await resolveApiBase();
+  if (!apiBase) {
+    return [];
+  }
+
+  try {
+    const response = await fetch(`${apiBase}/user-panel/subscriptions/packages`, fetchOptions);
+    if (!response.ok) {
+      return [];
+    }
+    const data = (await response.json()) as SubscriptionPackage[];
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+};
+
 export async function HomeLanding() {
   const t = await getTranslations('landing');
   const locale = await getLocale();
@@ -150,6 +170,7 @@ export async function HomeLanding() {
 
   const slides = await fetchSlides();
   const featuredPosts = await fetchFeaturedPosts();
+  const packages = await fetchPackages();
   const latestNews = await fetchLatestNews();
   const latestBlogs = await fetchLatestBlogs();
   const appBase = await resolveAppBase();
@@ -161,6 +182,7 @@ export async function HomeLanding() {
           <HomeSlider slides={slides} locale={locale} appBase={appBase} />
         </div>
       ) : null}
+      <HomePackagesSection packages={packages} />
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-14 px-4">
         <HomeFeaturedPosts
           posts={featuredPosts}

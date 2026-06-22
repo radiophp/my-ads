@@ -2,17 +2,10 @@ import type { SubscriptionPackage, UserSubscription } from '@prisma/client';
 
 export type SubscriptionPackageSummary = Pick<
   SubscriptionPackage,
-  | 'id'
-  | 'title'
-  | 'durationDays'
-  | 'freeDays'
-  | 'includedUsers'
-  | 'savedFiltersLimit'
-  | 'isTrial'
-  | 'trialOncePerUser'
-  | 'allowDiscountCodes'
-  | 'allowInviteCodes'
->;
+  'id' | 'title' | 'durationDays' | 'freeDays' | 'includedUsers' | 'isTrial' | 'trialOncePerUser'
+> & { features: Record<string, string> };
+
+type SubscriptionWithPackage = UserSubscription & { package?: SubscriptionPackage | null };
 
 export class UserSubscriptionDto {
   id!: string;
@@ -30,9 +23,7 @@ export class UserSubscriptionDto {
   updatedAt!: Date;
   package?: SubscriptionPackageSummary;
 
-  static fromEntity(
-    entity: UserSubscription & { package?: SubscriptionPackage | null },
-  ): UserSubscriptionDto {
+  static fromEntity(entity: SubscriptionWithPackage): UserSubscriptionDto {
     return {
       id: entity.id,
       packageId: entity.packageId,
@@ -54,11 +45,9 @@ export class UserSubscriptionDto {
             durationDays: entity.package.durationDays,
             freeDays: entity.package.freeDays,
             includedUsers: entity.package.includedUsers,
-            savedFiltersLimit: entity.package.savedFiltersLimit,
             isTrial: entity.package.isTrial,
             trialOncePerUser: entity.package.trialOncePerUser,
-            allowDiscountCodes: entity.package.allowDiscountCodes,
-            allowInviteCodes: entity.package.allowInviteCodes,
+            features: (entity.package.features as Record<string, string>) ?? {},
           }
         : undefined,
     };

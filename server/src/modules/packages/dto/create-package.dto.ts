@@ -4,6 +4,7 @@ import {
   IsInt,
   IsNotEmpty,
   IsNumber,
+  IsObject,
   IsOptional,
   IsString,
   IsUrl,
@@ -47,12 +48,6 @@ export class CreatePackageDto {
   includedUsers!: number;
 
   @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  @IsOptional()
-  savedFiltersLimit?: number;
-
-  @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   actualPrice!: number;
@@ -76,22 +71,6 @@ export class CreatePackageDto {
   @Type(() => Boolean)
   @IsBoolean()
   @IsOptional()
-  allowDiscountCodes?: boolean;
-
-  @Transform(({ value }) =>
-    value === '' || typeof value === 'undefined' || value === null ? undefined : value,
-  )
-  @Type(() => Boolean)
-  @IsBoolean()
-  @IsOptional()
-  allowInviteCodes?: boolean;
-
-  @Transform(({ value }) =>
-    value === '' || typeof value === 'undefined' || value === null ? undefined : value,
-  )
-  @Type(() => Boolean)
-  @IsBoolean()
-  @IsOptional()
   isTrial?: boolean;
 
   @Transform(({ value }) =>
@@ -101,4 +80,8 @@ export class CreatePackageDto {
   @IsBoolean()
   @IsOptional()
   trialOncePerUser?: boolean;
+
+  @IsObject()
+  @IsOptional()
+  features?: Record<string, string>;
 }

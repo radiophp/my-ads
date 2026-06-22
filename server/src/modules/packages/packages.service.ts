@@ -23,7 +23,9 @@ export class PackagesService {
   }
 
   async findById(id: string): Promise<PackageDto> {
-    const entity = await this.prisma.subscriptionPackage.findUnique({ where: { id } });
+    const entity = await this.prisma.subscriptionPackage.findUnique({
+      where: { id },
+    });
     if (!entity) {
       throw new NotFoundException('Subscription package not found.');
     }
@@ -43,14 +45,12 @@ export class PackagesService {
         durationDays: dto.durationDays,
         freeDays: dto.freeDays,
         includedUsers: dto.includedUsers,
-        savedFiltersLimit: dto.savedFiltersLimit ?? undefined,
-        allowDiscountCodes: dto.allowDiscountCodes ?? undefined,
-        allowInviteCodes: dto.allowInviteCodes ?? undefined,
-        isTrial: dto.isTrial ?? undefined,
-        trialOncePerUser: dto.trialOncePerUser ?? undefined,
+        isTrial: dto.isTrial ?? false,
+        trialOncePerUser: dto.trialOncePerUser ?? true,
         actualPrice: new Prisma.Decimal(dto.actualPrice),
         discountedPrice: new Prisma.Decimal(dto.discountedPrice),
         isActive: dto.isActive ?? true,
+        features: (dto.features ?? {}) as Prisma.JsonObject,
       },
     });
 
@@ -86,15 +86,6 @@ export class PackagesService {
         ...(typeof dto.durationDays === 'number' ? { durationDays: dto.durationDays } : {}),
         ...(typeof dto.freeDays === 'number' ? { freeDays: dto.freeDays } : {}),
         ...(typeof dto.includedUsers === 'number' ? { includedUsers: dto.includedUsers } : {}),
-        ...(typeof dto.savedFiltersLimit === 'number'
-          ? { savedFiltersLimit: dto.savedFiltersLimit }
-          : {}),
-        ...(typeof dto.allowDiscountCodes === 'boolean'
-          ? { allowDiscountCodes: dto.allowDiscountCodes }
-          : {}),
-        ...(typeof dto.allowInviteCodes === 'boolean'
-          ? { allowInviteCodes: dto.allowInviteCodes }
-          : {}),
         ...(typeof dto.isTrial === 'boolean' ? { isTrial: dto.isTrial } : {}),
         ...(typeof dto.trialOncePerUser === 'boolean'
           ? { trialOncePerUser: dto.trialOncePerUser }
@@ -106,6 +97,7 @@ export class PackagesService {
           ? { discountedPrice: new Prisma.Decimal(dto.discountedPrice) }
           : {}),
         ...(typeof dto.isActive === 'boolean' ? { isActive: dto.isActive } : {}),
+        ...(dto.features ? { features: dto.features as Prisma.JsonObject } : {}),
       },
     });
 

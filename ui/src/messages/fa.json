@@ -119,9 +119,20 @@
       }
     },
     "featuredPosts": {
-      "title": "فایل‌های برگزیده",
-      "description": "فایل‌های منتخب تیم ماهان فایل.",
-      "empty": "هنوز فایل برگزیده‌ای ثبت نشده است."
+      "title": "آگهی‌های ویژه",
+      "description": "گزیده‌ای از آگهی‌های منتخب توسط تیم ماهان فایل.",
+      "empty": "هنوز آگهی ویژه‌ای وجود ندارد."
+    },
+    "packages": {
+      "title": "پکیج‌های اشتراک",
+      "description": "یک برنامه متناسب با نیاز خود انتخاب کنید و از قابلیت‌های ویژه بهره‌مند شوید.",
+      "more": "مشاهده همه پکیج‌ها",
+      "features": "قابلیت‌ها",
+      "buy": "خرید پکیج",
+      "trial": "امتحان رایگان",
+      "freeDays": "+{days} روز هدیه",
+      "users": "{count} کاربر",
+      "duration": "{days} روز"
     },
     "news": {
       "title": "آخرین اخبار بازار",
@@ -2104,17 +2115,30 @@
           "durationDays": "مدت (روز)",
           "freeDays": "روزهای هدیه",
           "includedUsers": "تعداد کاربران مشمول",
-          "savedFiltersLimit": "حداکثر فیلترهای ذخیره‌شده",
-          "allowDiscountCodes": "اجازه استفاده از کد تخفیف",
-          "allowDiscountCodesHint": "این پکیج امکان استفاده از کد تخفیف را دارد.",
-          "allowInviteCodes": "اجازه استفاده از کد دعوت",
-          "allowInviteCodesHint": "این پکیج امکان استفاده از کد دعوت و دریافت روز هدیه را دارد.",
           "isTrial": "پکیج آزمایشی",
           "isTrialHint": "این پکیج را به‌عنوان نسخه آزمایشی علامت بزنید.",
           "trialOncePerUser": "آزمایشی فقط یک‌بار",
           "trialOncePerUserHint": "هر کاربر فقط یک‌بار می‌تواند این آزمایش را فعال کند.",
           "actualPrice": "قیمت اصلی",
           "discountedPrice": "قیمت با تخفیف"
+        },
+        "capabilities": {
+          "title": "قابلیت‌ها",
+          "hint": "محدودیت‌ها و ویژگی‌های این پکیج را تنظیم کنید."
+        },
+        "capabilityLabels": {
+          "saved_filters_limit": "قابلیت ذخیره {count} فیلتر",
+          "allow_discount_codes": "دسترسی به کد تخفیف",
+          "allow_invite_codes": "دسترسی به کد دعوت",
+          "ring_binders_limit": "ساخت زونکن تا {count} عدد",
+          "districts_limit": "دسترسی به {count} منطقه",
+          "notifications_limit": "دریافت اعلان آگهی‌های جدید {count} فیلتر",
+          "zip_downloads_per_day": "دانلود گروهی عکس‌های {count} آگهی در روز",
+          "divar_drafts_per_day": "ایجاد {count} پیش‌نویس دیوار در روز",
+          "ai_edits_limit": "ویرایش {count} آگهی با هوش مصنوعی",
+          "channels_limit": "ارسال اتوماتیک آگهی در {count} کانال شما",
+          "share_ring_binder": "قابلیت اشتراک زونکن",
+          "builders_archive": "دسترسی به آرشیو سازندگان"
         },
         "createSubmit": "ثبت پکیج",
         "updateSubmit": "به‌روزرسانی پکیج",
@@ -2135,16 +2159,16 @@
         "searchLabel": "جستجو",
         "searchPlaceholder": "جستجوی پکیج…",
         "searchEmpty": "پکیجی مطابق جستجو پیدا نشد.",
-        "columns": {
-          "package": "پکیج",
-          "duration": "مدت",
-          "users": "کاربران",
-          "pricing": "قیمت‌گذاری",
-          "savedFilters": "فیلترهای ذخیره‌شده",
-          "status": "وضعیت",
-          "actions": "عملیات"
-        },
+          "columns": {
+            "package": "پکیج",
+            "duration": "مدت",
+            "users": "کاربران",
+            "pricing": "قیمت‌گذاری",
+            "status": "وضعیت",
+            "actions": "عملیات"
+          },
         "add": "افزودن پکیج",
+        "showDeactivated": "نمایش غیرفعال‌ها",
         "loading": "در حال بارگذاری پکیج‌ها…",
         "empty": "هنوز هیچ پکیجی تعریف نشده است. اولین پکیج را از بالا ایجاد کنید.",
         "actions": {

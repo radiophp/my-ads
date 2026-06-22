@@ -6,14 +6,12 @@ export type SubscriptionPackage = {
   durationDays: number;
   freeDays: number;
   includedUsers: number;
-  savedFiltersLimit: number;
-  allowDiscountCodes: boolean;
-  allowInviteCodes: boolean;
   isTrial: boolean;
   trialOncePerUser: boolean;
   actualPrice: string;
   discountedPrice: string;
   isActive: boolean;
+  features: Record<string, string>;
   createdAt: string;
   updatedAt: string;
 };
@@ -25,14 +23,12 @@ export type CreatePackagePayload = {
   durationDays: number;
   freeDays: number;
   includedUsers: number;
-  savedFiltersLimit?: number;
-  allowDiscountCodes?: boolean;
-  allowInviteCodes?: boolean;
   isTrial?: boolean;
   trialOncePerUser?: boolean;
   actualPrice: number;
   discountedPrice: number;
   isActive?: boolean;
+  features?: Record<string, string>;
 };
 
 export type UpdatePackagePayload = Partial<CreatePackagePayload>;

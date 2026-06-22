@@ -447,12 +447,10 @@ model SubscriptionPackage {
   includedUsers   Int      @default(1)
   actualPrice     Decimal  @db.Decimal(12, 2)
   discountedPrice Decimal  @db.Decimal(12, 2)
-  savedFiltersLimit Int    @default(5)
-  allowDiscountCodes Boolean @default(true)
-  allowInviteCodes  Boolean @default(true)
   isTrial           Boolean @default(false)
   trialOncePerUser  Boolean @default(true)
   isActive        Boolean  @default(true)
+  features        Json     @default("{}")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   discountCodes   DiscountCode[]

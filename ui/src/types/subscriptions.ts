@@ -21,11 +21,9 @@ export type UserSubscription = {
     | 'durationDays'
     | 'freeDays'
     | 'includedUsers'
-    | 'savedFiltersLimit'
     | 'isTrial'
     | 'trialOncePerUser'
-    | 'allowDiscountCodes'
-    | 'allowInviteCodes'
+    | 'features'
   >;
 };
 

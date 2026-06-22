@@ -67,16 +67,15 @@ export function AdminPackageEditor({ mode, packageId }: AdminPackageEditorProps)
       form.reset({
         title: existingPackage.title,
         description: existingPackage.description ?? '',
+        imageUrl: existingPackage.imageUrl ?? '',
         durationDays: existingPackage.durationDays,
         freeDays: existingPackage.freeDays,
         includedUsers: existingPackage.includedUsers,
-        savedFiltersLimit: existingPackage.savedFiltersLimit,
-        allowDiscountCodes: existingPackage.allowDiscountCodes,
-        allowInviteCodes: existingPackage.allowInviteCodes,
         isTrial: existingPackage.isTrial,
         trialOncePerUser: existingPackage.trialOncePerUser,
         actualPrice: Number.parseFloat(existingPackage.actualPrice),
         discountedPrice: Number.parseFloat(existingPackage.discountedPrice),
+        features: { ...existingPackage.features },
       });
     }
   }, [existingPackage, form, isEditing]);
@@ -88,17 +87,14 @@ export function AdminPackageEditor({ mode, packageId }: AdminPackageEditorProps)
       durationDays: t('form.fields.durationDays'),
       freeDays: t('form.fields.freeDays'),
       includedUsers: t('form.fields.includedUsers'),
-      savedFiltersLimit: t('form.fields.savedFiltersLimit'),
-      allowDiscountCodes: t('form.fields.allowDiscountCodes'),
-      allowDiscountCodesHint: t('form.fields.allowDiscountCodesHint'),
-      allowInviteCodes: t('form.fields.allowInviteCodes'),
-      allowInviteCodesHint: t('form.fields.allowInviteCodesHint'),
       isTrial: t('form.fields.isTrial'),
       isTrialHint: t('form.fields.isTrialHint'),
       trialOncePerUser: t('form.fields.trialOncePerUser'),
       trialOncePerUserHint: t('form.fields.trialOncePerUserHint'),
       actualPrice: t('form.fields.actualPrice'),
       discountedPrice: t('form.fields.discountedPrice'),
+      capabilities: t('form.capabilities.title'),
+      capabilitiesHint: t('form.capabilities.hint'),
       submit: isEditing ? t('form.updateSubmit') : t('form.createSubmit'),
       cancel: t('form.cancel'),
     }),
@@ -144,13 +140,11 @@ export function AdminPackageEditor({ mode, packageId }: AdminPackageEditorProps)
       durationDays: values.durationDays,
       freeDays: values.freeDays,
       includedUsers: values.includedUsers,
-      savedFiltersLimit: values.savedFiltersLimit,
-      allowDiscountCodes: values.allowDiscountCodes,
-      allowInviteCodes: values.allowInviteCodes,
       isTrial: values.isTrial,
       trialOncePerUser: values.trialOncePerUser,
       actualPrice: values.actualPrice,
       discountedPrice: values.discountedPrice,
+      features: values.features,
     };
 
     try {
@@ -201,12 +195,6 @@ export function AdminPackageEditor({ mode, packageId }: AdminPackageEditorProps)
             </div>
           ) : (
             <>
-              <PackageImageUploader
-                value={imageValue ? imageValue : null}
-                onChange={handleImageChange}
-                disabled={isSubmitting}
-                texts={imageTexts}
-              />
               <PackageForm
                 form={form}
                 onSubmit={handleSubmit}
@@ -224,6 +212,14 @@ export function AdminPackageEditor({ mode, packageId }: AdminPackageEditorProps)
                       {editorT('reset')}
                     </Button>
                   )
+                }
+                imageUploader={
+                  <PackageImageUploader
+                    value={imageValue ? imageValue : null}
+                    onChange={handleImageChange}
+                    disabled={isSubmitting}
+                    texts={imageTexts}
+                  />
                 }
               />
             </>

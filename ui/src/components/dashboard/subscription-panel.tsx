@@ -150,7 +150,7 @@ function PackageCard({
           </li>
           <li className="flex items-center gap-2">
             <Check className="size-4 text-emerald-500" aria-hidden />
-            <span>{t('package.savedFilters', { count: pkg.savedFiltersLimit })}</span>
+            <span>{t('package.savedFilters', { count: Number(pkg.features?.saved_filters_limit ?? 5) })}</span>
           </li>
         </ul>
 
@@ -233,7 +233,7 @@ function ActivateDialog({
             </div>
           </div>
 
-          {pkg.allowDiscountCodes && (
+          {pkg.features?.allow_discount_codes === 'true' && (
             <div className="space-y-2">
               <Label htmlFor="discountCode" className="flex items-center gap-2">
                 <TicketPercent className="size-4 text-muted-foreground" aria-hidden />
@@ -249,7 +249,7 @@ function ActivateDialog({
             </div>
           )}
 
-          {pkg.allowInviteCodes && (
+          {pkg.features?.allow_invite_codes === 'true' && (
             <div className="space-y-2">
               <Label htmlFor="inviteCode" className="flex items-center gap-2">
                 <UserPlus className="size-4 text-muted-foreground" aria-hidden />

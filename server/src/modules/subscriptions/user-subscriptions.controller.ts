@@ -4,11 +4,11 @@ import { SubscriptionsService } from './subscriptions.service';
 import { ActivateSubscriptionDto } from './dto/activate-subscription.dto';
 
 @Controller('user-panel/subscriptions')
-@UseGuards(JwtAuthGuard)
 export class UserSubscriptionsController {
   constructor(private readonly subscriptionsService: SubscriptionsService) {}
 
   @Get('current')
+  @UseGuards(JwtAuthGuard)
   async getCurrent(@Req() request: { user?: { sub: string } }) {
     return this.subscriptionsService.getActiveSubscription(request.user?.sub ?? '');
   }
@@ -19,6 +19,7 @@ export class UserSubscriptionsController {
   }
 
   @Post('activate')
+  @UseGuards(JwtAuthGuard)
   async activate(@Req() request: { user?: { sub: string } }, @Body() dto: ActivateSubscriptionDto) {
     return this.subscriptionsService.activateSubscription(request.user?.sub ?? '', dto);
   }

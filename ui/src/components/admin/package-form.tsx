@@ -2,6 +2,8 @@
 
 import type { ReactNode } from 'react';
 import { useWatch, type UseFormReturn } from 'react-hook-form';
+import { useTranslations } from 'next-intl';
+
 import { Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -17,6 +19,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { PACKAGE_FEATURES } from '@/components/admin/constants/package-features.constants';
 import type { PackageFormValues } from '@/components/admin/package-form-defs';
 
 export type PackageFormTexts = {
@@ -25,17 +29,14 @@ export type PackageFormTexts = {
   durationDays: string;
   freeDays: string;
   includedUsers: string;
-  savedFiltersLimit: string;
-  allowDiscountCodes: string;
-  allowDiscountCodesHint: string;
-  allowInviteCodes: string;
-  allowInviteCodesHint: string;
   isTrial: string;
   isTrialHint: string;
   trialOncePerUser: string;
   trialOncePerUserHint: string;
   actualPrice: string;
   discountedPrice: string;
+  capabilities: string;
+  capabilitiesHint: string;
   submit: string;
   cancel: string;
 };
@@ -47,6 +48,7 @@ type PackageFormProps = {
   isSubmitting: boolean;
   submitIcon?: ReactNode;
   secondaryAction?: ReactNode;
+  imageUploader?: ReactNode;
 };
 
 export function PackageForm({
@@ -56,46 +58,35 @@ export function PackageForm({
   isSubmitting,
   submitIcon,
   secondaryAction,
+  imageUploader,
 }: PackageFormProps) {
+  const t = useTranslations('admin.packages.form.capabilityLabels');
   const isTrial = useWatch({ control: form.control, name: 'isTrial' });
+  const featureEntries = Object.entries(PACKAGE_FEATURES).sort(([keyA], [keyB]) => {
+    const endKeys = ['allow_discount_codes', 'allow_invite_codes'];
+    const aEnd = endKeys.includes(keyA) ? 1 : 0;
+    const bEnd = endKeys.includes(keyB) ? 1 : 0;
+    return aEnd - bEnd;
+  });
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-        <FormField
-          control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{texts.title}</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="Premium package" autoComplete="off" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="grid gap-5 md:grid-cols-2">
+        <div className="grid gap-5 md:grid-cols-4">
           <FormField
             control={form.control}
-            name="description"
+            name="title"
             render={({ field }) => (
-              <FormItem className="md:col-span-2">
-                <FormLabel>{texts.description}</FormLabel>
+              <FormItem>
+                <FormLabel>{texts.title}</FormLabel>
                 <FormControl>
-                  <Textarea
-                    {...field}
-                    placeholder="Describe the benefits users receive with this package"
-                  />
+                  <Input {...field} placeholder="Premium package" autoComplete="off" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-        </div>
 
-        <div className="grid gap-5 md:grid-cols-3">
           <FormField
             control={form.control}
             name="durationDays"
@@ -139,19 +130,30 @@ export function PackageForm({
           />
         </div>
 
-        <FormField
-          control={form.control}
-          name="savedFiltersLimit"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{texts.savedFiltersLimit}</FormLabel>
-              <FormControl>
-                <Input {...field} type="number" min={1} inputMode="numeric" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+        <div className="grid gap-5 md:grid-cols-2">
+          {imageUploader && (
+            <div className="order-2 md:order-1">
+              {imageUploader}
+            </div>
           )}
-        />
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem className={`flex flex-col ${imageUploader ? 'h-full' : 'md:col-span-2'}`}>
+                <FormLabel>{texts.description}</FormLabel>
+                <FormControl className="flex-1">
+                  <Textarea
+                    {...field}
+                    className="min-h-[180px]"
+                    placeholder="Describe the benefits users receive with this package"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <div className="grid gap-5 md:grid-cols-2">
           <FormField
@@ -198,40 +200,6 @@ export function PackageForm({
         <div className="grid gap-4 md:grid-cols-2">
           <FormField
             control={form.control}
-            name="allowDiscountCodes"
-            render={({ field }) => (
-              <FormItem className="flex items-center justify-between rounded-lg border border-border/60 p-4">
-                <div className="space-y-1">
-                  <FormLabel>{texts.allowDiscountCodes}</FormLabel>
-                  <FormDescription>{texts.allowDiscountCodesHint}</FormDescription>
-                </div>
-                <FormControl>
-                  <Switch checked={field.value} onCheckedChange={field.onChange} />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="allowInviteCodes"
-            render={({ field }) => (
-              <FormItem className="flex items-center justify-between rounded-lg border border-border/60 p-4">
-                <div className="space-y-1">
-                  <FormLabel>{texts.allowInviteCodes}</FormLabel>
-                  <FormDescription>{texts.allowInviteCodesHint}</FormDescription>
-                </div>
-                <FormControl>
-                  <Switch checked={field.value} onCheckedChange={field.onChange} />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <FormField
-            control={form.control}
             name="isTrial"
             render={({ field }) => (
               <FormItem className="flex items-center justify-between rounded-lg border border-border/60 p-4">
@@ -266,6 +234,69 @@ export function PackageForm({
             )}
           />
         </div>
+
+        {featureEntries.length > 0 && (
+          <Card className="border-border/70">
+            <CardHeader>
+              <CardTitle className="text-base font-semibold">{texts.capabilities}</CardTitle>
+              <p className="text-sm text-muted-foreground">{texts.capabilitiesHint}</p>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2">
+                {featureEntries.map(([key, feature]) => {
+                  const fieldKey = `features.${key}` as const;
+
+                  if (feature.type === 'BOOLEAN') {
+                    return (
+                      <FormField
+                        key={key}
+                        control={form.control}
+                        name={fieldKey}
+                        render={({ field }) => (
+                          <FormItem className="flex items-center justify-between rounded-lg border border-border/60 p-4">
+                            <FormLabel className="mb-0">
+                              {t(key)}
+                            </FormLabel>
+                            <FormControl>
+                              <Switch
+                                checked={field.value === 'true'}
+                                onCheckedChange={(checked) =>
+                                  field.onChange(checked ? 'true' : 'false')
+                                }
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    );
+                  }
+
+                  return (
+                    <FormField
+                      key={key}
+                      control={form.control}
+                      name={fieldKey}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t(key)}</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              type="number"
+                              min={0}
+                              inputMode="numeric"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="flex items-center justify-end gap-2">
           {secondaryAction ?? null}

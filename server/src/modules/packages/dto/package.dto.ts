@@ -8,14 +8,12 @@ export class PackageDto {
   durationDays!: number;
   freeDays!: number;
   includedUsers!: number;
-  savedFiltersLimit!: number;
-  allowDiscountCodes!: boolean;
-  allowInviteCodes!: boolean;
   isTrial!: boolean;
   trialOncePerUser!: boolean;
   actualPrice!: string;
   discountedPrice!: string;
   isActive!: boolean;
+  features!: Record<string, string>;
   createdAt!: Date;
   updatedAt!: Date;
 
@@ -28,14 +26,12 @@ export class PackageDto {
       durationDays: entity.durationDays,
       freeDays: entity.freeDays,
       includedUsers: entity.includedUsers,
-      savedFiltersLimit: entity.savedFiltersLimit,
-      allowDiscountCodes: entity.allowDiscountCodes,
-      allowInviteCodes: entity.allowInviteCodes,
       isTrial: entity.isTrial,
       trialOncePerUser: entity.trialOncePerUser,
       actualPrice: entity.actualPrice.toString(),
       discountedPrice: entity.discountedPrice.toString(),
       isActive: entity.isActive,
+      features: (entity.features as Record<string, string>) ?? {},
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     };

@@ -162,8 +162,12 @@ export class SavedFiltersService {
       return this.defaultLimit;
     }
     const subscription = await this.subscriptionsService.getActiveSubscription(userId);
-    if (subscription?.package?.savedFiltersLimit) {
-      return subscription.package.savedFiltersLimit;
+    if (subscription?.package?.features) {
+      const val = (subscription.package.features as Record<string, string>)['saved_filters_limit'];
+      const limit = val ? Number.parseInt(val, 10) : NaN;
+      if (!Number.isNaN(limit)) {
+        return limit;
+      }
     }
     return this.defaultLimit;
   }

@@ -13,6 +13,17 @@ const addDays = (date: Date, days: number) => {
 
 const clampPrice = (value: number) => Math.max(0, Number(value.toFixed(2)));
 
+function getFeature(features: unknown, key: string): string | undefined {
+  if (features && typeof features === 'object') {
+    return (features as Record<string, string>)[key];
+  }
+  return undefined;
+}
+
+function featureBool(features: unknown, key: string): boolean {
+  return getFeature(features, key) === 'true';
+}
+
 @Injectable()
 export class SubscriptionsService {
   constructor(private readonly prisma: PrismaService) {}
@@ -83,7 +94,7 @@ export class SubscriptionsService {
 
       let discountCodeId: string | null = null;
       if (dto.discountCode) {
-        if (!pkg.allowDiscountCodes) {
+        if (!featureBool(pkg.features, 'allow_discount_codes')) {
           throw new BadRequestException('Discount codes are not allowed for this package.');
         }
 
@@ -137,7 +148,7 @@ export class SubscriptionsService {
       let inviteBonusDays = 0;
       let inviterUserId: string | null = null;
       if (dto.inviteCode) {
-        if (!pkg.allowInviteCodes) {
+        if (!featureBool(pkg.features, 'allow_invite_codes')) {
           throw new BadRequestException('Invite codes are not allowed for this package.');
         }
 

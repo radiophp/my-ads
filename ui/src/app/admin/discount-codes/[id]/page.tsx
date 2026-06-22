@@ -1,9 +1,10 @@
 import { AdminDiscountCodeEditorClient } from '@/components/admin/admin-discount-code-editor-client';
 
 type AdminDiscountCodeEditPageProps = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
-export default function AdminDiscountCodeEditPage({ params }: AdminDiscountCodeEditPageProps) {
-  return <AdminDiscountCodeEditorClient mode="edit" discountCodeId={params.id} />;
+export default async function AdminDiscountCodeEditPage({ params }: AdminDiscountCodeEditPageProps) {
+  const { id } = await params;
+  return <AdminDiscountCodeEditorClient mode="edit" discountCodeId={id} />;
 }

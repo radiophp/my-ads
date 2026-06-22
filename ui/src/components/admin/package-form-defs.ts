@@ -1,6 +1,7 @@
 'use client';
 
 import { z } from 'zod';
+import { defaultPackageFeatures } from '@/components/admin/constants/package-features.constants';
 
 export const packageSchemaFactory = (t: (key: string) => string) =>
   z
@@ -37,16 +38,11 @@ export const packageSchemaFactory = (t: (key: string) => string) =>
         .number()
         .int(t('validation.includedUsersInteger'))
         .min(1, t('validation.includedUsersMin')),
-      savedFiltersLimit: z.coerce
-        .number()
-        .int(t('validation.savedFiltersInteger'))
-        .min(1, t('validation.savedFiltersMin')),
-      allowDiscountCodes: z.boolean(),
-      allowInviteCodes: z.boolean(),
       isTrial: z.boolean(),
       trialOncePerUser: z.boolean(),
       actualPrice: z.coerce.number().min(0, t('validation.actualPriceMin')),
       discountedPrice: z.coerce.number().min(0, t('validation.discountedPriceMin')),
+      features: z.record(z.string(), z.string()),
     })
     .superRefine((data, ctx) => {
       if (data.discountedPrice > data.actualPrice) {
@@ -68,11 +64,9 @@ export const createPackageDefaultValues: PackageFormValues = {
   durationDays: 30,
   freeDays: 0,
   includedUsers: 1,
-  savedFiltersLimit: 5,
-  allowDiscountCodes: true,
-  allowInviteCodes: true,
   isTrial: false,
   trialOncePerUser: true,
   actualPrice: 0,
   discountedPrice: 0,
+  features: defaultPackageFeatures(),
 };

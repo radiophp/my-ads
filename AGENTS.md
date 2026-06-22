@@ -286,6 +286,38 @@ Large files are split by extracting pure utility functions/constants/types into 
 - **CSP for Bale**: `frame-ancestors https://*.bale.ai`, Bale SDK sources in `scriptSrc`/`connectSrc`, `xFrameOptions: false`
 - **CLOUDFLARE_API_TOKEN**: GitHub secret (not in .env.prod)
 
+## Subscription Packages & Features
+
+### Architecture
+- **Features stored as JSON** (`features Json @default("{}")`) on `SubscriptionPackage` model — no separate feature tables or assignments
+- 12 hardcoded features defined in a shared constant (NUMBER/BOOLEAN types) on both server and UI — redeploy needed to add new features
+- Old columns `savedFiltersLimit`, `allowDiscountCodes`, `allowInviteCodes` and related `PackageFeature`/`PackageFeatureAssignment` tables removed
+
+### Shared Constants
+| File | Purpose |
+| --- | --- |
+| `server/src/modules/packages/package-features.constants.ts` | 12 feature definitions with type + default |
+| `ui/src/components/admin/constants/package-features.constants.ts` | Mirror copy for frontend, exports `PackageFeatureKey` type and `defaultPackageFeatures()` |
+
+### Feature Icon Mapping
+- `ui/src/components/shared/package-feature-icons.tsx` — maps each `PackageFeatureKey` to a Lucide icon
+- Exports `getPackageFeatureIcon(key)` — usable in admin, home cards, etc.
+
+### Home Page Packages Section
+- `ui/src/components/home/home-packages-section.tsx` — Swiper slider with Navigation arrows
+  - Desktop: arrows positioned outside card area (left/right)
+  - Mobile (`< md`): arrows shown beside the title
+  - Fractional slides: `1.2` (mobile), `2` (tablet), `3.2` (desktop) — last card peeks to hint more content
+- `ui/src/components/home/home-package-card.tsx` — card with logo+title, feature bullets with icons, price, Info dialog for description
+  - `GET /user-panel/subscriptions/packages` is public (no JWT guard) so home page can fetch without auth
+
+### Key Points
+- `PackageDto` reads `features` from `entity.features` directly (runtime cast `Record<string, string>`)
+- `SubscriptionsService` uses `featureBool()` helper to read boolean features from JSON
+- `saved-filters.service.ts` reads `saved_filters_limit` from features JSON
+- Admin form (`package-form.tsx`) renders capabilities from constant (not API query)
+- Admin table (`admin-packages-manager.tsx`) shows individual feature columns with دارد/ندارد for booleans
+
 ## Pagination Strategy (Divar Dashboard)
 - No Prisma `cursor`/`skip` for large tables (full-table scans on tied `publishedAt`)
 - Manual `WHERE (publishedAt, createdAt, id) < (cursor...)` tuple comparisons via `runQuery`/`buildWhereClause`

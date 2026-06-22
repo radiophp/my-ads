@@ -1,9 +1,10 @@
 import { AdminInviteCodeEditorClient } from '@/components/admin/admin-invite-code-editor-client';
 
 type AdminInviteCodeEditPageProps = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
-export default function AdminInviteCodeEditPage({ params }: AdminInviteCodeEditPageProps) {
-  return <AdminInviteCodeEditorClient mode="edit" inviteCodeId={params.id} />;
+export default async function AdminInviteCodeEditPage({ params }: AdminInviteCodeEditPageProps) {
+  const { id } = await params;
+  return <AdminInviteCodeEditorClient mode="edit" inviteCodeId={id} />;
 }

@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react';
 import {
+  Banknote,
   Boxes,
   BarChart3,
   GitBranch,
@@ -222,13 +223,18 @@ export function AdminDashboard() {
       icon: <ClipboardList className="size-8 text-primary" aria-hidden />,
       title: t('cards.usageLogs.title'),
     },
+    payments: {
+      href: '/admin/payments',
+      icon: <Banknote className="size-8 text-primary" aria-hidden />,
+      title: t('cards.payments.title'),
+    },
   } satisfies Record<string, DashboardNavItem>;
 
   const sections: DashboardSection[] = [
     {
       title: t('sections.core.title'),
       description: t('sections.core.description'),
-      items: [items.users, items.packages, items.discountCodes, items.inviteCodes, items.usageLogs],
+      items: [items.users, items.packages, items.discountCodes, items.inviteCodes, items.usageLogs, items.payments],
     },
     {
       title: t('sections.content.title'),

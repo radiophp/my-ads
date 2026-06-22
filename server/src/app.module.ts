@@ -59,6 +59,8 @@ import { InviteCodesModule } from './modules/invite-codes/invite-codes.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 import { AdminUsersModule } from './modules/admin-users/admin-users.module';
 import { UsageModule } from './modules/usage/usage.module';
+import { BankAccountsModule } from './modules/bank-accounts/bank-accounts.module';
+import { PaymentsModule } from './modules/payments/payments.module';
 
 @Module({
   imports: [
@@ -134,6 +136,8 @@ import { UsageModule } from './modules/usage/usage.module';
     SubscriptionsModule,
     AdminUsersModule,
     UsageModule,
+    BankAccountsModule,
+    PaymentsModule,
   ],
 })
 export class AppModule {}

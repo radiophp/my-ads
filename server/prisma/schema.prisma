@@ -124,6 +124,7 @@ model User {
   activationNote     String?
   activationRequestedAt DateTime?
   usageLogs          UsageLog[]
+  paymentRequests    PaymentRequest[]
 
   @@index([cityId])
 }
@@ -465,6 +466,7 @@ model SubscriptionPackage {
   updatedAt       DateTime @updatedAt
   discountCodes   DiscountCode[]
   subscriptions   UserSubscription[]
+  paymentRequests PaymentRequest[]
 
   @@index([isActive])
 }
@@ -1087,4 +1089,46 @@ model UsageLog {
   @@index([userId, feature, consumedAt])
   @@index([userId, consumedAt])
   @@index([feature, consumedAt])
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model BankAccount {
+  id             String   @id @default(uuid())
+  bankName       String
+  cardNumber     String
+  cardHolderName String
+  sheba          String
+  isActive       Boolean  @default(true)
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([isActive, sortOrder])
+}
+
+model PaymentRequest {
+  id              String        @id @default(uuid())
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  packageId       String
+  package         SubscriptionPackage @relation(fields: [packageId], references: [id])
+  amount          Decimal       @db.Decimal(12, 2)
+  discountCodeId  String?
+  inviteCodeId    String?
+  receiptUrl      String?
+  status          PaymentStatus @default(PENDING)
+  rejectionReason String?
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([status, createdAt])
 }

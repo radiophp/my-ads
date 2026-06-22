@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { Crown, Loader2, Sparkles, TicketPercent, UserPlus, Zap } from 'lucide-react';
+import { Crown, Image as ImageIcon, Loader2, Sparkles, TicketPercent, Upload, UserPlus, Zap } from 'lucide-react';
 
 import {
   useGetCurrentSubscriptionQuery,
@@ -25,6 +25,11 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { HomePackageCard } from '@/components/home/home-package-card';
+import {
+  useGetBankAccountsQuery,
+  useInitiatePaymentMutation,
+  useUploadReceiptMutation,
+} from '@/features/api/endpoints/payments';
 import type { SubscriptionPackage } from '@/types/packages';
 
 function CurrentSubscriptionCard() {
@@ -254,14 +259,224 @@ function RejectedActivationCard() {
   );
 }
 
+function PaymentDialog({
+  pkg,
+  open,
+  onOpenChange,
+}: {
+  pkg: SubscriptionPackage | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const t = useTranslations('dashboard.subscriptionPage');
+  const { toast } = useToast();
+  const { data: bankAccounts, isLoading: banksLoading } = useGetBankAccountsQuery();
+  const [initiate, { isLoading: initiating }] = useInitiatePaymentMutation();
+  const [uploadReceipt, { isLoading: uploading }] = useUploadReceiptMutation();
+  const [discountCode, setDiscountCode] = useState('');
+  const [inviteCode, setInviteCode] = useState('');
+  const [paymentId, setPaymentId] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [step, setStep] = useState<'form' | 'upload' | 'success' | 'error'>('form');
+  const [errorMsg, setErrorMsg] = useState('');
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  if (!pkg) return null;
+
+  const handleInitiate = async () => {
+    try {
+      const result = await initiate({
+        packageId: pkg.id,
+        discountCode: discountCode.trim() || undefined,
+        inviteCode: inviteCode.trim() || undefined,
+      }).unwrap();
+      setPaymentId(result.id);
+      setStep('upload');
+    } catch (err: unknown) {
+      const msg =
+        err && typeof err === 'object' && 'data' in err
+          ? String((err as { data: { message?: string } }).data?.message ?? '')
+          : t('payment.error');
+      toast({ title: msg, variant: 'destructive' });
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!paymentId || !file) return;
+    try {
+      await uploadReceipt({ id: paymentId, file }).unwrap();
+      setStep('success');
+      toast({ title: t('payment.success') });
+    } catch {
+      toast({ title: t('payment.uploadError'), variant: 'destructive' });
+    }
+  };
+
+  const reset = () => {
+    setDiscountCode('');
+    setInviteCode('');
+    setPaymentId(null);
+    setFile(null);
+    setStep('form');
+    setErrorMsg('');
+  };
+
+  const price = Number(pkg.discountedPrice);
+  const isPaid = price > 0;
+
+  if (!isPaid) return null;
+
+  if (step === 'success') {
+    return (
+      <Dialog open={open} onOpenChange={(v) => { if (!v) { reset(); onOpenChange(false); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('payment.successTitle')}</DialogTitle>
+            <DialogDescription>{t('payment.successDesc')}</DialogDescription>
+          </DialogHeader>
+          <div className="py-4 text-center text-sm text-muted-foreground">
+            {t('payment.pendingMessage')}
+          </div>
+          <DialogFooter>
+            <Button onClick={() => { reset(); onOpenChange(false); }}>{t('payment.close')}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => { if (!v) { reset(); onOpenChange(false); } }}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{t('payment.title')}</DialogTitle>
+          <DialogDescription>{t('payment.description', { title: pkg.title })}</DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-2">
+          <div className="rounded-lg border bg-muted/30 p-3">
+            <div className="flex items-center justify-between">
+              <span className="font-medium">{pkg.title}</span>
+              <span className="text-lg font-bold">{price.toLocaleString()} {t('package.currency')}</span>
+            </div>
+          </div>
+
+          {step === 'form' && (
+            <>
+              {banksLoading ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="size-4 animate-spin" />
+                </div>
+              ) : bankAccounts && bankAccounts.length > 0 ? (
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">{t('payment.bankAccounts')}</Label>
+                  {bankAccounts.map((acc) => (
+                    <div key={acc.id} className="rounded-lg border p-3 text-sm space-y-1">
+                      <p className="font-medium">{acc.bankName}</p>
+                      <p className="text-muted-foreground" dir="ltr">{t('payment.cardNumber')}: {acc.cardNumber}</p>
+                      <p className="text-muted-foreground">{t('payment.cardHolder')}: {acc.cardHolderName}</p>
+                      <p className="text-muted-foreground" dir="ltr">{t('payment.sheba')}: {acc.sheba}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+
+              {pkg.features?.allow_discount_codes === 'true' && (
+                <div className="space-y-2">
+                  <Label htmlFor="discountCode" className="flex items-center gap-2">
+                    <TicketPercent className="size-4 text-muted-foreground" aria-hidden />
+                    {t('activate.discountLabel')}
+                  </Label>
+                  <Input
+                    id="discountCode"
+                    value={discountCode}
+                    onChange={(e) => setDiscountCode(e.target.value)}
+                    placeholder={t('activate.discountPlaceholder')}
+                    maxLength={64}
+                  />
+                </div>
+              )}
+
+              {pkg.features?.allow_invite_codes === 'true' && (
+                <div className="space-y-2">
+                  <Label htmlFor="inviteCode" className="flex items-center gap-2">
+                    <UserPlus className="size-4 text-muted-foreground" aria-hidden />
+                    {t('activate.inviteLabel')}
+                  </Label>
+                  <Input
+                    id="inviteCode"
+                    value={inviteCode}
+                    onChange={(e) => setInviteCode(e.target.value)}
+                    placeholder={t('activate.invitePlaceholder')}
+                    maxLength={64}
+                  />
+                </div>
+              )}
+
+              <DialogFooter>
+                <Button variant="outline" onClick={() => { reset(); onOpenChange(false); }}>
+                  {t('activate.cancel')}
+                </Button>
+                <Button onClick={handleInitiate} disabled={initiating}>
+                  {initiating ? <Loader2 className="size-4 animate-spin" /> : t('payment.next')}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+
+          {step === 'upload' && (
+            <>
+              <p className="text-sm text-muted-foreground">{t('payment.uploadDesc')}</p>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              />
+              {file ? (
+                <div className="flex items-center gap-3 rounded-lg border bg-muted/30 p-3">
+                  <ImageIcon className="size-8 shrink-0 text-muted-foreground" />
+                  <div className="min-w-0 flex-1 text-sm">
+                    <p className="truncate font-medium">{file.name}</p>
+                    <p className="text-muted-foreground">{(file.size / 1024).toFixed(1)} KB</p>
+                  </div>
+                  <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()}>
+                    {t('payment.changeFile')}
+                  </Button>
+                </div>
+              ) : (
+                <Button variant="outline" className="w-full" onClick={() => fileRef.current?.click()}>
+                  <Upload className="size-4" />
+                  {t('payment.selectFile')}
+                </Button>
+              )}
+              <DialogFooter className="gap-2">
+                <Button variant="outline" onClick={() => setStep('form')}>
+                  {t('payment.back')}
+                </Button>
+                <Button onClick={handleUpload} disabled={!file || uploading}>
+                  {uploading ? <Loader2 className="size-4 animate-spin" /> : t('payment.submitReceipt')}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function PackageCardWrapper({ pkg }: { pkg: SubscriptionPackage }) {
   const { data: activationStatus } = useGetActivationStatusQuery();
   const t = useTranslations('dashboard.subscriptionPage');
   const { toast } = useToast();
   const [requestActivation] = useRequestActivationMutation();
   const [activatingPkg, setActivatingPkg] = useState<SubscriptionPackage | null>(null);
+  const [payingPkg, setPayingPkg] = useState<SubscriptionPackage | null>(null);
 
   const isRejected = activationStatus?.activationStatus === 'REJECTED';
+  const isPaid = Number(pkg.discountedPrice) > 0;
 
   const handleActivate = async (p: SubscriptionPackage) => {
     if (isRejected) {
@@ -271,6 +486,8 @@ function PackageCardWrapper({ pkg }: { pkg: SubscriptionPackage }) {
       } catch {
         toast({ title: t('activation.error'), variant: 'destructive' });
       }
+    } else if (isPaid) {
+      setPayingPkg(p);
     } else {
       setActivatingPkg(p);
     }
@@ -283,6 +500,11 @@ function PackageCardWrapper({ pkg }: { pkg: SubscriptionPackage }) {
         pkg={activatingPkg}
         open={Boolean(activatingPkg)}
         onOpenChange={(open) => { if (!open) setActivatingPkg(null); }}
+      />
+      <PaymentDialog
+        pkg={payingPkg}
+        open={Boolean(payingPkg)}
+        onOpenChange={(open) => { if (!open) setPayingPkg(null); }}
       />
     </>
   );

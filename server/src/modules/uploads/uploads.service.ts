@@ -8,7 +8,7 @@ export type UploadResult = StoredObjectMetadata & {
   contentType?: string;
 };
 
-export type UploadScope = 'profile' | 'temp' | 'public';
+export type UploadScope = 'profile' | 'temp' | 'public' | 'receipts';
 
 @Injectable()
 export class UploadsService {
@@ -113,6 +113,11 @@ export class UploadsService {
         return `temp/public/${uniqueName}${suffix}`;
       case 'public':
         return `public/${uniqueName}${suffix}`;
+      case 'receipts':
+        if (ownerId) {
+          return `receipts/${ownerId}/${uniqueName}${suffix}`;
+        }
+        return `receipts/public/${uniqueName}${suffix}`;
       case 'profile':
       default:
         if (ownerId) {

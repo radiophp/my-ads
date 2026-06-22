@@ -624,6 +624,68 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  async sendPaymentApproved(paymentId: string): Promise<{ success: boolean; error?: string }> {
+    const payment = await this.prisma.paymentRequest.findUnique({
+      where: { id: paymentId },
+      include: { package: { select: { title: true } } },
+    });
+    if (!payment) return { success: false, error: 'Payment not found' };
+
+    return this.sendPaymentMessage(
+      payment.userId,
+      `✅ پرداخت شما تأیید شد.\nاشتراک «${payment.package.title}» با موفقیت فعال شد.\nاز <a href="https://ble.ir">سامانه ماکاران</a> می‌توانید از امکانات اشتراک خود استفاده کنید.`,
+    );
+  }
+
+  async sendPaymentRejected(
+    paymentId: string,
+    reason?: string,
+  ): Promise<{ success: boolean; error?: string }> {
+    const payment = await this.prisma.paymentRequest.findUnique({
+      where: { id: paymentId },
+      include: { package: { select: { title: true } } },
+    });
+    if (!payment) return { success: false, error: 'Payment not found' };
+
+    const reasonText = reason ? `\nدلیل: ${reason}` : '';
+    return this.sendPaymentMessage(
+      payment.userId,
+      `❌ پرداخت شما برای اشتراک «${payment.package.title}» رد شد.${reasonText}\nبرای اطلاعات بیشتر به <a href="https://ble.ir">سامانه ماکاران</a> مراجعه کنید.`,
+    );
+  }
+
+  private async sendPaymentMessage(
+    userId: string,
+    message: string,
+  ): Promise<{ success: boolean; error?: string }> {
+    await this.ensureSender();
+    if (!this.sender) {
+      return { success: false, error: 'Bale sender is not initialized' };
+    }
+
+    const chatLink = await this.findChatLink({ userId });
+    if (!chatLink) {
+      return { success: false, error: 'Bale chat link not found' };
+    }
+
+    try {
+      await this.sendWithRetry(
+        'paymentNotification',
+        () =>
+          this.sender!.sendMessage(chatLink.chatId, message, {
+            parse_mode: 'HTML',
+            link_preview_options: { is_disabled: true },
+          }),
+        { chatId: chatLink.chatId },
+      );
+      return { success: true };
+    } catch (err) {
+      const errMsg = (err as any)?.response?.description ?? (err as Error).message;
+      this.logger.error(`Failed to send payment notification to user ${userId}: ${errMsg}`);
+      return { success: false, error: errMsg };
+    }
+  }
+
   async sharePostToUser(
     userId: string,
     postId: string,

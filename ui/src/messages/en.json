@@ -854,6 +854,27 @@
         "requested": "Activation request submitted successfully",
         "error": "Failed to submit activation request",
         "requireApproval": "You need to be approved before you can view and activate subscription plans."
+      },
+      "payment": {
+        "title": "Payment & Activation",
+        "description": "To activate \"{title}\", transfer the amount to one of the accounts below and upload your receipt.",
+        "bankAccounts": "Bank accounts for transfer:",
+        "cardNumber": "Card Number",
+        "cardHolder": "Account Holder",
+        "sheba": "IBAN",
+        "next": "Next",
+        "uploadDesc": "Upload an image of your payment receipt.",
+        "selectFile": "Select file",
+        "changeFile": "Change file",
+        "submitReceipt": "Submit receipt",
+        "back": "Back",
+        "successTitle": "Receipt submitted successfully",
+        "successDesc": "Your payment has been recorded and is pending admin review.",
+        "pendingMessage": "Once approved, you will receive a message in our Bale bot and your subscription will be activated.",
+        "close": "Close",
+        "success": "Receipt uploaded successfully",
+        "error": "Failed to initiate payment",
+        "uploadError": "Failed to upload receipt"
       }
     },
     "usage": {
@@ -870,6 +891,28 @@
         "action": "Action",
         "time": "Time"
       }
+    },
+    "payments": {
+      "title": "My Payments",
+      "description": "Track your payment status.",
+      "amount": "Amount",
+      "currency": "Toman",
+      "receipt": "Receipt",
+      "viewReceipt": "View receipt",
+      "rejectionReason": "Reason: {reason}",
+      "rejectionNoReason": "Your payment was rejected. Please upload a new receipt.",
+      "reUpload": "Re-upload receipt",
+      "reUploadSuccess": "New receipt uploaded successfully",
+      "error": "Failed to upload receipt",
+      "status": {
+        "PENDING": "Pending Review",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected"
+      },
+      "empty": "No payments recorded yet.",
+      "pageInfo": "Page {page} of {totalPages} — {total} total payments",
+      "prev": "Previous",
+      "next": "Next"
     }
   },
   "admin": {
@@ -1015,6 +1058,10 @@
         "usageLogs": {
           "title": "Usage Logs",
           "description": "View user usage logs."
+        },
+        "payments": {
+          "title": "Payments",
+          "description": "Manage user payments, approve or reject them."
         }
       }
     },
@@ -1066,6 +1113,45 @@
       "pageInfo": "Page {page} of {totalPages} — {total} total logs",
       "prev": "Previous",
       "next": "Next"
+    },
+    "payments": {
+      "title": "Payments",
+      "description": "Manage user payments",
+      "filter": {
+        "all": "All",
+        "PENDING": "Pending",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected"
+      },
+      "columns": {
+        "user": "User",
+        "package": "Package",
+        "amount": "Amount",
+        "status": "Status",
+        "receipt": "Receipt",
+        "actions": "Actions"
+      },
+      "status": {
+        "PENDING": "Pending Review",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected"
+      },
+      "viewReceipt": "View receipt",
+      "approveSuccess": "Payment approved successfully",
+      "rejectSuccess": "Payment rejected",
+      "error": "Operation failed",
+      "empty": "No payments found",
+      "pageInfo": "Page {page} of {totalPages} — {total} total payments",
+      "prev": "Previous",
+      "next": "Next",
+      "rejectDialog": {
+        "title": "Reject Payment",
+        "description": "Enter a reason for rejecting this payment.",
+        "reason": "Rejection reason",
+        "placeholder": "Enter rejection reason...",
+        "cancel": "Cancel",
+        "confirm": "Reject Payment"
+      }
     },
     "divarReports": {
       "title": "Divar district price report",

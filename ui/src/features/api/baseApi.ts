@@ -131,6 +131,7 @@ export const apiSlice = createApi({
     'AdminWebsiteSettings',
     'PostsWithPhones',
     'UsageLogs',
+    'Payments',
   ],
   endpoints: () => ({}),
 });

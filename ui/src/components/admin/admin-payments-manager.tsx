@@ -1,12 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, ExternalLink, Loader2, Search, X } from 'lucide-react';
+import { Check, ExternalLink, Loader2, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
@@ -66,8 +65,6 @@ export function AdminPaymentsManager() {
       toast({ title: t('error'), variant: 'destructive' });
     }
   };
-
-  const isPending = (status?: string) => statusFilter === 'PENDING' || (!status && statusFilter === undefined);
 
   return (
     <div className="flex w-full flex-col gap-6 px-4 py-8">

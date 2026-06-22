@@ -33,7 +33,7 @@ export function HomePackageCard({ pkg, onActivate }: HomePackageCardProps) {
 
   return (
     <>
-      <div className="flex h-full flex-col rounded-lg border border-border/70 bg-card p-4 shadow-sm transition-shadow hover:shadow-md md:p-6">
+      <div className="bg-card flex h-full flex-col rounded-lg border border-border/70 p-4 shadow-sm transition-shadow hover:shadow-md md:p-6">
         <div className="flex items-center gap-3">
           {pkg.imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element

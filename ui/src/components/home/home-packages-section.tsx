@@ -26,7 +26,7 @@ export function HomePackagesSection({ packages, onActivate, sectionClassName }: 
       <div className="flex items-center justify-center gap-4 md:hidden">
         <button
           type="button"
-          className={`${prevClass} inline-flex size-10 items-center justify-center rounded-full border border-border/70 bg-card text-foreground shadow-sm transition hover:bg-card/80 disabled:cursor-not-allowed disabled:opacity-40`}
+          className={`${prevClass} bg-card hover:bg-card/80 inline-flex size-10 items-center justify-center rounded-full border border-border/70 text-foreground shadow-sm transition disabled:cursor-not-allowed disabled:opacity-40`}
           aria-label="Previous"
         >
           <ChevronRight className="size-4" aria-hidden />
@@ -36,7 +36,7 @@ export function HomePackagesSection({ packages, onActivate, sectionClassName }: 
         </h2>
         <button
           type="button"
-          className={`${nextClass} inline-flex size-10 items-center justify-center rounded-full border border-border/70 bg-card text-foreground shadow-sm transition hover:bg-card/80 disabled:cursor-not-allowed disabled:opacity-40`}
+          className={`${nextClass} bg-card hover:bg-card/80 inline-flex size-10 items-center justify-center rounded-full border border-border/70 text-foreground shadow-sm transition disabled:cursor-not-allowed disabled:opacity-40`}
           aria-label="Next"
         >
           <ChevronLeft className="size-4" aria-hidden />
@@ -50,7 +50,7 @@ export function HomePackagesSection({ packages, onActivate, sectionClassName }: 
       <div className="relative overflow-hidden md:overflow-visible">
         <button
           type="button"
-          className={`${prevClass} hidden md:inline-flex absolute md:-left-10 left-0 top-1/2 z-10 size-10 -translate-y-1/2 items-center justify-center rounded-full border border-border/70 bg-card text-foreground shadow-sm transition hover:bg-card/80 disabled:cursor-not-allowed disabled:opacity-40`}
+          className={`${prevClass} bg-card hover:bg-card/80 absolute left-0 top-1/2 z-10 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full border border-border/70 text-foreground shadow-sm transition disabled:cursor-not-allowed disabled:opacity-40 md:-left-10 md:inline-flex`}
           aria-label="Previous"
         >
           <ChevronLeft className="size-4" aria-hidden />
@@ -69,7 +69,7 @@ export function HomePackagesSection({ packages, onActivate, sectionClassName }: 
         >
           {packages.map((pkg) => (
             <SwiperSlide key={pkg.id} className="flex h-auto">
-              <div className="h-full w-full">
+              <div className="size-full">
                 <HomePackageCard pkg={pkg} onActivate={onActivate} />
               </div>
             </SwiperSlide>
@@ -77,7 +77,7 @@ export function HomePackagesSection({ packages, onActivate, sectionClassName }: 
         </Swiper>
         <button
           type="button"
-          className={`${nextClass} hidden md:inline-flex absolute md:-right-10 right-0 top-1/2 z-10 size-10 -translate-y-1/2 items-center justify-center rounded-full border border-border/70 bg-card text-foreground shadow-sm transition hover:bg-card/80 disabled:cursor-not-allowed disabled:opacity-40`}
+          className={`${nextClass} bg-card hover:bg-card/80 absolute right-0 top-1/2 z-10 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full border border-border/70 text-foreground shadow-sm transition disabled:cursor-not-allowed disabled:opacity-40 md:-right-10 md:inline-flex`}
           aria-label="Next"
         >
           <ChevronRight className="size-4" aria-hidden />

@@ -3,6 +3,12 @@ import { apiSlice } from '../baseApi';
 import type { ActivateSubscriptionPayload, UserSubscription } from '@/types/subscriptions';
 import type { SubscriptionPackage } from '@/types/packages';
 
+type ActivationStatus = {
+  activationStatus: 'APPROVED' | 'PENDING' | 'REJECTED';
+  activationNote: string | null;
+  activationRequestedAt: string | null;
+};
+
 const subscriptionsApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getCurrentSubscription: builder.query<UserSubscription | null, void>({
@@ -21,6 +27,18 @@ const subscriptionsApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ['UserSubscription', 'SavedFilters'],
     }),
+    requestActivation: builder.mutation<{ status: string; message: string }, { packageId: string }>({
+      query: (body) => ({
+        url: '/user-panel/subscriptions/request-activation',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['UserSubscription', 'AdminUsers'],
+    }),
+    getActivationStatus: builder.query<ActivationStatus | null, void>({
+      query: () => '/user-panel/subscriptions/activation-status',
+      providesTags: ['AdminUsers'],
+    }),
   }),
 });
 
@@ -28,4 +46,6 @@ export const {
   useGetCurrentSubscriptionQuery,
   useGetAvailablePackagesQuery,
   useActivateSubscriptionMutation,
+  useRequestActivationMutation,
+  useGetActivationStatusQuery,
 } = subscriptionsApi;

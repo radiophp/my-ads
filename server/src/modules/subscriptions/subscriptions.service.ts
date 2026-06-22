@@ -1,7 +1,8 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { DiscountCodeType, Prisma, SubscriptionStatus } from '@prisma/client';
+import { ActivationStatus, DiscountCodeType, Prisma, SubscriptionStatus } from '@prisma/client';
 import { PrismaService } from '@app/platform/database/prisma.service';
 import { ActivateSubscriptionDto } from './dto/activate-subscription.dto';
+import { RequestActivationDto } from './dto/request-activation.dto';
 import { UserSubscriptionDto } from './dto/subscription.dto';
 import { PackageDto } from '@app/modules/packages/dto/package.dto';
 
@@ -64,12 +65,55 @@ export class SubscriptionsService {
     return UserSubscriptionDto.fromEntity(subscription);
   }
 
+  async requestActivation(userId: string, dto: RequestActivationDto) {
+    const pkg = await this.prisma.subscriptionPackage.findUnique({ where: { id: dto.packageId } });
+    if (!pkg || !pkg.isActive) {
+      throw new NotFoundException('Subscription package not found.');
+    }
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        activationStatus: ActivationStatus.PENDING,
+        activationRequestedAt: new Date(),
+        activationNote: null,
+      },
+    });
+
+    return { status: 'PENDING', message: 'Activation request submitted.' };
+  }
+
+  async getActivationStatus(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { activationStatus: true, activationNote: true, activationRequestedAt: true },
+    });
+    if (!user) throw new NotFoundException('User not found.');
+    return user;
+  }
+
   async activateSubscription(
     userId: string,
     dto: ActivateSubscriptionDto,
   ): Promise<UserSubscriptionDto> {
     if (!userId) {
       throw new BadRequestException('Missing user.');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { activationStatus: true, activationNote: true },
+    });
+    if (!user) throw new NotFoundException('User not found.');
+    if (user.activationStatus === ActivationStatus.PENDING) {
+      throw new BadRequestException('Your account is pending activation approval.');
+    }
+    if (user.activationStatus === ActivationStatus.REJECTED) {
+      throw new BadRequestException(
+        user.activationNote
+          ? `Activation request rejected: ${user.activationNote}`
+          : 'Activation request rejected.',
+      );
     }
 
     return this.prisma.$transaction(async (tx) => {

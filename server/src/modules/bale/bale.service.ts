@@ -594,6 +594,36 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
     return null;
   }
 
+  async sendActivationApproved(userId: string): Promise<{ success: boolean; error?: string }> {
+    await this.ensureSender();
+    if (!this.sender) {
+      return { success: false, error: 'Bale sender is not initialized' };
+    }
+
+    const chatLink = await this.findChatLink({ userId });
+    if (!chatLink) {
+      return { success: false, error: 'Bale chat link not found' };
+    }
+
+    try {
+      await this.sendWithRetry(
+        'activationApproved',
+        () =>
+          this.sender!.sendMessage(
+            chatLink.chatId,
+            '✅ درخواست فعال‌سازی حساب شما تأیید شد.\nهم‌اکنون می‌توانید از <a href="https://ble.ir">سامانه ماکاران</a> یکی از برنامه‌های اشتراک را فعال کنید.',
+            { parse_mode: 'HTML', link_preview_options: { is_disabled: true } },
+          ),
+        { chatId: chatLink.chatId },
+      );
+      return { success: true };
+    } catch (err) {
+      const errMsg = (err as any)?.response?.description ?? (err as Error).message;
+      this.logger.error(`Failed to send activation approved to user ${userId}: ${errMsg}`);
+      return { success: false, error: errMsg };
+    }
+  }
+
   async sharePostToUser(
     userId: string,
     postId: string,

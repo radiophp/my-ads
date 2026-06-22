@@ -57,6 +57,8 @@ import { FeaturedPostsModule } from './modules/featured-posts/featured-posts.mod
 import { DiscountCodesModule } from './modules/discount-codes/discount-codes.module';
 import { InviteCodesModule } from './modules/invite-codes/invite-codes.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
+import { AdminUsersModule } from './modules/admin-users/admin-users.module';
+import { UsageModule } from './modules/usage/usage.module';
 
 @Module({
   imports: [
@@ -130,6 +132,8 @@ import { SubscriptionsModule } from './modules/subscriptions/subscriptions.modul
     DiscountCodesModule,
     InviteCodesModule,
     SubscriptionsModule,
+    AdminUsersModule,
+    UsageModule,
   ],
 })
 export class AppModule {}

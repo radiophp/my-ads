@@ -22,8 +22,10 @@ import {
   Settings,
   TicketPercent,
   UserPlus,
+  Users,
   Radar,
   Phone,
+  ClipboardList,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -209,13 +211,24 @@ export function AdminDashboard() {
       icon: <Phone className="size-8 text-primary" aria-hidden />,
       title: t('cards.postsWithPhones.title'),
     },
+    users: {
+      href: '/admin/users',
+      icon: <Users className="size-8 text-primary" aria-hidden />,
+      title: t('cards.users.title'),
+      countKey: 'pendingActivations',
+    },
+    usageLogs: {
+      href: '/admin/usage-logs',
+      icon: <ClipboardList className="size-8 text-primary" aria-hidden />,
+      title: t('cards.usageLogs.title'),
+    },
   } satisfies Record<string, DashboardNavItem>;
 
   const sections: DashboardSection[] = [
     {
       title: t('sections.core.title'),
       description: t('sections.core.description'),
-      items: [items.packages, items.discountCodes, items.inviteCodes],
+      items: [items.users, items.packages, items.discountCodes, items.inviteCodes, items.usageLogs],
     },
     {
       title: t('sections.content.title'),

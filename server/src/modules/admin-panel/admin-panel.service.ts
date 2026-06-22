@@ -6,6 +6,7 @@ export type AdminEntityCounts = {
   packages: number;
   discountCodes: number;
   inviteCodes: number;
+  pendingActivations: number;
   provinces: number;
   cities: number;
   districts: number;
@@ -39,6 +40,7 @@ export class AdminPanelService {
       packages,
       discountCodes,
       inviteCodes,
+      pendingActivations,
       provinces,
       cities,
       districts,
@@ -65,6 +67,7 @@ export class AdminPanelService {
       this.prisma.subscriptionPackage.count(),
       this.prisma.discountCode.count(),
       this.prisma.inviteCode.count(),
+      this.prisma.user.count({ where: { activationStatus: 'PENDING' } }),
       this.prisma.province.count(),
       this.prisma.city.count(),
       this.prisma.district.count(),
@@ -95,6 +98,7 @@ export class AdminPanelService {
       packages,
       discountCodes,
       inviteCodes,
+      pendingActivations,
       provinces,
       cities,
       districts,

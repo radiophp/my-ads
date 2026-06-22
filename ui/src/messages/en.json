@@ -833,7 +833,7 @@
       },
       "activate": {
         "title": "Activate subscription",
-        "description": "You are about to activate “{title}”.",
+        "description": "You are about to activate \"{title}\".",
         "discountLabel": "Discount code (optional)",
         "discountPlaceholder": "Enter discount code",
         "inviteLabel": "Invite code (optional)",
@@ -843,6 +843,32 @@
         "processing": "Activating…",
         "success": "Subscription activated successfully!",
         "error": "Failed to activate subscription"
+      },
+      "activation": {
+        "pendingTitle": "Pending Approval",
+        "pendingDesc": "Your activation request has been submitted.",
+        "pendingMessage": "Please wait for admin approval. Once approved, you will receive a message in our Bale bot and can activate a subscription plan.",
+        "rejectedTitle": "Rejected",
+        "rejectedDesc": "Your activation request has been rejected.",
+        "retry": "Request Again",
+        "requested": "Activation request submitted successfully",
+        "error": "Failed to submit activation request",
+        "requireApproval": "You need to be approved before you can view and activate subscription plans."
+      }
+    },
+    "usage": {
+      "title": "Usage Report",
+      "description": "Track your usage against your subscription plan limits.",
+      "noLimits": "No usage limits defined for your current plan.",
+      "remaining": "{count, plural, one={# remaining} other={# remaining}}",
+      "exhausted": "Exhausted",
+      "history": "Usage History",
+      "historyDesc": "Your recent usage activity",
+      "noHistory": "No usage history found.",
+      "columns": {
+        "feature": "Feature",
+        "action": "Action",
+        "time": "Time"
       }
     }
   },
@@ -981,8 +1007,65 @@
         "postsWithPhones": {
           "title": "Posts with Phones",
           "description": "View Divar posts with phone numbers from various sources."
+        },
+        "users": {
+          "title": "Users",
+          "description": "Manage users, approve or reject activation requests."
+        },
+        "usageLogs": {
+          "title": "Usage Logs",
+          "description": "View user usage logs."
         }
       }
+    },
+    "users": {
+      "title": "Users",
+      "description": "Manage system users",
+      "searchPlaceholder": "Search by phone or name…",
+      "filter": {
+        "all": "All",
+        "PENDING": "Pending",
+        "APPROVED": "Approved",
+        "REJECTED": "Rejected"
+      },
+      "columns": {
+        "phone": "Phone",
+        "name": "Name",
+        "role": "Role",
+        "activation": "Activation Status",
+        "subscription": "Current Subscription",
+        "actions": "Actions"
+      },
+      "status": {
+        "APPROVED": "Approved",
+        "PENDING": "Pending",
+        "REJECTED": "Rejected"
+      },
+      "approveSuccess": "User approved successfully",
+      "rejectSuccess": "User request rejected",
+      "error": "Operation failed",
+      "empty": "No users found",
+      "pageInfo": "Page {page} of {totalPages} — {total} total users",
+      "prev": "Previous",
+      "next": "Next"
+    },
+    "usageLogs": {
+      "title": "Usage Logs",
+      "description": "View user usage logs",
+      "userId": "User ID",
+      "userIdPlaceholder": "Enter user ID",
+      "feature": "Feature",
+      "featurePlaceholder": "Filter by feature",
+      "columns": {
+        "user": "User",
+        "feature": "Feature",
+        "action": "Action",
+        "time": "Time"
+      },
+      "empty": "No logs found",
+      "pageInfo": "Page {page} of {totalPages} — {total} total logs",
+      "prev": "Previous",
+      "next": "Next"
     },
     "divarReports": {
       "title": "Divar district price report",

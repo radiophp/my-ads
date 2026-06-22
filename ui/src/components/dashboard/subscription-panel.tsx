@@ -2,12 +2,14 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Crown, Sparkles, TicketPercent, UserPlus, Zap } from 'lucide-react';
+import { Crown, Loader2, Sparkles, TicketPercent, UserPlus, Zap } from 'lucide-react';
 
 import {
   useGetCurrentSubscriptionQuery,
   useGetAvailablePackagesQuery,
   useActivateSubscriptionMutation,
+  useGetActivationStatusQuery,
+  useRequestActivationMutation,
 } from '@/features/api/endpoints/subscriptions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -204,10 +206,96 @@ function ActivateDialog({
   );
 }
 
+function ActivationStatusCard() {
+  const t = useTranslations('dashboard.subscriptionPage');
+  const { data: status, isLoading } = useGetActivationStatusQuery();
+
+  if (isLoading) return null;
+  if (!status) return null;
+  if (status.activationStatus !== 'PENDING') return null;
+
+  return (
+    <Card className="border-amber-500/20 bg-amber-50/50 dark:bg-amber-950/10">
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-2">
+          <Loader2 className="size-5 animate-spin text-amber-600" aria-hidden />
+          <CardTitle className="text-lg">{t('activation.pendingTitle')}</CardTitle>
+        </div>
+        <CardDescription>{t('activation.pendingDesc')}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground">{t('activation.pendingMessage')}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function RejectedActivationCard() {
+  const t = useTranslations('dashboard.subscriptionPage');
+  const { data: status } = useGetActivationStatusQuery();
+
+  if (!status || status.activationStatus !== 'REJECTED') return null;
+
+  return (
+    <Card className="border-red-500/20 bg-red-50/50 dark:bg-red-950/10">
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">✕</span>
+          <CardTitle className="text-lg">{t('activation.rejectedTitle')}</CardTitle>
+        </div>
+        <CardDescription>{t('activation.rejectedDesc')}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {status.activationNote && (
+          <p className="text-sm text-muted-foreground">{status.activationNote}</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function PackageCardWrapper({ pkg }: { pkg: SubscriptionPackage }) {
+  const { data: activationStatus } = useGetActivationStatusQuery();
+  const t = useTranslations('dashboard.subscriptionPage');
+  const { toast } = useToast();
+  const [requestActivation] = useRequestActivationMutation();
+  const [activatingPkg, setActivatingPkg] = useState<SubscriptionPackage | null>(null);
+
+  const isRejected = activationStatus?.activationStatus === 'REJECTED';
+
+  const handleActivate = async (p: SubscriptionPackage) => {
+    if (isRejected) {
+      try {
+        await requestActivation({ packageId: p.id }).unwrap();
+        toast({ title: t('activation.requested') });
+      } catch {
+        toast({ title: t('activation.error'), variant: 'destructive' });
+      }
+    } else {
+      setActivatingPkg(p);
+    }
+  };
+
+  return (
+    <>
+      <HomePackageCard pkg={pkg} onActivate={handleActivate} />
+      <ActivateDialog
+        pkg={activatingPkg}
+        open={Boolean(activatingPkg)}
+        onOpenChange={(open) => { if (!open) setActivatingPkg(null); }}
+      />
+    </>
+  );
+}
+
 export function SubscriptionPanel() {
   const t = useTranslations('dashboard.subscriptionPage');
   const { data: packages = [], isLoading, error } = useGetAvailablePackagesQuery();
-  const [activatingPkg, setActivatingPkg] = useState<SubscriptionPackage | null>(null);
+  const { data: activationStatus } = useGetActivationStatusQuery();
+
+  const isApproved = activationStatus?.activationStatus === 'APPROVED';
+  const isRejected = activationStatus?.activationStatus === 'REJECTED';
+  const showPackages = isApproved || isRejected;
 
   return (
     <div className="space-y-8">
@@ -215,6 +303,10 @@ export function SubscriptionPanel() {
         <h1 className="text-2xl font-bold tracking-tight">{t('title')}</h1>
         <p className="mt-1 text-muted-foreground">{t('description')}</p>
       </div>
+
+      <ActivationStatusCard />
+
+      <RejectedActivationCard />
 
       <CurrentSubscriptionCard />
 
@@ -241,6 +333,12 @@ export function SubscriptionPanel() {
             <p className="text-destructive">{t('loadError')}</p>
           </CardContent>
         </Card>
+      ) : !showPackages ? (
+        <Card>
+          <CardContent className="py-8 text-center">
+            <p className="text-muted-foreground">{t('activation.requireApproval')}</p>
+          </CardContent>
+        </Card>
       ) : packages.length === 0 ? (
         <Card>
           <CardContent className="py-8 text-center">
@@ -250,18 +348,10 @@ export function SubscriptionPanel() {
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {packages.map((pkg) => (
-            <HomePackageCard key={pkg.id} pkg={pkg} onActivate={setActivatingPkg} />
+            <PackageCardWrapper key={pkg.id} pkg={pkg} />
           ))}
         </div>
       )}
-
-      <ActivateDialog
-        pkg={activatingPkg}
-        open={Boolean(activatingPkg)}
-        onOpenChange={(open) => {
-          if (!open) setActivatingPkg(null);
-        }}
-      />
     </div>
   );
 }

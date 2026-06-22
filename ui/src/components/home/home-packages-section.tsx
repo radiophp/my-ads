@@ -9,18 +9,20 @@ import type { SubscriptionPackage } from '@/types/packages';
 
 type HomePackagesSectionProps = {
   packages: SubscriptionPackage[];
+  onActivate?: (pkg: SubscriptionPackage) => void;
+  sectionClassName?: string;
 };
 
 const prevClass = 'packages-swiper-prev';
 const nextClass = 'packages-swiper-next';
 
-export function HomePackagesSection({ packages }: HomePackagesSectionProps) {
+export function HomePackagesSection({ packages, onActivate, sectionClassName }: HomePackagesSectionProps) {
   const t = useTranslations('landing');
 
   if (packages.length === 0) return null;
 
   return (
-    <section className="mx-auto w-full max-w-6xl space-y-6 px-4">
+    <section className={`mx-auto w-full max-w-6xl space-y-6 px-4 ${sectionClassName ?? ''}`}>
       <div className="flex items-center justify-center gap-4 md:hidden">
         <button
           type="button"
@@ -68,7 +70,7 @@ export function HomePackagesSection({ packages }: HomePackagesSectionProps) {
           {packages.map((pkg) => (
             <SwiperSlide key={pkg.id} className="flex h-auto">
               <div className="h-full w-full">
-                <HomePackageCard pkg={pkg} />
+                <HomePackageCard pkg={pkg} onActivate={onActivate} />
               </div>
             </SwiperSlide>
           ))}

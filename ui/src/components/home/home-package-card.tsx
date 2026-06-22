@@ -22,9 +22,10 @@ import type { PackageFeatureKey } from '@/components/admin/constants/package-fea
 
 type HomePackageCardProps = {
   pkg: SubscriptionPackage;
+  onActivate?: (pkg: SubscriptionPackage) => void;
 };
 
-export function HomePackageCard({ pkg }: HomePackageCardProps) {
+export function HomePackageCard({ pkg, onActivate }: HomePackageCardProps) {
   const [open, setOpen] = useState(false);
   const t = useTranslations('landing');
   const fl = useTranslations('admin.packages.form.capabilityLabels');
@@ -99,11 +100,17 @@ export function HomePackageCard({ pkg }: HomePackageCardProps) {
               ) : null}
             </div>
           ) : <div />}
-          <Button asChild size="sm">
-            <Link href="/dashboard/subscription">
+          {onActivate ? (
+            <Button size="sm" onClick={() => onActivate(pkg)}>
               {pkg.isTrial ? t('packages.trial') : t('packages.buy')}
-            </Link>
-          </Button>
+            </Button>
+          ) : (
+            <Button asChild size="sm">
+              <Link href="/dashboard/subscription">
+                {pkg.isTrial ? t('packages.trial') : t('packages.buy')}
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
       <Dialog open={open} onOpenChange={setOpen}>

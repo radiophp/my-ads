@@ -44,6 +44,7 @@ import {
   Info,
   LogIn,
   Monitor,
+  Gem,
 } from 'lucide-react';
 import { useNotificationsSocket } from '@/features/notifications/useNotificationsSocket';
 import { useNotificationPreferences } from '@/features/notifications/useNotificationPreferences';
@@ -61,6 +62,7 @@ type NavIconKey =
   | 'dashboard'
   | 'ringBinder'
   | 'savedFilters'
+  | 'subscription'
   | 'notifications'
   | 'filters'
   | 'admin'
@@ -83,6 +85,7 @@ const navIconComponents: Record<NavIconKey, typeof LayoutDashboard> = {
   dashboard: LayoutDashboard,
   ringBinder: FolderKanban,
   savedFilters: Bookmark,
+  subscription: Gem,
   notifications: Bell,
   filters: Filter,
   admin: ShieldCheck,
@@ -362,6 +365,13 @@ export function SiteHeader() {
       icon: 'savedFilters' as const,
     },
     {
+      key: 'subscription',
+      label: t('header.nav.subscription'),
+      href: '/dashboard/subscription',
+      visible: showAuthNav,
+      icon: 'subscription' as const,
+    },
+    {
       key: 'notifications',
       label: t('header.nav.notifications'),
       href: '/dashboard/notifications',
@@ -484,6 +494,15 @@ export function SiteHeader() {
               >
                 {renderNavIcon('savedFilters', 'hidden lg:block')}
                 {t('header.nav.savedFilters')}
+              </Link>
+            )}
+            {showAuthNav && (
+              <Link
+                href="/dashboard/subscription"
+                className="items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-secondary/60 hover:text-secondary-foreground sm:inline-flex"
+              >
+                {renderNavIcon('subscription', 'hidden lg:block')}
+                {t('header.nav.subscription')}
               </Link>
             )}
             {showAuthNav && (

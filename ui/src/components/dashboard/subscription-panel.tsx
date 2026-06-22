@@ -1,0 +1,349 @@
+'use client';
+
+import { useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { Check, Crown, Sparkles, TicketPercent, UserPlus, Zap } from 'lucide-react';
+
+import {
+  useGetCurrentSubscriptionQuery,
+  useGetAvailablePackagesQuery,
+  useActivateSubscriptionMutation,
+} from '@/features/api/endpoints/subscriptions';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/components/ui/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import type { SubscriptionPackage } from '@/types/packages';
+
+function PlanIcon({ isTrial }: { isTrial: boolean }) {
+  if (isTrial) return <Sparkles className="size-5 text-amber-500" aria-hidden />;
+  return <Crown className="size-5 text-primary" aria-hidden />;
+}
+
+function CurrentSubscriptionCard() {
+  const t = useTranslations('dashboard.subscriptionPage');
+  const { data: subscription, isLoading, error } = useGetCurrentSubscriptionQuery();
+
+  if (isLoading) {
+    return (
+      <Card className="border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-950/10">
+        <CardHeader>
+          <div className="h-5 w-40 animate-pulse rounded bg-muted" />
+          <div className="h-4 w-60 animate-pulse rounded bg-muted" />
+        </CardHeader>
+        <CardContent>
+          <div className="h-4 w-32 animate-pulse rounded bg-muted" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error || !subscription) {
+    return null;
+  }
+
+  const daysLeft = Math.max(
+    0,
+    Math.ceil((new Date(subscription.endsAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
+  );
+
+  return (
+    <Card className="border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-950/10">
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-2">
+          <Crown className="size-5 text-emerald-600" aria-hidden />
+          <CardTitle className="text-lg">{t('current.title')}</CardTitle>
+        </div>
+        <CardDescription>{t('current.description')}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+          <span className="font-semibold text-emerald-700 dark:text-emerald-400">
+            {subscription.package?.title}
+          </span>
+          <span className="text-muted-foreground">
+            {t('current.daysLeft', { count: daysLeft })}
+          </span>
+          {subscription.isTrial && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+              <Sparkles className="size-3" aria-hidden />
+              {t('current.trial')}
+            </span>
+          )}
+          {subscription.bonusDays > 0 && (
+            <span className="text-xs text-muted-foreground">
+              {t('current.bonusDays', { count: subscription.bonusDays })}
+            </span>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function PackageCard({
+  pkg,
+  onActivate,
+}: {
+  pkg: SubscriptionPackage;
+  onActivate: (pkg: SubscriptionPackage) => void;
+}) {
+  const t = useTranslations('dashboard.subscriptionPage');
+  const price = Number(pkg.discountedPrice);
+  const originalPrice = Number(pkg.actualPrice);
+  const hasDiscount = originalPrice > price;
+
+  return (
+    <Card
+      className={`relative flex flex-col transition-shadow hover:shadow-md ${pkg.isTrial ? 'border-amber-200 dark:border-amber-800' : ''}`}
+    >
+      {pkg.isTrial && (
+        <div className="absolute -top-2.5 left-1/2 -translate-x-1/2">
+          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-3 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+            <Sparkles className="size-3" aria-hidden />
+            {t('package.trialBadge')}
+          </span>
+        </div>
+      )}
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-2">
+          <PlanIcon isTrial={pkg.isTrial} />
+          <CardTitle className="text-base">{pkg.title}</CardTitle>
+        </div>
+        {pkg.description && (
+          <CardDescription className="line-clamp-2">{pkg.description}</CardDescription>
+        )}
+      </CardHeader>
+      <CardContent className="flex flex-1 flex-col gap-4">
+        <div className="space-y-1">
+          <div className="flex items-baseline gap-1">
+            <span className="text-2xl font-bold">{price.toLocaleString()}</span>
+            <span className="text-sm text-muted-foreground">{t('package.currency')}</span>
+          </div>
+          {hasDiscount && (
+            <span className="text-sm text-muted-foreground line-through">
+              {originalPrice.toLocaleString()} {t('package.currency')}
+            </span>
+          )}
+        </div>
+
+        <ul className="space-y-2 text-sm">
+          <li className="flex items-center gap-2">
+            <Check className="size-4 text-emerald-500" aria-hidden />
+            <span>
+              {t('package.duration', { count: pkg.durationDays })}
+              {pkg.freeDays > 0 && ` + ${t('package.freeDays', { count: pkg.freeDays })}`}
+            </span>
+          </li>
+          <li className="flex items-center gap-2">
+            <Check className="size-4 text-emerald-500" aria-hidden />
+            <span>{t('package.users', { count: pkg.includedUsers })}</span>
+          </li>
+          <li className="flex items-center gap-2">
+            <Check className="size-4 text-emerald-500" aria-hidden />
+            <span>{t('package.savedFilters', { count: pkg.savedFiltersLimit })}</span>
+          </li>
+        </ul>
+
+        <div className="mt-auto pt-2">
+          <Button
+            className="w-full"
+            variant={pkg.isTrial ? 'outline' : 'default'}
+            onClick={() => onActivate(pkg)}
+          >
+            {pkg.isTrial ? t('package.tryAction') : t('package.buyAction')}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ActivateDialog({
+  pkg,
+  open,
+  onOpenChange,
+}: {
+  pkg: SubscriptionPackage | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const t = useTranslations('dashboard.subscriptionPage');
+  const { toast } = useToast();
+  const [activate, { isLoading }] = useActivateSubscriptionMutation();
+  const [discountCode, setDiscountCode] = useState('');
+  const [inviteCode, setInviteCode] = useState('');
+
+  if (!pkg) return null;
+
+  const handleActivate = async () => {
+    try {
+      await activate({
+        packageId: pkg.id,
+        discountCode: discountCode.trim() || undefined,
+        inviteCode: inviteCode.trim() || undefined,
+      }).unwrap();
+      toast({ title: t('activate.success') });
+      onOpenChange(false);
+      setDiscountCode('');
+      setInviteCode('');
+    } catch (err: unknown) {
+      const message =
+        err && typeof err === 'object' && 'data' in err
+          ? String((err as { data: { message?: string } }).data?.message ?? '')
+          : '';
+      toast({
+        title: t('activate.error'),
+        description: message || undefined,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const price = Number(pkg.discountedPrice);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{t('activate.title')}</DialogTitle>
+          <DialogDescription>{t('activate.description', { title: pkg.title })}</DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-2">
+          <div className="rounded-lg border bg-muted/30 p-3">
+            <div className="flex items-center justify-between">
+              <span className="font-medium">{pkg.title}</span>
+              <span className="text-lg font-bold">{price.toLocaleString()}</span>
+            </div>
+            <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+              <span>{t('package.duration', { count: pkg.durationDays })}</span>
+              {pkg.freeDays > 0 && (
+                <span>+{t('package.freeDays', { count: pkg.freeDays })}</span>
+              )}
+            </div>
+          </div>
+
+          {pkg.allowDiscountCodes && (
+            <div className="space-y-2">
+              <Label htmlFor="discountCode" className="flex items-center gap-2">
+                <TicketPercent className="size-4 text-muted-foreground" aria-hidden />
+                {t('activate.discountLabel')}
+              </Label>
+              <Input
+                id="discountCode"
+                value={discountCode}
+                onChange={(e) => setDiscountCode(e.target.value)}
+                placeholder={t('activate.discountPlaceholder')}
+                maxLength={64}
+              />
+            </div>
+          )}
+
+          {pkg.allowInviteCodes && (
+            <div className="space-y-2">
+              <Label htmlFor="inviteCode" className="flex items-center gap-2">
+                <UserPlus className="size-4 text-muted-foreground" aria-hidden />
+                {t('activate.inviteLabel')}
+              </Label>
+              <Input
+                id="inviteCode"
+                value={inviteCode}
+                onChange={(e) => setInviteCode(e.target.value)}
+                placeholder={t('activate.invitePlaceholder')}
+                maxLength={64}
+              />
+            </div>
+          )}
+        </div>
+
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
+            {t('activate.cancel')}
+          </Button>
+          <Button onClick={handleActivate} disabled={isLoading}>
+            {isLoading ? (
+              <span className="flex items-center gap-2">
+                <Zap className="size-4 animate-pulse" aria-hidden />
+                {t('activate.processing')}
+              </span>
+            ) : (
+              t('activate.confirm')
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function SubscriptionPanel() {
+  const t = useTranslations('dashboard.subscriptionPage');
+  const { data: packages = [], isLoading, error } = useGetAvailablePackagesQuery();
+  const [activatingPkg, setActivatingPkg] = useState<SubscriptionPackage | null>(null);
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">{t('title')}</h1>
+        <p className="mt-1 text-muted-foreground">{t('description')}</p>
+      </div>
+
+      <CurrentSubscriptionCard />
+
+      {isLoading ? (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <div className="h-5 w-32 animate-pulse rounded bg-muted" />
+                <div className="h-4 w-48 animate-pulse rounded bg-muted" />
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="h-8 w-24 animate-pulse rounded bg-muted" />
+                <div className="h-4 w-full animate-pulse rounded bg-muted" />
+                <div className="h-4 w-full animate-pulse rounded bg-muted" />
+                <div className="h-4 w-3/4 animate-pulse rounded bg-muted" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : error ? (
+        <Card className="border-destructive/20">
+          <CardContent className="py-8 text-center">
+            <p className="text-destructive">{t('loadError')}</p>
+          </CardContent>
+        </Card>
+      ) : packages.length === 0 ? (
+        <Card>
+          <CardContent className="py-8 text-center">
+            <p className="text-muted-foreground">{t('empty')}</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {packages.map((pkg) => (
+            <PackageCard key={pkg.id} pkg={pkg} onActivate={setActivatingPkg} />
+          ))}
+        </div>
+      )}
+
+      <ActivateDialog
+        pkg={activatingPkg}
+        open={Boolean(activatingPkg)}
+        onOpenChange={(open) => {
+          if (!open) setActivatingPkg(null);
+        }}
+      />
+    </div>
+  );
+}

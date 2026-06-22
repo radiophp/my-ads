@@ -11,6 +11,7 @@
       "dashboard": "داشبورد",
       "ringBinder": "زونکن",
       "savedFilters": "فیلترها",
+      "subscription": "اشتراک",
       "notifications": "اعلان‌ها",
       "filters": "فیلترها",
       "admin": "مدیریت",
@@ -55,7 +56,8 @@
     "posts": "آگهی‌ها",
     "preview": "پیش‌نمایش",
     "offline": "آفلاین",
-    "sessions": "نشست‌ها"
+    "sessions": "نشست‌ها",
+    "subscription": "اشتراک"
   },
   "landing": {
     "title": "به ماهان فایل خوش آمدید",
@@ -795,6 +797,43 @@
       "shareMessageBusinessLabel": "نوع آگهی‌دهنده",
       "loginTitle": "برای ادامه وارد شوید",
       "loginDescription": "مشاهده جزئیات و فیلتر دقیق آگهی‌ها فقط برای کاربران واردشده امکان‌پذیر است."
+    },
+    "subscriptionPage": {
+      "badge": "اشتراک",
+      "title": "اشتراک و برنامه‌ها",
+      "description": "برنامه‌ای متناسب با نیاز خود انتخاب کنید و امکانات بیشتری را فعال کنید.",
+      "loadError": "امکان بارگذاری برنامه‌های اشتراک وجود ندارد. دوباره تلاش کنید.",
+      "empty": "در حال حاضر هیچ برنامه اشتراکی در دسترس نیست.",
+      "current": {
+        "title": "برنامه فعال",
+        "description": "اشتراک شما فعال است.",
+        "daysLeft": "{count, plural, one={# روز باقی‌مانده} other={# روز باقی‌مانده}}",
+        "trial": "آزمایشی",
+        "bonusDays": "+{count, plural, one={# روز هدیه} other={# روز هدیه}}"
+      },
+      "package": {
+        "trialBadge": "آزمایشی",
+        "currency": "تومان",
+        "duration": "{count, plural, one={# روز} other={# روز}}",
+        "freeDays": "{count, plural, one={# روز رایگان} other={# روز رایگان}}",
+        "users": "{count, plural, one={# کاربر} other={# کاربر}}",
+        "savedFilters": "{count, plural, one={# فیلتر ذخیره‌شده} other={# فیلتر ذخیره‌شده}}",
+        "tryAction": "شروع آزمایشی رایگان",
+        "buyAction": "انتخاب برنامه"
+      },
+      "activate": {
+        "title": "فعال‌سازی اشتراک",
+        "description": "در حال فعال‌سازی «{title}» هستید.",
+        "discountLabel": "کد تخفیف (اختیاری)",
+        "discountPlaceholder": "کد تخفیف را وارد کنید",
+        "inviteLabel": "کد دعوت (اختیاری)",
+        "invitePlaceholder": "کد دعوت را وارد کنید",
+        "cancel": "انصراف",
+        "confirm": "فعال‌سازی",
+        "processing": "در حال فعال‌سازی…",
+        "success": "اشتراک با موفقیت فعال شد!",
+        "error": "فعال‌سازی اشتراک ناموفق بود"
+      }
     }
   },
   "admin": {

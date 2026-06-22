@@ -11,6 +11,7 @@
       "dashboard": "Dashboard",
       "ringBinder": "Ring binder",
       "savedFilters": "Saved filters",
+      "subscription": "Subscription",
       "notifications": "Notifications",
       "filters": "Filters",
       "admin": "Admin",
@@ -55,7 +56,8 @@
     "posts": "Posts",
     "preview": "Preview",
     "offline": "Offline",
-    "sessions": "Sessions"
+    "sessions": "Sessions",
+    "subscription": "Subscription"
   },
   "landing": {
     "title": "Welcome to Mahan File",
@@ -794,6 +796,43 @@
       "shareMessageBusinessLabel": "Business type",
       "loginTitle": "Sign in to continue",
       "loginDescription": "Full details and advanced filters are available after signing in."
+    },
+    "subscriptionPage": {
+      "badge": "Subscription",
+      "title": "Subscription & Plans",
+      "description": "Choose a plan that fits your needs and unlock more features.",
+      "loadError": "Unable to load subscription plans. Please try again.",
+      "empty": "No subscription plans are available at the moment.",
+      "current": {
+        "title": "Active plan",
+        "description": "Your subscription is active and running.",
+        "daysLeft": "{count, plural, one={# day left} other={# days left}}",
+        "trial": "Trial",
+        "bonusDays": "+{count, plural, one={# bonus day} other={# bonus days}}"
+      },
+      "package": {
+        "trialBadge": "Trial",
+        "currency": "Toman",
+        "duration": "{count, plural, one={# day} other={# days}}",
+        "freeDays": "{count, plural, one={# free day} other={# free days}}",
+        "users": "{count, plural, one={# user} other={# users}}",
+        "savedFilters": "{count, plural, one={# saved filter} other={# saved filters}}",
+        "tryAction": "Start free trial",
+        "buyAction": "Select plan"
+      },
+      "activate": {
+        "title": "Activate subscription",
+        "description": "You are about to activate “{title}”.",
+        "discountLabel": "Discount code (optional)",
+        "discountPlaceholder": "Enter discount code",
+        "inviteLabel": "Invite code (optional)",
+        "invitePlaceholder": "Enter invite code",
+        "cancel": "Cancel",
+        "confirm": "Activate",
+        "processing": "Activating…",
+        "success": "Subscription activated successfully!",
+        "error": "Failed to activate subscription"
+      }
     }
   },
   "admin": {

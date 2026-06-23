@@ -640,9 +640,9 @@ function PaymentDialog({
                       onChange={(e) => setFile(e.target.files?.[0] ?? null)}
                     />
                     {file ? (
-                      <div className="flex items-center gap-3 rounded-lg border bg-muted/30 p-3">
-                        <ImageIcon className="size-8 shrink-0 text-muted-foreground" />
-                        <div className="min-w-0 flex-1 text-sm">
+                      <div className="flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed bg-muted/30 p-8">
+                        <ImageIcon className="size-10 shrink-0 text-muted-foreground" />
+                        <div className="text-center text-sm">
                           <p className="truncate font-medium">{file.name}</p>
                           <p className="text-muted-foreground">{(file.size / 1024).toFixed(1)} KB</p>
                         </div>
@@ -651,10 +651,14 @@ function PaymentDialog({
                         </Button>
                       </div>
                     ) : (
-                      <Button variant="outline" className="w-full" onClick={() => fileRef.current?.click()}>
-                        <Upload className="size-4" />
-                        {t('payment.selectFile')}
-                      </Button>
+                      <button
+                        type="button"
+                        onClick={() => fileRef.current?.click()}
+                        className="flex w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-8 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                      >
+                        <Upload className="size-10" />
+                        <span>{t('payment.selectFile')}</span>
+                      </button>
                     )}
                   </div>
                 </>

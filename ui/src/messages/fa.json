@@ -907,7 +907,11 @@
         "expired": "منقضی شده",
         "countdownDays": "{days} روز و {hours} ساعت",
         "countdownHours": "{hours} ساعت و {minutes} دقیقه",
-        "countdownMinutes": "{minutes} دقیقه"
+        "countdownMinutes": "{minutes} دقیقه",
+        "confirmTitle": "لغو پرداخت",
+        "confirmDescription": "آیا از لغو این پرداخت اطمینان دارید؟ در صورت لغو، کد تخفیف یا دعوت خود را از دست نخواهید داد و می‌توانید مجدداً استفاده کنید.",
+        "confirmBack": "بازگشت",
+        "confirmYes": "بله، لغو شود"
       }
     },
     "usage": {

@@ -24,6 +24,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { HomePackageCard } from '@/components/home/home-package-card';
 import {
   useGetBankAccountsQuery,
@@ -703,6 +713,7 @@ function PendingPaymentCard({ pending, onCancel }: { pending: NonNullable<Return
   const t = useTranslations('dashboard.subscriptionPage.pendingPayment');
   const tp = useTranslations('dashboard.subscriptionPage.package');
   const [cancelling, setCancelling] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [remaining, setRemaining] = useState('');
 
   useEffect(() => {
@@ -727,7 +738,7 @@ function PendingPaymentCard({ pending, onCancel }: { pending: NonNullable<Return
     return () => clearInterval(interval);
   }, [pending.expiresAt, t]);
 
-  const handleCancel = async () => {
+  const handleConfirmCancel = async () => {
     setCancelling(true);
     try {
       await onCancel();
@@ -737,41 +748,59 @@ function PendingPaymentCard({ pending, onCancel }: { pending: NonNullable<Return
   };
 
   return (
-    <Card className="border-amber-500/20 bg-amber-50/50 dark:bg-amber-950/10">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle className="text-base">{t('title')}</CardTitle>
-          <CardDescription>{t('description')}</CardDescription>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">{t('package')}</span>
-          <span className="font-medium">{pending.package?.title ?? '—'}</span>
-        </div>
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">{t('amount')}</span>
-          <span className="font-medium">{Number(pending.finalAmount).toLocaleString()} {tp('currency')}</span>
-        </div>
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">{t('receipt')}</span>
-          <span>{pending.receiptUrl ? t('uploaded') : t('notUploaded')}</span>
-        </div>
-        {pending.expiresAt && (
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">{t('deadline')}</span>
-            <span className="flex items-center gap-1 font-medium text-amber-600 dark:text-amber-400">
-              <Clock className="size-3.5" />
-              {remaining}
-            </span>
+    <>
+      <Card className="border-amber-500/20 bg-amber-50/50 dark:bg-amber-950/10">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-base">{t('title')}</CardTitle>
+            <CardDescription>{t('description')}</CardDescription>
           </div>
-        )}
-        <Button variant="destructive" size="sm" onClick={handleCancel} disabled={cancelling} className="w-full">
-          {cancelling ? <Loader2 className="size-4 animate-spin" /> : <X className="size-4" />}
-          {t('cancelButton')}
-        </Button>
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">{t('package')}</span>
+            <span className="font-medium">{pending.package?.title ?? '—'}</span>
+          </div>
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">{t('amount')}</span>
+            <span className="font-medium">{Number(pending.finalAmount).toLocaleString()} {tp('currency')}</span>
+          </div>
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">{t('receipt')}</span>
+            <span>{pending.receiptUrl ? t('uploaded') : t('notUploaded')}</span>
+          </div>
+          {pending.expiresAt && (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">{t('deadline')}</span>
+              <span className="flex items-center gap-1 font-medium text-amber-600 dark:text-amber-400">
+                <Clock className="size-3.5" />
+                {remaining}
+              </span>
+            </div>
+          )}
+          <Button variant="destructive" size="sm" onClick={() => setShowConfirm(true)} className="w-full">
+            <X className="size-4" />
+            {t('cancelButton')}
+          </Button>
+        </CardContent>
+      </Card>
+
+      <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('confirmTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>{t('confirmDescription')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('confirmBack')}</AlertDialogCancel>
+            <AlertDialogAction onClick={() => void handleConfirmCancel()} disabled={cancelling}>
+              {cancelling ? <Loader2 className="size-4 animate-spin" /> : null}
+              {t('confirmYes')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 

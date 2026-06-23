@@ -654,9 +654,7 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
     );
   }
 
-  async sendPaymentAutoCancelled(
-    paymentId: string,
-  ): Promise<{ success: boolean; error?: string }> {
+  async sendPaymentAutoCancelled(paymentId: string): Promise<{ success: boolean; error?: string }> {
     const payment = await this.prisma.paymentRequest.findUnique({
       where: { id: paymentId },
       include: { package: { select: { title: true } } },

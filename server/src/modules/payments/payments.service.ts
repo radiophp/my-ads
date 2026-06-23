@@ -581,10 +581,14 @@ export class PaymentsService {
       try {
         const result = await this.baleBotService.sendPaymentAutoCancelled(id);
         if (!result.success) {
-          this.logger.warn(`Failed to send auto-cancel notification for payment ${id}: ${result.error}`);
+          this.logger.warn(
+            `Failed to send auto-cancel notification for payment ${id}: ${result.error}`,
+          );
         }
       } catch (err) {
-        this.logger.error(`Error sending auto-cancel notification for payment ${id}: ${(err as Error).message}`);
+        this.logger.error(
+          `Error sending auto-cancel notification for payment ${id}: ${(err as Error).message}`,
+        );
       }
     }
 

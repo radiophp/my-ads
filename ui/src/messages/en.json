@@ -906,7 +906,11 @@
         "expired": "Expired",
         "countdownDays": "{days}d {hours}h",
         "countdownHours": "{hours}h {minutes}m",
-        "countdownMinutes": "{minutes}m"
+        "countdownMinutes": "{minutes}m",
+        "confirmTitle": "Cancel Payment",
+        "confirmDescription": "Are you sure you want to cancel this payment? Your discount or invite code will not be lost and can be reused.",
+        "confirmBack": "Go Back",
+        "confirmYes": "Yes, Cancel"
       }
     },
     "usage": {

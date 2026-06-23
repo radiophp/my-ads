@@ -1454,7 +1454,7 @@
         "turnstileEnabled": "Enable Cloudflare Turnstile human verification",
         "taxPercentage": "VAT Percentage",
         "paymentTimeLimitDays": "Payment Time Limit (working days)",
-        "days": "days"
+        "days": "days",
         "taxPercentageHint": "Enter tax percentage (e.g., 9)"
       },
       "actions": {

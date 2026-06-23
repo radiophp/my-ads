@@ -132,7 +132,8 @@
       "trial": "امتحان رایگان",
       "freeDays": "+{days} روز هدیه",
       "users": "{count} کاربر",
-      "duration": "{days} روز"
+      "duration": "{days} روز",
+      "moreInfo": "اطلاعات بیشتر"
     },
     "news": {
       "title": "آخرین اخبار بازار",
@@ -825,8 +826,8 @@
       "package": {
         "trialBadge": "آزمایشی",
         "currency": "تومان",
-        "duration": "{count, plural, one={# روز} other={# روز}}",
-        "freeDays": "{count, plural, one={# روز رایگان} other={# روز رایگان}}",
+        "duration": "{count} روز",
+        "freeDays": "{count} روز رایگان",
         "users": "{count, plural, one={# کاربر} other={# کاربر}}",
         "savedFilters": "{count, plural, one={# فیلتر ذخیره‌شده} other={# فیلتر ذخیره‌شده}}",
         "tryAction": "شروع آزمایشی رایگان",
@@ -875,7 +876,8 @@
         "close": "بستن",
         "success": "رسید با موفقیت بارگذاری شد",
         "error": "خطا در شروع فرایند پرداخت",
-        "uploadError": "خطا در بارگذاری رسید"
+        "uploadError": "خطا در بارگذاری رسید",
+        "copied": "کپی شد"
       }
     },
     "usage": {

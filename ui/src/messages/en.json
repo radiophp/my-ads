@@ -132,7 +132,8 @@
       "trial": "Try free",
       "freeDays": "+{days} bonus days",
       "users": "{count, plural, one {{count} user} other {{count} users}}",
-      "duration": "{days, plural, one {{days} day} other {{days} days}}"
+      "duration": "{days, plural, one {{days} day} other {{days} days}}",
+      "moreInfo": "More info"
     },
     "news": {
       "title": "Latest market news",
@@ -874,7 +875,8 @@
         "close": "Close",
         "success": "Receipt uploaded successfully",
         "error": "Failed to initiate payment",
-        "uploadError": "Failed to upload receipt"
+        "uploadError": "Failed to upload receipt",
+        "copied": "Copied"
       }
     },
     "usage": {

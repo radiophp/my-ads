@@ -28,6 +28,7 @@ type WebsiteSettingRecord = {
   instagramUrl: string | null;
   telegramChannelUrl: string | null;
   telegramBotUrl: string | null;
+  baleBotUrl: string | null;
   aboutDescription: string | null;
   address: string | null;
   turnstileEnabled: boolean;
@@ -42,6 +43,7 @@ export type WebsiteSettingsItem = {
   instagramUrl: string | null;
   telegramChannelUrl: string | null;
   telegramBotUrl: string | null;
+  baleBotUrl: string | null;
   aboutDescription: string | null;
   address: string | null;
   turnstileEnabled: boolean;

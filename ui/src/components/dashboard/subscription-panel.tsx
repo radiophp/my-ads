@@ -798,7 +798,7 @@ function PendingPaymentCard({ pending, onCancel, onContinue }: {
             {pending.receiptUrl ? (
               <button type="button" onClick={() => setShowImage(true)} className="overflow-hidden rounded-md border">
                 <img
-                  src={`/storage/uploads/${pending.receiptUrl}`}
+                  src={`/storage/upload/${pending.receiptUrl}`}
                   alt={t('receipt')}
                   className="size-12 object-cover"
                 />
@@ -852,7 +852,7 @@ function PendingPaymentCard({ pending, onCancel, onContinue }: {
         <DialogContent className="max-w-[90vw] border-0 bg-black/90 p-0 sm:max-w-[80vw]">
           <div className="flex items-center justify-center p-2">
             <img
-              src={`/storage/uploads/${pending.receiptUrl}`}
+              src={`/storage/upload/${pending.receiptUrl}`}
               alt={t('receipt')}
               className="max-h-[85dvh] w-auto rounded-lg object-contain"
             />

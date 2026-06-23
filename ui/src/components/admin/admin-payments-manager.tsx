@@ -126,7 +126,7 @@ export function AdminPaymentsManager() {
                       <td className="whitespace-nowrap py-3 pr-4">
                         {payment.receiptUrl ? (
                           <a
-                            href={`/storage/uploads/${payment.receiptUrl}`}
+                            href={`/storage/upload/${payment.receiptUrl}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 text-primary hover:underline"

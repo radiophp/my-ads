@@ -103,7 +103,7 @@ export function PaymentsManager() {
                   <div className="text-sm">
                     <span className="text-muted-foreground">{t('receipt')}: </span>
                     <a
-                      href={`/storage/uploads/${payment.receiptUrl}`}
+                      href={`/storage/upload/${payment.receiptUrl}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-primary hover:underline"

@@ -32,6 +32,7 @@ type WebsiteSettingRecord = {
   aboutDescription: string | null;
   address: string | null;
   turnstileEnabled: boolean;
+  taxPercentage: number | null;
   updatedAt: Date;
 };
 
@@ -45,6 +46,7 @@ export type WebsiteSettingsItem = {
   aboutDescription: string | null;
   address: string | null;
   turnstileEnabled: boolean;
+  taxPercentage: number;
   updatedAt?: Date;
 };
 
@@ -109,6 +111,7 @@ export class WebsiteSettingsService {
       aboutDescription: record?.aboutDescription ?? null,
       address: record?.address ?? null,
       turnstileEnabled: record?.turnstileEnabled ?? false,
+      taxPercentage: record?.taxPercentage ?? 0,
       updatedAt: record?.updatedAt,
     };
   }
@@ -187,6 +190,7 @@ export class WebsiteSettingsService {
           aboutDescription: normalizeValue(dto.aboutDescription),
           address: normalizeValue(dto.address),
           turnstileEnabled: dto.turnstileEnabled ?? false,
+          taxPercentage: dto.taxPercentage ?? 0,
         },
         update: {
           phoneContacts: normalizeContacts(dto.phoneContacts as WebsiteContact[]),
@@ -197,6 +201,7 @@ export class WebsiteSettingsService {
           aboutDescription: normalizeValue(dto.aboutDescription),
           address: normalizeValue(dto.address),
           turnstileEnabled: dto.turnstileEnabled ?? false,
+          taxPercentage: dto.taxPercentage ?? 0,
         },
       });
       const item = this.toItem(record);

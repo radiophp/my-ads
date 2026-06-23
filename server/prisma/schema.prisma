@@ -1071,6 +1071,7 @@ model WebsiteSetting {
   aboutDescription    String?
   address             String?
   turnstileEnabled    Boolean  @default(false)
+  taxPercentage       Float    @default(0)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
@@ -1120,6 +1121,12 @@ model PaymentRequest {
   amount          Decimal       @db.Decimal(12, 2)
   discountCodeId  String?
   inviteCodeId    String?
+  originalPrice   Decimal       @db.Decimal(12, 2) @default(0)
+  discountAmount  Decimal?      @db.Decimal(12, 2)
+  taxPercentage   Float         @default(0)
+  taxAmount       Decimal       @db.Decimal(12, 2) @default(0)
+  finalAmount     Decimal       @db.Decimal(12, 2) @default(0)
+  inviteBonusDays Int?
   receiptUrl      String?
   status          PaymentStatus @default(PENDING)
   rejectionReason String?

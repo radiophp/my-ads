@@ -12,6 +12,7 @@ import type { WebsiteContact, WebsiteSettings } from '@/types/website-settings';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
@@ -25,6 +26,7 @@ type WebsiteSettingsDraft = {
   aboutDescription: string;
   address: string;
   turnstileEnabled: boolean;
+  taxPercentage: number;
 };
 
 const CONTACT_SLOTS = 5;
@@ -62,6 +64,7 @@ export function AdminWebsiteSettingsManager() {
     aboutDescription: '',
     address: '',
     turnstileEnabled: false,
+    taxPercentage: 0,
   }));
 
   useEffect(() => {
@@ -75,6 +78,7 @@ export function AdminWebsiteSettingsManager() {
       aboutDescription: data.aboutDescription ?? '',
       address: data.address ?? '',
       turnstileEnabled: data.turnstileEnabled ?? false,
+      taxPercentage: data.taxPercentage ?? 0,
     });
   }, [data]);
 
@@ -97,6 +101,7 @@ export function AdminWebsiteSettingsManager() {
       aboutDescription: normalizeField(draft.aboutDescription),
       address: normalizeField(draft.address),
       turnstileEnabled: draft.turnstileEnabled,
+      taxPercentage: draft.taxPercentage,
     }),
     [draft],
   );
@@ -290,6 +295,27 @@ export function AdminWebsiteSettingsManager() {
                   {t('fields.turnstileEnabled')}
                 </span>
               </label>
+            </div>
+          </section>
+
+          <section className="rounded-xl border border-border/60 p-4">
+            <h3 className="text-sm font-semibold text-foreground">{t('sections.finance')}</h3>
+            <p className="mt-1 text-xs text-muted-foreground">{t('sections.financeHint')}</p>
+            <div className="mt-4">
+              <Label htmlFor="taxPercentage" className="text-sm font-medium">{t('fields.taxPercentage')}</Label>
+              <div className="mt-2 flex items-center gap-2">
+                <Input
+                  id="taxPercentage"
+                  type="number"
+                  min={0}
+                  max={100}
+                  step={0.5}
+                  value={draft.taxPercentage}
+                  onChange={(e) => setDraft((c) => ({ ...c, taxPercentage: Number(e.target.value) }))}
+                  className="w-24"
+                />
+                <span className="text-sm text-muted-foreground">%</span>
+              </div>
             </div>
           </section>
 

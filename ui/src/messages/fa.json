@@ -877,7 +877,19 @@
         "success": "رسید با موفقیت بارگذاری شد",
         "error": "خطا در شروع فرایند پرداخت",
         "uploadError": "خطا در بارگذاری رسید",
-        "copied": "کپی شد"
+        "copied": "کپی شد",
+        "discountToggle": "دارای کد تخفیف هستم",
+        "inviteToggle": "دارای کد دعوت هستم",
+        "mutualExclusive": "فقط می‌توانید از یکی از این گزینه‌ها استفاده کنید",
+        "codePlaceholder": "کد را وارد کنید",
+        "applyCode": "اعمال",
+        "codeApplied": "کد با موفقیت اعمال شد",
+        "codeError": "خطا در اعتبارسنجی کد",
+        "wrongCodeWarning": "{count} بار دیگر فرصت تلاش دارید",
+        "priceRow": "قیمت بسته",
+        "taxRow": "مالیات ({percent}٪)",
+        "discountRow": "تخفیف",
+        "finalPrice": "قابل پرداخت"
       }
     },
     "usage": {
@@ -1402,7 +1414,9 @@
         "social": "لینک‌های شبکه‌های اجتماعی",
         "about": "محتوای صفحه درباره ما",
         "security": "امنیت",
-        "securityHint": "تنظیمات احراز هویت انسانی (مانند Cloudflare Turnstile)."
+        "securityHint": "تنظیمات احراز هویت انسانی (مانند Cloudflare Turnstile).",
+        "finance": "مالی",
+        "financeHint": "تنظیمات مالیاتی و قیمت‌گذاری."
       },
       "fields": {
         "phoneLabel": "تماس {index}",
@@ -1420,7 +1434,9 @@
         "aboutDescriptionPlaceholder": "توضیحات صفحه درباره ما را بنویسید",
         "address": "آدرس",
         "addressPlaceholder": "آدرس شرکت",
-        "turnstileEnabled": "فعال‌سازی احراز هویت انسانی Cloudflare Turnstile"
+        "turnstileEnabled": "فعال‌سازی احراز هویت انسانی Cloudflare Turnstile",
+        "taxPercentage": "درصد مالیات بر ارزش افزوده",
+        "taxPercentageHint": "درصد مالیات را وارد کنید (مثلاً ۹)"
       },
       "actions": {
         "refresh": "تازه‌سازی",

@@ -1,6 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { DiscountCodeType, Prisma, SubscriptionStatus } from '@prisma/client';
 import { PrismaService } from '@app/platform/database/prisma.service';
+import { RedisService } from '@app/platform/cache/redis.service';
+import { WEBSITE_SETTINGS_KEY } from '@app/modules/website-settings/website-settings.constants';
 
 const addDays = (date: Date, days: number) => {
   const result = new Date(date);
@@ -10,9 +12,172 @@ const addDays = (date: Date, days: number) => {
 
 const clampPrice = (value: number) => Math.max(0, Number(value.toFixed(2)));
 
+const VALIDATE_CODE_RATE_LIMIT = 3;
+const VALIDATE_CODE_RATE_WINDOW_SEC = 30 * 60;
+
+function rateLimitKey(userId: string): string {
+  return `rate-limit:validate-code:${userId}`;
+}
+
 @Injectable()
 export class PaymentsService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(PaymentsService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redis: RedisService,
+  ) {}
+
+  private async getTaxPercentage(): Promise<number> {
+    try {
+      const settings = await this.prisma.websiteSetting.findUnique({
+        where: { key: WEBSITE_SETTINGS_KEY },
+        select: { taxPercentage: true },
+      });
+      return settings?.taxPercentage ?? 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  private computeTax(amount: number, taxPercentage: number) {
+    const taxAmount = clampPrice(amount * (taxPercentage / 100));
+    return {
+      taxPercentage,
+      taxAmount,
+      finalAmount: clampPrice(amount + taxAmount),
+    };
+  }
+
+  private async recordFailedAttempt(userId: string): Promise<number> {
+    try {
+      const count = await this.redis.incr(rateLimitKey(userId));
+      if (count === 1) {
+        await this.redis.expire(rateLimitKey(userId), VALIDATE_CODE_RATE_WINDOW_SEC);
+      }
+      return Math.max(0, VALIDATE_CODE_RATE_LIMIT - count);
+    } catch (error) {
+      this.logger.warn(`Rate limit increment failed: ${(error as Error).message}`);
+      return -1;
+    }
+  }
+
+  async validateCode(
+    userId: string,
+    dto: { packageId: string; code: string; type: 'discount' | 'invite' },
+  ) {
+    const pkg = await this.prisma.subscriptionPackage.findUnique({ where: { id: dto.packageId } });
+    if (!pkg || !pkg.isActive) {
+      return { valid: false as const, message: 'Subscription package not found.' };
+    }
+
+    const price = pkg.discountedPrice.toNumber();
+    if (price <= 0) {
+      return { valid: false as const, message: 'This package is free.' };
+    }
+
+    let attempts = 0;
+    try {
+      const raw = await this.redis.get(rateLimitKey(userId));
+      attempts = raw ? Number(raw) : 0;
+    } catch (error) {
+      this.logger.warn(`Rate limit check failed: ${(error as Error).message}`);
+    }
+
+    if (attempts >= VALIDATE_CODE_RATE_LIMIT) {
+      return {
+        valid: false as const,
+        message: 'Maximum attempts reached. Please try again later.',
+        remainingAttempts: 0,
+      };
+    }
+
+    const fail = async (message: string) => ({
+      valid: false as const,
+      message,
+      remainingAttempts: await this.recordFailedAttempt(userId),
+    });
+
+    if (dto.type === 'discount') {
+      const codeValue = dto.code.trim().toUpperCase();
+      const discountCode = await this.prisma.discountCode.findUnique({
+        where: { code: codeValue },
+      });
+      if (!discountCode || !discountCode.isActive) {
+        return fail('Invalid discount code.');
+      }
+      if (discountCode.packageId && discountCode.packageId !== pkg.id) {
+        return fail('Discount code is not valid for this package.');
+      }
+      const now = new Date();
+      if (discountCode.validFrom && now < discountCode.validFrom) {
+        return fail('Discount code is not active yet.');
+      }
+      if (discountCode.validTo && now > discountCode.validTo) {
+        return fail('Discount code has expired.');
+      }
+      if (discountCode.maxRedemptions) {
+        const total = await this.prisma.discountCodeRedemption.count({
+          where: { discountCodeId: discountCode.id },
+        });
+        if (total >= discountCode.maxRedemptions) {
+          return fail('Discount code has reached its limit.');
+        }
+      }
+      if (discountCode.maxRedemptionsPerUser) {
+        const userCount = await this.prisma.discountCodeRedemption.count({
+          where: { discountCodeId: discountCode.id, userId },
+        });
+        if (userCount >= discountCode.maxRedemptionsPerUser) {
+          return fail('Discount code limit reached for this user.');
+        }
+      }
+
+      const discountValue = discountCode.value.toNumber();
+      const adjustedPrice =
+        discountCode.type === DiscountCodeType.PERCENT
+          ? clampPrice(price - price * (discountValue / 100))
+          : clampPrice(price - discountValue);
+      const discountAmount = Number((price - adjustedPrice).toFixed(2));
+
+      return {
+        valid: true as const,
+        codeId: discountCode.id,
+        adjustedPrice,
+        discountAmount,
+      };
+    }
+
+    if (dto.type === 'invite') {
+      const inviteValue = dto.code.trim().toUpperCase();
+      const inviteCode = await this.prisma.inviteCode.findUnique({ where: { code: inviteValue } });
+      if (!inviteCode || !inviteCode.isActive) {
+        return fail('Invalid invite code.');
+      }
+      if (inviteCode.inviterUserId === userId) {
+        return fail('Invite code cannot be used by the inviter.');
+      }
+      const existing = await this.prisma.inviteCodeRedemption.findUnique({
+        where: {
+          inviteCodeId_invitedUserId: {
+            inviteCodeId: inviteCode.id,
+            invitedUserId: userId,
+          },
+        },
+      });
+      if (existing) {
+        return fail('Invite code already used by this user.');
+      }
+
+      return {
+        valid: true as const,
+        codeId: inviteCode.id,
+        bonusDays: inviteCode.bonusDays,
+      };
+    }
+
+    return fail('Invalid code type.');
+  }
 
   async initiate(
     userId: string,
@@ -23,13 +188,14 @@ export class PaymentsService {
       throw new NotFoundException('Subscription package not found.');
     }
 
-    const price = pkg.discountedPrice.toNumber();
-    if (price <= 0) {
+    const originalPrice = pkg.discountedPrice.toNumber();
+    if (originalPrice <= 0) {
       throw new BadRequestException('This package is free. Use the direct activation flow.');
     }
 
-    let finalPrice = price;
+    let amount = originalPrice;
     let discountCodeId: string | null = null;
+    let discountAmount: number | null = null;
 
     if (dto.discountCode) {
       const codeValue = dto.discountCode.trim().toUpperCase();
@@ -68,14 +234,16 @@ export class PaymentsService {
 
       const discountValue = discountCode.value.toNumber();
       if (discountCode.type === DiscountCodeType.PERCENT) {
-        finalPrice = clampPrice(price - price * (discountValue / 100));
+        amount = clampPrice(originalPrice - originalPrice * (discountValue / 100));
       } else {
-        finalPrice = clampPrice(price - discountValue);
+        amount = clampPrice(originalPrice - discountValue);
       }
       discountCodeId = discountCode.id;
+      discountAmount = Number((originalPrice - amount).toFixed(2));
     }
 
     let inviteCodeId: string | null = null;
+    let inviteBonusDays: number | null = null;
     if (dto.inviteCode) {
       const inviteValue = dto.inviteCode.trim().toUpperCase();
       const inviteCode = await this.prisma.inviteCode.findUnique({ where: { code: inviteValue } });
@@ -97,15 +265,25 @@ export class PaymentsService {
         throw new BadRequestException('Invite code already used by this user.');
       }
       inviteCodeId = inviteCode.id;
+      inviteBonusDays = inviteCode.bonusDays;
     }
+
+    const taxPercentage = await this.getTaxPercentage();
+    const { taxAmount, finalAmount } = this.computeTax(amount, taxPercentage);
 
     const payment = await this.prisma.paymentRequest.create({
       data: {
         userId,
         packageId: pkg.id,
-        amount: finalPrice,
+        amount,
+        originalPrice: new Prisma.Decimal(originalPrice),
+        discountAmount: discountAmount != null ? new Prisma.Decimal(discountAmount) : null,
+        taxPercentage,
+        taxAmount: new Prisma.Decimal(taxAmount),
+        finalAmount: new Prisma.Decimal(finalAmount),
         discountCodeId,
         inviteCodeId,
+        inviteBonusDays,
       },
     });
 

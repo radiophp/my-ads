@@ -1,5 +1,15 @@
 import { Type } from 'class-transformer';
-import { IsArray, IsBoolean, IsOptional, IsString, IsUrl, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUrl,
+  Max,
+  Min,
+  ValidateNested,
+} from 'class-validator';
 import { WebsiteContactDto } from './website-contact.dto';
 
 export class UpdateWebsiteSettingsDto {
@@ -36,4 +46,10 @@ export class UpdateWebsiteSettingsDto {
   @IsOptional()
   @IsBoolean()
   turnstileEnabled?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  taxPercentage?: number;
 }

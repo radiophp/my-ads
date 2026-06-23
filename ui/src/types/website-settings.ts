@@ -13,5 +13,6 @@ export type WebsiteSettings = {
   aboutDescription: string | null;
   address: string | null;
   turnstileEnabled: boolean;
+  taxPercentage: number;
   updatedAt?: string;
 };

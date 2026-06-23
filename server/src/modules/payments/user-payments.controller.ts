@@ -12,6 +12,7 @@ import {
 import { JwtAuthGuard } from '@app/modules/auth/guards/jwt-auth.guard';
 import { PaymentsService } from './payments.service';
 import { InitiatePaymentDto } from './dto/initiate-payment.dto';
+import { ValidateCodeDto } from './dto/validate-code.dto';
 import type { FastifyRequest } from 'fastify';
 import type { MultipartFile } from '@fastify/multipart';
 import { UploadsService } from '@app/modules/uploads/uploads.service';
@@ -29,6 +30,11 @@ export class UserPaymentsController {
   @Post('initiate')
   async initiate(@Req() req: AuthedReq, @Body() dto: InitiatePaymentDto) {
     return this.paymentsService.initiate(req.user?.sub ?? '', dto);
+  }
+
+  @Post('validate-code')
+  async validateCode(@Req() req: AuthedReq, @Body() dto: ValidateCodeDto) {
+    return this.paymentsService.validateCode(req.user?.sub ?? '', dto);
   }
 
   @Post('upload-receipt/:id')

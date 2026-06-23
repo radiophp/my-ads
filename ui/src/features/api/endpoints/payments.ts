@@ -15,6 +15,12 @@ type PaymentRequest = {
   amount: number;
   discountCodeId: string | null;
   inviteCodeId: string | null;
+  originalPrice: number;
+  discountAmount: number | null;
+  taxPercentage: number;
+  taxAmount: number;
+  finalAmount: number;
+  inviteBonusDays: number | null;
   receiptUrl: string | null;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   rejectionReason: string | null;
@@ -38,6 +44,10 @@ type InitiatePaymentPayload = {
   inviteCode?: string;
 };
 
+type CodeValidationResult =
+  | { valid: true; codeId: string; adjustedPrice?: number; discountAmount?: number; bonusDays?: number }
+  | { valid: false; message: string; remainingAttempts?: number };
+
 const paymentsApi = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getBankAccounts: builder.query<BankAccount[], void>({
@@ -50,6 +60,13 @@ const paymentsApi = apiSlice.injectEndpoints({
         body,
       }),
       invalidatesTags: ['Payments'],
+    }),
+    validateCode: builder.mutation<CodeValidationResult, { packageId: string; code: string; type: 'discount' | 'invite' }>({
+      query: (body) => ({
+        url: '/user-panel/payments/validate-code',
+        method: 'POST',
+        body,
+      }),
     }),
     uploadReceipt: builder.mutation<PaymentRequest, { id: string; file: File }>({
       query: ({ id, file }) => {
@@ -120,6 +137,7 @@ const paymentsApi = apiSlice.injectEndpoints({
 export const {
   useGetBankAccountsQuery,
   useInitiatePaymentMutation,
+  useValidateCodeMutation,
   useUploadReceiptMutation,
   useReUploadReceiptMutation,
   useGetMyPaymentsQuery,

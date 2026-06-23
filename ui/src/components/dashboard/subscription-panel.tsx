@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/components/ui/use-toast';
 import {
   Dialog,
@@ -28,7 +29,9 @@ import {
   useGetBankAccountsQuery,
   useInitiatePaymentMutation,
   useUploadReceiptMutation,
+  useValidateCodeMutation,
 } from '@/features/api/endpoints/payments';
+import { useGetWebsiteSettingsQuery } from '@/features/api/endpoints/website-settings';
 import type { SubscriptionPackage } from '@/types/packages';
 
 function CurrentSubscriptionCard() {
@@ -280,6 +283,49 @@ function RejectedActivationCard() {
   );
 }
 
+function PriceBreakdown({
+  originalPrice,
+  taxPercentage,
+  discountAmount,
+}: {
+  originalPrice: number;
+  taxPercentage: number;
+  discountAmount: number | null;
+}) {
+  const t = useTranslations('dashboard.subscriptionPage');
+  const taxableAmount = originalPrice;
+  const taxAmount = Math.round(taxableAmount * (taxPercentage / 100));
+  const finalPrice = taxableAmount + taxAmount - (discountAmount ?? 0);
+
+  return (
+    <div className="space-y-1.5 rounded-lg border bg-muted/30 p-3 text-sm">
+      <div className="flex items-center justify-between">
+        <span className="text-muted-foreground">{t('payment.priceRow')}</span>
+        <span>{originalPrice.toLocaleString()} {t('package.currency')}</span>
+      </div>
+      {taxPercentage > 0 && (
+        <div className="flex items-center justify-between">
+          <span className="text-muted-foreground">{t('payment.taxRow', { percent: taxPercentage })}</span>
+          <span>{taxAmount.toLocaleString()} {t('package.currency')}</span>
+        </div>
+      )}
+      {discountAmount != null && discountAmount > 0 && (
+        <div className="flex items-center justify-between">
+          <span className="text-muted-foreground">{t('payment.discountRow')}</span>
+          <span className="text-red-500 dark:text-red-400">
+            -{discountAmount.toLocaleString()} {t('package.currency')}
+          </span>
+        </div>
+      )}
+      <hr className="border-border/60" />
+      <div className="flex items-center justify-between font-semibold">
+        <span>{t('payment.finalPrice')}</span>
+        <span className="text-lg font-bold">{finalPrice.toLocaleString()} {t('package.currency')}</span>
+      </div>
+    </div>
+  );
+}
+
 function PaymentDialog({
   pkg,
   open,
@@ -291,35 +337,116 @@ function PaymentDialog({
 }) {
   const t = useTranslations('dashboard.subscriptionPage');
   const { toast } = useToast();
+  const { data: settings } = useGetWebsiteSettingsQuery();
   const { data: bankAccounts, isLoading: banksLoading } = useGetBankAccountsQuery();
   const [initiate, { isLoading: initiating }] = useInitiatePaymentMutation();
   const [uploadReceipt, { isLoading: uploading }] = useUploadReceiptMutation();
-  const [discountCode, setDiscountCode] = useState('');
-  const [inviteCode, setInviteCode] = useState('');
+  const [validateCode, { isLoading: validating }] = useValidateCodeMutation();
+  const [activeType, setActiveType] = useState<'discount' | 'invite' | null>(null);
+  const [codeInput, setCodeInput] = useState('');
+  const [appliedCode, setAppliedCode] = useState<{
+    code: string;
+    codeId: string;
+    type: 'discount' | 'invite';
+    adjustedPrice?: number;
+    discountAmount?: number;
+    bonusDays?: number;
+  } | null>(null);
+  const [codeError, setCodeError] = useState('');
   const [paymentId, setPaymentId] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [step, setStep] = useState<'form' | 'upload' | 'success' | 'error'>('form');
-  const [_errorMsg, setErrorMsg] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const handleClose = useCallback(() => {
-    setDiscountCode('');
-    setInviteCode('');
+  const taxPercentage = settings?.taxPercentage ?? 0;
+  const originalPrice = pkg ? Number(pkg.discountedPrice) : 0;
+  const isPaid = originalPrice > 0;
+  const dialogOpen = open && pkg !== null && isPaid;
+  const discountAmount = appliedCode?.type === 'discount' ? (appliedCode.discountAmount ?? 0) : null;
+
+  const canApplyCode = codeInput.trim().length > 0 && !validating;
+  const showDiscountToggle = pkg?.features?.allow_discount_codes === 'true';
+  const showInviteToggle = pkg?.features?.allow_invite_codes === 'true';
+
+  const resetState = useCallback(() => {
+    setActiveType(null);
+    setCodeInput('');
+    setAppliedCode(null);
+    setCodeError('');
     setPaymentId(null);
     setFile(null);
     setStep('form');
-    setErrorMsg('');
+  }, []);
+
+  const handleClose = useCallback(() => {
+    resetState();
     onOpenChange(false);
-  }, [onOpenChange]);
+  }, [resetState, onOpenChange]);
+
+  const handleToggle = (type: 'discount' | 'invite') => {
+    if (activeType === type) {
+      setActiveType(null);
+      setAppliedCode(null);
+      setCodeInput('');
+      setCodeError('');
+      return;
+    }
+    if (activeType !== null) {
+      setActiveType(type);
+      setAppliedCode(null);
+      setCodeInput('');
+      setCodeError('');
+      toast({ description: t('payment.mutualExclusive') });
+      return;
+    }
+    setActiveType(type);
+    setCodeInput('');
+    setCodeError('');
+  };
+
+  const handleApplyCode = async () => {
+    if (!pkg || !activeType || !codeInput.trim()) return;
+    setCodeError('');
+    try {
+      const result = await validateCode({
+        packageId: pkg.id,
+        code: codeInput.trim(),
+        type: activeType,
+      }).unwrap();
+      if (result.valid) {
+        setAppliedCode({
+          code: codeInput.trim(),
+          codeId: result.codeId,
+          type: activeType,
+          adjustedPrice: result.adjustedPrice,
+          discountAmount: result.discountAmount,
+          bonusDays: result.bonusDays,
+        });
+        toast({ description: t('payment.codeApplied') });
+      } else {
+        setCodeError(result.message);
+        const remaining = result.remainingAttempts;
+        if (remaining !== undefined && remaining > 0) {
+          toast({ description: t('payment.wrongCodeWarning', { count: remaining }) });
+        }
+      }
+    } catch {
+      setCodeError(t('payment.codeError'));
+    }
+  };
 
   const handleInitiate = async () => {
     if (!pkg) return;
     try {
-      const result = await initiate({
+      const payload: { packageId: string; discountCode?: string; inviteCode?: string } = {
         packageId: pkg.id,
-        discountCode: discountCode.trim() || undefined,
-        inviteCode: inviteCode.trim() || undefined,
-      }).unwrap();
+      };
+      if (appliedCode?.type === 'discount') {
+        payload.discountCode = appliedCode.code;
+      } else if (appliedCode?.type === 'invite') {
+        payload.inviteCode = appliedCode.code;
+      }
+      const result = await initiate(payload).unwrap();
       setPaymentId(result.id);
       setStep('upload');
     } catch (err: unknown) {
@@ -341,10 +468,6 @@ function PaymentDialog({
       toast({ title: t('payment.uploadError'), variant: 'destructive' });
     }
   };
-
-  const price = pkg ? Number(pkg.discountedPrice) : 0;
-  const isPaid = price > 0;
-  const dialogOpen = open && pkg !== null && isPaid;
 
   return (
     <Dialog open={dialogOpen} onOpenChange={(v) => { if (!v) handleClose(); }}>
@@ -379,14 +502,80 @@ function PaymentDialog({
                 <div className="rounded-lg border bg-muted/30 p-3">
                   <div className="flex items-center justify-between">
                     <span className="font-medium">{pkg.title}</span>
-                    <span className="text-lg font-bold">
-                      {price.toLocaleString()} {t('package.currency')}
-                    </span>
+                  </div>
+                  <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                    <span>{t('package.duration', { count: pkg.durationDays })}</span>
+                    {pkg.freeDays > 0 && (
+                      <span>+{t('package.freeDays', { count: pkg.freeDays })}</span>
+                    )}
                   </div>
                 </div>
               )}
 
+              <PriceBreakdown
+                originalPrice={originalPrice}
+                taxPercentage={taxPercentage}
+                discountAmount={discountAmount}
+              />
+
               {step === 'form' && (
+                <>
+                  {(showDiscountToggle || showInviteToggle) && (
+                    <div className="space-y-3">
+                      {showDiscountToggle && (
+                        <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm">
+                          <div className="flex flex-1 items-center gap-2">
+                            <TicketPercent className="size-4 text-muted-foreground" aria-hidden />
+                            <span>{t('payment.discountToggle')}</span>
+                          </div>
+                          <Switch
+                            checked={activeType === 'discount'}
+                            onCheckedChange={() => handleToggle('discount')}
+                          />
+                        </label>
+                      )}
+                      {showInviteToggle && (
+                        <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm">
+                          <div className="flex flex-1 items-center gap-2">
+                            <UserPlus className="size-4 text-muted-foreground" aria-hidden />
+                            <span>{t('payment.inviteToggle')}</span>
+                          </div>
+                          <Switch
+                            checked={activeType === 'invite'}
+                            onCheckedChange={() => handleToggle('invite')}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  )}
+
+                  {activeType && (
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <Input
+                          value={codeInput}
+                          onChange={(e) => { setCodeInput(e.target.value); setCodeError(''); }}
+                          placeholder={t('payment.codePlaceholder')}
+                          maxLength={64}
+                          className="flex-1"
+                        />
+                        <Button
+                          variant="outline"
+                          onClick={handleApplyCode}
+                          disabled={!canApplyCode}
+                        >
+                          {validating ? <Loader2 className="size-4 animate-spin" /> : t('payment.applyCode')}
+                        </Button>
+                      </div>
+                      {codeError && (
+                        <p className="text-xs text-red-500">{codeError}</p>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {step === 'upload' && (
                 <>
                   {banksLoading ? (
                     <div className="flex items-center justify-center py-4">
@@ -396,112 +585,78 @@ function PaymentDialog({
                     <div className="space-y-3">
                       <Label className="text-sm font-medium">{t('payment.bankAccounts')}</Label>
                       {bankAccounts.map((acc) => (
-                          <div key={acc.id} className="space-y-2 rounded-lg border p-3 text-sm">
-                            <p className="font-medium">{acc.bankName}</p>
-                            <div>
-                              <p className="text-xs text-muted-foreground">{t('payment.cardNumber')}</p>
-                              <div className="flex items-center gap-1.5">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    navigator.clipboard.writeText(acc.cardNumber.replace(/[-\s]/g, ''));
-                                    toast({ description: t('payment.copied') });
-                                  }}
-                                  className="flex items-center gap-1.5 text-left font-mono text-muted-foreground transition-colors hover:text-foreground"
-                                  dir="ltr"
-                                >
-                                  {acc.cardNumber}
-                                  <Copy className="size-3.5 shrink-0" />
-                                </button>
-                              </div>
-                            </div>
-                            <div>
-                              <p className="text-xs text-muted-foreground">{t('payment.cardHolder')}</p>
-                              <p>{acc.cardHolderName}</p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-muted-foreground">{t('payment.sheba')}</p>
-                              <div className="flex items-center gap-1.5">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    navigator.clipboard.writeText(acc.sheba.replace(/[-\s]/g, ''));
-                                    toast({ description: t('payment.copied') });
-                                  }}
-                                  className="flex items-center gap-1.5 text-left font-mono text-muted-foreground transition-colors hover:text-foreground"
-                                  dir="ltr"
-                                >
-                                  {acc.sheba}
-                                  <Copy className="size-3.5 shrink-0" />
-                                </button>
-                              </div>
+                        <div key={acc.id} className="space-y-2 rounded-lg border p-3 text-sm">
+                          <p className="font-medium">{acc.bankName}</p>
+                          <div>
+                            <p className="text-xs text-muted-foreground">{t('payment.cardNumber')}</p>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(acc.cardNumber.replace(/[-\s]/g, ''));
+                                  toast({ description: t('payment.copied') });
+                                }}
+                                className="flex items-center gap-1.5 text-left font-mono text-muted-foreground transition-colors hover:text-foreground"
+                                dir="ltr"
+                              >
+                                {acc.cardNumber}
+                                <Copy className="size-3.5 shrink-0" />
+                              </button>
                             </div>
                           </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">{t('payment.cardHolder')}</p>
+                            <p>{acc.cardHolderName}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-muted-foreground">{t('payment.sheba')}</p>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(acc.sheba.replace(/[-\s]/g, ''));
+                                  toast({ description: t('payment.copied') });
+                                }}
+                                className="flex items-center gap-1.5 text-left font-mono text-muted-foreground transition-colors hover:text-foreground"
+                                dir="ltr"
+                              >
+                                {acc.sheba}
+                                <Copy className="size-3.5 shrink-0" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
                       ))}
                     </div>
                   ) : null}
 
-                  {pkg?.features?.allow_discount_codes === 'true' && (
-                    <div className="space-y-2">
-                      <Label htmlFor="discountCode" className="flex items-center gap-2">
-                        <TicketPercent className="size-4 text-muted-foreground" aria-hidden />
-                        {t('activate.discountLabel')}
-                      </Label>
-                      <Input
-                        id="discountCode"
-                        value={discountCode}
-                        onChange={(e) => setDiscountCode(e.target.value)}
-                        placeholder={t('activate.discountPlaceholder')}
-                        maxLength={64}
-                      />
-                    </div>
-                  )}
-
-                  {pkg?.features?.allow_invite_codes === 'true' && (
-                    <div className="space-y-2">
-                      <Label htmlFor="inviteCode" className="flex items-center gap-2">
-                        <UserPlus className="size-4 text-muted-foreground" aria-hidden />
-                        {t('activate.inviteLabel')}
-                      </Label>
-                      <Input
-                        id="inviteCode"
-                        value={inviteCode}
-                        onChange={(e) => setInviteCode(e.target.value)}
-                        placeholder={t('activate.invitePlaceholder')}
-                        maxLength={64}
-                      />
-                    </div>
-                  )}
-                </>
-              )}
-
-              {step === 'upload' && (
-                <>
-                  <p className="text-sm text-muted-foreground">{t('payment.uploadDesc')}</p>
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                  />
-                  {file ? (
-                    <div className="flex items-center gap-3 rounded-lg border bg-muted/30 p-3">
-                      <ImageIcon className="size-8 shrink-0 text-muted-foreground" />
-                      <div className="min-w-0 flex-1 text-sm">
-                        <p className="truncate font-medium">{file.name}</p>
-                        <p className="text-muted-foreground">{(file.size / 1024).toFixed(1)} KB</p>
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">{t('payment.uploadDesc')}</p>
+                    <input
+                      ref={fileRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                    />
+                    {file ? (
+                      <div className="flex items-center gap-3 rounded-lg border bg-muted/30 p-3">
+                        <ImageIcon className="size-8 shrink-0 text-muted-foreground" />
+                        <div className="min-w-0 flex-1 text-sm">
+                          <p className="truncate font-medium">{file.name}</p>
+                          <p className="text-muted-foreground">{(file.size / 1024).toFixed(1)} KB</p>
+                        </div>
+                        <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()}>
+                          {t('payment.changeFile')}
+                        </Button>
                       </div>
-                      <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()}>
-                        {t('payment.changeFile')}
+                    ) : (
+                      <Button variant="outline" className="w-full" onClick={() => fileRef.current?.click()}>
+                        <Upload className="size-4" />
+                        {t('payment.selectFile')}
                       </Button>
-                    </div>
-                  ) : (
-                    <Button variant="outline" className="w-full" onClick={() => fileRef.current?.click()}>
-                      <Upload className="size-4" />
-                      {t('payment.selectFile')}
-                    </Button>
-                  )}
+                    )}
+                  </div>
                 </>
               )}
             </div>

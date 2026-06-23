@@ -876,7 +876,19 @@
         "success": "Receipt uploaded successfully",
         "error": "Failed to initiate payment",
         "uploadError": "Failed to upload receipt",
-        "copied": "Copied"
+        "copied": "Copied",
+        "discountToggle": "I have a discount code",
+        "inviteToggle": "I have an invite code",
+        "mutualExclusive": "You can only use one of these options",
+        "codePlaceholder": "Enter code",
+        "applyCode": "Apply",
+        "codeApplied": "Code applied successfully",
+        "codeError": "Failed to validate code",
+        "wrongCodeWarning": "You have {count} attempt(s) remaining",
+        "priceRow": "Package price",
+        "taxRow": "VAT ({percent}%)",
+        "discountRow": "Discount",
+        "finalPrice": "Total payable"
       }
     },
     "usage": {
@@ -1401,7 +1413,9 @@
         "social": "Social links",
         "about": "About page content",
         "security": "Security",
-        "securityHint": "Human verification settings (e.g. Cloudflare Turnstile)."
+        "securityHint": "Human verification settings (e.g. Cloudflare Turnstile).",
+        "finance": "Finance",
+        "financeHint": "Tax and pricing settings."
       },
       "fields": {
         "phoneLabel": "Contact {index}",
@@ -1419,7 +1433,9 @@
         "aboutDescriptionPlaceholder": "Write the about page description",
         "address": "Address",
         "addressPlaceholder": "Company address",
-        "turnstileEnabled": "Enable Cloudflare Turnstile human verification"
+        "turnstileEnabled": "Enable Cloudflare Turnstile human verification",
+        "taxPercentage": "VAT Percentage",
+        "taxPercentageHint": "Enter tax percentage (e.g., 9)"
       },
       "actions": {
         "refresh": "Refresh",

@@ -889,6 +889,19 @@
         "taxRow": "VAT ({percent}%)",
         "discountRow": "Discount",
         "finalPrice": "Total payable"
+      },
+      "pendingPayment": {
+        "title": "Pending Payment",
+        "description": "You have a pending payment. Cancel it before purchasing a new plan.",
+        "package": "Plan",
+        "amount": "Amount",
+        "receipt": "Receipt",
+        "uploaded": "Uploaded",
+        "notUploaded": "Not uploaded",
+        "cancelButton": "Cancel Payment",
+        "cancelled": "Payment cancelled successfully",
+        "cancelError": "Failed to cancel payment",
+        "blocked": "You have a pending payment. Please cancel it first."
       }
     },
     "usage": {

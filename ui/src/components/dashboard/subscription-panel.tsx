@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Copy, Crown, Image as ImageIcon, Loader2, Sparkles, TicketPercent, Upload, UserPlus, Zap } from 'lucide-react';
+import { Copy, Crown, Image as ImageIcon, Loader2, Sparkles, TicketPercent, Upload, UserPlus, X, Zap } from 'lucide-react';
 
 import {
   useGetCurrentSubscriptionQuery,
@@ -30,6 +30,8 @@ import {
   useInitiatePaymentMutation,
   useUploadReceiptMutation,
   useValidateCodeMutation,
+  useCancelPaymentMutation,
+  useGetPendingPaymentQuery,
 } from '@/features/api/endpoints/payments';
 import { useGetWebsiteSettingsQuery } from '@/features/api/endpoints/website-settings';
 import type { SubscriptionPackage } from '@/types/packages';
@@ -697,7 +699,51 @@ function PaymentDialog({
   );
 }
 
-function PackageCardWrapper({ pkg }: { pkg: SubscriptionPackage }) {
+function PendingPaymentCard({ pending, onCancel }: { pending: NonNullable<ReturnType<typeof useGetPendingPaymentQuery>['data']>; onCancel: () => void }) {
+  const t = useTranslations('dashboard.subscriptionPage.pendingPayment');
+  const tp = useTranslations('dashboard.subscriptionPage.package');
+  const [cancelling, setCancelling] = useState(false);
+
+  const handleCancel = async () => {
+    setCancelling(true);
+    try {
+      await onCancel();
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  return (
+    <Card className="border-amber-500/20 bg-amber-50/50 dark:bg-amber-950/10">
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle className="text-base">{t('title')}</CardTitle>
+          <CardDescription>{t('description')}</CardDescription>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">{t('package')}</span>
+          <span className="font-medium">{pending.package?.title ?? '—'}</span>
+        </div>
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">{t('amount')}</span>
+          <span className="font-medium">{Number(pending.finalAmount).toLocaleString()} {tp('currency')}</span>
+        </div>
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">{t('receipt')}</span>
+          <span>{pending.receiptUrl ? t('uploaded') : t('notUploaded')}</span>
+        </div>
+        <Button variant="destructive" size="sm" onClick={handleCancel} disabled={cancelling} className="w-full">
+          {cancelling ? <Loader2 className="size-4 animate-spin" /> : <X className="size-4" />}
+          {t('cancelButton')}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+function PackageCardWrapper({ pkg, pendingPayment }: { pkg: SubscriptionPackage; pendingPayment: boolean }) {
   const { data: activationStatus } = useGetActivationStatusQuery();
   const t = useTranslations('dashboard.subscriptionPage');
   const { toast } = useToast();
@@ -709,6 +755,10 @@ function PackageCardWrapper({ pkg }: { pkg: SubscriptionPackage }) {
   const isPaid = Number(pkg.discountedPrice) > 0;
 
   const handleActivate = async (_p: SubscriptionPackage) => {
+    if (pendingPayment) {
+      toast({ title: t('pendingPayment.blocked'), variant: 'destructive' });
+      return;
+    }
     if (isRejected) {
       try {
         await requestActivation({ packageId: pkg.id }).unwrap();
@@ -744,10 +794,23 @@ export function SubscriptionPanel() {
   const t = useTranslations('dashboard.subscriptionPage');
   const { data: packages = [], isLoading, error } = useGetAvailablePackagesQuery();
   const { data: activationStatus } = useGetActivationStatusQuery();
+  const { data: pendingPayment } = useGetPendingPaymentQuery();
+  const [cancelPayment] = useCancelPaymentMutation();
+  const { toast } = useToast();
 
   const isApproved = activationStatus?.activationStatus === 'APPROVED';
   const isRejected = activationStatus?.activationStatus === 'REJECTED';
   const showPackages = isApproved || isRejected;
+
+  const handleCancelPending = async () => {
+    if (!pendingPayment) return;
+    try {
+      await cancelPayment(pendingPayment.id).unwrap();
+      toast({ title: t('pendingPayment.cancelled') });
+    } catch {
+      toast({ title: t('pendingPayment.cancelError'), variant: 'destructive' });
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -755,6 +818,10 @@ export function SubscriptionPanel() {
         <h1 className="text-2xl font-bold tracking-tight">{t('title')}</h1>
         <p className="mt-1 text-muted-foreground">{t('description')}</p>
       </div>
+
+      {pendingPayment && (
+        <PendingPaymentCard pending={pendingPayment} onCancel={handleCancelPending} />
+      )}
 
       <ActivationStatusCard />
 
@@ -800,7 +867,7 @@ export function SubscriptionPanel() {
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {packages.map((pkg) => (
-            <PackageCardWrapper key={pkg.id} pkg={pkg} />
+            <PackageCardWrapper key={pkg.id} pkg={pkg} pendingPayment={!!pendingPayment} />
           ))}
         </div>
       )}

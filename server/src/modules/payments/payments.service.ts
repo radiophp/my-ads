@@ -284,6 +284,9 @@ export class PaymentsService {
         discountCodeId,
         inviteCodeId,
         inviteBonusDays,
+        durationDays: pkg.durationDays,
+        freeDays: pkg.freeDays,
+        features: pkg.features ?? {},
       },
     });
 
@@ -378,7 +381,6 @@ export class PaymentsService {
   async approvePayment(paymentId: string, adminId: string) {
     const payment = await this.prisma.paymentRequest.findUnique({
       where: { id: paymentId },
-      include: { package: true },
     });
     if (!payment) throw new NotFoundException('Payment not found.');
     if (payment.status !== 'PENDING') {
@@ -389,26 +391,25 @@ export class PaymentsService {
     }
 
     const now = new Date();
-    const pkg = payment.package;
     const user = await this.prisma.user.findUnique({
       where: { id: payment.userId },
       select: { pendingBonusDays: true },
     });
 
     const pendingBonusDays = user?.pendingBonusDays ?? 0;
-    const totalDays = pkg.durationDays + pkg.freeDays + pendingBonusDays;
+    const totalDays = payment.durationDays + payment.freeDays + pendingBonusDays;
     const endsAt = addDays(now, totalDays);
 
     const subscription = await this.prisma.userSubscription.create({
       data: {
         userId: payment.userId,
-        packageId: pkg.id,
+        packageId: payment.packageId,
         discountCodeId: payment.discountCodeId,
         inviteCodeId: payment.inviteCodeId,
         status: SubscriptionStatus.ACTIVE,
         startsAt: now,
         endsAt,
-        basePrice: pkg.actualPrice,
+        basePrice: payment.originalPrice,
         finalPrice: new Prisma.Decimal(payment.amount),
         bonusDays: pendingBonusDays,
       },
@@ -499,5 +500,27 @@ export class PaymentsService {
     if (!payment) throw new NotFoundException('Payment not found.');
     if (payment.userId !== userId) throw new BadRequestException('Not your payment.');
     return payment.receiptUrl ?? '';
+  }
+
+  async getPendingPayment(userId: string) {
+    return this.prisma.paymentRequest.findFirst({
+      where: { userId, status: 'PENDING' },
+      include: { package: { select: { id: true, title: true, imageUrl: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async cancelPayment(paymentId: string, userId: string) {
+    const payment = await this.prisma.paymentRequest.findUnique({ where: { id: paymentId } });
+    if (!payment) throw new NotFoundException('Payment not found.');
+    if (payment.userId !== userId) throw new BadRequestException('Not your payment.');
+    if (payment.status !== 'PENDING') {
+      throw new BadRequestException('Payment can only be cancelled when pending.');
+    }
+
+    return this.prisma.paymentRequest.update({
+      where: { id: paymentId },
+      data: { status: 'CANCELLED' },
+    });
   }
 }

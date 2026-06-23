@@ -22,7 +22,7 @@ type PaymentRequest = {
   finalAmount: number;
   inviteBonusDays: number | null;
   receiptUrl: string | null;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
   rejectionReason: string | null;
   createdAt: string;
   updatedAt: string;
@@ -131,6 +131,18 @@ const paymentsApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ['Payments'],
     }),
+    cancelPayment: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/user-panel/payments/${id}/cancel`,
+        method: 'POST',
+        body: {},
+      }),
+      invalidatesTags: ['Payments'],
+    }),
+    getPendingPayment: builder.query<PaymentRequest | null, void>({
+      query: () => '/user-panel/payments/pending/current',
+      providesTags: ['Payments'],
+    }),
   }),
 });
 
@@ -145,4 +157,6 @@ export const {
   useGetAdminPaymentsQuery,
   useApprovePaymentMutation,
   useRejectPaymentMutation,
+  useCancelPaymentMutation,
+  useGetPendingPaymentQuery,
 } = paymentsApi;

@@ -29,7 +29,14 @@ export class UserPaymentsController {
 
   @Post('initiate')
   async initiate(@Req() req: AuthedReq, @Body() dto: InitiatePaymentDto) {
-    return this.paymentsService.initiate(req.user?.sub ?? '', dto);
+    const userId = req.user?.sub ?? '';
+    const pending = await this.paymentsService.getPendingPayment(userId);
+    if (pending) {
+      throw new BadRequestException(
+        'You have a pending payment. Cancel it before starting a new one.',
+      );
+    }
+    return this.paymentsService.initiate(userId, dto);
   }
 
   @Post('validate-code')
@@ -64,9 +71,19 @@ export class UserPaymentsController {
     );
   }
 
+  @Get('pending/current')
+  async pendingPayment(@Req() req: AuthedReq) {
+    return this.paymentsService.getPendingPayment(req.user?.sub ?? '');
+  }
+
   @Get(':id')
   async getPayment(@Req() req: AuthedReq, @Param('id') id: string) {
     return this.paymentsService.getPayment(id, req.user?.sub ?? '');
+  }
+
+  @Post(':id/cancel')
+  async cancelPayment(@Req() req: AuthedReq, @Param('id') id: string) {
+    return this.paymentsService.cancelPayment(id, req.user?.sub ?? '');
   }
 
   private async extractMultipartFile(request: AuthedReq): Promise<MultipartFile> {

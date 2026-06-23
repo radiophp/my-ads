@@ -741,6 +741,7 @@ function PendingPaymentCard({ pending, onCancel, onContinue }: {
   const tp = useTranslations('dashboard.subscriptionPage.package');
   const [cancelling, setCancelling] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showImage, setShowImage] = useState(false);
   const [remaining, setRemaining] = useState('');
 
   useEffect(() => {
@@ -794,7 +795,17 @@ function PendingPaymentCard({ pending, onCancel, onContinue }: {
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">{t('receipt')}</span>
-            <span>{pending.receiptUrl ? t('uploaded') : t('notUploaded')}</span>
+            {pending.receiptUrl ? (
+              <button type="button" onClick={() => setShowImage(true)} className="overflow-hidden rounded-md border">
+                <img
+                  src={`/storage/uploads/${pending.receiptUrl}`}
+                  alt={t('receipt')}
+                  className="size-12 object-cover"
+                />
+              </button>
+            ) : (
+              <span>{t('notUploaded')}</span>
+            )}
           </div>
           {pending.expiresAt && (
             <div className="flex items-center justify-between text-sm">
@@ -836,6 +847,18 @@ function PendingPaymentCard({ pending, onCancel, onContinue }: {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={showImage} onOpenChange={setShowImage}>
+        <DialogContent className="max-w-[90vw] border-0 bg-black/90 p-0 sm:max-w-[80vw]">
+          <div className="flex items-center justify-center p-2">
+            <img
+              src={`/storage/uploads/${pending.receiptUrl}`}
+              alt={t('receipt')}
+              className="max-h-[85dvh] w-auto rounded-lg object-contain"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

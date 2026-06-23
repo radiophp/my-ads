@@ -108,9 +108,15 @@ function ActivateDialog({
   const [discountCode, setDiscountCode] = useState('');
   const [inviteCode, setInviteCode] = useState('');
 
-  if (!pkg) return null;
+  const dialogOpen = open && pkg !== null;
+
+  const resetState = useCallback(() => {
+    setDiscountCode('');
+    setInviteCode('');
+  }, []);
 
   const handleActivate = async () => {
+    if (!pkg) return;
     try {
       await activate({
         packageId: pkg.id,
@@ -119,8 +125,7 @@ function ActivateDialog({
       }).unwrap();
       toast({ title: t('activate.success') });
       onOpenChange(false);
-      setDiscountCode('');
-      setInviteCode('');
+      resetState();
     } catch (err: unknown) {
       const message =
         err && typeof err === 'object' && 'data' in err
@@ -134,65 +139,74 @@ function ActivateDialog({
     }
   };
 
-  const price = Number(pkg.discountedPrice);
+  const handleClose = useCallback(() => {
+    resetState();
+    onOpenChange(false);
+  }, [resetState, onOpenChange]);
+
+  const price = pkg ? Number(pkg.discountedPrice) : 0;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={dialogOpen} onOpenChange={(v) => { if (!v) handleClose(); }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{t('activate.title')}</DialogTitle>
-          <DialogDescription>{t('activate.description', { title: pkg.title })}</DialogDescription>
+          <DialogDescription>
+            {pkg ? t('activate.description', { title: pkg.title }) : ''}
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-2">
-          <div className="rounded-lg border bg-muted/30 p-3">
-            <div className="flex items-center justify-between">
-              <span className="font-medium">{pkg.title}</span>
-              <span className="text-lg font-bold">{price.toLocaleString()}</span>
+        {pkg && (
+          <div className="space-y-4 py-2">
+            <div className="rounded-lg border bg-muted/30 p-3">
+              <div className="flex items-center justify-between">
+                <span className="font-medium">{pkg.title}</span>
+                <span className="text-lg font-bold">{price.toLocaleString()}</span>
+              </div>
+              <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                <span>{t('package.duration', { count: pkg.durationDays })}</span>
+                {pkg.freeDays > 0 && (
+                  <span>+{t('package.freeDays', { count: pkg.freeDays })}</span>
+                )}
+              </div>
             </div>
-            <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-              <span>{t('package.duration', { count: pkg.durationDays })}</span>
-              {pkg.freeDays > 0 && (
-                <span>+{t('package.freeDays', { count: pkg.freeDays })}</span>
-              )}
-            </div>
+
+            {pkg.features?.allow_discount_codes === 'true' && (
+              <div className="space-y-2">
+                <Label htmlFor="discountCode" className="flex items-center gap-2">
+                  <TicketPercent className="size-4 text-muted-foreground" aria-hidden />
+                  {t('activate.discountLabel')}
+                </Label>
+                <Input
+                  id="discountCode"
+                  value={discountCode}
+                  onChange={(e) => setDiscountCode(e.target.value)}
+                  placeholder={t('activate.discountPlaceholder')}
+                  maxLength={64}
+                />
+              </div>
+            )}
+
+            {pkg.features?.allow_invite_codes === 'true' && (
+              <div className="space-y-2">
+                <Label htmlFor="inviteCode" className="flex items-center gap-2">
+                  <UserPlus className="size-4 text-muted-foreground" aria-hidden />
+                  {t('activate.inviteLabel')}
+                </Label>
+                <Input
+                  id="inviteCode"
+                  value={inviteCode}
+                  onChange={(e) => setInviteCode(e.target.value)}
+                  placeholder={t('activate.invitePlaceholder')}
+                  maxLength={64}
+                />
+              </div>
+            )}
           </div>
-
-          {pkg.features?.allow_discount_codes === 'true' && (
-            <div className="space-y-2">
-              <Label htmlFor="discountCode" className="flex items-center gap-2">
-                <TicketPercent className="size-4 text-muted-foreground" aria-hidden />
-                {t('activate.discountLabel')}
-              </Label>
-              <Input
-                id="discountCode"
-                value={discountCode}
-                onChange={(e) => setDiscountCode(e.target.value)}
-                placeholder={t('activate.discountPlaceholder')}
-                maxLength={64}
-              />
-            </div>
-          )}
-
-          {pkg.features?.allow_invite_codes === 'true' && (
-            <div className="space-y-2">
-              <Label htmlFor="inviteCode" className="flex items-center gap-2">
-                <UserPlus className="size-4 text-muted-foreground" aria-hidden />
-                {t('activate.inviteLabel')}
-              </Label>
-              <Input
-                id="inviteCode"
-                value={inviteCode}
-                onChange={(e) => setInviteCode(e.target.value)}
-                placeholder={t('activate.invitePlaceholder')}
-                maxLength={64}
-              />
-            </div>
-          )}
-        </div>
+        )}
 
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
+          <Button variant="outline" onClick={handleClose} disabled={isLoading}>
             {t('activate.cancel')}
           </Button>
           <Button onClick={handleActivate} disabled={isLoading}>

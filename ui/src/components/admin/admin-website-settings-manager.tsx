@@ -27,6 +27,7 @@ type WebsiteSettingsDraft = {
   address: string;
   turnstileEnabled: boolean;
   taxPercentage: number;
+  paymentTimeLimitDays: number;
 };
 
 const CONTACT_SLOTS = 5;
@@ -65,6 +66,7 @@ export function AdminWebsiteSettingsManager() {
     address: '',
     turnstileEnabled: false,
     taxPercentage: 0,
+    paymentTimeLimitDays: 3,
   }));
 
   useEffect(() => {
@@ -79,6 +81,7 @@ export function AdminWebsiteSettingsManager() {
       address: data.address ?? '',
       turnstileEnabled: data.turnstileEnabled ?? false,
       taxPercentage: data.taxPercentage ?? 0,
+      paymentTimeLimitDays: data.paymentTimeLimitDays ?? 3,
     });
   }, [data]);
 
@@ -102,6 +105,7 @@ export function AdminWebsiteSettingsManager() {
       address: normalizeField(draft.address),
       turnstileEnabled: draft.turnstileEnabled,
       taxPercentage: draft.taxPercentage,
+      paymentTimeLimitDays: draft.paymentTimeLimitDays,
     }),
     [draft],
   );
@@ -301,22 +305,38 @@ export function AdminWebsiteSettingsManager() {
           <section className="rounded-xl border border-border/60 p-4">
             <h3 className="text-sm font-semibold text-foreground">{t('sections.finance')}</h3>
             <p className="mt-1 text-xs text-muted-foreground">{t('sections.financeHint')}</p>
-            <div className="mt-4">
-              <Label htmlFor="taxPercentage" className="text-sm font-medium">{t('fields.taxPercentage')}</Label>
-              <div className="mt-2 flex items-center gap-2">
-                <Input
-                  id="taxPercentage"
-                  type="number"
-                  min={0}
-                  max={100}
-                  step={0.5}
-                  value={draft.taxPercentage}
-                  onChange={(e) => setDraft((c) => ({ ...c, taxPercentage: Number(e.target.value) }))}
-                  className="w-24"
-                />
-                <span className="text-sm text-muted-foreground">%</span>
+              <div className="mt-4">
+                <Label htmlFor="taxPercentage" className="text-sm font-medium">{t('fields.taxPercentage')}</Label>
+                <div className="mt-2 flex items-center gap-2">
+                  <Input
+                    id="taxPercentage"
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={0.5}
+                    value={draft.taxPercentage}
+                    onChange={(e) => setDraft((c) => ({ ...c, taxPercentage: Number(e.target.value) }))}
+                    className="w-24"
+                  />
+                  <span className="text-sm text-muted-foreground">%</span>
+                </div>
               </div>
-            </div>
+              <div className="mt-4">
+                <Label htmlFor="paymentTimeLimitDays" className="text-sm font-medium">{t('fields.paymentTimeLimitDays')}</Label>
+                <div className="mt-2 flex items-center gap-2">
+                  <Input
+                    id="paymentTimeLimitDays"
+                    type="number"
+                    min={0}
+                    max={365}
+                    step={1}
+                    value={draft.paymentTimeLimitDays}
+                    onChange={(e) => setDraft((c) => ({ ...c, paymentTimeLimitDays: Number(e.target.value) }))}
+                    className="w-24"
+                  />
+                  <span className="text-sm text-muted-foreground">{t('fields.days')}</span>
+                </div>
+              </div>
           </section>
 
           <div className="flex items-center gap-2">

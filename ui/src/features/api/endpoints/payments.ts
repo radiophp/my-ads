@@ -26,6 +26,7 @@ type PaymentRequest = {
   rejectionReason: string | null;
   createdAt: string;
   updatedAt: string;
+  expiresAt?: string;
   package?: { id: string; title: string; imageUrl?: string; durationDays?: number };
   user?: { id: string; phone: string; firstName: string | null; lastName: string | null };
 };

@@ -901,7 +901,12 @@
         "cancelButton": "Cancel Payment",
         "cancelled": "Payment cancelled successfully",
         "cancelError": "Failed to cancel payment",
-        "blocked": "You have a pending payment. Please cancel it first."
+        "blocked": "You have a pending payment. Please cancel it first.",
+        "deadline": "Time remaining",
+        "expired": "Expired",
+        "countdownDays": "{days}d {hours}h",
+        "countdownHours": "{hours}h {minutes}m",
+        "countdownMinutes": "{minutes}m"
       }
     },
     "usage": {
@@ -1448,6 +1453,8 @@
         "addressPlaceholder": "Company address",
         "turnstileEnabled": "Enable Cloudflare Turnstile human verification",
         "taxPercentage": "VAT Percentage",
+        "paymentTimeLimitDays": "Payment Time Limit (working days)",
+        "days": "days"
         "taxPercentageHint": "Enter tax percentage (e.g., 9)"
       },
       "actions": {

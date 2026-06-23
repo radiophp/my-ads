@@ -902,7 +902,12 @@
         "cancelButton": "لغو پرداخت",
         "cancelled": "پرداخت با موفقیت لغو شد",
         "cancelError": "خطا در لغو پرداخت",
-        "blocked": "شما یک پرداخت در انتظار دارید. لطفاً ابتدا آن را لغو کنید."
+        "blocked": "شما یک پرداخت در انتظار دارید. لطفاً ابتدا آن را لغو کنید.",
+        "deadline": "مهلت باقی‌مانده",
+        "expired": "منقضی شده",
+        "countdownDays": "{days} روز و {hours} ساعت",
+        "countdownHours": "{hours} ساعت و {minutes} دقیقه",
+        "countdownMinutes": "{minutes} دقیقه"
       }
     },
     "usage": {
@@ -1449,6 +1454,8 @@
         "addressPlaceholder": "آدرس شرکت",
         "turnstileEnabled": "فعال‌سازی احراز هویت انسانی Cloudflare Turnstile",
         "taxPercentage": "درصد مالیات بر ارزش افزوده",
+        "paymentTimeLimitDays": "مهلت پرداخت (روزهای کاری)",
+        "days": "روز"
         "taxPercentageHint": "درصد مالیات را وارد کنید (مثلاً ۹)"
       },
       "actions": {

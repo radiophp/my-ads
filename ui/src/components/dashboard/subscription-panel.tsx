@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { Copy, Crown, Image as ImageIcon, Loader2, Sparkles, TicketPercent, Upload, UserPlus, X, Zap } from 'lucide-react';
+import { Clock, Copy, Crown, Image as ImageIcon, Loader2, Sparkles, TicketPercent, Upload, UserPlus, X, Zap } from 'lucide-react';
 
 import {
   useGetCurrentSubscriptionQuery,
@@ -703,6 +703,29 @@ function PendingPaymentCard({ pending, onCancel }: { pending: NonNullable<Return
   const t = useTranslations('dashboard.subscriptionPage.pendingPayment');
   const tp = useTranslations('dashboard.subscriptionPage.package');
   const [cancelling, setCancelling] = useState(false);
+  const [remaining, setRemaining] = useState('');
+
+  useEffect(() => {
+    if (!pending.expiresAt) return;
+
+    const update = () => {
+      const diff = new Date(pending.expiresAt!).getTime() - Date.now();
+      if (diff <= 0) {
+        setRemaining(t('expired'));
+        return;
+      }
+      const days = Math.floor(diff / 86400000);
+      const hours = Math.floor((diff % 86400000) / 3600000);
+      const minutes = Math.floor((diff % 3600000) / 60000);
+      if (days > 0) setRemaining(t('countdownDays', { days, hours }));
+      else if (hours > 0) setRemaining(t('countdownHours', { hours, minutes }));
+      else setRemaining(t('countdownMinutes', { minutes }));
+    };
+
+    update();
+    const interval = setInterval(update, 60000);
+    return () => clearInterval(interval);
+  }, [pending.expiresAt, t]);
 
   const handleCancel = async () => {
     setCancelling(true);
@@ -734,6 +757,15 @@ function PendingPaymentCard({ pending, onCancel }: { pending: NonNullable<Return
           <span className="text-muted-foreground">{t('receipt')}</span>
           <span>{pending.receiptUrl ? t('uploaded') : t('notUploaded')}</span>
         </div>
+        {pending.expiresAt && (
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">{t('deadline')}</span>
+            <span className="flex items-center gap-1 font-medium text-amber-600 dark:text-amber-400">
+              <Clock className="size-3.5" />
+              {remaining}
+            </span>
+          </div>
+        )}
         <Button variant="destructive" size="sm" onClick={handleCancel} disabled={cancelling} className="w-full">
           {cancelling ? <Loader2 className="size-4 animate-spin" /> : <X className="size-4" />}
           {t('cancelButton')}

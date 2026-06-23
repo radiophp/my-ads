@@ -28,11 +28,11 @@ type WebsiteSettingRecord = {
   instagramUrl: string | null;
   telegramChannelUrl: string | null;
   telegramBotUrl: string | null;
-  baleBotUrl: string | null;
   aboutDescription: string | null;
   address: string | null;
   turnstileEnabled: boolean;
   taxPercentage: number | null;
+  paymentTimeLimitDays: number | null;
   updatedAt: Date;
 };
 
@@ -42,11 +42,11 @@ export type WebsiteSettingsItem = {
   instagramUrl: string | null;
   telegramChannelUrl: string | null;
   telegramBotUrl: string | null;
-  baleBotUrl: string | null;
   aboutDescription: string | null;
   address: string | null;
   turnstileEnabled: boolean;
   taxPercentage: number;
+  paymentTimeLimitDays: number;
   updatedAt?: Date;
 };
 
@@ -112,6 +112,7 @@ export class WebsiteSettingsService {
       address: record?.address ?? null,
       turnstileEnabled: record?.turnstileEnabled ?? false,
       taxPercentage: record?.taxPercentage ?? 0,
+      paymentTimeLimitDays: record?.paymentTimeLimitDays ?? 3,
       updatedAt: record?.updatedAt,
     };
   }
@@ -191,6 +192,7 @@ export class WebsiteSettingsService {
           address: normalizeValue(dto.address),
           turnstileEnabled: dto.turnstileEnabled ?? false,
           taxPercentage: dto.taxPercentage ?? 0,
+          paymentTimeLimitDays: dto.paymentTimeLimitDays ?? 3,
         },
         update: {
           phoneContacts: normalizeContacts(dto.phoneContacts as WebsiteContact[]),
@@ -202,6 +204,7 @@ export class WebsiteSettingsService {
           address: normalizeValue(dto.address),
           turnstileEnabled: dto.turnstileEnabled ?? false,
           taxPercentage: dto.taxPercentage ?? 0,
+          paymentTimeLimitDays: dto.paymentTimeLimitDays ?? 3,
         },
       });
       const item = this.toItem(record);

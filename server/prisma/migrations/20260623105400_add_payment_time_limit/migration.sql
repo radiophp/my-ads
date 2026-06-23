@@ -1,0 +1,1 @@
+ALTER TABLE "WebsiteSetting" ADD COLUMN "paymentTimeLimitDays" INTEGER NOT NULL DEFAULT 3;

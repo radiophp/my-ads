@@ -52,4 +52,10 @@ export class UpdateWebsiteSettingsDto {
   @Min(0)
   @Max(100)
   taxPercentage?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(365)
+  paymentTimeLimitDays?: number;
 }

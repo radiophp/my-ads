@@ -2,12 +2,39 @@ import { BadRequestException, Injectable, Logger, NotFoundException } from '@nes
 import { DiscountCodeType, Prisma, SubscriptionStatus } from '@prisma/client';
 import { PrismaService } from '@app/platform/database/prisma.service';
 import { RedisService } from '@app/platform/cache/redis.service';
+import { BaleBotService } from '@app/modules/bale/bale.service';
 import { WEBSITE_SETTINGS_KEY } from '@app/modules/website-settings/website-settings.constants';
 
 const addDays = (date: Date, days: number) => {
   const result = new Date(date);
   result.setDate(result.getDate() + days);
   return result;
+};
+
+const isHoliday = (date: Date): boolean => {
+  const day = date.getDay();
+  return day === 4 || day === 5;
+};
+
+const addWorkingDays = (start: Date, n: number): Date => {
+  const result = new Date(start);
+  let added = 0;
+  while (added < n) {
+    result.setDate(result.getDate() + 1);
+    if (!isHoliday(result)) added++;
+  }
+  return result;
+};
+
+const countWorkingDaysBetween = (start: Date, end: Date): number => {
+  if (end <= start) return 0;
+  let count = 0;
+  const current = new Date(start);
+  while (current < end) {
+    current.setDate(current.getDate() + 1);
+    if (!isHoliday(current)) count++;
+  }
+  return count;
 };
 
 const clampPrice = (value: number) => Math.max(0, Number(value.toFixed(2)));
@@ -26,6 +53,7 @@ export class PaymentsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly redis: RedisService,
+    private readonly baleBotService: BaleBotService,
   ) {}
 
   private async getTaxPercentage(): Promise<number> {
@@ -503,11 +531,64 @@ export class PaymentsService {
   }
 
   async getPendingPayment(userId: string) {
-    return this.prisma.paymentRequest.findFirst({
+    const payment = await this.prisma.paymentRequest.findFirst({
       where: { userId, status: 'PENDING' },
       include: { package: { select: { id: true, title: true, imageUrl: true } } },
       orderBy: { createdAt: 'desc' },
     });
+    if (!payment) return null;
+
+    const limitDays = await this.getPaymentTimeLimitDays();
+    const expiresAt = addWorkingDays(payment.createdAt, limitDays);
+
+    return { ...payment, expiresAt };
+  }
+
+  private async getPaymentTimeLimitDays(): Promise<number> {
+    try {
+      const settings = await this.prisma.websiteSetting.findUnique({
+        where: { key: WEBSITE_SETTINGS_KEY },
+        select: { paymentTimeLimitDays: true },
+      });
+      return settings?.paymentTimeLimitDays ?? 3;
+    } catch {
+      return 3;
+    }
+  }
+
+  async autoCancelExpiredPayments(): Promise<number> {
+    const limitDays = await this.getPaymentTimeLimitDays();
+    const now = new Date();
+    const expired = await this.prisma.paymentRequest.findMany({
+      where: {
+        status: 'PENDING',
+      },
+      select: { id: true, createdAt: true },
+    });
+
+    const expiredIds = expired
+      .filter((p) => countWorkingDaysBetween(p.createdAt, now) >= limitDays)
+      .map((p) => p.id);
+
+    if (expiredIds.length === 0) return 0;
+
+    await this.prisma.paymentRequest.updateMany({
+      where: { id: { in: expiredIds } },
+      data: { status: 'CANCELLED' },
+    });
+
+    for (const id of expiredIds) {
+      try {
+        const result = await this.baleBotService.sendPaymentAutoCancelled(id);
+        if (!result.success) {
+          this.logger.warn(`Failed to send auto-cancel notification for payment ${id}: ${result.error}`);
+        }
+      } catch (err) {
+        this.logger.error(`Error sending auto-cancel notification for payment ${id}: ${(err as Error).message}`);
+      }
+    }
+
+    return expiredIds.length;
   }
 
   async cancelPayment(paymentId: string, userId: string) {

@@ -654,6 +654,21 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
     );
   }
 
+  async sendPaymentAutoCancelled(
+    paymentId: string,
+  ): Promise<{ success: boolean; error?: string }> {
+    const payment = await this.prisma.paymentRequest.findUnique({
+      where: { id: paymentId },
+      include: { package: { select: { title: true } } },
+    });
+    if (!payment) return { success: false, error: 'Payment not found' };
+
+    return this.sendPaymentMessage(
+      payment.userId,
+      `⏰ پرداخت شما برای اشتراک «${payment.package.title}» به دلیل گذشت مهلت زمانی توسط سیستم لغو شد.\nدر صورت تمایل می‌توانید مجدداً فرایند خرید را از <a href="https://ble.ir">سامانه ماکاران</a> آغاز کنید.`,
+    );
+  }
+
   private async sendPaymentMessage(
     userId: string,
     message: string,

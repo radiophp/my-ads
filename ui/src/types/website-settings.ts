@@ -14,5 +14,6 @@ export type WebsiteSettings = {
   address: string | null;
   turnstileEnabled: boolean;
   taxPercentage: number;
+  paymentTimeLimitDays: number;
   updatedAt?: string;
 };

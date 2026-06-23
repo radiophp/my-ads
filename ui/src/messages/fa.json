@@ -1455,7 +1455,7 @@
         "turnstileEnabled": "فعال‌سازی احراز هویت انسانی Cloudflare Turnstile",
         "taxPercentage": "درصد مالیات بر ارزش افزوده",
         "paymentTimeLimitDays": "مهلت پرداخت (روزهای کاری)",
-        "days": "روز"
+        "days": "روز",
         "taxPercentageHint": "درصد مالیات را وارد کنید (مثلاً ۹)"
       },
       "actions": {

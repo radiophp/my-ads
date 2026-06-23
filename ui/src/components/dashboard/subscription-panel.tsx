@@ -39,9 +39,11 @@ import {
   useGetBankAccountsQuery,
   useInitiatePaymentMutation,
   useUploadReceiptMutation,
+  useReUploadReceiptMutation,
   useValidateCodeMutation,
   useCancelPaymentMutation,
   useGetPendingPaymentQuery,
+  useGetPaymentQuery,
 } from '@/features/api/endpoints/payments';
 import { useGetWebsiteSettingsQuery } from '@/features/api/endpoints/website-settings';
 import type { SubscriptionPackage } from '@/types/packages';
@@ -342,15 +344,18 @@ function PaymentDialog({
   pkg,
   open,
   onOpenChange,
+  existingPaymentId,
 }: {
   pkg: SubscriptionPackage | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  existingPaymentId?: string | null;
 }) {
   const t = useTranslations('dashboard.subscriptionPage');
   const { toast } = useToast();
   const { data: settings } = useGetWebsiteSettingsQuery();
   const { data: bankAccounts, isLoading: banksLoading } = useGetBankAccountsQuery();
+  const { data: existingPayment, isLoading: loadingPayment } = useGetPaymentQuery(existingPaymentId ?? '', { skip: !existingPaymentId });
   const [initiate, { isLoading: initiating }] = useInitiatePaymentMutation();
   const [uploadReceipt, { isLoading: uploading }] = useUploadReceiptMutation();
   const [validateCode, { isLoading: validating }] = useValidateCodeMutation();
@@ -365,15 +370,22 @@ function PaymentDialog({
     bonusDays?: number;
   } | null>(null);
   const [codeError, setCodeError] = useState('');
-  const [paymentId, setPaymentId] = useState<string | null>(null);
+  const [paymentId, setPaymentId] = useState<string | null>(existingPaymentId ?? null);
   const [file, setFile] = useState<File | null>(null);
-  const [step, setStep] = useState<'form' | 'upload' | 'success' | 'error'>('form');
+  const [step, setStep] = useState<'form' | 'upload' | 'success' | 'error'>(existingPaymentId ? 'upload' : 'form');
   const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (existingPaymentId) {
+      setPaymentId(existingPaymentId);
+      setStep('upload');
+    }
+  }, [existingPaymentId]);
 
   const taxPercentage = settings?.taxPercentage ?? 0;
   const originalPrice = pkg ? Number(pkg.discountedPrice) : 0;
   const isPaid = originalPrice > 0;
-  const dialogOpen = open && pkg !== null && isPaid;
+  const dialogOpen = open && (!!existingPaymentId || (pkg !== null && isPaid));
   const discountAmount = appliedCode?.type === 'discount' ? (appliedCode.discountAmount ?? 0) : null;
 
   const canApplyCode = codeInput.trim().length > 0 && !validating;
@@ -483,7 +495,7 @@ function PaymentDialog({
 
   return (
     <Dialog open={dialogOpen} onOpenChange={(v) => { if (!v) handleClose(); }}>
-      <DialogContent className="flex flex-col gap-0 p-0 max-md:!inset-0 max-md:max-h-dvh max-md:!translate-x-0 max-md:!translate-y-0 max-md:rounded-none sm:max-w-lg">
+      <DialogContent className="flex max-h-[85dvh] flex-col gap-0 p-0 max-md:!inset-0 max-md:max-h-dvh max-md:!translate-x-0 max-md:!translate-y-0 max-md:rounded-none sm:max-w-lg">
         <div className="shrink-0 px-6 pt-6">
           {step === 'success' ? (
             <DialogHeader>
@@ -508,9 +520,20 @@ function PaymentDialog({
             <div className="py-4 text-center text-sm text-muted-foreground">
               {t('payment.pendingMessage')}
             </div>
+          ) : step === 'upload' && existingPaymentId && loadingPayment ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="size-6 animate-spin text-muted-foreground" />
+            </div>
           ) : (
             <div className="space-y-4 py-2">
-              {pkg && (
+              {step === 'upload' && existingPayment ? (
+                <div className="rounded-lg border bg-muted/30 p-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">{existingPayment.package?.title ?? ''}</span>
+                    <span className="text-sm font-medium">{Number(existingPayment.finalAmount).toLocaleString()} {t('package.currency')}</span>
+                  </div>
+                </div>
+              ) : pkg && (
                 <div className="rounded-lg border bg-muted/30 p-3">
                   <div className="flex items-center justify-between">
                     <span className="font-medium">{pkg.title}</span>
@@ -525,9 +548,9 @@ function PaymentDialog({
               )}
 
               <PriceBreakdown
-                originalPrice={originalPrice}
-                taxPercentage={taxPercentage}
-                discountAmount={discountAmount}
+                originalPrice={existingPayment ? Number(existingPayment.originalPrice) : originalPrice}
+                taxPercentage={existingPayment ? existingPayment.taxPercentage : taxPercentage}
+                discountAmount={existingPayment ? Number(existingPayment.discountAmount ?? 0) : discountAmount}
               />
 
               {step === 'form' && (
@@ -689,7 +712,7 @@ function PaymentDialog({
               <Button onClick={handleUpload} disabled={!file || uploading}>
                 {uploading ? <Loader2 className="size-4 animate-spin" /> : t('payment.submitReceipt')}
               </Button>
-              <Button variant="outline" onClick={() => setStep('form')}>
+              <Button variant="outline" onClick={() => existingPaymentId ? handleClose() : setStep('form')}>
                 {t('payment.back')}
               </Button>
             </div>
@@ -709,7 +732,11 @@ function PaymentDialog({
   );
 }
 
-function PendingPaymentCard({ pending, onCancel }: { pending: NonNullable<ReturnType<typeof useGetPendingPaymentQuery>['data']>; onCancel: () => void }) {
+function PendingPaymentCard({ pending, onCancel, onContinue }: {
+  pending: NonNullable<ReturnType<typeof useGetPendingPaymentQuery>['data']>;
+  onCancel: () => void;
+  onContinue: () => void;
+}) {
   const t = useTranslations('dashboard.subscriptionPage.pendingPayment');
   const tp = useTranslations('dashboard.subscriptionPage.package');
   const [cancelling, setCancelling] = useState(false);
@@ -778,10 +805,17 @@ function PendingPaymentCard({ pending, onCancel }: { pending: NonNullable<Return
               </span>
             </div>
           )}
-          <Button variant="destructive" size="sm" onClick={() => setShowConfirm(true)} className="w-full">
-            <X className="size-4" />
-            {t('cancelButton')}
-          </Button>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            {!pending.receiptUrl && (
+              <Button variant="default" size="sm" onClick={onContinue} className="sm:flex-1">
+                {t('continueButton')}
+              </Button>
+            )}
+            <Button variant="destructive" size="sm" onClick={() => setShowConfirm(true)} className="sm:flex-1">
+              <X className="size-4" />
+              {t('cancelButton')}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -804,7 +838,7 @@ function PendingPaymentCard({ pending, onCancel }: { pending: NonNullable<Return
   );
 }
 
-function PackageCardWrapper({ pkg, pendingPayment }: { pkg: SubscriptionPackage; pendingPayment: boolean }) {
+function PackageCardWrapper({ pkg, pendingPayment, onContinue }: { pkg: SubscriptionPackage; pendingPayment: boolean; onContinue?: () => void }) {
   const { data: activationStatus } = useGetActivationStatusQuery();
   const t = useTranslations('dashboard.subscriptionPage');
   const { toast } = useToast();
@@ -817,7 +851,7 @@ function PackageCardWrapper({ pkg, pendingPayment }: { pkg: SubscriptionPackage;
 
   const handleActivate = async (_p: SubscriptionPackage) => {
     if (pendingPayment) {
-      toast({ title: t('pendingPayment.blocked'), variant: 'destructive' });
+      if (onContinue) onContinue();
       return;
     }
     if (isRejected) {
@@ -858,6 +892,7 @@ export function SubscriptionPanel() {
   const { data: pendingPayment } = useGetPendingPaymentQuery();
   const [cancelPayment] = useCancelPaymentMutation();
   const { toast } = useToast();
+  const [continuePaymentId, setContinuePaymentId] = useState<string | null>(null);
 
   const isApproved = activationStatus?.activationStatus === 'APPROVED';
   const isRejected = activationStatus?.activationStatus === 'REJECTED';
@@ -873,6 +908,12 @@ export function SubscriptionPanel() {
     }
   };
 
+  const handleContinuePayment = () => {
+    if (pendingPayment) {
+      setContinuePaymentId(pendingPayment.id);
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div>
@@ -881,7 +922,7 @@ export function SubscriptionPanel() {
       </div>
 
       {pendingPayment && (
-        <PendingPaymentCard pending={pendingPayment} onCancel={handleCancelPending} />
+        <PendingPaymentCard pending={pendingPayment} onCancel={handleCancelPending} onContinue={handleContinuePayment} />
       )}
 
       <ActivationStatusCard />
@@ -928,10 +969,17 @@ export function SubscriptionPanel() {
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {packages.map((pkg) => (
-            <PackageCardWrapper key={pkg.id} pkg={pkg} pendingPayment={!!pendingPayment} />
+            <PackageCardWrapper key={pkg.id} pkg={pkg} pendingPayment={!!pendingPayment} onContinue={handleContinuePayment} />
           ))}
         </div>
       )}
+
+      <PaymentDialog
+        pkg={null}
+        open={!!continuePaymentId}
+        onOpenChange={(v) => { if (!v) setContinuePaymentId(null); }}
+        existingPaymentId={continuePaymentId}
+      />
     </div>
   );
 }

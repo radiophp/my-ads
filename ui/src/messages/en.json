@@ -910,7 +910,8 @@
         "confirmTitle": "Cancel Payment",
         "confirmDescription": "Are you sure you want to cancel this payment? Your discount or invite code will not be lost and can be reused.",
         "confirmBack": "Go Back",
-        "confirmYes": "Yes, Cancel"
+        "confirmYes": "Yes, Cancel",
+        "continueButton": "Continue Payment"
       }
     },
     "usage": {

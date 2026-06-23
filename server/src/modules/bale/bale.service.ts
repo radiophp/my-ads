@@ -611,7 +611,7 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
         () =>
           this.sender!.sendMessage(
             chatLink.chatId,
-            '✅ درخواست فعال‌سازی حساب شما تأیید شد.\nهم‌اکنون می‌توانید از <a href="https://ble.ir">سامانه ماکاران</a> یکی از برنامه‌های اشتراک را فعال کنید.',
+            '✅ درخواست فعال‌سازی حساب شما تأیید شد.\nهم‌اکنون می‌توانید از <a href="https://ble.ir">سامانه ماهان فایل</a> یکی از برنامه‌های اشتراک را فعال کنید.',
             { parse_mode: 'HTML', link_preview_options: { is_disabled: true } },
           ),
         { chatId: chatLink.chatId },
@@ -633,7 +633,7 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
 
     return this.sendPaymentMessage(
       payment.userId,
-      `✅ پرداخت شما تأیید شد.\nاشتراک «${payment.package.title}» با موفقیت فعال شد.\nاز <a href="https://ble.ir">سامانه ماکاران</a> می‌توانید از امکانات اشتراک خود استفاده کنید.`,
+      `✅ پرداخت شما تأیید شد.\nاشتراک «${payment.package.title}» با موفقیت فعال شد.\nاز <a href="https://ble.ir">سامانه ماهان فایل</a> می‌توانید از امکانات اشتراک خود استفاده کنید.`,
     );
   }
 
@@ -650,7 +650,7 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
     const reasonText = reason ? `\nدلیل: ${reason}` : '';
     return this.sendPaymentMessage(
       payment.userId,
-      `❌ پرداخت شما برای اشتراک «${payment.package.title}» رد شد.${reasonText}\nبرای اطلاعات بیشتر به <a href="https://ble.ir">سامانه ماکاران</a> مراجعه کنید.`,
+      `❌ پرداخت شما برای اشتراک «${payment.package.title}» رد شد.${reasonText}\nبرای اطلاعات بیشتر به <a href="https://ble.ir">سامانه ماهان فایل</a> مراجعه کنید.`,
     );
   }
 
@@ -663,7 +663,7 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
 
     return this.sendPaymentMessage(
       payment.userId,
-      `⏰ پرداخت شما برای اشتراک «${payment.package.title}» به دلیل گذشت مهلت زمانی توسط سیستم لغو شد.\nدر صورت تمایل می‌توانید مجدداً فرایند خرید را از <a href="https://ble.ir">سامانه ماکاران</a> آغاز کنید.`,
+      `⏰ پرداخت شما برای اشتراک «${payment.package.title}» به دلیل گذشت مهلت زمانی توسط سیستم لغو شد.\nدر صورت تمایل می‌توانید مجدداً فرایند خرید را از <a href="https://ble.ir">سامانه ماهان فایل</a> آغاز کنید.`,
     );
   }
 

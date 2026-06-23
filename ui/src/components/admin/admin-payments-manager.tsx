@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/dialog';
 
 const STATUS_COLORS: Record<string, string> = {
+  INITIATED: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
   PENDING: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
   APPROVED: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
   REJECTED: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
@@ -74,8 +75,8 @@ export function AdminPaymentsManager() {
             <CardTitle>{t('title')}</CardTitle>
             <CardDescription>{t('description')}</CardDescription>
           </div>
-          <div className="flex gap-2">
-            {['PENDING', 'APPROVED', 'REJECTED', undefined].map((status) => (
+          <div className="flex flex-wrap gap-2">
+            {['PENDING', 'INITIATED', 'APPROVED', 'REJECTED', undefined].map((status) => (
               <Button
                 key={status ?? 'all'}
                 variant={statusFilter === status ? 'default' : 'outline'}

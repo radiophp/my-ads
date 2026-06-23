@@ -22,7 +22,7 @@ type PaymentRequest = {
   finalAmount: number;
   inviteBonusDays: number | null;
   receiptUrl: string | null;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
+  status: 'INITIATED' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
   rejectionReason: string | null;
   createdAt: string;
   updatedAt: string;

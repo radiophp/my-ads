@@ -326,9 +326,11 @@ export class PaymentsService {
     if (!payment) throw new NotFoundException('Payment not found.');
     if (payment.userId !== userId)
       throw new BadRequestException('Payment does not belong to user.');
-    if (payment.status === 'APPROVED') throw new BadRequestException('Payment already approved.');
-    if (payment.status === 'PENDING' && payment.receiptUrl) {
+    if (payment.receiptUrl) {
       throw new BadRequestException('Receipt already uploaded. Wait for admin review.');
+    }
+    if (payment.status !== 'INITIATED' && payment.status !== 'PENDING') {
+      throw new BadRequestException('Payment cannot accept a receipt in its current state.');
     }
 
     return this.prisma.paymentRequest.update({
@@ -532,7 +534,7 @@ export class PaymentsService {
 
   async getPendingPayment(userId: string) {
     const payment = await this.prisma.paymentRequest.findFirst({
-      where: { userId, status: 'PENDING' },
+      where: { userId, status: { in: ['INITIATED', 'PENDING'] } },
       include: { package: { select: { id: true, title: true, imageUrl: true } } },
       orderBy: { createdAt: 'desc' },
     });
@@ -561,7 +563,7 @@ export class PaymentsService {
     const now = new Date();
     const expired = await this.prisma.paymentRequest.findMany({
       where: {
-        status: 'PENDING',
+        status: { in: ['INITIATED', 'PENDING'] },
       },
       select: { id: true, createdAt: true },
     });
@@ -599,7 +601,7 @@ export class PaymentsService {
     const payment = await this.prisma.paymentRequest.findUnique({ where: { id: paymentId } });
     if (!payment) throw new NotFoundException('Payment not found.');
     if (payment.userId !== userId) throw new BadRequestException('Not your payment.');
-    if (payment.status !== 'PENDING') {
+    if (payment.status !== 'INITIATED' && payment.status !== 'PENDING') {
       throw new BadRequestException('Payment can only be cancelled when pending.');
     }
 

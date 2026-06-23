@@ -942,6 +942,7 @@
       "reUploadSuccess": "New receipt uploaded successfully",
       "error": "Failed to upload receipt",
       "status": {
+        "INITIATED": "Awaiting Receipt",
         "PENDING": "Pending Review",
         "APPROVED": "Approved",
         "REJECTED": "Rejected"
@@ -1157,6 +1158,7 @@
       "filter": {
         "all": "All",
         "PENDING": "Pending",
+        "INITIATED": "No Receipt",
         "APPROVED": "Approved",
         "REJECTED": "Rejected"
       },
@@ -1169,6 +1171,7 @@
         "actions": "Actions"
       },
       "status": {
+        "INITIATED": "No Receipt",
         "PENDING": "Pending Review",
         "APPROVED": "Approved",
         "REJECTED": "Rejected"

@@ -943,6 +943,7 @@
       "reUploadSuccess": "رسید جدید با موفقیت بارگذاری شد",
       "error": "خطا در بارگذاری رسید",
       "status": {
+        "INITIATED": "در انتظار بارگذاری رسید",
         "PENDING": "در انتظار تأیید",
         "APPROVED": "تأیید شده",
         "REJECTED": "رد شده"
@@ -1157,7 +1158,8 @@
       "description": "مدیریت پرداخت‌های کاربران",
       "filter": {
         "all": "همه",
-        "PENDING": "در انتظار",
+        "PENDING": "در انتظار تأیید",
+        "INITIATED": "بدون رسید",
         "APPROVED": "تأیید شده",
         "REJECTED": "رد شده"
       },
@@ -1170,6 +1172,7 @@
         "actions": "عملیات"
       },
       "status": {
+        "INITIATED": "بدون رسید",
         "PENDING": "در انتظار تأیید",
         "APPROVED": "تأیید شده",
         "REJECTED": "رد شده"

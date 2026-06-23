@@ -811,10 +811,12 @@ function PendingPaymentCard({ pending, onCancel, onContinue }: {
                 {t('continueButton')}
               </Button>
             )}
-            <Button variant="destructive" size="sm" onClick={() => setShowConfirm(true)} className="sm:flex-1">
-              <X className="size-4" />
-              {t('cancelButton')}
-            </Button>
+            {!pending.receiptUrl && (
+              <Button variant="destructive" size="sm" onClick={() => setShowConfirm(true)} className="sm:flex-1">
+                <X className="size-4" />
+                {t('cancelButton')}
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>

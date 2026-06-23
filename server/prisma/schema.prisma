@@ -1094,6 +1094,7 @@ model UsageLog {
 }
 
 enum PaymentStatus {
+  INITIATED
   PENDING
   APPROVED
   REJECTED
@@ -1133,7 +1134,7 @@ model PaymentRequest {
   freeDays        Int           @default(0)
   features        Json          @default("{}")
   receiptUrl      String?
-  status          PaymentStatus @default(PENDING)
+  status          PaymentStatus @default(INITIATED)
   rejectionReason String?
   reviewedBy      String?
   reviewedAt      DateTime?

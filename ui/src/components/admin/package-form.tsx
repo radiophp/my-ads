@@ -60,7 +60,7 @@ export function PackageForm({
   secondaryAction,
   imageUploader,
 }: PackageFormProps) {
-  const t = useTranslations('admin.packages.form.capabilityLabels');
+  const t = useTranslations('admin.packages.form.capabilityFormLabels');
   const isTrial = useWatch({ control: form.control, name: 'isTrial' });
   const featureEntries = Object.entries(PACKAGE_FEATURES).sort(([keyA], [keyB]) => {
     const endKeys = ['allow_discount_codes', 'allow_invite_codes'];

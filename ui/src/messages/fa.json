@@ -2399,6 +2399,21 @@
           "builders_archive": "دسترسی به آرشیو سازندگان {count} منطقه",
           "archive_history_quarters": "دسترسی به آرشیو {count} فصل گذشته"
         },
+        "capabilityFormLabels": {
+          "saved_filters_limit": "فیلترهای ذخیره‌شده",
+          "allow_discount_codes": "کد تخفیف",
+          "allow_invite_codes": "کد دعوت",
+          "ring_binders_limit": "زونکن",
+          "districts_limit": "مناطق تحت پوشش",
+          "notifications_limit": "اعلان فیلترها",
+          "zip_downloads_per_day": "دانلود گروهی",
+          "divar_drafts_per_day": "پیش‌نویس دیوار",
+          "ai_edits_limit": "ویرایش با هوش مصنوعی",
+          "channels_limit": "کانال‌ها",
+          "share_ring_binder": "اشتراک زونکن",
+          "builders_archive": "آرشیو سازندگان",
+          "archive_history_quarters": "آرشیو فصلی"
+        },
         "createSubmit": "ثبت پکیج",
         "updateSubmit": "به‌روزرسانی پکیج",
         "cancel": "انصراف",

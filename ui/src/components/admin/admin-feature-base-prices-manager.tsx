@@ -228,7 +228,7 @@ export function AdminFeatureBasePricesManager() {
                                   handleSave(price);
                                 }
                               }}
-                              className="h-8 flex-1 rounded-none border-0 text-right"
+                              className="h-8 flex-1 border-0 text-right"
                               disabled={isSaving}
                             />
                             <div className="flex items-center px-1.5 h-8 text-[11px] text-muted-foreground border-l bg-muted/50 shrink-0">

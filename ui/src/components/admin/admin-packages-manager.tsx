@@ -42,7 +42,7 @@ const TOTAL_COL_COUNT = FIXED_COL_COUNT + FEATURE_KEYS.length + 2;
 
 export function AdminPackagesManager() {
   const t = useTranslations('admin.packages');
-  const fl = useTranslations('admin.packages.form.capabilityLabels');
+  const fl = useTranslations('admin.packages.form.capabilityFormLabels');
   const locale = useLocale();
   const { toast } = useToast();
 

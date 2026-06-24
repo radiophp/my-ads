@@ -2398,6 +2398,21 @@
           "builders_archive": "Access builders archive of {count} districts",
           "archive_history_quarters": "Access {count} past quarters archive"
         },
+        "capabilityFormLabels": {
+          "saved_filters_limit": "Saved filters",
+          "allow_discount_codes": "Discount codes",
+          "allow_invite_codes": "Invite codes",
+          "ring_binders_limit": "Ring binders",
+          "districts_limit": "Districts",
+          "notifications_limit": "Notifications",
+          "zip_downloads_per_day": "ZIP downloads",
+          "divar_drafts_per_day": "Divar drafts",
+          "ai_edits_limit": "AI edits",
+          "channels_limit": "Channels",
+          "share_ring_binder": "Share ring binders",
+          "builders_archive": "Builders archive",
+          "archive_history_quarters": "Quarterly archive"
+        },
         "createSubmit": "Save package",
         "updateSubmit": "Update package",
         "cancel": "Cancel",

@@ -815,12 +815,13 @@
       "description": "Choose a plan that fits your needs and unlock more features.",
       "loadError": "Unable to load subscription plans. Please try again.",
       "empty": "No subscription plans are available at the moment.",
+      "noPurchasedPackages": "You have already purchased a package. Free packages are no longer available for you.",
       "current": {
         "title": "Active plan",
         "description": "Your subscription is active and running.",
-        "daysLeft": "{count, plural, one={# day left} other={# days left}}",
+        "daysLeft": "{count} day(s) left",
         "trial": "Trial",
-        "bonusDays": "+{count, plural, one={# bonus day} other={# bonus days}}"
+        "bonusDays": "+{count} bonus day(s)"
       },
       "package": {
         "trialBadge": "Trial",
@@ -901,6 +902,7 @@
         "cancelButton": "Cancel Payment",
         "cancelled": "Payment cancelled successfully",
         "cancelError": "Failed to cancel payment",
+        "awaitingReview": "Your previous payment has not been approved yet. You can purchase a new package after admin review.",
         "blocked": "You have a pending payment. Please cancel it first.",
         "deadline": "Time remaining",
         "expired": "Expired",

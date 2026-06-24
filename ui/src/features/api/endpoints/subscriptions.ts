@@ -7,6 +7,7 @@ type ActivationStatus = {
   activationStatus: 'APPROVED' | 'PENDING' | 'REJECTED';
   activationNote: string | null;
   activationRequestedAt: string | null;
+  hasEverPurchased: boolean;
 };
 
 const subscriptionsApi = apiSlice.injectEndpoints({

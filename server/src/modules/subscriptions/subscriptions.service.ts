@@ -84,12 +84,17 @@ export class SubscriptionsService {
   }
 
   async getActivationStatus(userId: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      select: { activationStatus: true, activationNote: true, activationRequestedAt: true },
-    });
+    const [user, paidCount] = await Promise.all([
+      this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { activationStatus: true, activationNote: true, activationRequestedAt: true },
+      }),
+      this.prisma.userSubscription.count({
+        where: { userId, basePrice: { gt: 0 } },
+      }),
+    ]);
     if (!user) throw new NotFoundException('User not found.');
-    return user;
+    return { ...user, hasEverPurchased: paidCount > 0 };
   }
 
   async activateSubscription(
@@ -130,6 +135,15 @@ export class SubscriptionsService {
         });
         if (trialCount > 0) {
           throw new BadRequestException('Trial already used.');
+        }
+      }
+
+      if (pkg.discountedPrice.toNumber() <= 0) {
+        const paidCount = await tx.userSubscription.count({
+          where: { userId, basePrice: { gt: 0 } },
+        });
+        if (paidCount > 0) {
+          throw new BadRequestException('Free packages are not available after a paid purchase.');
         }
       }
 

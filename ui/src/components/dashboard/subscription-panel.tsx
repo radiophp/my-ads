@@ -778,11 +778,20 @@ function PendingPaymentCard({ pending, onCancel, onContinue }: {
   return (
     <>
       <Card className="border-amber-500/20 bg-amber-50/50 dark:bg-amber-950/10">
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle className="text-base">{t('title')}</CardTitle>
             <CardDescription>{t('description')}</CardDescription>
           </div>
+          {pending.receiptUrl && (
+            <button type="button" onClick={() => setShowImage(true)} className="overflow-hidden rounded-md border shrink-0">
+              <img
+                src={`/storage/upload/${pending.receiptUrl}`}
+                alt={t('receipt')}
+                className="size-12 object-cover"
+              />
+            </button>
+          )}
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex items-center justify-between text-sm">
@@ -795,17 +804,7 @@ function PendingPaymentCard({ pending, onCancel, onContinue }: {
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">{t('receipt')}</span>
-            {pending.receiptUrl ? (
-              <button type="button" onClick={() => setShowImage(true)} className="overflow-hidden rounded-md border">
-                <img
-                  src={`/storage/upload/${pending.receiptUrl}`}
-                  alt={t('receipt')}
-                  className="size-12 object-cover"
-                />
-              </button>
-            ) : (
-              <span>{t('notUploaded')}</span>
-            )}
+            <span>{pending.receiptUrl ? t('uploaded') : t('notUploaded')}</span>
           </div>
           {pending.expiresAt && (
             <div className="flex items-center justify-between text-sm">
@@ -863,7 +862,7 @@ function PendingPaymentCard({ pending, onCancel, onContinue }: {
   );
 }
 
-function PackageCardWrapper({ pkg, pendingPayment, onContinue }: { pkg: SubscriptionPackage; pendingPayment: boolean; onContinue?: () => void }) {
+function PackageCardWrapper({ pkg, pendingPayment, onContinue }: { pkg: SubscriptionPackage; pendingPayment: NonNullable<ReturnType<typeof useGetPendingPaymentQuery>['data']> | null; onContinue?: () => void }) {
   const { data: activationStatus } = useGetActivationStatusQuery();
   const t = useTranslations('dashboard.subscriptionPage');
   const { toast } = useToast();
@@ -876,6 +875,10 @@ function PackageCardWrapper({ pkg, pendingPayment, onContinue }: { pkg: Subscrip
 
   const handleActivate = async (_p: SubscriptionPackage) => {
     if (pendingPayment) {
+      if (pendingPayment.receiptUrl) {
+        toast({ title: t('pendingPayment.awaitingReview') });
+        return;
+      }
       if (onContinue) onContinue();
       return;
     }
@@ -922,6 +925,9 @@ export function SubscriptionPanel() {
   const isApproved = activationStatus?.activationStatus === 'APPROVED';
   const isRejected = activationStatus?.activationStatus === 'REJECTED';
   const showPackages = isApproved || isRejected;
+  const filteredPackages = activationStatus?.hasEverPurchased
+    ? packages.filter((pkg) => Number(pkg.discountedPrice) > 0)
+    : packages;
 
   const handleCancelPending = async () => {
     if (!pendingPayment) return;
@@ -991,10 +997,16 @@ export function SubscriptionPanel() {
             <p className="text-muted-foreground">{t('empty')}</p>
           </CardContent>
         </Card>
+      ) : filteredPackages.length === 0 ? (
+        <Card>
+          <CardContent className="py-8 text-center">
+            <p className="text-muted-foreground">{t('noPurchasedPackages')}</p>
+          </CardContent>
+        </Card>
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {packages.map((pkg) => (
-            <PackageCardWrapper key={pkg.id} pkg={pkg} pendingPayment={!!pendingPayment} onContinue={handleContinuePayment} />
+          {filteredPackages.map((pkg) => (
+            <PackageCardWrapper key={pkg.id} pkg={pkg} pendingPayment={pendingPayment ?? null} onContinue={handleContinuePayment} />
           ))}
         </div>
       )}

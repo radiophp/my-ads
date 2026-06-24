@@ -29,6 +29,7 @@ export type AdminEntityCounts = {
   featuredPosts: number;
   seoSettings: number;
   websiteSettings: number;
+  featureBasePrices: number;
 };
 
 @Injectable()
@@ -63,6 +64,7 @@ export class AdminPanelService {
       featuredPosts,
       seoSettings,
       websiteSettings,
+      featureBasePrices,
     ] = await Promise.all([
       this.prisma.subscriptionPackage.count(),
       this.prisma.discountCode.count(),
@@ -92,6 +94,7 @@ export class AdminPanelService {
       this.prisma.featuredPost.count(),
       this.prisma.seoSetting.count(),
       this.prisma.websiteSetting.count(),
+      this.prisma.featureBasePrice.count(),
     ]);
 
     return {
@@ -121,6 +124,7 @@ export class AdminPanelService {
       featuredPosts,
       seoSettings,
       websiteSettings,
+      featureBasePrices,
     };
   }
 }

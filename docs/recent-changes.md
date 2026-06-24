@@ -4,6 +4,35 @@ Compact log of notable changes, grouped by theme with commit references.
 
 ---
 
+## 2026-06-24 — Feature-based pricing infrastructure (Phase A)
+
+**Overview:** Adds `FeatureBasePrice`, `PackageFeatureConfig`, `PackageFeaturePriceSnapshot` models and admin UI for inline price editing.
+
+**Backend:**
+- Prisma models: `FeatureBasePrice` (with `FeaturePricingType` enum, `limitType` DAILY/OVERALL), `PackageFeatureConfig`, `PackageFeaturePriceSnapshot`
+- 7 migrations: base models, Persian label fixes, type changes, `limitType` column
+- `FeatureBasePriceService` — CRUD + `seedFromConstants` (12 features + archive_history_quarters)
+- `FeaturePricingService` — `calculatePackagePricing` (DAILY vs OVERALL amortization), `generateSnapshots`
+- `packages.service.ts` updated — accepts `featureConfigs` on create/update, auto-converts features JSON, auto-generates snapshots
+- `admin-panel.service.ts` — stats include `featureBasePrices` count
+
+**Frontend:**
+- `admin-feature-base-prices-manager.tsx` — table with search, inline price editing
+- Input group: input + "ریال" label + ذخیره button share one border
+- `PriceHint` component shows Persian word price below input (e.g., "پنج هزار تومان")
+- Enter key saves, number delimiter (comma formatting)
+- Active/deactivate switch right-aligned (LTR direction)
+- Right-aligned headers, breadcrumb translation
+- `package-features.constants.ts` — 13 features, `limitType` per feature
+- `package-feature-icons.tsx` — added `archive_history_quarters` → History icon
+
+**Key decisions:**
+- FeatureBasePrice stores reference prices; snapshots immutable per package
+- OVERALL features amortized: `dailyTotal = (unitPrice × limitValue) / durationDays`
+- Changing FeatureBasePrice never affects existing packages
+
+---
+
 ## 2026-06-13 — Bale botId for multi-environment safety
 
 **Commit:** `cf99a00`

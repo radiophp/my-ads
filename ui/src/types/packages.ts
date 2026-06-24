@@ -1,3 +1,21 @@
+export type PackageFeatureConfig = {
+  id: string;
+  featureKey: string;
+  limitValue: number;
+  allowExtra: boolean;
+  maxExtra: number;
+  unitPriceOverride: string | null;
+};
+
+export type PackagePriceSnapshot = {
+  id: string;
+  featureKey: string;
+  pricingType: 'PER_UNIT' | 'FLAT_ACCESS';
+  unitPrice: string;
+  limitValue: number;
+  dailyTotal: string;
+};
+
 export type SubscriptionPackage = {
   id: string;
   title: string;
@@ -12,6 +30,8 @@ export type SubscriptionPackage = {
   discountedPrice: string;
   isActive: boolean;
   features: Record<string, string>;
+  featureConfigs?: PackageFeatureConfig[];
+  priceSnapshots?: PackagePriceSnapshot[];
   createdAt: string;
   updatedAt: string;
 };
@@ -29,6 +49,13 @@ export type CreatePackagePayload = {
   discountedPrice: number;
   isActive?: boolean;
   features?: Record<string, string>;
+  featureConfigs?: Array<{
+    featureKey: string;
+    limitValue: number;
+    allowExtra?: boolean;
+    maxExtra?: number;
+    unitPriceOverride?: number;
+  }>;
 };
 
 export type UpdatePackagePayload = Partial<CreatePackagePayload>;

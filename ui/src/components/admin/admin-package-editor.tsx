@@ -145,6 +145,12 @@ export function AdminPackageEditor({ mode, packageId }: AdminPackageEditorProps)
       actualPrice: values.actualPrice,
       discountedPrice: values.discountedPrice,
       features: values.features,
+      featureConfigs: Object.entries(values.features).map(([featureKey, value]) => ({
+        featureKey,
+        limitValue: value === 'true' ? 1 : value === 'false' ? 0 : Number.parseInt(value, 10) || 0,
+        allowExtra: false,
+        maxExtra: 0,
+      })),
     };
 
     try {

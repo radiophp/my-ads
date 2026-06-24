@@ -4,6 +4,7 @@ import {
   Download,
   Filter,
   FolderKanban,
+  History,
   MapPin,
   PenLine,
   Radio,
@@ -28,6 +29,7 @@ const ICON_MAP: Record<PackageFeatureKey, LucideIcon> = {
   channels_limit: Radio,
   share_ring_binder: Share2,
   builders_archive: Archive,
+  archive_history_quarters: History,
 };
 
 export function getPackageFeatureIcon(key: PackageFeatureKey): LucideIcon {

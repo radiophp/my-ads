@@ -132,6 +132,7 @@ export const apiSlice = createApi({
     'PostsWithPhones',
     'UsageLogs',
     'Payments',
+    'FeatureBasePrices',
   ],
   endpoints: () => ({}),
 });

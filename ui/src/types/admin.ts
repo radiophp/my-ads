@@ -25,4 +25,5 @@ export type AdminDashboardStats = {
   featuredPosts: number;
   seoSettings: number;
   websiteSettings: number;
+  featureBasePrices: number;
 };

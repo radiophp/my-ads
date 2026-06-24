@@ -1102,7 +1102,48 @@
         "payments": {
           "title": "Payments",
           "description": "Manage user payments, approve or reject them."
+        },
+        "featureBasePrices": {
+          "title": "Feature Base Prices",
+          "description": "Set daily unit prices for features to calculate package pricing."
         }
+      }
+    },
+    "featureBasePrices": {
+      "title": "Feature Base Prices",
+      "description": "Set daily base prices for each feature.",
+      "searchPlaceholder": "Search by title or feature key…",
+      "columns": {
+        "featureKey": "Key",
+        "title": "Title",
+        "type": "Type",
+        "limitType": "Limit Type",
+        "unitPrice": "Unit Price",
+        "unitLabel": "Unit Label",
+        "active": "Active",
+        "actions": "Actions"
+      },
+      "perUnit": "Per Unit",
+      "flatAccess": "Flat Access",
+      "daily": "Daily",
+      "overall": "Overall",
+      "editHint": "Click to edit",
+      "active": "Active",
+      "inactive": "Inactive",
+      "save": "Save",
+      "empty": "No features found.",
+      "editDialog": {
+        "title": "Edit Price",
+        "unitPriceLabel": "Daily Unit Price",
+        "save": "Save",
+        "cancel": "Cancel"
+      },
+      "toast": {
+        "invalidPrice": "Invalid price.",
+        "updatedTitle": "Updated",
+        "updatedDescription": "Feature base price updated successfully.",
+        "errorTitle": "Error",
+        "errorDescription": "Failed to update feature base price."
       }
     },
     "users": {
@@ -2353,8 +2394,9 @@
           "divar_drafts_per_day": "Create {count} Divar drafts per day",
           "ai_edits_limit": "Edit {count} ads with AI",
           "channels_limit": "Auto-send ads to {count} channels",
-          "share_ring_binder": "Share ring binders",
-          "builders_archive": "Access builders archive"
+          "share_ring_binder": "Share {count} ring binders",
+          "builders_archive": "Access builders archive of {count} districts",
+          "archive_history_quarters": "Access {count} past quarters archive"
         },
         "createSubmit": "Save package",
         "updateSubmit": "Update package",

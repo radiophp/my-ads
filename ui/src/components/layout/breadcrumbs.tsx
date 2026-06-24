@@ -118,6 +118,7 @@ export function Breadcrumbs({ className, force = false }: BreadcrumbsProps) {
     seo: adminT('seoSettings.title'),
     'website-settings': adminT('websiteSettings.title'),
     notifications: adminT('notifications.title'),
+    'feature-base-prices': adminT('featureBasePrices.title'),
   };
 
   const resolveLabel = (segment: string, parent?: string) => {

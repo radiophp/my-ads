@@ -1,4 +1,8 @@
-import type { SubscriptionPackage } from '@prisma/client';
+import type {
+  SubscriptionPackage,
+  PackageFeatureConfig,
+  PackageFeaturePriceSnapshot,
+} from '@prisma/client';
 
 export class PackageDto {
   id!: string;
@@ -14,10 +18,17 @@ export class PackageDto {
   discountedPrice!: string;
   isActive!: boolean;
   features!: Record<string, string>;
+  featureConfigs?: unknown[];
+  priceSnapshots?: unknown[];
   createdAt!: Date;
   updatedAt!: Date;
 
-  static fromEntity(entity: SubscriptionPackage): PackageDto {
+  static fromEntity(
+    entity: SubscriptionPackage & {
+      featureConfigs?: PackageFeatureConfig[];
+      priceSnapshots?: PackageFeaturePriceSnapshot[];
+    },
+  ): PackageDto {
     return {
       id: entity.id,
       title: entity.title,
@@ -32,6 +43,8 @@ export class PackageDto {
       discountedPrice: entity.discountedPrice.toString(),
       isActive: entity.isActive,
       features: (entity.features as Record<string, string>) ?? {},
+      featureConfigs: entity.featureConfigs ?? undefined,
+      priceSnapshots: entity.priceSnapshots ?? undefined,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     };

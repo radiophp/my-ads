@@ -1103,7 +1103,48 @@
         "payments": {
           "title": "پرداخت‌ها",
           "description": "مدیریت پرداخت‌های کاربران و تأیید یا رد آن‌ها."
+        },
+        "featureBasePrices": {
+          "title": "قیمت پایه ویژگی‌ها",
+          "description": "تعیین قیمت روزانه هر ویژگی برای محاسبه قیمت پکیج‌ها."
         }
+      }
+    },
+    "featureBasePrices": {
+      "title": "قیمت پایه ویژگی‌ها",
+      "description": "قیمت پایه روزانه هر ویژگی را تعیین کنید.",
+      "searchPlaceholder": "جستجو با عنوان یا کلید ویژگی…",
+      "columns": {
+        "featureKey": "کلید",
+        "title": "عنوان",
+        "type": "نوع",
+        "limitType": "نوع محدودیت",
+        "unitPrice": "قیمت واحد",
+        "unitLabel": "برچسب واحد",
+        "active": "فعال",
+        "actions": "عملیات"
+      },
+      "perUnit": "تعدادی",
+      "flatAccess": "دسترسی",
+      "daily": "روزانه",
+      "overall": "کلی",
+      "editHint": "کلیک برای ویرایش",
+      "active": "فعال",
+      "inactive": "غیرفعال",
+      "save": "ذخیره",
+      "empty": "هیچ ویژگی‌ای یافت نشد.",
+      "editDialog": {
+        "title": "ویرایش قیمت",
+        "unitPriceLabel": "قیمت واحد روزانه",
+        "save": "ذخیره",
+        "cancel": "انصراف"
+      },
+      "toast": {
+        "invalidPrice": "قیمت نامعتبر است.",
+        "updatedTitle": "به‌روزرسانی شد",
+        "updatedDescription": "قیمت پایه با موفقیت به‌روزرسانی شد.",
+        "errorTitle": "خطا",
+        "errorDescription": "به‌روزرسانی قیمت پایه با خطا مواجه شد."
       }
     },
     "users": {
@@ -2348,14 +2389,15 @@
           "allow_discount_codes": "دسترسی به کد تخفیف",
           "allow_invite_codes": "دسترسی به کد دعوت",
           "ring_binders_limit": "ساخت زونکن تا {count} عدد",
-          "districts_limit": "دسترسی به {count} منطقه",
+          "districts_limit": "تعداد مناطق تحت پوشش",
           "notifications_limit": "دریافت اعلان آگهی‌های جدید {count} فیلتر",
           "zip_downloads_per_day": "دانلود گروهی عکس‌های {count} آگهی در روز",
           "divar_drafts_per_day": "ایجاد {count} پیش‌نویس دیوار در روز",
           "ai_edits_limit": "ویرایش {count} آگهی با هوش مصنوعی",
           "channels_limit": "ارسال اتوماتیک آگهی در {count} کانال شما",
-          "share_ring_binder": "قابلیت اشتراک زونکن",
-          "builders_archive": "دسترسی به آرشیو سازندگان"
+          "share_ring_binder": "اشتراک {count} زونکن",
+          "builders_archive": "دسترسی به آرشیو سازندگان {count} منطقه",
+          "archive_history_quarters": "دسترسی به آرشیو {count} فصل گذشته"
         },
         "createSubmit": "ثبت پکیج",
         "updateSubmit": "به‌روزرسانی پکیج",

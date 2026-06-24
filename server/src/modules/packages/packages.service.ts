@@ -4,10 +4,14 @@ import { PrismaService } from '@app/platform/database/prisma.service';
 import { PackageDto } from './dto/package.dto';
 import { CreatePackageDto } from './dto/create-package.dto';
 import { UpdatePackageDto } from './dto/update-package.dto';
+import { FeaturePricingService } from './feature-pricing.service';
 
 @Injectable()
 export class PackagesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly featurePricingService: FeaturePricingService,
+  ) {}
 
   async list(): Promise<PackageDto[]> {
     const packages = await this.prisma.subscriptionPackage.findMany({
@@ -17,14 +21,22 @@ export class PackagesService {
         { discountedPrice: 'asc' },
         { title: 'asc' },
       ],
+      include: {
+        featureConfigs: true,
+        priceSnapshots: true,
+      },
     });
 
-    return packages.map(PackageDto.fromEntity);
+    return packages.map((p) => PackageDto.fromEntity(p));
   }
 
   async findById(id: string): Promise<PackageDto> {
     const entity = await this.prisma.subscriptionPackage.findUnique({
       where: { id },
+      include: {
+        featureConfigs: true,
+        priceSnapshots: true,
+      },
     });
     if (!entity) {
       throw new NotFoundException('Subscription package not found.');
@@ -51,8 +63,27 @@ export class PackagesService {
         discountedPrice: new Prisma.Decimal(dto.discountedPrice),
         isActive: dto.isActive ?? true,
         features: (dto.features ?? {}) as Prisma.JsonObject,
+        featureConfigs: dto.featureConfigs
+          ? {
+              create: dto.featureConfigs.map((fc) => ({
+                featureKey: fc.featureKey,
+                limitValue: fc.limitValue,
+                allowExtra: fc.allowExtra ?? false,
+                maxExtra: fc.maxExtra ?? 0,
+                unitPriceOverride: fc.unitPriceOverride ?? null,
+              })),
+            }
+          : undefined,
+      },
+      include: {
+        featureConfigs: true,
+        priceSnapshots: true,
       },
     });
+
+    if (dto.featureConfigs) {
+      await this.featurePricingService.generateSnapshots(entity.id);
+    }
 
     return PackageDto.fromEntity(entity);
   }
@@ -98,8 +129,30 @@ export class PackagesService {
           : {}),
         ...(typeof dto.isActive === 'boolean' ? { isActive: dto.isActive } : {}),
         ...(dto.features ? { features: dto.features as Prisma.JsonObject } : {}),
+        ...(dto.featureConfigs
+          ? {
+              featureConfigs: {
+                deleteMany: { packageId: id },
+                create: dto.featureConfigs.map((fc) => ({
+                  featureKey: fc.featureKey,
+                  limitValue: fc.limitValue,
+                  allowExtra: fc.allowExtra ?? false,
+                  maxExtra: fc.maxExtra ?? 0,
+                  unitPriceOverride: fc.unitPriceOverride ?? null,
+                })),
+              },
+            }
+          : {}),
+      },
+      include: {
+        featureConfigs: true,
+        priceSnapshots: true,
       },
     });
+
+    if (dto.featureConfigs) {
+      await this.featurePricingService.generateSnapshots(entity.id);
+    }
 
     return PackageDto.fromEntity(entity);
   }

@@ -27,6 +27,7 @@ import {
   Radar,
   Phone,
   ClipboardList,
+  DollarSign,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -228,13 +229,18 @@ export function AdminDashboard() {
       icon: <Banknote className="size-8 text-primary" aria-hidden />,
       title: t('cards.payments.title'),
     },
+    featureBasePrices: {
+      href: '/admin/feature-base-prices',
+      icon: <DollarSign className="size-8 text-primary" aria-hidden />,
+      title: t('cards.featureBasePrices.title'),
+    },
   } satisfies Record<string, DashboardNavItem>;
 
   const sections: DashboardSection[] = [
     {
       title: t('sections.core.title'),
       description: t('sections.core.description'),
-      items: [items.users, items.packages, items.discountCodes, items.inviteCodes, items.usageLogs, items.payments],
+      items: [items.users, items.packages, items.discountCodes, items.inviteCodes, items.usageLogs, items.payments, items.featureBasePrices],
     },
     {
       title: t('sections.content.title'),

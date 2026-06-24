@@ -23,6 +23,7 @@
     "prisma:deploy": "dotenv -e ../.env -- prisma migrate deploy",
     "prisma:studio": "dotenv -e ../.env -- prisma studio",
     "sync:divar-categories": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/sync-divar-categories.ts",
+    "seed:feature-base-prices": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/seed-feature-base-prices.ts",
     "sync:divar-category-filters": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/sync-divar-category-filters.ts",
     "divar:harvest-posts": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-divar-post-harvest.ts",
     "divar:fetch-posts": "dotenv -e ../.env -- ts-node -r tsconfig-paths/register ./src/scripts/run-divar-post-fetch.ts",

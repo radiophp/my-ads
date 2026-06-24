@@ -10,7 +10,36 @@ import {
   IsUrl,
   MaxLength,
   Min,
+  ValidateNested,
+  IsArray,
 } from 'class-validator';
+
+class FeatureConfigDto {
+  @IsString()
+  @IsNotEmpty()
+  featureKey!: string;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  limitValue!: number;
+
+  @Type(() => Boolean)
+  @IsBoolean()
+  @IsOptional()
+  allowExtra?: boolean;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  maxExtra?: number;
+
+  @Type(() => Number)
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @IsOptional()
+  unitPriceOverride?: number;
+}
 
 export class CreatePackageDto {
   @IsString()
@@ -84,4 +113,10 @@ export class CreatePackageDto {
   @IsObject()
   @IsOptional()
   features?: Record<string, string>;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => FeatureConfigDto)
+  @IsOptional()
+  featureConfigs?: FeatureConfigDto[];
 }

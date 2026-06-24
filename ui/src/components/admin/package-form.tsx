@@ -2,9 +2,8 @@
 
 import type { ReactNode } from 'react';
 import { useWatch, type UseFormReturn } from 'react-hook-form';
-import { useTranslations } from 'next-intl';
-
-import { Loader2 } from 'lucide-react';
+import { DollarSign, Loader2 } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -19,9 +18,10 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { PACKAGE_FEATURES } from '@/components/admin/constants/package-features.constants';
 import type { PackageFormValues } from '@/components/admin/package-form-defs';
+import type { PackagePricingBreakdown } from '@/types/feature-base-prices';
 
 export type PackageFormTexts = {
   title: string;
@@ -49,6 +49,9 @@ type PackageFormProps = {
   submitIcon?: ReactNode;
   secondaryAction?: ReactNode;
   imageUploader?: ReactNode;
+  pricingBreakdown?: PackagePricingBreakdown | null;
+  isCalculating?: boolean;
+  durationDays?: number;
 };
 
 export function PackageForm({
@@ -59,8 +62,13 @@ export function PackageForm({
   submitIcon,
   secondaryAction,
   imageUploader,
+  pricingBreakdown,
+  isCalculating,
+  durationDays,
 }: PackageFormProps) {
   const t = useTranslations('admin.packages.form.capabilityFormLabels');
+  const fl = useTranslations('admin.packages.form.capabilityFormLabels');
+  const locale = useLocale();
   const isTrial = useWatch({ control: form.control, name: 'isTrial' });
   const featureEntries = Object.entries(PACKAGE_FEATURES).sort(([keyA], [keyB]) => {
     const endKeys = ['allow_discount_codes', 'allow_invite_codes'];
@@ -296,6 +304,128 @@ export function PackageForm({
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {pricingBreakdown && durationDays && durationDays > 0 && (
+          <Card className="border-border/70">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base font-semibold">
+                <DollarSign className="size-4" aria-hidden />
+                پیش‌نمایش قیمت
+              </CardTitle>
+              <CardDescription>
+                محاسبه شده بر اساس قیمت پایه ویژگی‌ها
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {/* Subscription features */}
+                {pricingBreakdown.features.some((f) => !f.isPermanent && Number.parseFloat(f.dailyTotal) / 10 > 0) && (
+                  <>
+                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      اشتراک (ماهیانه)
+                    </div>
+                    <div className="space-y-2">
+                      {pricingBreakdown.features
+                        .filter((f) => !f.isPermanent)
+                        .map((f) => {
+                          const dailyToman = Math.round(Number.parseFloat(f.dailyTotal) / 10);
+                          if (dailyToman <= 0) return null;
+                          return (
+                            <div key={f.featureKey} className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">{fl(f.featureKey)}</span>
+                              <span className="font-medium tabular-nums text-foreground" dir="ltr">
+                                {Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(dailyToman)}{' '}
+                                <span className="text-xs text-muted-foreground">تومان/روز</span>
+                              </span>
+                            </div>
+                          );
+                        })}
+                    </div>
+                    <div className="border-t border-border/60" />
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">جمع روزانه</span>
+                      <span className="tabular-nums text-foreground" dir="ltr">
+                        {Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(
+                          Math.round(Number.parseFloat(pricingBreakdown.subscriptionDailyTotal) / 10),
+                        )}{' '}
+                        <span className="text-xs text-muted-foreground">تومان</span>
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm font-semibold">
+                      <span className="text-muted-foreground">جمع برای {durationDays} روز</span>
+                      <span className="tabular-nums text-foreground" dir="ltr">
+                        {Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(
+                          Math.round(Number.parseFloat(pricingBreakdown.subscriptionTotalForDuration) / 10),
+                        )}{' '}
+                        <span className="text-xs text-muted-foreground">تومان</span>
+                      </span>
+                    </div>
+                  </>
+                )}
+
+                {/* Permanent features */}
+                {pricingBreakdown.features.some((f) => f.isPermanent && Number.parseFloat(f.oneTimeTotal) / 10 > 0) && (
+                  <>
+                    <div className="border-t border-border/60" />
+                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      یک‌بار (دائمی)
+                    </div>
+                    <div className="space-y-2">
+                      {pricingBreakdown.features
+                        .filter((f) => f.isPermanent)
+                        .map((f) => {
+                          const oneTimeToman = Math.round(Number.parseFloat(f.oneTimeTotal) / 10);
+                          if (oneTimeToman <= 0) return null;
+                          return (
+                            <div key={f.featureKey} className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">{fl(f.featureKey)}</span>
+                              <span className="font-medium tabular-nums text-foreground" dir="ltr">
+                                {Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(oneTimeToman)}{' '}
+                                <span className="text-xs text-muted-foreground">تومان</span>
+                              </span>
+                            </div>
+                          );
+                        })}
+                    </div>
+                    <div className="flex items-center justify-between text-sm font-semibold">
+                      <span className="text-muted-foreground">جمع یک‌بار</span>
+                      <span className="tabular-nums text-foreground" dir="ltr">
+                        {Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(
+                          Math.round(Number.parseFloat(pricingBreakdown.oneTimeTotal) / 10),
+                        )}{' '}
+                        <span className="text-xs text-muted-foreground">تومان</span>
+                      </span>
+                    </div>
+                  </>
+                )}
+
+                {/* Grand total */}
+                {Number.parseFloat(pricingBreakdown.subscriptionTotalForDuration) > 0 &&
+                  Number.parseFloat(pricingBreakdown.oneTimeTotal) > 0 && (
+                    <>
+                      <div className="border-t border-border/60" />
+                      <div className="flex items-center justify-between text-sm font-bold">
+                        <span className="text-foreground">جمع کل</span>
+                        <span className="tabular-nums text-foreground" dir="ltr">
+                          {Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(
+                            Math.round(Number.parseFloat(pricingBreakdown.grandTotal) / 10),
+                          )}{' '}
+                          <span className="text-xs text-muted-foreground">تومان</span>
+                        </span>
+                      </div>
+                    </>
+                  )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {isCalculating && (
+          <div className="flex items-center justify-center gap-2 py-2 text-sm text-muted-foreground">
+            <Loader2 className="size-4 animate-spin" aria-hidden />
+            در حال محاسبه...
+          </div>
         )}
 
         <div className="flex items-center justify-end gap-2">

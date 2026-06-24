@@ -7,6 +7,7 @@ export type FeatureBasePrice = {
   unitPrice: string;
   unitLabel: string | null;
   limitType: string;
+  isPermanent: boolean;
   isActive: boolean;
   sortOrder: number;
   createdAt: string;
@@ -20,6 +21,7 @@ export type CreateFeatureBasePricePayload = {
   pricingType: 'PER_UNIT' | 'FLAT_ACCESS';
   unitPrice: number;
   unitLabel?: string;
+  isPermanent?: boolean;
   isActive?: boolean;
   sortOrder?: number;
 };
@@ -27,13 +29,23 @@ export type CreateFeatureBasePricePayload = {
 export type UpdateFeatureBasePricePayload = Partial<CreateFeatureBasePricePayload>;
 
 export type PackagePricingBreakdown = {
-  dailyTotal: string;
-  totalForDuration: string;
+  subscriptionDailyTotal: string;
+  subscriptionTotalForDuration: string;
+  oneTimeTotal: string;
+  grandTotal: string;
   features: Array<{
     featureKey: string;
     pricingType: 'PER_UNIT' | 'FLAT_ACCESS';
     unitPrice: string;
     limitValue: number;
+    limitType: string;
     dailyTotal: string;
+    oneTimeTotal: string;
+    isPermanent: boolean;
   }>;
+};
+
+export type CalculatePricingPayload = {
+  durationDays: number;
+  featureConfigs: Array<{ featureKey: string; limitValue: number }>;
 };

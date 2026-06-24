@@ -3,6 +3,7 @@ import type {
   FeatureBasePrice,
   CreateFeatureBasePricePayload,
   UpdateFeatureBasePricePayload,
+  CalculatePricingPayload,
   PackagePricingBreakdown,
 } from '@/types/feature-base-prices';
 
@@ -58,6 +59,13 @@ const featureBasePricesApi = apiSlice.injectEndpoints({
       query: (packageId) => `/admin/feature-base-prices/recalculate/${packageId}`,
       providesTags: (result, error, packageId) => [{ type: 'FeatureBasePrices' as const, id: `recalc-${packageId}` }],
     }),
+    calculatePricing: builder.mutation<PackagePricingBreakdown, CalculatePricingPayload>({
+      query: (body) => ({
+        url: '/admin/feature-base-prices/calculate-pricing',
+        method: 'POST',
+        body,
+      }),
+    }),
     applySnapshots: builder.mutation<void, string>({
       query: (packageId) => ({
         url: `/admin/feature-base-prices/apply-snapshots/${packageId}`,
@@ -77,5 +85,6 @@ export const {
   useUpdateFeatureBasePriceMutation,
   useDeleteFeatureBasePriceMutation,
   useRecalculatePricingQuery,
+  useCalculatePricingMutation,
   useApplySnapshotsMutation,
 } = featureBasePricesApi;

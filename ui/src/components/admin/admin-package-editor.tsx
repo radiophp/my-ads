@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useWatch } from 'react-hook-form';
 import { Loader2, Save, ArrowLeft } from 'lucide-react';
@@ -28,6 +28,8 @@ import {
   useGetPackageQuery,
   useUpdatePackageMutation,
 } from '@/features/api/endpoints/packages';
+import { useCalculatePricingMutation } from '@/features/api/endpoints/feature-base-prices';
+import type { PackagePricingBreakdown } from '@/types/feature-base-prices';
 import { Link } from '@/i18n/routing';
 
 type AdminPackageEditorProps = {
@@ -51,8 +53,45 @@ export function AdminPackageEditor({ mode, packageId }: AdminPackageEditorProps)
 
   const [createPackage, { isLoading: isCreating }] = useCreatePackageMutation();
   const [updatePackage, { isLoading: isUpdating }] = useUpdatePackageMutation();
+  const [calculatePricing, { isLoading: isCalculating }] = useCalculatePricingMutation();
 
   const isEditing = mode === 'edit';
+
+  const watchedFeatures = useWatch({ control: form.control, name: 'features' });
+  const watchedDurationDays = useWatch({ control: form.control, name: 'durationDays' });
+  const [pricing, setPricing] = useState<PackagePricingBreakdown | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (!watchedDurationDays || watchedDurationDays < 1) {
+      setPricing(null);
+      return;
+    }
+
+    const configs = Object.entries(watchedFeatures ?? {}).map(([featureKey, value]) => ({
+      featureKey,
+      limitValue:
+        value === 'true' ? 1 : value === 'false' ? 0 : Number.parseInt(value, 10) || 0,
+    }));
+
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const result = await calculatePricing({
+          durationDays: watchedDurationDays,
+          featureConfigs: configs,
+        }).unwrap();
+        setPricing(result);
+      } catch {
+        setPricing(null);
+      }
+    }, 500);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [watchedFeatures, watchedDurationDays, calculatePricing]);
 
   const {
     data: existingPackage,
@@ -227,6 +266,9 @@ export function AdminPackageEditor({ mode, packageId }: AdminPackageEditorProps)
                     texts={imageTexts}
                   />
                 }
+                pricingBreakdown={pricing}
+                isCalculating={isCalculating}
+                durationDays={watchedDurationDays}
               />
             </>
           )}

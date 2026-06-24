@@ -1162,6 +1162,7 @@ model FeatureBasePrice {
   unitPrice   Decimal           @db.Decimal(12, 2)
   unitLabel   String?
   limitType   String            @default("OVERALL")
+  isPermanent Boolean           @default(false)
   isActive    Boolean           @default(true)
   sortOrder   Int               @default(0)
   createdAt   DateTime          @default(now())
@@ -1193,6 +1194,8 @@ model PackageFeaturePriceSnapshot {
   unitPrice   Decimal           @db.Decimal(12, 2)
   limitValue  Int               @default(0)
   dailyTotal  Decimal           @db.Decimal(12, 2)
+  oneTimeTotal String           @default("0")
+  isPermanent Boolean           @default(false)
   createdAt   DateTime          @default(now())
 
   @@unique([packageId, featureKey])

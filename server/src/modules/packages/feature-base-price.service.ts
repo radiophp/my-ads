@@ -10,6 +10,7 @@ interface CreateFeatureBasePriceDto {
   pricingType: FeaturePricingType;
   unitPrice: number;
   unitLabel?: string;
+  isPermanent?: boolean;
   isActive?: boolean;
   sortOrder?: number;
 }
@@ -20,6 +21,7 @@ interface UpdateFeatureBasePriceDto {
   pricingType?: FeaturePricingType;
   unitPrice?: number;
   unitLabel?: string | null;
+  isPermanent?: boolean;
   isActive?: boolean;
   sortOrder?: number;
 }
@@ -87,6 +89,7 @@ export class FeatureBasePriceService {
         featureDef.type === 'NUMBER' ? FeaturePricingType.PER_UNIT : FeaturePricingType.FLAT_ACCESS;
 
       const limitType = featureDef.limitType ?? 'OVERALL';
+      const isPermanent = featureDef.isPermanent ?? false;
 
       await this.prisma.featureBasePrice.upsert({
         where: { featureKey },
@@ -96,6 +99,7 @@ export class FeatureBasePriceService {
           pricingType,
           unitLabel: labels.unitLabel,
           limitType,
+          isPermanent,
         },
         create: {
           featureKey,
@@ -105,6 +109,7 @@ export class FeatureBasePriceService {
           unitPrice: 0,
           unitLabel: labels.unitLabel,
           limitType,
+          isPermanent,
           sortOrder: entries.findIndex(([k]) => k === featureKey),
         },
       });

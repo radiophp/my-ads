@@ -12,13 +12,17 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import {
+  ArrayMinSize,
+  IsArray,
   IsBoolean,
   IsEnum,
   IsNumber,
   IsOptional,
   IsString,
   Min,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { FeaturePricingType } from '@prisma/client';
 import { JwtAuthGuard } from '@app/modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '@app/modules/auth/guards/roles.guard';
@@ -47,6 +51,10 @@ class CreateFeatureBasePriceDto {
   @IsOptional()
   @IsString()
   unitLabel?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isPermanent?: boolean;
 
   @IsOptional()
   @IsBoolean()
@@ -81,11 +89,36 @@ class UpdateFeatureBasePriceDto {
 
   @IsOptional()
   @IsBoolean()
+  isPermanent?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
   isActive?: boolean;
 
   @IsOptional()
   @IsNumber()
   sortOrder?: number;
+}
+
+class PricingInputItem {
+  @IsString()
+  featureKey!: string;
+
+  @IsNumber()
+  @Min(0)
+  limitValue!: number;
+}
+
+class CalculatePricingDto {
+  @IsNumber()
+  @Min(1)
+  durationDays!: number;
+
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => PricingInputItem)
+  featureConfigs!: PricingInputItem[];
 }
 
 @Controller('admin/feature-base-prices')
@@ -125,6 +158,14 @@ export class AdminFeatureBasePricesController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id', new ParseUUIDPipe()) id: string): Promise<void> {
     await this.featureBasePriceService.remove(id);
+  }
+
+  @Post('calculate-pricing')
+  async calculatePricing(@Body() dto: CalculatePricingDto) {
+    return this.featurePricingService.calculatePricingFromConfigs(
+      dto.durationDays,
+      dto.featureConfigs,
+    );
   }
 
   @Post('recalculate/:packageId')

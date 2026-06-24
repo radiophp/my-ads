@@ -2,19 +2,28 @@ import { Injectable } from '@nestjs/common';
 import { FeaturePricingType, Prisma } from '@prisma/client';
 import { PrismaService } from '@app/platform/database/prisma.service';
 
-interface FeatureDailyPrice {
+export interface PricingCalculationInput {
+  featureKey: string;
+  limitValue: number;
+}
+
+interface FeaturePriceLine {
   featureKey: string;
   pricingType: FeaturePricingType;
   unitPrice: string;
   limitValue: number;
   limitType: string;
   dailyTotal: string;
+  oneTimeTotal: string;
+  isPermanent: boolean;
 }
 
 export interface PackagePricingBreakdown {
-  dailyTotal: string;
-  totalForDuration: string;
-  features: FeatureDailyPrice[];
+  subscriptionDailyTotal: string;
+  subscriptionTotalForDuration: string;
+  oneTimeTotal: string;
+  grandTotal: string;
+  features: FeaturePriceLine[];
 }
 
 @Injectable()
@@ -29,17 +38,32 @@ export class FeaturePricingService {
       where: { packageId },
     });
 
+    return this.doCalculate(durationDays, configs);
+  }
+
+  async calculatePricingFromConfigs(
+    durationDays: number,
+    inputs: PricingCalculationInput[],
+  ): Promise<PackagePricingBreakdown> {
+    return this.doCalculate(durationDays, inputs);
+  }
+
+  private async doCalculate(
+    durationDays: number,
+    inputs: { featureKey: string; limitValue: number }[],
+  ): Promise<PackagePricingBreakdown> {
     const basePrices = await this.prisma.featureBasePrice.findMany({
       where: { isActive: true },
     });
 
     const basePriceMap = new Map(basePrices.map((bp) => [bp.featureKey, bp]));
 
-    const features: FeatureDailyPrice[] = configs.map((cfg) => {
+    const features: FeaturePriceLine[] = inputs.map((cfg) => {
       const base = basePriceMap.get(cfg.featureKey);
       const pricingType = base?.pricingType ?? FeaturePricingType.PER_UNIT;
       const limitType = base?.limitType ?? 'OVERALL';
-      const unitPrice = cfg.unitPriceOverride ?? base?.unitPrice ?? new Prisma.Decimal(0);
+      const isPermanent = base?.isPermanent ?? false;
+      const unitPrice = base?.unitPrice ?? new Prisma.Decimal(0);
       const limitValue = cfg.limitValue;
       const unitPriceNum = new Prisma.Decimal(unitPrice.toString());
 
@@ -51,9 +75,13 @@ export class FeaturePricingService {
           : unitPriceNum.mul(limitValue);
 
       const dailyTotal =
-        limitType === 'OVERALL' && pricingType === FeaturePricingType.PER_UNIT
-          ? totalRaw.div(durationDays)
-          : totalRaw;
+        isPermanent
+          ? new Prisma.Decimal(0)
+          : limitType === 'OVERALL' && pricingType === FeaturePricingType.PER_UNIT
+            ? totalRaw.div(durationDays)
+            : totalRaw;
+
+      const oneTimeTotal = isPermanent ? totalRaw : new Prisma.Decimal(0);
 
       return {
         featureKey: cfg.featureKey,
@@ -61,19 +89,33 @@ export class FeaturePricingService {
         unitPrice: unitPriceNum.toString(),
         limitValue,
         limitType,
+        isPermanent,
         dailyTotal: dailyTotal.toString(),
+        oneTimeTotal: oneTimeTotal.toString(),
       };
     });
 
-    const dailySum = features.reduce(
+    const subscriptionFeatures = features.filter((f) => !f.isPermanent);
+    const oneTimeFeatures = features.filter((f) => f.isPermanent);
+
+    const subscriptionDailySum = subscriptionFeatures.reduce(
       (sum, f) => sum.add(new Prisma.Decimal(f.dailyTotal)),
       new Prisma.Decimal(0),
     );
-    const totalForDuration = dailySum.mul(durationDays);
+    const subscriptionTotalForDuration = subscriptionDailySum.mul(durationDays);
+
+    const oneTimeSum = oneTimeFeatures.reduce(
+      (sum, f) => sum.add(new Prisma.Decimal(f.oneTimeTotal)),
+      new Prisma.Decimal(0),
+    );
+
+    const grandTotal = subscriptionTotalForDuration.add(oneTimeSum);
 
     return {
-      dailyTotal: dailySum.toString(),
-      totalForDuration: totalForDuration.toString(),
+      subscriptionDailyTotal: subscriptionDailySum.toString(),
+      subscriptionTotalForDuration: subscriptionTotalForDuration.toString(),
+      oneTimeTotal: oneTimeSum.toString(),
+      grandTotal: grandTotal.toString(),
       features,
     };
   }
@@ -97,6 +139,7 @@ export class FeaturePricingService {
       const base = basePriceMap.get(cfg.featureKey);
       const pricingType = base?.pricingType ?? FeaturePricingType.PER_UNIT;
       const limitType = base?.limitType ?? 'OVERALL';
+      const isPermanent = base?.isPermanent ?? false;
       const unitPrice = cfg.unitPriceOverride ?? base?.unitPrice ?? new Prisma.Decimal(0);
       const unitPriceNum = new Prisma.Decimal(unitPrice.toString());
       const limitValue = cfg.limitValue;
@@ -109,9 +152,13 @@ export class FeaturePricingService {
           : unitPriceNum.mul(limitValue);
 
       const dailyTotal =
-        limitType === 'OVERALL' && pricingType === FeaturePricingType.PER_UNIT
-          ? totalRaw.div(durationDays)
-          : totalRaw;
+        isPermanent
+          ? new Prisma.Decimal(0)
+          : limitType === 'OVERALL' && pricingType === FeaturePricingType.PER_UNIT
+            ? totalRaw.div(durationDays)
+            : totalRaw;
+
+      const oneTimeTotalForSnap = isPermanent ? totalRaw : new Prisma.Decimal(0);
 
       await this.prisma.packageFeaturePriceSnapshot.upsert({
         where: { packageId_featureKey: { packageId, featureKey: cfg.featureKey } },
@@ -120,6 +167,8 @@ export class FeaturePricingService {
           unitPrice: unitPriceNum,
           limitValue,
           dailyTotal,
+          oneTimeTotal: oneTimeTotalForSnap.toString(),
+          isPermanent,
         },
         create: {
           packageId,
@@ -128,6 +177,8 @@ export class FeaturePricingService {
           unitPrice: unitPriceNum,
           limitValue,
           dailyTotal,
+          oneTimeTotal: oneTimeTotalForSnap.toString(),
+          isPermanent,
         },
       });
     }

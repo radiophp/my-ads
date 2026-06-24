@@ -192,6 +192,7 @@ export function AdminFeatureBasePricesManager() {
                   <th className="pb-2 text-right font-medium">{t('columns.title')}</th>
                   <th className="pb-2 text-right font-medium">{t('columns.type')}</th>
                   <th className="pb-2 text-right font-medium">{t('columns.limitType')}</th>
+                  <th className="pb-2 text-right font-medium">{t('columns.pricing')}</th>
                   <th className="pb-2 text-right font-medium">{t('columns.unitPrice')}</th>
                   <th className="pb-2 text-right font-medium">{t('columns.unitLabel')}</th>
                   <th className="pb-2 text-right font-medium">{t('columns.active')}</th>
@@ -210,6 +211,13 @@ export function AdminFeatureBasePricesManager() {
                       </td>
                       <td className="py-2.5 text-right text-muted-foreground">
                         {price.limitType === 'DAILY' ? t('daily') : t('overall')}
+                      </td>
+                      <td className="py-2.5 text-right">
+                        {price.isPermanent ? (
+                          <span className="text-xs text-amber-600 dark:text-amber-400">{t('permanent')}</span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">{t('subscription')}</span>
+                        )}
                       </td>
                       <td className="py-2.5 text-right align-top">
                         <div className="flex flex-col gap-0.5">

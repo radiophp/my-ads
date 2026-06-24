@@ -11,6 +11,14 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import {
+  IsBoolean,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+} from 'class-validator';
 import { FeaturePricingType } from '@prisma/client';
 import { JwtAuthGuard } from '@app/modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '@app/modules/auth/guards/roles.guard';
@@ -20,23 +28,63 @@ import { FeaturePricingService } from './feature-pricing.service';
 import { PackagesService } from './packages.service';
 
 class CreateFeatureBasePriceDto {
+  @IsString()
   featureKey!: string;
+
+  @IsString()
   title!: string;
+
+  @IsString()
   titleEn!: string;
+
+  @IsEnum(FeaturePricingType)
   pricingType!: FeaturePricingType;
+
+  @IsNumber()
+  @Min(0)
   unitPrice!: number;
+
+  @IsOptional()
+  @IsString()
   unitLabel?: string;
+
+  @IsOptional()
+  @IsBoolean()
   isActive?: boolean;
+
+  @IsOptional()
+  @IsNumber()
   sortOrder?: number;
 }
 
 class UpdateFeatureBasePriceDto {
+  @IsOptional()
+  @IsString()
   title?: string;
+
+  @IsOptional()
+  @IsString()
   titleEn?: string;
+
+  @IsOptional()
+  @IsEnum(FeaturePricingType)
   pricingType?: FeaturePricingType;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
   unitPrice?: number;
+
+  @IsOptional()
+  @IsString()
   unitLabel?: string | null;
+
+  @IsOptional()
+  @IsBoolean()
   isActive?: boolean;
+
+  @IsOptional()
+  @IsNumber()
   sortOrder?: number;
 }
 

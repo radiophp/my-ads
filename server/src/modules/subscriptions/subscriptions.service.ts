@@ -87,6 +87,39 @@ export class SubscriptionsService {
     return Number.isNaN(limit) ? 0 : limit;
   }
 
+  async resolvePermanentFeatureLimit(
+    userId: string,
+    featureKey: string,
+    isAdmin?: boolean,
+  ): Promise<number> {
+    if (isAdmin) return Infinity;
+
+    if (!userId) return 0;
+
+    const override = await this.prisma.userFeatureOverride.findUnique({
+      where: { userId_featureKey: { userId, featureKey } },
+    });
+    if (override) return override.limitValue;
+
+    const subscriptions = await this.prisma.userSubscription.findMany({
+      where: { userId },
+      include: { package: { select: { features: true } } },
+    });
+
+    let maxLimit = 0;
+    for (const sub of subscriptions) {
+      const pkgVal = (sub.package.features as Record<string, string>)[featureKey];
+      const pkgLimit = pkgVal ? Number.parseInt(pkgVal, 10) : 0;
+      if (Number.isNaN(pkgLimit)) continue;
+
+      const extras = (sub.featureExtras as Record<string, number>)[featureKey] ?? 0;
+      const effective = pkgLimit + extras;
+      if (effective > maxLimit) maxLimit = effective;
+    }
+
+    return maxLimit;
+  }
+
   async requestActivation(userId: string, dto: RequestActivationDto) {
     const pkg = await this.prisma.subscriptionPackage.findUnique({ where: { id: dto.packageId } });
     if (!pkg || !pkg.isActive) {

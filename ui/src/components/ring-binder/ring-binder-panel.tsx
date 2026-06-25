@@ -25,8 +25,6 @@ import {
 } from '@/features/api/endpoints/ring-binder';
 import type { RingBinderFolder } from '@/types/ring-binder';
 
-const DEFAULT_MAX_FOLDERS = 30;
-
 export function RingBinderPanel() {
   const t = useTranslations('ringBinder');
   const locale = useLocale();
@@ -40,8 +38,8 @@ export function RingBinderPanel() {
   const [folderToDelete, setFolderToDelete] = useState<RingBinderFolder | null>(null);
 
   const folders = data?.folders ?? [];
-  const maxFolders = data?.maxFolders ?? DEFAULT_MAX_FOLDERS;
-  const isAtLimit = folders.length >= maxFolders;
+  const folderLimit = data?.limit ?? Infinity;
+  const isAtLimit = folders.length >= folderLimit;
 
   const dateFormatter = useMemo(
     () =>
@@ -159,7 +157,7 @@ export function RingBinderPanel() {
               </Button>
             </form>
             <p className="mt-2 text-xs text-muted-foreground">
-              {t('form.limitHelper', { count: folders.length, max: maxFolders })}
+              {t('form.limitHelper', { count: folders.length, max: folderLimit })}
             </p>
             {isAtLimit ? (
               <p className="mt-1 text-xs font-medium text-destructive">{t('form.limitReached')}</p>

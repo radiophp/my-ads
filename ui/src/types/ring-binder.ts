@@ -10,7 +10,8 @@ export type RingBinderFolder = {
 
 export type RingBinderFolderListResponse = {
   folders: RingBinderFolder[];
-  maxFolders: number;
+  limit: number;
+  remaining: number;
 };
 
 export type SavedFolderEntry = {

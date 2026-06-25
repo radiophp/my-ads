@@ -53,7 +53,7 @@ export function SaveToFolderDialog({
     { skip: !open },
   );
   const folders = useMemo(() => data?.folders ?? [], [data?.folders]);
-  const maxFolders = data?.maxFolders ?? 30;
+  const maxFolders = data?.limit ?? Infinity;
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [newFolderName, setNewFolderName] = useState('');
   const [createFolder, { isLoading: isCreating }] = useCreateRingBinderFolderMutation();

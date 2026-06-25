@@ -6,14 +6,18 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@app/platform/database/prisma.service';
+import { SubscriptionsService } from '@app/modules/subscriptions/subscriptions.service';
 
-export const MAX_RING_BINDER_FOLDERS = 30;
+const FEATURE_KEY = 'ring_binders_limit';
 
 @Injectable()
 export class RingBindersService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly subscriptionsService: SubscriptionsService,
+  ) {}
 
-  async listFolders(userId: string) {
+  async listFolders(userId: string, isAdmin = false) {
     const folders = await this.prismaService.ringBinderFolder.findMany({
       where: { userId, deletedAt: null },
       orderBy: { createdAt: 'asc' },
@@ -32,10 +36,20 @@ export class RingBindersService {
       },
     });
 
-    return folders.map(({ _count, ...folder }) => ({
-      ...folder,
-      savedPostCount: _count.posts,
-    }));
+    const limit = await this.subscriptionsService.resolvePermanentFeatureLimit(
+      userId,
+      FEATURE_KEY,
+      isAdmin,
+    );
+
+    return {
+      folders: folders.map(({ _count, ...folder }) => ({
+        ...folder,
+        savedPostCount: _count.posts,
+      })),
+      limit,
+      remaining: limit === Infinity ? Infinity : Math.max(limit - folders.length, 0),
+    };
   }
 
   private async assertNameAvailable(userId: string, name: string, excludeId?: string) {
@@ -63,17 +77,25 @@ export class RingBindersService {
     return folder;
   }
 
-  async createFolder(userId: string, name: string) {
+  async createFolder(userId: string, name: string, isAdmin = false) {
     const sanitizedName = name.trim();
     if (!sanitizedName) {
       throw new BadRequestException('Folder name cannot be empty.');
     }
 
-    const folderCount = await this.prismaService.ringBinderFolder.count({
-      where: { userId, deletedAt: null },
-    });
-    if (folderCount >= MAX_RING_BINDER_FOLDERS) {
-      throw new BadRequestException(`You can create up to ${MAX_RING_BINDER_FOLDERS} folders.`);
+    const limit = await this.subscriptionsService.resolvePermanentFeatureLimit(
+      userId,
+      FEATURE_KEY,
+      isAdmin,
+    );
+
+    if (limit !== Infinity) {
+      const folderCount = await this.prismaService.ringBinderFolder.count({
+        where: { userId, deletedAt: null },
+      });
+      if (folderCount >= limit) {
+        throw new BadRequestException(`حداکثر ${limit} زونکن می‌توانید داشته باشید.`);
+      }
     }
 
     await this.assertNameAvailable(userId, sanitizedName);

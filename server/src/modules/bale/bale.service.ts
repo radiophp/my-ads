@@ -681,6 +681,41 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
     );
   }
 
+  async sendSubscriptionExpired(
+    userId: string,
+    packageTitle: string,
+  ): Promise<{ success: boolean; error?: string }> {
+    await this.ensureSender();
+    if (!this.sender) {
+      return { success: false, error: 'Bale sender is not initialized' };
+    }
+
+    const chatLink = await this.findChatLink({ userId });
+    if (!chatLink) {
+      return { success: false, error: 'Bale chat link not found' };
+    }
+
+    try {
+      await this.sendWithRetry(
+        'subscriptionExpired',
+        () =>
+          this.sender!.sendMessage(
+            chatLink.chatId,
+            `⏰ اشتراک شما برای پکیج «${packageTitle}» به پایان رسیده است.\nدر نتیجه مجموعه‌های فیلتر شما غیرفعال شدند.\nبرای تمدید اشتراک و فعال‌سازی مجدد امکانات به <a href="https://ble.ir">سامانه ماهان فایل</a> مراجعه کنید.`,
+            { parse_mode: 'HTML', link_preview_options: { is_disabled: true } },
+          ),
+        { chatId: chatLink.chatId },
+      );
+      return { success: true };
+    } catch (err) {
+      const errMsg = (err as any)?.response?.description ?? (err as Error).message;
+      this.logger.error(
+        `Failed to send subscription expired notification to user ${userId}: ${errMsg}`,
+      );
+      return { success: false, error: errMsg };
+    }
+  }
+
   private async sendPaymentMessage(
     userId: string,
     message: string,

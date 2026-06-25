@@ -2,13 +2,14 @@
 
 import { useMemo, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { Bookmark, Eye, RefreshCw, Trash2 } from 'lucide-react';
+import { Bookmark, Eye, Power, PowerOff, RefreshCw, Trash2 } from 'lucide-react';
 import { skipToken } from '@reduxjs/toolkit/query';
 
 import {
   useGetSavedFiltersQuery,
   useDeleteSavedFilterMutation,
   useUpdateSavedFilterMutation,
+  useToggleSavedFilterMutation,
 } from '@/features/api/endpoints/saved-filters';
 import {
   useGetProvincesQuery,
@@ -56,8 +57,10 @@ export function SavedFiltersPanel() {
   });
   const [deleteSavedFilter, { isLoading: isDeleting }] = useDeleteSavedFilterMutation();
   const [updateSavedFilter, { isLoading: isUpdating }] = useUpdateSavedFilterMutation();
+  const [toggleSavedFilter, { isLoading: isToggling }] = useToggleSavedFilterMutation();
   const [pendingDelete, setPendingDelete] = useState<SavedFilter | null>(null);
   const [pendingToggleId, setPendingToggleId] = useState<string | null>(null);
+  const [pendingStatusToggle, setPendingStatusToggle] = useState<string | null>(null);
   const [viewingFilter, setViewingFilter] = useState<SavedFilter | null>(null);
 
   const { data: provinces = [] } = useGetProvincesQuery();
@@ -80,21 +83,30 @@ export function SavedFiltersPanel() {
 
   const filters = data?.filters ?? [];
   const limit = data?.limit ?? 0;
-  const remaining = data?.remaining ?? Math.max(limit - filters.length, 0);
+  const activeCount = data?.activeCount ?? filters.filter((f) => f.isActive).length;
+  const remaining = data?.remaining ?? Math.max(limit - activeCount, 0);
   const busy = isLoading || isFetching;
 
   const summaryLine = useMemo(() => {
     if (!data) {
       return null;
     }
-    return t('summary', { count: filters.length, limit, remaining });
-  }, [data, filters.length, limit, remaining, t]);
+    return t('summary', { count: filters.length, limit, activeCount, remaining });
+  }, [data, filters.length, limit, activeCount, remaining, t]);
 
   const handleRefresh = () => {
     refetch();
   };
 
   const handleToggleNotifications = async (filter: SavedFilter, enabled: boolean) => {
+    if (!filter.isActive && enabled) {
+      toast({
+        title: t('toast.errorTitle'),
+        description: t('toast.inactiveNotificationError'),
+        variant: 'destructive',
+      });
+      return;
+    }
     setPendingToggleId(filter.id);
     try {
       await updateSavedFilter({ id: filter.id, body: { notificationsEnabled: enabled } }).unwrap();
@@ -103,14 +115,70 @@ export function SavedFiltersPanel() {
         description: t('toast.notificationsUpdatedDescription', { name: filter.name }),
       });
     } catch (error) {
+      let description = t('toast.notificationsToggleError');
+      try {
+        const plain = JSON.parse(JSON.stringify(error));
+        const data = plain?.data;
+        const dataMsg =
+          typeof data?.message?.message === 'string'
+            ? data.message.message
+            : typeof data?.message === 'string'
+              ? data.message
+              : typeof plain?.message === 'string'
+                ? plain.message
+                : '';
+        if (dataMsg) description = dataMsg;
+      } catch {}
       console.error('Failed to toggle notifications', error);
       toast({
         title: t('toast.errorTitle'),
-        description: t('toast.notificationsToggleError'),
+        description,
         variant: 'destructive',
       });
     } finally {
       setPendingToggleId(null);
+    }
+  };
+
+  const handleToggleActive = async (filter: SavedFilter) => {
+    setPendingStatusToggle(filter.id);
+    try {
+      await toggleSavedFilter(filter.id).unwrap();
+      toast({
+        title: filter.isActive ? t('toast.deactivatedTitle') : t('toast.activatedTitle'),
+        description: filter.isActive
+          ? t('toast.deactivatedDescription', { name: filter.name })
+          : t('toast.activatedDescription', { name: filter.name }),
+      });
+    } catch (error) {
+      let title = t('toast.errorTitle');
+      let description = t('toast.activationError');
+      try {
+        const plain = JSON.parse(JSON.stringify(error));
+        const data = plain?.data;
+        const dataMsg =
+          typeof data?.message?.message === 'string'
+            ? data.message.message
+            : typeof data?.message === 'string'
+              ? data.message
+              : typeof plain?.message === 'string'
+                ? plain.message
+                : '';
+        if (dataMsg) {
+          description = dataMsg;
+          if (dataMsg.includes('اشتراک شما به پایان رسیده')) {
+            title = t('toast.subscriptionExpiredTitle');
+          }
+        }
+      } catch {}
+      console.error('Failed to toggle filter active state', error);
+      toast({
+        title,
+        description,
+        variant: 'destructive',
+      });
+    } finally {
+      setPendingStatusToggle(null);
     }
   };
 
@@ -179,20 +247,46 @@ export function SavedFiltersPanel() {
             {filters.map((filter) => (
               <li
                 key={filter.id}
-                className="bg-card/50 flex flex-col gap-4 rounded-2xl border border-border/70 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between"
+                className={`bg-card/50 flex flex-col gap-4 rounded-2xl border p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between ${
+                  filter.isActive ? 'border-border/70' : 'border-border/30 opacity-60'
+                }`}
               >
                 <div className="min-w-0">
-                  <p className="truncate text-base font-semibold text-foreground">{filter.name}</p>
+                  <div className="flex items-center gap-2">
+                    <p className={`truncate text-base font-semibold ${filter.isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
+                      {filter.name}
+                    </p>
+                    {!filter.isActive && (
+                      <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                        {t('item.inactive')}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-sm text-muted-foreground">
                     {t('item.updated', { value: formatTimestamp(filter.updatedAt) })}
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    type="button"
+                    variant={filter.isActive ? 'secondary' : 'outline'}
+                    size="sm"
+                    onClick={() => void handleToggleActive(filter)}
+                    disabled={isToggling || pendingStatusToggle === filter.id}
+                    className="inline-flex items-center gap-2"
+                  >
+                    {filter.isActive ? (
+                      <PowerOff className="size-4" aria-hidden />
+                    ) : (
+                      <Power className="size-4" aria-hidden />
+                    )}
+                    {filter.isActive ? t('item.deactivate') : t('item.activate')}
+                  </Button>
                   <div className="flex items-center gap-2 rounded-full border border-border/60 px-3 py-1 text-xs">
                     <span>{t('item.notificationsLabel')}</span>
                     <Switch
                       checked={filter.notificationsEnabled}
-                      disabled={isUpdating || pendingToggleId === filter.id}
+                      disabled={isUpdating || pendingToggleId === filter.id || !filter.isActive}
                       aria-label={t('item.notificationsAria', { name: filter.name })}
                       onCheckedChange={(checked) => void handleToggleNotifications(filter, checked)}
                     />

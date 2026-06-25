@@ -6,6 +6,7 @@ export class SavedFilterDto {
   name!: string;
   payload!: SavedFilterPayload;
   notificationsEnabled!: boolean;
+  isActive!: boolean;
   createdAt!: Date;
   updatedAt!: Date;
 
@@ -15,6 +16,7 @@ export class SavedFilterDto {
       name: entity.name,
       payload,
       notificationsEnabled: entity.notificationsEnabled,
+      isActive: entity.isActive,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     };

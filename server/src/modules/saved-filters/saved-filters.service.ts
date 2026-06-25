@@ -12,32 +12,30 @@ import { SavedFilterDto } from './dto/saved-filter.dto';
 import { type SavedFilterPayload, normalizeSavedFilterPayload } from './saved-filter-payload.util';
 import { SubscriptionsService } from '@app/modules/subscriptions/subscriptions.service';
 
-export const DEFAULT_MAX_SAVED_FILTERS = 5;
+const FEATURE_KEY = 'saved_filters_limit';
 
 @Injectable()
 export class SavedFiltersService {
-  private readonly defaultLimit: number;
-
   constructor(
     private readonly prisma: PrismaService,
     private readonly subscriptionsService: SubscriptionsService,
-  ) {
-    const parsed = Number.parseInt(process.env['SAVED_FILTERS_DEFAULT_LIMIT'] ?? '', 10);
-    this.defaultLimit = Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_MAX_SAVED_FILTERS;
-  }
+  ) {}
 
-  async list(userId: string) {
+  async list(userId: string, isAdmin = false) {
     if (!userId) {
       throw new UnauthorizedException();
     }
 
-    const [limit, filters, total] = await Promise.all([
-      this.resolveLimitForUser(userId),
+    const limit = await this.subscriptionsService.resolveFeatureLimit(userId, FEATURE_KEY, isAdmin);
+
+    const [filters, activeCount] = await Promise.all([
       this.prisma.savedFilter.findMany({
         where: { userId },
         orderBy: { createdAt: 'desc' },
       }),
-      this.prisma.savedFilter.count({ where: { userId } }),
+      isAdmin
+        ? Promise.resolve(Infinity)
+        : this.prisma.savedFilter.count({ where: { userId, isActive: true } }),
     ]);
 
     const items = filters.map((filter) =>
@@ -47,18 +45,33 @@ export class SavedFiltersService {
     return {
       filters: items,
       limit,
-      remaining: Math.max(limit - total, 0),
+      activeCount,
+      remaining: Math.max(limit - activeCount, 0),
     };
   }
 
-  async create(userId: string, dto: CreateSavedFilterDto) {
+  async create(userId: string, dto: CreateSavedFilterDto, isAdmin = false) {
     if (!userId) {
       throw new UnauthorizedException();
     }
-    const limit = await this.resolveLimitForUser(userId);
-    const total = await this.prisma.savedFilter.count({ where: { userId } });
-    if (total >= limit) {
-      throw new BadRequestException('You reached the maximum number of saved filters.');
+
+    const limit = await this.subscriptionsService.resolveFeatureLimit(userId, FEATURE_KEY, isAdmin);
+
+    if (limit === 0) {
+      throw new BadRequestException(
+        'برای ذخیره فیلتر نیاز به اشتراک فعال دارید. برای خرید اشتراک به صفحه اشتراک‌ها مراجعه کنید.',
+      );
+    }
+
+    if (!isAdmin) {
+      const activeCount = await this.prisma.savedFilter.count({
+        where: { userId, isActive: true },
+      });
+      if (activeCount >= limit) {
+        throw new BadRequestException(
+          'حداکثر تعداد فیلتر فعال را رسیده‌اید. ابتدا یکی از فیلترها را غیرفعال یا حذف کنید.',
+        );
+      }
     }
 
     const name = dto.name.trim();
@@ -70,7 +83,6 @@ export class SavedFiltersService {
     }
 
     const payload = normalizeSavedFilterPayload(dto.payload);
-
     const notificationsEnabled = dto.notificationsEnabled !== false;
 
     const entity = await this.prisma.savedFilter.create({
@@ -79,13 +91,19 @@ export class SavedFiltersService {
         name,
         payload: payload as Prisma.InputJsonValue,
         notificationsEnabled,
+        isActive: true,
       },
     });
+
+    const activeCount = isAdmin
+      ? Infinity
+      : await this.prisma.savedFilter.count({ where: { userId, isActive: true } });
 
     return {
       filter: SavedFilterDto.fromEntity(entity, payload),
       limit,
-      remaining: Math.max(limit - (total + 1), 0),
+      activeCount,
+      remaining: Math.max(limit - activeCount, 0),
     };
   }
 
@@ -126,6 +144,11 @@ export class SavedFiltersService {
     };
 
     if (typeof dto.notificationsEnabled === 'boolean') {
+      if (dto.notificationsEnabled && !existing.isActive) {
+        throw new BadRequestException(
+          'Cannot enable notifications on an inactive filter. Activate the filter first.',
+        );
+      }
       updateData.notificationsEnabled = dto.notificationsEnabled;
     }
 
@@ -137,7 +160,7 @@ export class SavedFiltersService {
     return SavedFilterDto.fromEntity(entity, nextPayload);
   }
 
-  async remove(userId: string, id: string) {
+  async remove(userId: string, id: string, isAdmin = false) {
     if (!userId) {
       throw new UnauthorizedException();
     }
@@ -148,27 +171,65 @@ export class SavedFiltersService {
       throw new NotFoundException('Saved filter not found.');
     }
     await this.prisma.savedFilter.delete({ where: { id } });
-    const limit = await this.resolveLimitForUser(userId);
-    const total = await this.prisma.savedFilter.count({ where: { userId } });
+
+    const limit = await this.subscriptionsService.resolveFeatureLimit(userId, FEATURE_KEY, isAdmin);
+    const activeCount = isAdmin
+      ? Infinity
+      : await this.prisma.savedFilter.count({ where: { userId, isActive: true } });
+
     return {
       success: true,
       limit,
-      remaining: Math.max(limit - total, 0),
+      activeCount,
+      remaining: Math.max(limit - activeCount, 0),
     };
   }
 
-  private async resolveLimitForUser(userId: string): Promise<number> {
+  async toggleActive(userId: string, id: string, isAdmin = false) {
     if (!userId) {
-      return this.defaultLimit;
+      throw new UnauthorizedException();
     }
-    const subscription = await this.subscriptionsService.getActiveSubscription(userId);
-    if (subscription?.package?.features) {
-      const val = (subscription.package.features as Record<string, string>)['saved_filters_limit'];
-      const limit = val ? Number.parseInt(val, 10) : NaN;
-      if (!Number.isNaN(limit)) {
-        return limit;
+
+    const filter = await this.prisma.savedFilter.findFirst({
+      where: { id, userId },
+    });
+    if (!filter) {
+      throw new NotFoundException('Saved filter not found.');
+    }
+
+    const newActive = !filter.isActive;
+    const limit = await this.subscriptionsService.resolveFeatureLimit(userId, FEATURE_KEY, isAdmin);
+
+    if (newActive && !isAdmin) {
+      const activeCount = await this.prisma.savedFilter.count({
+        where: { userId, isActive: true },
+      });
+      if (activeCount >= limit) {
+        const message =
+          limit === 0
+            ? 'اشتراک شما به پایان رسیده است. برای فعال‌سازی مجموعه، اشتراک خود را تمدید کنید.'
+            : 'حداکثر تعداد فیلتر فعال را رسیده‌اید. ابتدا یکی از فیلترها را غیرفعال یا حذف کنید.';
+        throw new BadRequestException(message);
       }
     }
-    return this.defaultLimit;
+
+    const entity = await this.prisma.savedFilter.update({
+      where: { id },
+      data: {
+        isActive: newActive,
+        ...(newActive ? {} : { notificationsEnabled: false }),
+      },
+    });
+
+    const activeCount = isAdmin
+      ? Infinity
+      : await this.prisma.savedFilter.count({ where: { userId, isActive: true } });
+
+    return {
+      filter: SavedFilterDto.fromEntity(entity, normalizeSavedFilterPayload(entity.payload)),
+      limit,
+      activeCount,
+      remaining: Math.max(limit - activeCount, 0),
+    };
   }
 }

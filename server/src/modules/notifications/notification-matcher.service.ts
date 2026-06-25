@@ -86,6 +86,7 @@ export class NotificationMatcherService {
     const records = await this.prisma.savedFilter.findMany({
       where: {
         notificationsEnabled: true,
+        isActive: true,
         user: {
           isActive: true,
         },
@@ -95,6 +96,7 @@ export class NotificationMatcherService {
         name: true,
         userId: true,
         payload: true,
+        isActive: true,
       },
       orderBy: [{ createdAt: 'asc' }],
     });

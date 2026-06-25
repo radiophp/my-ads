@@ -63,7 +63,7 @@ import { DesktopCategorySection } from './desktop-category-section';
 import { DesktopRegionSelectors } from './desktop-region-selectors';
 import { CodeSearch } from '@/components/layout/code-search';
 
-const DEFAULT_SAVED_FILTER_LIMIT = 5;
+const DEFAULT_SAVED_FILTER_LIMIT = 0;
 const DEFAULT_PROVINCE_NAME_FA = 'البرز';
 
 export function DashboardSearchFilterPanel() {
@@ -930,11 +930,10 @@ export function DashboardSearchFilterPanel() {
 
   const savedFilters = savedFiltersData?.filters ?? [];
   const savedFiltersLimit = savedFiltersData?.limit ?? DEFAULT_SAVED_FILTER_LIMIT;
-  const savedFiltersRemaining =
-    savedFiltersData?.remaining ?? Math.max(savedFiltersLimit - savedFilters.length, 0);
+  const savedFiltersActiveCount = savedFiltersData?.activeCount ?? savedFilters.filter((f) => f.isActive).length;
+  const savedFiltersRemaining = savedFiltersData?.remaining ?? Math.max(savedFiltersLimit - savedFiltersActiveCount, 0);
   const savedFiltersBusy = savedFiltersLoading || savedFiltersFetching;
   const saveLimitReached = savedFiltersRemaining <= 0;
-  const totalSavedFilters = savedFilters.length;
 
   const handleApplySavedFilter = useCallback(
     (filter: SavedFilter) => {
@@ -1251,7 +1250,7 @@ export function DashboardSearchFilterPanel() {
               <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
             </Button>
             <p className="text-xs text-muted-foreground">
-              {savedFiltersT('usage', { count: totalSavedFilters, limit: savedFiltersLimit })}
+              {savedFiltersT('usage', { count: savedFiltersActiveCount, limit: savedFiltersLimit })}
             </p>
             <div className="hidden lg:flex">
               <Button
@@ -1600,7 +1599,7 @@ export function DashboardSearchFilterPanel() {
 		                        <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
 		                      </Button>
 		                      <p className="text-xs text-muted-foreground">
-		                        {savedFiltersT('usage', { count: totalSavedFilters, limit: savedFiltersLimit })}
+{savedFiltersT('usage', { count: savedFiltersActiveCount, limit: savedFiltersLimit })}
 		                      </p>
 		                    </div>
 

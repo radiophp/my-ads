@@ -5,6 +5,7 @@ import type {
   SavedFilter,
   SavedFilterCreateResponse,
   SavedFilterDeleteResponse,
+  SavedFilterToggleResponse,
   SavedFiltersResponse,
   UpdateSavedFilterPayload,
 } from '@/types/saved-filters';
@@ -44,7 +45,16 @@ const savedFiltersApi = apiSlice.injectEndpoints({
       query: (id) => ({
         url: `/saved-filters/${id}`,
         method: 'DELETE',
-        body: {},
+      }),
+      invalidatesTags: (result, error, id) => [
+        { type: 'SavedFilters', id },
+        { type: 'SavedFilters', id: 'LIST' },
+      ],
+    }),
+    toggleSavedFilter: builder.mutation<SavedFilterToggleResponse, string>({
+      query: (id) => ({
+        url: `/saved-filters/${id}/toggle`,
+        method: 'PATCH',
       }),
       invalidatesTags: (result, error, id) => [
         { type: 'SavedFilters', id },
@@ -59,4 +69,5 @@ export const {
   useCreateSavedFilterMutation,
   useUpdateSavedFilterMutation,
   useDeleteSavedFilterMutation,
+  useToggleSavedFilterMutation,
 } = savedFiltersApi;

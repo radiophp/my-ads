@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 
-import { X } from 'lucide-react';
+import { X, Settings, AlertTriangle } from 'lucide-react';
 
 import {
   Dialog,
@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Link } from '@/i18n/routing';
 import type { SavedFilter } from '@/types/saved-filters';
 import { cn } from '@/lib/utils';
 
@@ -36,6 +37,8 @@ export function SavedFiltersDialog({
 }: SavedFiltersDialogProps) {
   const savedFiltersT = useTranslations('dashboard.filters.saved');
   const totalSavedFilters = savedFilters.length;
+  const activeCount = savedFilters.filter((f) => f.isActive).length;
+  const hasInactive = savedFilters.some((f) => !f.isActive);
   const isRTL = ['fa', 'ar', 'he'].includes(locale);
 
   return (
@@ -50,7 +53,9 @@ export function SavedFiltersDialog({
               {savedFiltersT('title')}
             </p>
             <p className={cn('mt-1 text-sm text-muted-foreground', isRTL ? 'text-right' : 'text-left')}>
-              {savedFiltersT('usage', { count: totalSavedFilters, limit: savedFiltersLimit })}
+              {activeCount > 0
+                ? savedFiltersT('usageActive', { count: activeCount, limit: savedFiltersLimit })
+                : savedFiltersT('usage', { count: totalSavedFilters, limit: savedFiltersLimit })}
             </p>
           </div>
 
@@ -58,12 +63,32 @@ export function SavedFiltersDialog({
             <DialogHeader className={isRTL ? 'text-right' : 'text-left'}>
               <DialogTitle>{savedFiltersT('title')}</DialogTitle>
               <DialogDescription>
-                {savedFiltersT('usage', { count: totalSavedFilters, limit: savedFiltersLimit })}
+                {activeCount > 0
+                  ? savedFiltersT('usageActive', { count: activeCount, limit: savedFiltersLimit })
+                  : savedFiltersT('usage', { count: totalSavedFilters, limit: savedFiltersLimit })}
               </DialogDescription>
             </DialogHeader>
           </div>
 
           <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-6 py-4 lg:px-4">
+            {savedFiltersLimit === 0 && (
+              <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+                <AlertTriangle className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden="true" />
+                <div className="min-w-0 text-sm">
+                  <p className="font-semibold text-destructive">{savedFiltersT('subscriptionExpiredTitle')}</p>
+                  <p className="mt-0.5 text-muted-foreground">
+                    {savedFiltersT('subscriptionExpiredDescription')}{' '}
+                    <Link
+                      href="/dashboard/subscription"
+                      className="font-medium text-primary underline-offset-2 hover:underline"
+                      onClick={() => onOpenChange(false)}
+                    >
+                      {savedFiltersT('subscriptionExpiredLink')}
+                    </Link>
+                  </p>
+                </div>
+              </div>
+            )}
             {savedFiltersBusy ? (
               <div className="space-y-3">
                 {['one', 'two', 'three'].map((key) => (
@@ -77,10 +102,21 @@ export function SavedFiltersDialog({
                 {savedFilters.map((filter) => (
                   <li
                     key={filter.id}
-                    className="flex items-center justify-between gap-3 rounded-xl bg-muted/30 px-4 py-3"
+                    className={`flex items-center justify-between gap-3 rounded-xl px-4 py-3 ${
+                      filter.isActive ? 'bg-muted/30' : 'bg-muted/10 opacity-60'
+                    }`}
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-foreground">{filter.name}</p>
+                      <div className="flex items-center gap-2">
+                        <p className={`truncate text-sm font-semibold ${filter.isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
+                          {filter.name}
+                        </p>
+                        {!filter.isActive && (
+                          <span className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                            {savedFiltersT('inactive')}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-muted-foreground">
                         {savedFiltersT('lastUpdated', {
                           value: new Date(filter.updatedAt).toLocaleString(locale, {
@@ -90,29 +126,44 @@ export function SavedFiltersDialog({
                         })}
                       </p>
                     </div>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => {
-                        handleApplySavedFilter(filter);
-                        onOpenChange(false);
-                      }}
-                    >
-                      {savedFiltersT('apply')}
-                    </Button>
+                    {filter.isActive ? (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => {
+                          handleApplySavedFilter(filter);
+                          onOpenChange(false);
+                        }}
+                      >
+                        {savedFiltersT('apply')}
+                      </Button>
+                    ) : null}
                   </li>
                 ))}
               </ul>
             )}
+            {hasInactive && (
+              <p className="px-6 pb-2 text-xs text-muted-foreground lg:px-4">
+                {savedFiltersT('manageHint')}
+              </p>
+            )}
           </div>
 
-          <div className="border-t border-border bg-background/95 px-6 py-4 lg:border-0 lg:bg-transparent lg:px-4">
+          <div className="flex flex-col gap-2 border-t border-border bg-background/95 px-6 py-4 lg:border-0 lg:bg-transparent lg:px-4">
             <Button type="button" variant="outline" className="w-full" onClick={() => onOpenChange(false)}>
               <span className="flex items-center justify-center gap-2">
                 <X className="size-4" aria-hidden="true" />
                 <span>{savedFiltersT('dialog.cancel')}</span>
               </span>
+            </Button>
+            <Button type="button" variant="ghost" className="w-full" asChild>
+              <Link href="/dashboard/saved-filters" onClick={() => onOpenChange(false)}>
+                <span className="flex items-center justify-center gap-2">
+                  <Settings className="size-4" aria-hidden="true" />
+                  <span>{savedFiltersT('manageLink')}</span>
+                </span>
+              </Link>
             </Button>
           </div>
         </div>

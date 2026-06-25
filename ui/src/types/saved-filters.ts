@@ -5,6 +5,7 @@ export type SavedFilter = {
   name: string;
   payload: SearchFilterState;
   notificationsEnabled: boolean;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -12,18 +13,28 @@ export type SavedFilter = {
 export type SavedFiltersResponse = {
   filters: SavedFilter[];
   limit: number;
+  activeCount: number;
   remaining: number;
 };
 
 export type SavedFilterCreateResponse = {
   filter: SavedFilter;
   limit: number;
+  activeCount: number;
+  remaining: number;
+};
+
+export type SavedFilterToggleResponse = {
+  filter: SavedFilter;
+  limit: number;
+  activeCount: number;
   remaining: number;
 };
 
 export type SavedFilterDeleteResponse = {
   success: boolean;
   limit: number;
+  activeCount: number;
   remaining: number;
 };
 

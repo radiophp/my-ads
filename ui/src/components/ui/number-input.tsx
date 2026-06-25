@@ -39,11 +39,11 @@ export function NumberInput({
         type="button"
         variant="outline"
         size="icon"
-        className="h-7 w-7 rounded-s-none border-s-0"
-        onClick={increment}
-        disabled={disabled || value >= max}
+        className="size-7 rounded-e-none border-e-0"
+        onClick={decrement}
+        disabled={disabled || value <= min}
       >
-        <Plus className="size-3" />
+        <Minus className="size-3" />
       </Button>
       <div className="flex h-7 w-14 items-center justify-center border-y bg-background text-xs tabular-nums text-foreground">
         {value}
@@ -52,11 +52,11 @@ export function NumberInput({
         type="button"
         variant="outline"
         size="icon"
-        className="h-7 w-7 rounded-e-none border-e-0"
-        onClick={decrement}
-        disabled={disabled || value <= min}
+        className="size-7 rounded-s-none border-s-0"
+        onClick={increment}
+        disabled={disabled || value >= max}
       >
-        <Minus className="size-3" />
+        <Plus className="size-3" />
       </Button>
     </div>
   );

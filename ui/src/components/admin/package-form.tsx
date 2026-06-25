@@ -1,9 +1,8 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { useState } from 'react';
 import { useWatch, type UseFormReturn } from 'react-hook-form';
-import { DollarSign, Loader2, Settings2 } from 'lucide-react';
+import { DollarSign, Loader2 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
@@ -17,6 +16,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { NumberInput } from '@/components/ui/number-input';
+import { formatDelimited, numberToPersianWords } from '@/lib/number-utils';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -72,7 +73,6 @@ export function PackageForm({
   const locale = useLocale();
   const isTrial = useWatch({ control: form.control, name: 'isTrial' });
   const watchedFeatureMeta = useWatch({ control: form.control, name: 'featureMeta' as never }) as Record<string, Record<string, unknown>> | undefined;
-  const [expandedFeatures, setExpandedFeatures] = useState<Record<string, boolean>>({});
   const featureEntries = Object.entries(PACKAGE_FEATURES).sort(([keyA], [keyB]) => {
     const endKeys = ['allow_discount_codes', 'allow_invite_codes'];
     const aEnd = endKeys.includes(keyA) ? 1 : 0;
@@ -103,10 +103,12 @@ export function PackageForm({
             name="durationDays"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{texts.durationDays}</FormLabel>
-                <FormControl>
-                  <Input {...field} type="number" min={1} inputMode="numeric" />
-                </FormControl>
+                <div className="flex items-center gap-2">
+                  <FormLabel className="mb-0 w-[30%] shrink-0">{texts.durationDays}</FormLabel>
+                  <FormControl className="w-[70%]">
+                    <NumberInput value={field.value} onChange={field.onChange} min={1} />
+                  </FormControl>
+                </div>
                 <FormMessage />
               </FormItem>
             )}
@@ -117,10 +119,12 @@ export function PackageForm({
             name="freeDays"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{texts.freeDays}</FormLabel>
-                <FormControl>
-                  <Input {...field} type="number" min={0} inputMode="numeric" />
-                </FormControl>
+                <div className="flex items-center gap-2">
+                  <FormLabel className="mb-0 w-[30%] shrink-0">{texts.freeDays}</FormLabel>
+                  <FormControl className="w-[70%]">
+                    <NumberInput value={field.value} onChange={field.onChange} min={0} />
+                  </FormControl>
+                </div>
                 <FormMessage />
               </FormItem>
             )}
@@ -131,10 +135,12 @@ export function PackageForm({
             name="includedUsers"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{texts.includedUsers}</FormLabel>
-                <FormControl>
-                  <Input {...field} type="number" min={1} inputMode="numeric" />
-                </FormControl>
+                <div className="flex items-center gap-2">
+                  <FormLabel className="mb-0 w-[30%] shrink-0">{texts.includedUsers}</FormLabel>
+                  <FormControl className="w-[70%]">
+                    <NumberInput value={field.value} onChange={field.onChange} min={1} />
+                  </FormControl>
+                </div>
                 <FormMessage />
               </FormItem>
             )}
@@ -294,31 +300,20 @@ export function PackageForm({
                         const isDaily = feature.limitType === 'DAILY';
                         return (
                           <FormItem>
-                            <FormLabel className="flex items-center gap-2">
-                              {t(key)}
-                              <button
-                                type="button"
-                                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-                                onClick={() => setExpandedFeatures((prev) => {
-                                  const next = { ...prev };
-                                  next[key] = !prev[key];
-                                  return next;
-                                })}
-                              >
-                                <Settings2 className="size-3" aria-hidden />
-                              </button>
-                            </FormLabel>
-                            <FormControl>
-                              <Input
-                                {...field}
-                                type="number"
-                                min={0}
-                                inputMode="numeric"
-                              />
-                            </FormControl>
+                            <div className="flex items-center gap-2">
+                              <FormLabel className="mb-0 w-[30%] shrink-0">
+                                {t(key)}
+                              </FormLabel>
+                              <FormControl className="w-[70%]">
+                                <NumberInput
+                                  value={Number(field.value)}
+                                  onChange={(v) => field.onChange(String(v))}
+                                  min={0}
+                                />
+                              </FormControl>
+                            </div>
                             <FormMessage />
-                            {expandedFeatures[key] && (
-                              <div className="mt-2 space-y-2 rounded-md border border-border/50 p-3">
+                            <div className="mt-2 space-y-2 rounded-md border border-border/50 p-3">
                                 <FormField
                                   control={form.control}
                                   name={`featureMeta.${key}.allowExtra` as never}
@@ -341,24 +336,53 @@ export function PackageForm({
                                       name={`featureMeta.${key}.maxExtra` as never}
                                       render={({ field: fe }) => (
                                         <FormItem>
-                                          <FormLabel className="text-xs">حداکثر اضافه</FormLabel>
-                                          <FormControl>
-                                            <Input {...fe} type="number" min={0} inputMode="numeric" className="h-8" />
-                                          </FormControl>
+                                          <div className="flex items-center gap-2">
+                                            <FormLabel className="mb-0 w-[30%] shrink-0 text-xs">حداکثر اضافه</FormLabel>
+                                            <FormControl className="w-[70%]">
+                                              <NumberInput value={fe.value ?? 0} onChange={fe.onChange} min={0} />
+                                            </FormControl>
+                                          </div>
                                         </FormItem>
                                       )}
                                     />
                                     <FormField
                                       control={form.control}
                                       name={`featureMeta.${key}.extraUnitPrice` as never}
-                                      render={({ field: fe }) => (
-                                        <FormItem>
-                                          <FormLabel className="text-xs">قیمت هر واحد اضافه (ریال)</FormLabel>
-                                          <FormControl>
-                                            <Input {...fe} type="number" min={0} step="0.01" inputMode="decimal" className="h-8" />
-                                          </FormControl>
-                                        </FormItem>
-                                      )}
+                                      render={({ field: fe }) => {
+                                        const raw = fe.value != null ? String(fe.value) : '0';
+                                        const cleaned = raw.replace(/[^0-9]/g, '');
+                                        const rial = parseInt(cleaned, 10);
+                                        const toman = !isNaN(rial) ? Math.floor(rial / 10) : 0;
+                                        const words = numberToPersianWords(toman);
+                                        return (
+                                          <FormItem>
+                                            <div className="flex items-center gap-2">
+                                              <FormLabel className="mb-0 w-[30%] shrink-0 text-xs">قیمت هر واحد اضافه</FormLabel>
+                                              <FormControl className="w-[70%]">
+                                                <div className="flex items-center rounded-md border">
+                                                  <Input
+                                                    type="text"
+                                                    inputMode="decimal"
+                                                    min="0"
+                                                    value={formatDelimited(raw)}
+                                                    onChange={(e) => {
+                                                      const r = e.target.value.replace(/[^0-9.]/g, '');
+                                                      fe.onChange(r ? Number(r) : undefined);
+                                                    }}
+                                                    className="h-8 w-24 border-0 text-right"
+                                                  />
+                                                  <div className="flex h-8 items-center border-l bg-muted/50 px-1.5 text-[11px] text-muted-foreground shrink-0">
+                                                    ریال
+                                                  </div>
+                                                </div>
+                                              </FormControl>
+                                            </div>
+                                            <div className="text-[11px] leading-tight text-muted-foreground px-0.5">
+                                              <span className="text-[10px]">{words} تومان</span>
+                                            </div>
+                                          </FormItem>
+                                        );
+                                      }}
                                     />
                                   </>
                                 )}
@@ -385,16 +409,17 @@ export function PackageForm({
                                     name={`featureMeta.${key}.maxRolloverCap` as never}
                                     render={({ field: fe }) => (
                                       <FormItem>
-                                        <FormLabel className="text-xs">سقف رول‌اوور</FormLabel>
-                                        <FormControl>
-                                          <Input {...fe} type="number" min={0} inputMode="numeric" className="h-8" />
-                                        </FormControl>
+                                        <div className="flex items-center gap-2">
+                                          <FormLabel className="mb-0 w-[30%] shrink-0 text-xs">سقف رول‌اوور</FormLabel>
+                                          <FormControl className="w-[70%]">
+                                            <NumberInput value={fe.value ?? 0} onChange={fe.onChange} min={0} />
+                                          </FormControl>
+                                        </div>
                                       </FormItem>
                                     )}
                                   />
                                 )}
                               </div>
-                            )}
                           </FormItem>
                         );
                       }}

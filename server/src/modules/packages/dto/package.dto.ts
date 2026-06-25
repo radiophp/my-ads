@@ -50,7 +50,12 @@ export class PackageDto {
       actualPrice: entity.actualPrice.toString(),
       discountedPrice: entity.discountedPrice.toString(),
       isActive: entity.isActive,
-      features: (entity.features as Record<string, string>) ?? {},
+      features: Object.fromEntries(
+        Object.entries((entity.features as Record<string, unknown>) ?? {}).map(([k, v]) => [
+          k,
+          v != null ? String(v) : '',
+        ]),
+      ),
       featureConfigs: entity.featureConfigs ?? undefined,
       priceSnapshots: entity.priceSnapshots ?? undefined,
       stats,

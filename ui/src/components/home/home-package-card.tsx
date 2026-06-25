@@ -66,14 +66,15 @@ export function HomePackageCard({ pkg, onActivate }: HomePackageCardProps) {
           <p className="font-semibold text-muted-foreground">{t('packages.duration', { days: pkg.durationDays })}</p>
           {Object.entries(PACKAGE_FEATURES).map(([key, feature]) => {
             const val = pkg.features?.[key];
+            const num = Number(val);
             if (feature.type === 'BOOLEAN' && val !== 'true') return null;
-            if (feature.type === 'NUMBER' && (!val || Number(val) <= 0)) return null;
+            if (feature.type === 'NUMBER' && (isNaN(num) || num <= 0)) return null;
             const Icon = getPackageFeatureIcon(key as PackageFeatureKey);
             return (
               <p key={key} className="flex items-start gap-2 text-muted-foreground">
                 <Icon className="size-4 shrink-0" aria-hidden />
                 {feature.type === 'NUMBER'
-                  ? fl(key, { count: Number(val) })
+                  ? fl(key, { count: num })
                   : fl(key)}
               </p>
             );

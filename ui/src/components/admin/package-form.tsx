@@ -82,7 +82,7 @@ export function PackageForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 px-4 sm:px-6">
         <div className="grid gap-5 md:grid-cols-4">
           <FormField
             control={form.control}
@@ -103,9 +103,9 @@ export function PackageForm({
             name="durationDays"
             render={({ field }) => (
               <FormItem>
-                <div className="flex items-center gap-2">
-                  <FormLabel className="mb-0 w-[30%] shrink-0">{texts.durationDays}</FormLabel>
-                  <FormControl className="w-[70%]">
+                <div className="flex flex-col gap-1.5 md:flex-row md:items-center md:gap-2">
+                  <FormLabel className="mb-0 md:w-[30%] md:shrink-0">{texts.durationDays}</FormLabel>
+                  <FormControl className="md:w-[70%]">
                     <NumberInput value={field.value} onChange={field.onChange} min={1} />
                   </FormControl>
                 </div>
@@ -119,9 +119,9 @@ export function PackageForm({
             name="freeDays"
             render={({ field }) => (
               <FormItem>
-                <div className="flex items-center gap-2">
-                  <FormLabel className="mb-0 w-[30%] shrink-0">{texts.freeDays}</FormLabel>
-                  <FormControl className="w-[70%]">
+                <div className="flex flex-col gap-1.5 md:flex-row md:items-center md:gap-2">
+                  <FormLabel className="mb-0 md:w-[30%] md:shrink-0">{texts.freeDays}</FormLabel>
+                  <FormControl className="md:w-[70%]">
                     <NumberInput value={field.value} onChange={field.onChange} min={0} />
                   </FormControl>
                 </div>
@@ -135,9 +135,9 @@ export function PackageForm({
             name="includedUsers"
             render={({ field }) => (
               <FormItem>
-                <div className="flex items-center gap-2">
-                  <FormLabel className="mb-0 w-[30%] shrink-0">{texts.includedUsers}</FormLabel>
-                  <FormControl className="w-[70%]">
+                <div className="flex flex-col gap-1.5 md:flex-row md:items-center md:gap-2">
+                  <FormLabel className="mb-0 md:w-[30%] md:shrink-0">{texts.includedUsers}</FormLabel>
+                  <FormControl className="md:w-[70%]">
                     <NumberInput value={field.value} onChange={field.onChange} min={1} />
                   </FormControl>
                 </div>
@@ -176,41 +176,79 @@ export function PackageForm({
           <FormField
             control={form.control}
             name="actualPrice"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{texts.actualPrice}</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    type="number"
-                    min={0}
-                    step="0.01"
-                    inputMode="decimal"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            render={({ field }) => {
+              const raw = field.value != null ? String(field.value) : '0';
+              const cleaned = raw.replace(/[^0-9]/g, '');
+              const rial = parseInt(cleaned, 10);
+              const toman = !isNaN(rial) ? Math.floor(rial / 10) : 0;
+              const words = numberToPersianWords(toman);
+              return (
+                <FormItem>
+                  <FormLabel>{texts.actualPrice}</FormLabel>
+                  <FormControl>
+                    <div className="flex items-center rounded-md border">
+                      <Input
+                        type="text"
+                        inputMode="decimal"
+                        min="0"
+                        value={formatDelimited(raw)}
+                        onChange={(e) => {
+                          const r = e.target.value.replace(/[^0-9]/g, '');
+                          field.onChange(r ? Number(r) : 0);
+                        }}
+                        className="h-9 min-w-0 flex-1 border-0 bg-transparent px-3 text-right text-sm outline-none"
+                      />
+                      <div className="flex h-9 items-center border-l bg-muted/50 px-2 text-xs text-muted-foreground shrink-0">
+                        ریال
+                      </div>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                  <p className="text-[11px] leading-tight text-muted-foreground px-0.5">
+                    <span className="text-[10px]">{words} تومان</span>
+                  </p>
+                </FormItem>
+              );
+            }}
           />
 
           <FormField
             control={form.control}
             name="discountedPrice"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{texts.discountedPrice}</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    type="number"
-                    min={0}
-                    step="0.01"
-                    inputMode="decimal"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+            render={({ field }) => {
+              const raw = field.value != null ? String(field.value) : '0';
+              const cleaned = raw.replace(/[^0-9]/g, '');
+              const rial = parseInt(cleaned, 10);
+              const toman = !isNaN(rial) ? Math.floor(rial / 10) : 0;
+              const words = numberToPersianWords(toman);
+              return (
+                <FormItem>
+                  <FormLabel>{texts.discountedPrice}</FormLabel>
+                  <FormControl>
+                    <div className="flex items-center rounded-md border">
+                      <Input
+                        type="text"
+                        inputMode="decimal"
+                        min="0"
+                        value={formatDelimited(raw)}
+                        onChange={(e) => {
+                          const r = e.target.value.replace(/[^0-9]/g, '');
+                          field.onChange(r ? Number(r) : 0);
+                        }}
+                        className="h-9 min-w-0 flex-1 border-0 bg-transparent px-3 text-right text-sm outline-none"
+                      />
+                      <div className="flex h-9 items-center border-l bg-muted/50 px-2 text-xs text-muted-foreground shrink-0">
+                        ریال
+                      </div>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                  <p className="text-[11px] leading-tight text-muted-foreground px-0.5">
+                    <span className="text-[10px]">{words} تومان</span>
+                  </p>
+                </FormItem>
+              );
+            }}
           />
         </div>
 
@@ -259,7 +297,7 @@ export function PackageForm({
               <p className="text-sm text-muted-foreground">{texts.capabilitiesHint}</p>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 overflow-hidden md:grid-cols-2">
                 {featureEntries.map(([key, feature]) => {
                   const fieldKey = `features.${key}` as const;
 
@@ -270,7 +308,7 @@ export function PackageForm({
                         control={form.control}
                         name={fieldKey}
                         render={({ field }) => (
-                          <FormItem className="flex items-center justify-between rounded-lg border border-border/60 p-4">
+                          <FormItem className="flex items-center justify-between rounded-lg border border-border/60 p-4 min-w-0">
                             <FormLabel className="mb-0">
                               {t(key)}
                             </FormLabel>
@@ -299,21 +337,21 @@ export function PackageForm({
                         const allowRollover = meta?.allowRollover as boolean ?? false;
                         const isDaily = feature.limitType === 'DAILY';
                         return (
-                          <FormItem>
-                            <div className="flex items-center gap-2">
-                              <FormLabel className="mb-0 w-[30%] shrink-0">
-                                {t(key)}
-                              </FormLabel>
-                              <FormControl className="w-[70%]">
-                                <NumberInput
-                                  value={Number(field.value)}
-                                  onChange={(v) => field.onChange(String(v))}
-                                  min={0}
-                                />
-                              </FormControl>
-                            </div>
-                            <FormMessage />
-                            <div className="mt-2 space-y-2 rounded-md border border-border/50 p-3">
+                          <FormItem className="min-w-0">
+                             <div className="flex flex-col gap-1.5 md:flex-row md:items-center md:gap-2">
+                               <FormLabel className="mb-0 md:w-[30%] md:shrink-0">
+                                 {t(key)}
+                               </FormLabel>
+                               <FormControl className="md:w-[70%]">
+                                 <NumberInput
+                                   value={Number(field.value)}
+                                   onChange={(v) => field.onChange(String(v))}
+                                   min={0}
+                                 />
+                               </FormControl>
+                             </div>
+                             <FormMessage />
+                             <div className="mt-2 space-y-2 rounded-md border border-border/50 p-3 min-w-0">
                                 <FormField
                                   control={form.control}
                                   name={`featureMeta.${key}.allowExtra` as never}
@@ -336,9 +374,9 @@ export function PackageForm({
                                       name={`featureMeta.${key}.maxExtra` as never}
                                       render={({ field: fe }) => (
                                         <FormItem>
-                                          <div className="flex items-center gap-2">
-                                            <FormLabel className="mb-0 w-[30%] shrink-0 text-xs">حداکثر اضافه</FormLabel>
-                                            <FormControl className="w-[70%]">
+                                          <div className="flex flex-col gap-1.5 md:flex-row md:items-center md:gap-2">
+                                            <FormLabel className="mb-0 md:w-[30%] md:shrink-0 text-xs">حداکثر اضافه</FormLabel>
+                                            <FormControl className="md:w-[70%]">
                                               <NumberInput value={fe.value ?? 0} onChange={fe.onChange} min={0} />
                                             </FormControl>
                                           </div>
@@ -355,26 +393,26 @@ export function PackageForm({
                                         const toman = !isNaN(rial) ? Math.floor(rial / 10) : 0;
                                         const words = numberToPersianWords(toman);
                                         return (
-                                          <FormItem>
-                                            <div className="flex items-center gap-2">
-                                              <FormLabel className="mb-0 w-[30%] shrink-0 text-xs">قیمت هر واحد اضافه</FormLabel>
-                                              <FormControl className="w-[70%]">
-                                                <div className="flex items-center rounded-md border">
-                                                  <Input
-                                                    type="text"
-                                                    inputMode="decimal"
-                                                    min="0"
-                                                    value={formatDelimited(raw)}
-                                                    onChange={(e) => {
-                                                      const r = e.target.value.replace(/[^0-9.]/g, '');
-                                                      fe.onChange(r ? Number(r) : undefined);
-                                                    }}
-                                                    className="h-8 w-24 border-0 text-right"
-                                                  />
-                                                  <div className="flex h-8 items-center border-l bg-muted/50 px-1.5 text-[11px] text-muted-foreground shrink-0">
-                                                    ریال
+                          <FormItem className="min-w-0">
+                                            <div className="flex flex-col gap-1.5 md:flex-row md:items-center md:gap-2">
+                                              <FormLabel className="mb-0 md:w-[30%] md:shrink-0 text-xs">قیمت هر واحد اضافه</FormLabel>
+                                              <FormControl className="md:w-[70%]">
+                                                  <div className="flex w-full items-center rounded-md border">
+                                                   <Input
+                                                     type="text"
+                                                     inputMode="decimal"
+                                                     min="0"
+                                                     value={formatDelimited(raw)}
+                                                     onChange={(e) => {
+                                                       const r = e.target.value.replace(/[^0-9.]/g, '');
+                                                       fe.onChange(r ? Number(r) : undefined);
+                                                     }}
+                                                     className="h-9 min-w-0 flex-1 border-0 bg-transparent px-3 text-right text-sm outline-none"
+                                                   />
+                                                   <div className="flex h-9 items-center border-l bg-muted/50 px-2 text-xs text-muted-foreground shrink-0">
+                                                     ریال
+                                                   </div>
                                                   </div>
-                                                </div>
                                               </FormControl>
                                             </div>
                                             <div className="text-[11px] leading-tight text-muted-foreground px-0.5">
@@ -409,9 +447,9 @@ export function PackageForm({
                                     name={`featureMeta.${key}.maxRolloverCap` as never}
                                     render={({ field: fe }) => (
                                       <FormItem>
-                                        <div className="flex items-center gap-2">
-                                          <FormLabel className="mb-0 w-[30%] shrink-0 text-xs">سقف رول‌اوور</FormLabel>
-                                          <FormControl className="w-[70%]">
+                                        <div className="flex flex-col gap-1.5 md:flex-row md:items-center md:gap-2">
+                                          <FormLabel className="mb-0 md:w-[30%] md:shrink-0 text-xs">سقف رول‌اوور</FormLabel>
+                                          <FormControl className="md:w-[70%]">
                                             <NumberInput value={fe.value ?? 0} onChange={fe.onChange} min={0} />
                                           </FormControl>
                                         </div>

@@ -8,13 +8,6 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import { PackageForm } from '@/components/admin/package-form';
 import {
   createPackageDefaultValues,
@@ -237,7 +230,7 @@ export function AdminPackageEditor({ mode, packageId }: AdminPackageEditorProps)
   };
 
   return (
-    <div className="flex w-full flex-col gap-6 px-4 py-8">
+    <div className="flex w-full flex-col gap-6">
       <div className="flex items-center gap-2">
         <Button variant="ghost" asChild>
           <Link href="/admin/packages">
@@ -246,53 +239,49 @@ export function AdminPackageEditor({ mode, packageId }: AdminPackageEditorProps)
           </Link>
         </Button>
       </div>
-      <Card className="border-border/70">
-        <CardHeader>
-          <CardTitle>{headerTitle}</CardTitle>
-          <CardDescription>{headerDescription}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoadingData ? (
-            <div className="flex items-center justify-center gap-2 py-12 text-muted-foreground">
-              <Loader2 className="size-5 animate-spin" aria-hidden />
-              <span>{editorT('loading')}</span>
-            </div>
-          ) : (
-            <>
-              <PackageForm
-                form={form}
-                onSubmit={handleSubmit}
-                texts={formTexts}
-                isSubmitting={isSubmitting}
-                submitIcon={<Save className="mr-2 size-4" aria-hidden />}
-                secondaryAction={
-                  isEditing ? null : (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => form.reset(createPackageDefaultValues)}
-                      disabled={isSubmitting}
-                    >
-                      {editorT('reset')}
-                    </Button>
-                  )
-                }
-                imageUploader={
-                  <PackageImageUploader
-                    value={imageValue ? imageValue : null}
-                    onChange={handleImageChange}
-                    disabled={isSubmitting}
-                    texts={imageTexts}
-                  />
-                }
-                pricingBreakdown={pricing}
-                isCalculating={isCalculating}
-                durationDays={watchedDurationDays}
-              />
-            </>
-          )}
-        </CardContent>
-      </Card>
+      <div>
+        <h3 className="text-lg font-semibold leading-none tracking-tight">{headerTitle}</h3>
+        {headerDescription && (
+          <p className="mt-1 text-sm text-muted-foreground">{headerDescription}</p>
+        )}
+      </div>
+      {isLoadingData ? (
+        <div className="flex items-center justify-center gap-2 py-12 text-muted-foreground">
+          <Loader2 className="size-5 animate-spin" aria-hidden />
+          <span>{editorT('loading')}</span>
+        </div>
+      ) : (
+        <PackageForm
+          form={form}
+          onSubmit={handleSubmit}
+          texts={formTexts}
+          isSubmitting={isSubmitting}
+          submitIcon={<Save className="mr-2 size-4" aria-hidden />}
+          secondaryAction={
+            isEditing ? null : (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => form.reset(createPackageDefaultValues)}
+                disabled={isSubmitting}
+              >
+                {editorT('reset')}
+              </Button>
+            )
+          }
+          imageUploader={
+            <PackageImageUploader
+              value={imageValue ? imageValue : null}
+              onChange={handleImageChange}
+              disabled={isSubmitting}
+              texts={imageTexts}
+            />
+          }
+          pricingBreakdown={pricing}
+          isCalculating={isCalculating}
+          durationDays={watchedDurationDays}
+        />
+      )}
     </div>
   );
 }

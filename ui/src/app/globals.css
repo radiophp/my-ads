@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  *, ::before, ::after {
+    border-color: hsl(var(--border));
+  }
+}
+
 @font-face {
   font-family: 'IRANSans';
   src: url('/font/IRANSans/IRANSans%20UltraLight/IRANSans%20UltraLight.ttf') format('truetype');

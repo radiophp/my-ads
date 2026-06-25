@@ -27,7 +27,7 @@ export const Switch = forwardRef<HTMLButtonElement, SwitchProps>(function Switch
         onCheckedChange?.(!checked);
       }}
       className={cn(
-        'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+        'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border border-transparent transition-colors focus-visible:outline-none',
         disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
         checked ? 'bg-primary' : 'bg-muted',
         className,

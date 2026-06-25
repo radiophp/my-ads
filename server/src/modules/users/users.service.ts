@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { Role } from '@app/common/decorators/roles.decorator';
 import { PrismaService } from '@app/platform/database/prisma.service';
@@ -185,6 +185,18 @@ export class UsersService {
     if (city.provinceId !== provinceId) {
       throw new BadRequestException('Selected city does not belong to the provided province.');
     }
+  }
+
+  async devDeleteUser(id: string): Promise<void> {
+    if (process.env['NODE_ENV'] === 'production') {
+      throw new ForbiddenException('dev-delete is only available in non-production environments');
+    }
+
+    await this.prismaService.$transaction(async (tx) => {
+      await tx.telegramUserLink.deleteMany({ where: { userId: id } });
+      await tx.baleUserLink.deleteMany({ where: { userId: id } });
+      await tx.user.delete({ where: { id } });
+    });
   }
 
   private sanitizeUpdateInput(data: UpdateUserInput | UpdateProfileInput): Prisma.UserUpdateInput {

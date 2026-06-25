@@ -7,24 +7,14 @@ import type { AuthResponse } from '@/types/auth';
 
 const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:6200/api';
 
-const skipContentTypeEndpoints = new Set([
-  'uploadProfileImage',
-  'uploadTempProfileImage',
-  'uploadPublicImage',
-]);
-
 const rawBaseQuery = fetchBaseQuery({
   baseUrl,
-  prepareHeaders: (headers, { getState, endpoint }) => {
+  prepareHeaders: (headers, { getState }) => {
     const state = getState() as { auth?: AuthState };
     const token = state?.auth?.accessToken;
 
     if (token) {
       headers.set('Authorization', `Bearer ${token}`);
-    }
-
-    if (!headers.has('Content-Type') && !skipContentTypeEndpoints.has(endpoint)) {
-      headers.set('Content-Type', 'application/json');
     }
 
     return headers;

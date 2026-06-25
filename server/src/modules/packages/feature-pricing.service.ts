@@ -12,10 +12,13 @@ interface FeaturePriceLine {
   pricingType: FeaturePricingType;
   unitPrice: string;
   limitValue: number;
-  limitType: string;
+  limitType: string | null;
   dailyTotal: string;
   oneTimeTotal: string;
   isPermanent: boolean;
+  extraUnitPrice: string | null;
+  allowRollover: boolean;
+  maxRolloverCap: number;
 }
 
 export interface PackagePricingBreakdown {
@@ -61,7 +64,7 @@ export class FeaturePricingService {
     const features: FeaturePriceLine[] = inputs.map((cfg) => {
       const base = basePriceMap.get(cfg.featureKey);
       const pricingType = base?.pricingType ?? FeaturePricingType.PER_UNIT;
-      const limitType = base?.limitType ?? 'OVERALL';
+      const limitType = base?.limitType ?? null;
       const isPermanent = base?.isPermanent ?? false;
       const unitPrice = base?.unitPrice ?? new Prisma.Decimal(0);
       const limitValue = cfg.limitValue;
@@ -75,7 +78,7 @@ export class FeaturePricingService {
           : unitPriceNum.mul(limitValue);
 
       const dailyTotal =
-        isPermanent
+        isPermanent || limitType === null
           ? new Prisma.Decimal(0)
           : limitType === 'OVERALL' && pricingType === FeaturePricingType.PER_UNIT
             ? totalRaw.div(durationDays)
@@ -92,6 +95,9 @@ export class FeaturePricingService {
         isPermanent,
         dailyTotal: dailyTotal.toString(),
         oneTimeTotal: oneTimeTotal.toString(),
+        extraUnitPrice: null,
+        allowRollover: false,
+        maxRolloverCap: 0,
       };
     });
 
@@ -138,7 +144,7 @@ export class FeaturePricingService {
     for (const cfg of configs) {
       const base = basePriceMap.get(cfg.featureKey);
       const pricingType = base?.pricingType ?? FeaturePricingType.PER_UNIT;
-      const limitType = base?.limitType ?? 'OVERALL';
+      const limitType = base?.limitType ?? null;
       const isPermanent = base?.isPermanent ?? false;
       const unitPrice = cfg.unitPriceOverride ?? base?.unitPrice ?? new Prisma.Decimal(0);
       const unitPriceNum = new Prisma.Decimal(unitPrice.toString());
@@ -152,7 +158,7 @@ export class FeaturePricingService {
           : unitPriceNum.mul(limitValue);
 
       const dailyTotal =
-        isPermanent
+        isPermanent || limitType === null
           ? new Prisma.Decimal(0)
           : limitType === 'OVERALL' && pricingType === FeaturePricingType.PER_UNIT
             ? totalRaw.div(durationDays)
@@ -169,6 +175,9 @@ export class FeaturePricingService {
           dailyTotal,
           oneTimeTotal: oneTimeTotalForSnap.toString(),
           isPermanent,
+          extraUnitPrice: cfg.extraUnitPrice,
+          allowRollover: cfg.allowRollover,
+          maxRolloverCap: cfg.maxRolloverCap,
         },
         create: {
           packageId,
@@ -179,6 +188,9 @@ export class FeaturePricingService {
           dailyTotal,
           oneTimeTotal: oneTimeTotalForSnap.toString(),
           isPermanent,
+          extraUnitPrice: cfg.extraUnitPrice,
+          allowRollover: cfg.allowRollover,
+          maxRolloverCap: cfg.maxRolloverCap,
         },
       });
     }

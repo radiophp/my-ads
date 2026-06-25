@@ -88,7 +88,7 @@ export class FeatureBasePriceService {
       const pricingType: FeaturePricingType =
         featureDef.type === 'NUMBER' ? FeaturePricingType.PER_UNIT : FeaturePricingType.FLAT_ACCESS;
 
-      const limitType = featureDef.limitType ?? 'OVERALL';
+      const limitType = featureDef.limitType ?? null;
       const isPermanent = featureDef.isPermanent ?? false;
 
       await this.prisma.featureBasePrice.upsert({

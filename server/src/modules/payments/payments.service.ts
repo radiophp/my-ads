@@ -299,6 +299,24 @@ export class PaymentsService {
     const taxPercentage = await this.getTaxPercentage();
     const { taxAmount, finalAmount } = this.computeTax(amount, taxPercentage);
 
+    const featureSnapshots = await this.prisma.packageFeaturePriceSnapshot.findMany({
+      where: { packageId: pkg.id },
+    });
+    const featuresSnapshot: Record<string, any> = {};
+    for (const snap of featureSnapshots) {
+      featuresSnapshot[snap.featureKey] = {
+        limitValue: snap.limitValue,
+        unitPrice: snap.unitPrice.toString(),
+        dailyTotal: snap.dailyTotal.toString(),
+        oneTimeTotal: snap.oneTimeTotal,
+        pricingType: snap.pricingType,
+        isPermanent: snap.isPermanent,
+        extraUnitPrice: snap.extraUnitPrice?.toString() ?? null,
+        allowRollover: snap.allowRollover,
+        maxRolloverCap: snap.maxRolloverCap,
+      };
+    }
+
     const payment = await this.prisma.paymentRequest.create({
       data: {
         userId,
@@ -314,7 +332,7 @@ export class PaymentsService {
         inviteBonusDays,
         durationDays: pkg.durationDays,
         freeDays: pkg.freeDays,
-        features: pkg.features ?? {},
+        features: featuresSnapshot,
       },
     });
 
@@ -408,6 +426,41 @@ export class PaymentsService {
     return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
+  async finalizePayment(
+    paymentId: string,
+    adminId: string,
+    dto: { featureExtras: Record<string, number>; amount: number; adminNote?: string },
+  ) {
+    const payment = await this.prisma.paymentRequest.findUnique({
+      where: { id: paymentId },
+    });
+    if (!payment) throw new NotFoundException('Payment not found.');
+    if (payment.status !== 'INITIATED') {
+      throw new BadRequestException('Payment is not in initiated state.');
+    }
+    if (payment.receiptUrl) {
+      throw new BadRequestException('Payment already has a receipt. Cannot modify.');
+    }
+
+    const taxPercentage = await this.getTaxPercentage();
+    const amount = clampPrice(dto.amount);
+    const { taxAmount, finalAmount } = this.computeTax(amount, taxPercentage);
+
+    const now = new Date();
+    return this.prisma.paymentRequest.update({
+      where: { id: paymentId },
+      data: {
+        featureExtras: dto.featureExtras as any,
+        amount,
+        taxAmount: new Prisma.Decimal(taxAmount),
+        finalAmount: new Prisma.Decimal(finalAmount),
+        adminNote: dto.adminNote ?? null,
+        adminReviewedAt: now,
+        adminReviewedBy: adminId,
+      },
+    });
+  }
+
   async approvePayment(paymentId: string, adminId: string) {
     const payment = await this.prisma.paymentRequest.findUnique({
       where: { id: paymentId },
@@ -442,6 +495,7 @@ export class PaymentsService {
         basePrice: payment.originalPrice,
         finalPrice: new Prisma.Decimal(payment.amount),
         bonusDays: pendingBonusDays,
+        featureExtras: (payment.featureExtras ?? {}) as any,
       },
     });
 

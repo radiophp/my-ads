@@ -1,8 +1,9 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { useState } from 'react';
 import { useWatch, type UseFormReturn } from 'react-hook-form';
-import { DollarSign, Loader2 } from 'lucide-react';
+import { DollarSign, Loader2, Settings2 } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
@@ -70,6 +71,8 @@ export function PackageForm({
   const fl = useTranslations('admin.packages.form.capabilityFormLabels');
   const locale = useLocale();
   const isTrial = useWatch({ control: form.control, name: 'isTrial' });
+  const watchedFeatureMeta = useWatch({ control: form.control, name: 'featureMeta' as never }) as Record<string, Record<string, unknown>> | undefined;
+  const [expandedFeatures, setExpandedFeatures] = useState<Record<string, boolean>>({});
   const featureEntries = Object.entries(PACKAGE_FEATURES).sort(([keyA], [keyB]) => {
     const endKeys = ['allow_discount_codes', 'allow_invite_codes'];
     const aEnd = endKeys.includes(keyA) ? 1 : 0;
@@ -284,20 +287,117 @@ export function PackageForm({
                       key={key}
                       control={form.control}
                       name={fieldKey}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t(key)}</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              type="number"
-                              min={0}
-                              inputMode="numeric"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                      render={({ field }) => {
+                        const meta = watchedFeatureMeta?.[key] as Record<string, unknown> | undefined;
+                        const allowExtra = meta?.allowExtra as boolean ?? false;
+                        const allowRollover = meta?.allowRollover as boolean ?? false;
+                        const isDaily = feature.limitType === 'DAILY';
+                        return (
+                          <FormItem>
+                            <FormLabel className="flex items-center gap-2">
+                              {t(key)}
+                              <button
+                                type="button"
+                                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                                onClick={() => setExpandedFeatures((prev) => {
+                                  const next = { ...prev };
+                                  next[key] = !prev[key];
+                                  return next;
+                                })}
+                              >
+                                <Settings2 className="size-3" aria-hidden />
+                              </button>
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                type="number"
+                                min={0}
+                                inputMode="numeric"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                            {expandedFeatures[key] && (
+                              <div className="mt-2 space-y-2 rounded-md border border-border/50 p-3">
+                                <FormField
+                                  control={form.control}
+                                  name={`featureMeta.${key}.allowExtra` as never}
+                                  render={({ field: fe }) => (
+                                    <FormItem className="flex items-center justify-between">
+                                      <FormLabel className="mb-0 text-xs">مجاز به اضافه</FormLabel>
+                                      <FormControl>
+                                        <Switch
+                                          checked={fe.value ?? false}
+                                          onCheckedChange={fe.onChange}
+                                        />
+                                      </FormControl>
+                                    </FormItem>
+                                  )}
+                                />
+                                {allowExtra && (
+                                  <>
+                                    <FormField
+                                      control={form.control}
+                                      name={`featureMeta.${key}.maxExtra` as never}
+                                      render={({ field: fe }) => (
+                                        <FormItem>
+                                          <FormLabel className="text-xs">حداکثر اضافه</FormLabel>
+                                          <FormControl>
+                                            <Input {...fe} type="number" min={0} inputMode="numeric" className="h-8" />
+                                          </FormControl>
+                                        </FormItem>
+                                      )}
+                                    />
+                                    <FormField
+                                      control={form.control}
+                                      name={`featureMeta.${key}.extraUnitPrice` as never}
+                                      render={({ field: fe }) => (
+                                        <FormItem>
+                                          <FormLabel className="text-xs">قیمت هر واحد اضافه (ریال)</FormLabel>
+                                          <FormControl>
+                                            <Input {...fe} type="number" min={0} step="0.01" inputMode="decimal" className="h-8" />
+                                          </FormControl>
+                                        </FormItem>
+                                      )}
+                                    />
+                                  </>
+                                )}
+                                <div className="border-t border-border/40" />
+                                <FormField
+                                  control={form.control}
+                                  name={`featureMeta.${key}.allowRollover` as never}
+                                  render={({ field: fe }) => (
+                                    <FormItem className="flex items-center justify-between">
+                                      <FormLabel className="mb-0 text-xs">انتقال روزانه (رول‌اوور)</FormLabel>
+                                      <FormControl>
+                                        <Switch
+                                          checked={fe.value ?? false}
+                                          onCheckedChange={fe.onChange}
+                                          disabled={!isDaily}
+                                        />
+                                      </FormControl>
+                                    </FormItem>
+                                  )}
+                                />
+                                {allowRollover && isDaily && (
+                                  <FormField
+                                    control={form.control}
+                                    name={`featureMeta.${key}.maxRolloverCap` as never}
+                                    render={({ field: fe }) => (
+                                      <FormItem>
+                                        <FormLabel className="text-xs">سقف رول‌اوور</FormLabel>
+                                        <FormControl>
+                                          <Input {...fe} type="number" min={0} inputMode="numeric" className="h-8" />
+                                        </FormControl>
+                                      </FormItem>
+                                    )}
+                                  />
+                                )}
+                              </div>
+                            )}
+                          </FormItem>
+                        );
+                      }}
                     />
                   );
                 })}

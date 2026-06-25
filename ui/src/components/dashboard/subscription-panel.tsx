@@ -20,7 +20,6 @@ import { useToast } from '@/components/ui/use-toast';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -39,7 +38,6 @@ import {
   useGetBankAccountsQuery,
   useInitiatePaymentMutation,
   useUploadReceiptMutation,
-  useReUploadReceiptMutation,
   useValidateCodeMutation,
   useCancelPaymentMutation,
   useGetPendingPaymentQuery,
@@ -371,16 +369,23 @@ function PaymentDialog({
   } | null>(null);
   const [codeError, setCodeError] = useState('');
   const [paymentId, setPaymentId] = useState<string | null>(existingPaymentId ?? null);
-  const [file, setFile] = useState<File | null>(null);
-  const [step, setStep] = useState<'form' | 'upload' | 'success' | 'error'>(existingPaymentId ? 'upload' : 'form');
-  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (existingPaymentId) {
       setPaymentId(existingPaymentId);
-      setStep('upload');
     }
   }, [existingPaymentId]);
+  const [file, setFile] = useState<File | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const adminReviewed = existingPayment?.adminReviewedAt != null;
+  const step = existingPaymentId
+    ? loadingPayment
+      ? 'loading'
+      : adminReviewed
+        ? 'upload'
+        : 'awaiting'
+    : 'form';
 
   const taxPercentage = settings?.taxPercentage ?? 0;
   const originalPrice = pkg ? Number(pkg.discountedPrice) : 0;
@@ -399,7 +404,6 @@ function PaymentDialog({
     setCodeError('');
     setPaymentId(null);
     setFile(null);
-    setStep('form');
   }, []);
 
   const handleClose = useCallback(() => {
@@ -472,7 +476,8 @@ function PaymentDialog({
       }
       const result = await initiate(payload).unwrap();
       setPaymentId(result.id);
-      setStep('upload');
+      toast({ description: t('payment.requested') });
+      handleClose();
     } catch (err: unknown) {
       const msg =
         err && typeof err === 'object' && 'data' in err
@@ -486,54 +491,147 @@ function PaymentDialog({
     if (!paymentId || !file) return;
     try {
       await uploadReceipt({ id: paymentId, file }).unwrap();
-      setStep('success');
       toast({ title: t('payment.success') });
+      handleClose();
     } catch {
       toast({ title: t('payment.uploadError'), variant: 'destructive' });
     }
   };
 
+  const awaitingReview = step === 'awaiting';
+  const showUpload = step === 'upload';
+
   return (
     <Dialog open={dialogOpen} onOpenChange={(v) => { if (!v) handleClose(); }}>
       <DialogContent className="flex max-h-[85dvh] flex-col gap-0 p-0 max-md:!inset-0 max-md:max-h-dvh max-md:!translate-x-0 max-md:!translate-y-0 max-md:rounded-none sm:max-w-lg">
         <div className="shrink-0 px-6 pt-6">
-          {step === 'success' ? (
-            <DialogHeader>
-              <DialogTitle>{t('payment.successTitle')}</DialogTitle>
-            </DialogHeader>
-          ) : (
-            <DialogHeader>
-              <DialogTitle>{t('payment.title')}</DialogTitle>
-            </DialogHeader>
-          )}
+          <DialogHeader>
+            <DialogTitle>
+              {step === 'awaiting' ? t('payment.awaitingTitle') : t('payment.title')}
+            </DialogTitle>
+          </DialogHeader>
         </div>
 
         <div className="flex-1 overflow-y-auto px-6">
-          {step === 'success' ? (
-            <DialogDescription className="sr-only">{t('payment.successDesc')}</DialogDescription>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              {pkg ? t('payment.description', { title: pkg.title }) : ''}
-            </p>
-          )}
-          {step === 'success' ? (
-            <div className="py-4 text-center text-sm text-muted-foreground">
-              {t('payment.pendingMessage')}
-            </div>
-          ) : step === 'upload' && existingPaymentId && loadingPayment ? (
+          {step === 'loading' ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="size-6 animate-spin text-muted-foreground" />
             </div>
+          ) : awaitingReview && existingPayment ? (
+            <div className="space-y-4 py-4">
+              <div className="rounded-lg border bg-muted/30 p-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">{existingPayment.package?.title ?? ''}</span>
+                  <span className="text-sm font-medium">{Number(existingPayment.finalAmount).toLocaleString()} {t('package.currency')}</span>
+                </div>
+              </div>
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-800/30 dark:bg-amber-950/20 dark:text-amber-200">
+                {t('payment.awaitingReview')}
+              </div>
+            </div>
+          ) : showUpload && existingPayment ? (
+            <div className="space-y-4 py-2">
+              <div className="rounded-lg border bg-muted/30 p-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">{existingPayment.package?.title ?? ''}</span>
+                  <span className="text-sm font-medium">{Number(existingPayment.finalAmount).toLocaleString()} {t('package.currency')}</span>
+                </div>
+              </div>
+
+              <PriceBreakdown
+                originalPrice={Number(existingPayment.originalPrice)}
+                taxPercentage={existingPayment.taxPercentage}
+                discountAmount={Number(existingPayment.discountAmount ?? 0)}
+              />
+
+              {banksLoading ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="size-4 animate-spin" />
+                </div>
+              ) : bankAccounts && bankAccounts.length > 0 ? (
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">{t('payment.bankAccounts')}</Label>
+                  {bankAccounts.map((acc) => (
+                    <div key={acc.id} className="space-y-2 rounded-lg border p-3 text-sm">
+                      <p className="font-medium">{acc.bankName}</p>
+                      <div>
+                        <p className="text-xs text-muted-foreground">{t('payment.cardNumber')}</p>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(acc.cardNumber.replace(/[-\s]/g, ''));
+                              toast({ description: t('payment.copied') });
+                            }}
+                            className="flex items-center gap-1.5 text-left font-mono text-muted-foreground transition-colors hover:text-foreground"
+                            dir="ltr"
+                          >
+                            {acc.cardNumber}
+                            <Copy className="size-3.5 shrink-0" />
+                          </button>
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">{t('payment.cardHolder')}</p>
+                        <p>{acc.cardHolderName}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">{t('payment.sheba')}</p>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(acc.sheba.replace(/[-\s]/g, ''));
+                              toast({ description: t('payment.copied') });
+                            }}
+                            className="flex items-center gap-1.5 text-left font-mono text-muted-foreground transition-colors hover:text-foreground"
+                            dir="ltr"
+                          >
+                            {acc.sheba}
+                            <Copy className="size-3.5 shrink-0" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">{t('payment.uploadDesc')}</p>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                />
+                {file ? (
+                  <div className="flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed bg-muted/30 p-8">
+                    <ImageIcon className="size-10 shrink-0 text-muted-foreground" />
+                    <div className="text-center text-sm">
+                      <p className="truncate font-medium">{file.name}</p>
+                      <p className="text-muted-foreground">{(file.size / 1024).toFixed(1)} KB</p>
+                    </div>
+                    <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()}>
+                      {t('payment.changeFile')}
+                    </Button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => fileRef.current?.click()}
+                    className="flex w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-8 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                  >
+                    <Upload className="size-10" />
+                    <span>{t('payment.selectFile')}</span>
+                  </button>
+                )}
+              </div>
+            </div>
           ) : (
             <div className="space-y-4 py-2">
-              {step === 'upload' && existingPayment ? (
-                <div className="rounded-lg border bg-muted/30 p-3">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium">{existingPayment.package?.title ?? ''}</span>
-                    <span className="text-sm font-medium">{Number(existingPayment.finalAmount).toLocaleString()} {t('package.currency')}</span>
-                  </div>
-                </div>
-              ) : pkg && (
+              {pkg && (
                 <div className="rounded-lg border bg-muted/30 p-3">
                   <div className="flex items-center justify-between">
                     <span className="font-medium">{pkg.title}</span>
@@ -548,173 +646,78 @@ function PaymentDialog({
               )}
 
               <PriceBreakdown
-                originalPrice={existingPayment ? Number(existingPayment.originalPrice) : originalPrice}
-                taxPercentage={existingPayment ? existingPayment.taxPercentage : taxPercentage}
-                discountAmount={existingPayment ? Number(existingPayment.discountAmount ?? 0) : discountAmount}
+                originalPrice={originalPrice}
+                taxPercentage={taxPercentage}
+                discountAmount={discountAmount}
               />
 
-              {step === 'form' && (
-                <>
-                  {(showDiscountToggle || showInviteToggle) && (
-                    <div className="space-y-3">
-                      {showDiscountToggle && (
-                        <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm">
-                          <div className="flex flex-1 items-center gap-2">
-                            <TicketPercent className="size-4 text-muted-foreground" aria-hidden />
-                            <span>{t('payment.discountToggle')}</span>
-                          </div>
-                          <Switch
-                            checked={activeType === 'discount'}
-                            onCheckedChange={() => handleToggle('discount')}
-                          />
-                        </label>
-                      )}
-                      {showInviteToggle && (
-                        <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm">
-                          <div className="flex flex-1 items-center gap-2">
-                            <UserPlus className="size-4 text-muted-foreground" aria-hidden />
-                            <span>{t('payment.inviteToggle')}</span>
-                          </div>
-                          <Switch
-                            checked={activeType === 'invite'}
-                            onCheckedChange={() => handleToggle('invite')}
-                          />
-                        </label>
-                      )}
-                    </div>
-                  )}
-
-                  {activeType && (
-                    <div className="space-y-2">
-                      <div className="flex gap-2">
-                        <Input
-                          value={codeInput}
-                          onChange={(e) => { setCodeInput(e.target.value); setCodeError(''); }}
-                          placeholder={t('payment.codePlaceholder')}
-                          maxLength={64}
-                          className="flex-1"
-                        />
-                        <Button
-                          variant="outline"
-                          onClick={handleApplyCode}
-                          disabled={!canApplyCode}
-                        >
-                          {validating ? <Loader2 className="size-4 animate-spin" /> : t('payment.applyCode')}
-                        </Button>
+              {(showDiscountToggle || showInviteToggle) && (
+                <div className="space-y-3">
+                  {showDiscountToggle && (
+                    <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm">
+                      <div className="flex flex-1 items-center gap-2">
+                        <TicketPercent className="size-4 text-muted-foreground" aria-hidden />
+                        <span>{t('payment.discountToggle')}</span>
                       </div>
-                      {codeError && (
-                        <p className="text-xs text-red-500">{codeError}</p>
-                      )}
-                    </div>
+                      <Switch
+                        checked={activeType === 'discount'}
+                        onCheckedChange={() => handleToggle('discount')}
+                      />
+                    </label>
                   )}
-                </>
+                  {showInviteToggle && (
+                    <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm">
+                      <div className="flex flex-1 items-center gap-2">
+                        <UserPlus className="size-4 text-muted-foreground" aria-hidden />
+                        <span>{t('payment.inviteToggle')}</span>
+                      </div>
+                      <Switch
+                        checked={activeType === 'invite'}
+                        onCheckedChange={() => handleToggle('invite')}
+                      />
+                    </label>
+                  )}
+                </div>
               )}
 
-              {step === 'upload' && (
-                <>
-                  {banksLoading ? (
-                    <div className="flex items-center justify-center py-4">
-                      <Loader2 className="size-4 animate-spin" />
-                    </div>
-                  ) : bankAccounts && bankAccounts.length > 0 ? (
-                    <div className="space-y-3">
-                      <Label className="text-sm font-medium">{t('payment.bankAccounts')}</Label>
-                      {bankAccounts.map((acc) => (
-                        <div key={acc.id} className="space-y-2 rounded-lg border p-3 text-sm">
-                          <p className="font-medium">{acc.bankName}</p>
-                          <div>
-                            <p className="text-xs text-muted-foreground">{t('payment.cardNumber')}</p>
-                            <div className="flex items-center gap-1.5">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  navigator.clipboard.writeText(acc.cardNumber.replace(/[-\s]/g, ''));
-                                  toast({ description: t('payment.copied') });
-                                }}
-                                className="flex items-center gap-1.5 text-left font-mono text-muted-foreground transition-colors hover:text-foreground"
-                                dir="ltr"
-                              >
-                                {acc.cardNumber}
-                                <Copy className="size-3.5 shrink-0" />
-                              </button>
-                            </div>
-                          </div>
-                          <div>
-                            <p className="text-xs text-muted-foreground">{t('payment.cardHolder')}</p>
-                            <p>{acc.cardHolderName}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-muted-foreground">{t('payment.sheba')}</p>
-                            <div className="flex items-center gap-1.5">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  navigator.clipboard.writeText(acc.sheba.replace(/[-\s]/g, ''));
-                                  toast({ description: t('payment.copied') });
-                                }}
-                                className="flex items-center gap-1.5 text-left font-mono text-muted-foreground transition-colors hover:text-foreground"
-                                dir="ltr"
-                              >
-                                {acc.sheba}
-                                <Copy className="size-3.5 shrink-0" />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : null}
-
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">{t('payment.uploadDesc')}</p>
-                    <input
-                      ref={fileRef}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              {activeType && (
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <Input
+                      value={codeInput}
+                      onChange={(e) => { setCodeInput(e.target.value); setCodeError(''); }}
+                      placeholder={t('payment.codePlaceholder')}
+                      maxLength={64}
+                      className="flex-1"
                     />
-                    {file ? (
-                      <div className="flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed bg-muted/30 p-8">
-                        <ImageIcon className="size-10 shrink-0 text-muted-foreground" />
-                        <div className="text-center text-sm">
-                          <p className="truncate font-medium">{file.name}</p>
-                          <p className="text-muted-foreground">{(file.size / 1024).toFixed(1)} KB</p>
-                        </div>
-                        <Button size="sm" variant="outline" onClick={() => fileRef.current?.click()}>
-                          {t('payment.changeFile')}
-                        </Button>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => fileRef.current?.click()}
-                        className="flex w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-8 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-                      >
-                        <Upload className="size-10" />
-                        <span>{t('payment.selectFile')}</span>
-                      </button>
-                    )}
+                    <Button
+                      variant="outline"
+                      onClick={handleApplyCode}
+                      disabled={!canApplyCode}
+                    >
+                      {validating ? <Loader2 className="size-4 animate-spin" /> : t('payment.applyCode')}
+                    </Button>
                   </div>
-                </>
+                  {codeError && (
+                    <p className="text-xs text-red-500">{codeError}</p>
+                  )}
+                </div>
               )}
             </div>
           )}
         </div>
 
         <div className="shrink-0 border-t px-6 py-4">
-          {step === 'success' ? (
+          {awaitingReview ? (
             <div className="flex flex-row-reverse gap-2">
-              <Button onClick={handleClose}>{t('payment.close')}</Button>
+              <Button variant="outline" onClick={handleClose}>{t('payment.close')}</Button>
             </div>
-          ) : step === 'upload' ? (
+          ) : showUpload ? (
             <div className="flex flex-row-reverse gap-2">
               <Button onClick={handleUpload} disabled={!file || uploading}>
                 {uploading ? <Loader2 className="size-4 animate-spin" /> : t('payment.submitReceipt')}
               </Button>
-              <Button variant="outline" onClick={() => existingPaymentId ? handleClose() : setStep('form')}>
-                {t('payment.back')}
-              </Button>
+              <Button variant="outline" onClick={handleClose}>{t('activate.cancel')}</Button>
             </div>
           ) : (
             <div className="flex flex-row-reverse gap-2">
@@ -741,8 +744,10 @@ function PendingPaymentCard({ pending, onCancel, onContinue }: {
   const tp = useTranslations('dashboard.subscriptionPage.package');
   const [cancelling, setCancelling] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [showImage, setShowImage] = useState(false);
   const [remaining, setRemaining] = useState('');
+
+  const adminReviewed = pending.adminReviewedAt != null;
+  const hasReceipt = pending.receiptUrl != null;
 
   useEffect(() => {
     if (!pending.expiresAt) return;
@@ -781,17 +786,8 @@ function PendingPaymentCard({ pending, onCancel, onContinue }: {
         <CardHeader className="flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <CardTitle className="text-base">{t('title')}</CardTitle>
-            <CardDescription>{t('description')}</CardDescription>
+            <CardDescription>{adminReviewed ? t('descriptionReviewed') : t('description')}</CardDescription>
           </div>
-          {pending.receiptUrl && (
-            <button type="button" onClick={() => setShowImage(true)} className="overflow-hidden rounded-md border shrink-0">
-              <img
-                src={`/storage/upload/${pending.receiptUrl}`}
-                alt={t('receipt')}
-                className="size-12 object-cover"
-              />
-            </button>
-          )}
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex items-center justify-between text-sm">
@@ -804,7 +800,11 @@ function PendingPaymentCard({ pending, onCancel, onContinue }: {
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">{t('receipt')}</span>
-            <span>{pending.receiptUrl ? t('uploaded') : t('notUploaded')}</span>
+            <span>
+              {adminReviewed
+                ? (hasReceipt ? t('uploaded') : t('notUploaded'))
+                : t('awaitingReviewStatus')}
+            </span>
           </div>
           {pending.expiresAt && (
             <div className="flex items-center justify-between text-sm">
@@ -816,12 +816,12 @@ function PendingPaymentCard({ pending, onCancel, onContinue }: {
             </div>
           )}
           <div className="flex flex-col gap-2 sm:flex-row">
-            {!pending.receiptUrl && (
+            {adminReviewed && !hasReceipt && (
               <Button variant="default" size="sm" onClick={onContinue} className="sm:flex-1">
                 {t('continueButton')}
               </Button>
             )}
-            {!pending.receiptUrl && (
+            {!hasReceipt && (
               <Button variant="destructive" size="sm" onClick={() => setShowConfirm(true)} className="sm:flex-1">
                 <X className="size-4" />
                 {t('cancelButton')}
@@ -846,18 +846,6 @@ function PendingPaymentCard({ pending, onCancel, onContinue }: {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <Dialog open={showImage} onOpenChange={setShowImage}>
-        <DialogContent className="max-w-[90vw] border-0 bg-black/90 p-0 sm:max-w-[80vw]">
-          <div className="flex items-center justify-center p-2">
-            <img
-              src={`/storage/upload/${pending.receiptUrl}`}
-              alt={t('receipt')}
-              className="max-h-[85dvh] w-auto rounded-lg object-contain"
-            />
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }
@@ -879,7 +867,11 @@ function PackageCardWrapper({ pkg, pendingPayment, onContinue }: { pkg: Subscrip
         toast({ title: t('pendingPayment.awaitingReview') });
         return;
       }
-      if (onContinue) onContinue();
+      if (pendingPayment.adminReviewedAt) {
+        if (onContinue) onContinue();
+        return;
+      }
+      toast({ title: t('pendingPayment.awaitingAdminReview') });
       return;
     }
     if (isRejected) {

@@ -99,19 +99,30 @@ export function PaymentsManager() {
                   <span className="font-semibold">{Number(payment.amount).toLocaleString()} {t('currency')}</span>
                 </div>
 
-                {payment.receiptUrl && (
-                  <div className="text-sm">
-                    <span className="text-muted-foreground">{t('receipt')}: </span>
-                    <a
-                      href={`/storage/upload/${payment.receiptUrl}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline"
-                    >
-                      {t('viewReceipt')}
-                    </a>
-                  </div>
-                )}
+                  {payment.status === 'INITIATED' && !payment.adminReviewedAt && (
+                    <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3 text-sm text-amber-700 dark:border-amber-800/30 dark:bg-amber-950/10 dark:text-amber-300">
+                      {t('awaitingReview')}
+                    </div>
+                  )}
+
+                  {payment.receiptUrl && (
+                    <div className="text-sm">
+                      <span className="text-muted-foreground">{t('receipt')}: </span>
+                      <a
+                        href={`/storage/upload/${payment.receiptUrl}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline"
+                      >
+                        {t('viewReceipt')}
+                      </a>
+                    </div>
+                  )}
+                  {payment.status === 'INITIATED' && payment.adminReviewedAt && !payment.receiptUrl && (
+                    <p className="text-sm text-emerald-600 dark:text-emerald-400">
+                      {t('readyForPayment')}
+                    </p>
+                  )}
 
                 {payment.status === 'REJECTED' && (
                   <div className="space-y-3 rounded-lg border border-red-200 bg-red-50/50 p-3 dark:border-red-900/30 dark:bg-red-950/10">

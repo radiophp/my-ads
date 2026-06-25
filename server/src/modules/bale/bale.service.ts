@@ -624,6 +624,20 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  async sendPaymentReviewed(paymentId: string): Promise<{ success: boolean; error?: string }> {
+    const payment = await this.prisma.paymentRequest.findUnique({
+      where: { id: paymentId },
+      include: { package: { select: { title: true } } },
+    });
+    if (!payment) return { success: false, error: 'Payment not found' };
+
+    const formattedAmount = Number(payment.amount).toLocaleString('fa-IR');
+    return this.sendPaymentMessage(
+      payment.userId,
+      `🟡 صورتحساب اشتراک «${payment.package.title}» توسط مدیر بررسی و تأیید شد.\nمبلغ نهایی: ${formattedAmount} ریال\nلطفاً رسید پرداخت را در پنل کاربری بارگذاری کنید.`,
+    );
+  }
+
   async sendPaymentApproved(paymentId: string): Promise<{ success: boolean; error?: string }> {
     const payment = await this.prisma.paymentRequest.findUnique({
       where: { id: paymentId },
@@ -670,6 +684,7 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
   private async sendPaymentMessage(
     userId: string,
     message: string,
+    replyMarkup?: InlineKeyboardMarkup,
   ): Promise<{ success: boolean; error?: string }> {
     await this.ensureSender();
     if (!this.sender) {
@@ -688,6 +703,7 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
           this.sender!.sendMessage(chatLink.chatId, message, {
             parse_mode: 'HTML',
             link_preview_options: { is_disabled: true },
+            ...(replyMarkup ? { reply_markup: replyMarkup } : {}),
           }),
         { chatId: chatLink.chatId },
       );

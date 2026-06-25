@@ -27,7 +27,58 @@ export class PackagesService {
       },
     });
 
-    return packages.map((p) => PackageDto.fromEntity(p));
+    if (packages.length === 0) return [];
+
+    const packageIds = packages.map((p) => p.id);
+
+    const [subscriptionGroups, paymentGroups] = await Promise.all([
+      this.prisma.userSubscription.groupBy({
+        by: ['packageId', 'status'],
+        _count: true,
+        where: { packageId: { in: packageIds } },
+      }),
+      this.prisma.paymentRequest.groupBy({
+        by: ['packageId', 'status'],
+        _count: true,
+        _sum: { finalAmount: true },
+        where: { packageId: { in: packageIds } },
+      }),
+    ]);
+
+    const subMap: Record<string, Record<string, number>> = {};
+    for (const g of subscriptionGroups) {
+      if (!subMap[g.packageId]) subMap[g.packageId] = {};
+      subMap[g.packageId][g.status] = g._count;
+    }
+
+    const payMap: Record<string, { counts: Record<string, number>; revenue: number }> = {};
+    for (const g of paymentGroups) {
+      if (!payMap[g.packageId]) payMap[g.packageId] = { counts: {}, revenue: 0 };
+      payMap[g.packageId].counts[g.status] = g._count;
+      if (g.status === 'APPROVED' && g._sum.finalAmount) {
+        payMap[g.packageId].revenue += g._sum.finalAmount.toNumber();
+      }
+    }
+
+    return packages.map((p) => {
+      const sub = subMap[p.id] ?? {};
+      const pay = payMap[p.id] ?? { counts: {}, revenue: 0 };
+      return PackageDto.fromEntity(p, {
+        subscriptionCounts: {
+          ACTIVE: sub['ACTIVE'] ?? 0,
+          EXPIRED: sub['EXPIRED'] ?? 0,
+          CANCELED: sub['CANCELED'] ?? 0,
+        },
+        paymentCounts: {
+          INITIATED: pay.counts['INITIATED'] ?? 0,
+          PENDING: pay.counts['PENDING'] ?? 0,
+          APPROVED: pay.counts['APPROVED'] ?? 0,
+          REJECTED: pay.counts['REJECTED'] ?? 0,
+          CANCELLED: pay.counts['CANCELLED'] ?? 0,
+        },
+        totalRevenue: pay.revenue.toString(),
+      });
+    });
   }
 
   async findById(id: string): Promise<PackageDto> {
@@ -70,6 +121,9 @@ export class PackagesService {
                 limitValue: fc.limitValue,
                 allowExtra: fc.allowExtra ?? false,
                 maxExtra: fc.maxExtra ?? 0,
+                extraUnitPrice: fc.extraUnitPrice ?? null,
+                allowRollover: fc.allowRollover ?? false,
+                maxRolloverCap: fc.maxRolloverCap ?? 0,
                 unitPriceOverride: fc.unitPriceOverride ?? null,
               })),
             }
@@ -138,6 +192,9 @@ export class PackagesService {
                   limitValue: fc.limitValue,
                   allowExtra: fc.allowExtra ?? false,
                   maxExtra: fc.maxExtra ?? 0,
+                  extraUnitPrice: fc.extraUnitPrice ?? null,
+                  allowRollover: fc.allowRollover ?? false,
+                  maxRolloverCap: fc.maxRolloverCap ?? 0,
                   unitPriceOverride: fc.unitPriceOverride ?? null,
                 })),
               },

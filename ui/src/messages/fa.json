@@ -876,6 +876,9 @@
         "pendingMessage": "پس از تأیید، پیامی در ربات بله ماهان فایل دریافت خواهید کرد و اشتراک شما فعال خواهد شد.",
         "close": "بستن",
         "success": "رسید با موفقیت بارگذاری شد",
+        "requested": "درخواست پرداخت ثبت شد. تیم ما به زودی آن را بررسی خواهد کرد.",
+        "awaitingTitle": "در انتظار بررسی ادمین",
+        "awaitingReview": "درخواست شما در انتظار بررسی ادمین است. پس از آماده شدن صورت‌حساب به شما اطلاع‌رسانی خواهد شد.",
         "error": "خطا در شروع فرایند پرداخت",
         "uploadError": "خطا در بارگذاری رسید",
         "copied": "کپی شد",
@@ -903,6 +906,9 @@
         "cancelButton": "لغو پرداخت",
         "cancelled": "پرداخت با موفقیت لغو شد",
         "cancelError": "خطا در لغو پرداخت",
+        "descriptionReviewed": "صورت‌حساب شما آماده است. لطفاً پرداخت را تکمیل کنید.",
+        "awaitingReviewStatus": "در انتظار بررسی ادمین",
+        "awaitingAdminReview": "درخواست شما در انتظار بررسی ادمین است. لطفاً منتظر تماس تیم ما باشید.",
         "awaitingReview": "پرداخت قبلی شما هنوز تأیید نشده است. پس از بررسی ادمین می‌توانید پکیج جدید خریداری کنید.",
         "blocked": "شما یک پرداخت در انتظار دارید. لطفاً ابتدا آن را لغو کنید.",
         "deadline": "مهلت باقی‌مانده",
@@ -941,11 +947,13 @@
       "viewReceipt": "مشاهده رسید",
       "rejectionReason": "دلیل رد: {reason}",
       "rejectionNoReason": "پرداخت شما رد شده است. لطفاً رسید جدیدی بارگذاری کنید.",
+      "awaitingReview": "در انتظار بررسی ادمین. پس از آماده شدن صورت‌حساب به شما اطلاع داده خواهد شد.",
+      "readyForPayment": "صورت‌حساب آماده است. لطفاً با بارگذاری رسید، پرداخت را تکمیل کنید.",
       "reUpload": "بارگذاری مجدد رسید",
       "reUploadSuccess": "رسید جدید با موفقیت بارگذاری شد",
       "error": "خطا در بارگذاری رسید",
       "status": {
-        "INITIATED": "در انتظار بارگذاری رسید",
+        "INITIATED": "شروع شده",
         "PENDING": "در انتظار تأیید",
         "APPROVED": "تأیید شده",
         "REJECTED": "رد شده"
@@ -1179,7 +1187,15 @@
       "empty": "کاربری یافت نشد",
       "pageInfo": "صفحه {page} از {totalPages} — مجموع {total} کاربر",
       "prev": "قبلی",
-      "next": "بعدی"
+      "next": "بعدی",
+      "devDelete": {
+        "title": "حذف کاربر (فقط توسعه)",
+        "description": "این کاربر و تمام داده‌های مرتبط (اشتراک‌ها، پرداخت‌ها، کلاسورها، فیلترهای ذخیره شده، اعلان‌ها، عضویت‌های پیام‌رسان، لاگ مصرف، دستگاه‌ها، بازنشانی ویژگی‌ها، کدهای دعوت و تخفیف، یادداشت‌های پست) به طور دائمی حذف شوند. این اقدام قابل بازگشت نیست.",
+        "confirm": "بله، همه چیز حذف شود",
+        "cancel": "انصراف",
+        "success": "کاربر و تمام داده‌های مرتبط حذف شد",
+        "error": "خطا در حذف کاربر"
+      }
     },
     "usageLogs": {
       "title": "گزارش مصرف",
@@ -1205,7 +1221,7 @@
       "filter": {
         "all": "همه",
         "PENDING": "در انتظار تأیید",
-        "INITIATED": "بدون رسید",
+        "INITIATED": "شروع شده",
         "APPROVED": "تأیید شده",
         "REJECTED": "رد شده"
       },
@@ -1218,11 +1234,12 @@
         "actions": "عملیات"
       },
       "status": {
-        "INITIATED": "بدون رسید",
+        "INITIATED": "شروع شده",
         "PENDING": "در انتظار تأیید",
         "APPROVED": "تأیید شده",
         "REJECTED": "رد شده"
       },
+      "reviewButton": "بررسی",
       "viewReceipt": "مشاهده رسید",
       "approveSuccess": "پرداخت با موفقیت تأیید شد",
       "rejectSuccess": "پرداخت رد شد",
@@ -1231,6 +1248,28 @@
       "pageInfo": "صفحه {page} از {totalPages} — مجموع {total} پرداخت",
       "prev": "قبلی",
       "next": "بعدی",
+      "reviewDialog": {
+        "title": "بررسی پرداخت",
+        "featureExtras": "افزایش محدودیت ویژگی‌ها",
+        "featureExtrasHint": "محدودیت‌های اضافی فراتر از سطح پکیج را تعیین کنید. ویژگی‌های مرتبط با محله با 🏘️ مشخص شده‌اند.",
+        "base": "پایه",
+        "yes": "بله",
+        "no": "خیر",
+        "priceSection": "قیمت",
+        "packagePrice": "قیمت پکیج",
+        "extrasTotal": "مجموع افزایش‌ها",
+        "extrasLine": "{count} × {price}",
+        "computedTotal": "مجموع محاسبه شده",
+        "adminPrice": "قیمت تعدیل شده (قبل از مالیات)",
+        "taxPercent": "مالیات (٪)",
+        "finalAmount": "مبلغ نهایی",
+        "adminNote": "یادداشت مدیریتی",
+        "notePlaceholder": "یادداشت داخلی...",
+        "finalize": "نهایی‌سازی",
+        "cancel": "انصراف",
+        "finalized": "پرداخت با موفقیت نهایی‌سازی شد",
+        "invalidPrice": "مبلغ نامعتبر است"
+      },
       "rejectDialog": {
         "title": "رد پرداخت",
         "description": "دلیل رد پرداخت را وارد کنید.",
@@ -2457,6 +2496,31 @@
         "freeDaysValue": "+{days, plural, one {# روز هدیه} other {# روز هدیه}}",
         "active": "فعال",
         "inactive": "غیرفعال"
+      },
+      "cards": {
+        "featureConfigs": "تنظیمات ویژگی‌ها",
+        "priceSnapshots": "شکست قیمت",
+        "subscriptionStats": "آمار اشتراک‌ها",
+        "paymentStats": "آمار پرداخت‌ها",
+        "totalRevenue": "درآمد کل",
+        "permanent": "دائمی",
+        "allowExtra": "مجاز به افزایش",
+        "allowRollover": "انتقال مجاز",
+        "rolloverCap": "سقف انتقال",
+        "extraUnitPrice": "قیمت واحد اضافه",
+        "subscriptionDaily": "روزانه",
+        "subscriptionTotal": "کل اشتراک",
+        "oneTimeTotal": "یک‌باره",
+        "grandTotal": "جمع کل",
+        "activeSubs": "فعال",
+        "expiredSubs": "منقضی",
+        "canceledSubs": "لغو شده",
+        "paymentInitiated": "شروع شده",
+        "paymentPending": "در انتظار تایید",
+        "paymentApproved": "تایید شده",
+        "paymentRejected": "رد شده",
+        "paymentCancelled": "لغو شده",
+        "noSnapshots": "هنوز شکست قیمت تولید نشده است. برای تولید آن پکیج را ذخیره کنید."
       },
       "toast": {
         "createdTitle": "پکیج ایجاد شد",

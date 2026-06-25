@@ -289,8 +289,8 @@ Large files are split by extracting pure utility functions/constants/types into 
 ## Subscription Packages & Features
 
 ### Architecture
-- **Features stored as JSON** (`features Json @default("{}")`) on `SubscriptionPackage` model — no separate feature tables or assignments
-- 12 hardcoded features defined in a shared constant (NUMBER/BOOLEAN types) on both server and UI — redeploy needed to add new features
+- **Features stored as JSON** (`features Json @default("{}")`) on `SubscriptionPackage` model — being replaced by `PackageFeatureConfig` model below
+- 13 hardcoded features defined in a shared constant (NUMBER/BOOLEAN types) on both server and UI — redeploy needed to add new features
 - Old columns `savedFiltersLimit`, `allowDiscountCodes`, `allowInviteCodes` and related `PackageFeature`/`PackageFeatureAssignment` tables removed
 
 ### Shared Constants
@@ -317,6 +317,35 @@ Large files are split by extracting pure utility functions/constants/types into 
 - `saved-filters.service.ts` reads `saved_filters_limit` from features JSON
 - Admin form (`package-form.tsx`) renders capabilities from constant (not API query)
 - Admin table (`admin-packages-manager.tsx`) shows individual feature columns with دارد/ندارد for booleans
+
+### Feature Config Fields (Package Level)
+
+Per-feature settings stored on `PackageFeatureConfig` (and immutably snapped on `PackageFeaturePriceSnapshot`):
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `extraUnitPrice` | Decimal? | null | Unit price charged when user exceeds limit (up to `maxExtra`). Enables **overage pricing** — usage-based charge beyond the included limit. |
+| `allowRollover` | Boolean | false | Allows unused daily limit to accumulate to the next day. Only for DAILY-limit features. |
+| `maxRolloverCap` | Int | 0 | Maximum rollover balance that can accumulate. Rollover is **burned** when the subscription ends. |
+| `allowExtra` (existing) | Boolean | false | Whether extra (beyond limit) is allowed. |
+| `maxExtra` (existing) | Int | 0 | Max number of extra units allowed at `extraUnitPrice` each. |
+
+### Per-User Feature Overrides (`UserFeatureOverride`)
+
+Allows admin to override specific feature limits for individual users, overriding their package's feature config. Model unique on `(userId, featureKey)`.
+
+- **Backend**: `UsersController` adds `GET/PUT/DELETE /users/:userId/feature-overrides/:featureKey`
+- **Service**: `server/src/modules/users/user-feature-override.service.ts`
+- **Frontend**: `UserFeatureOverrideDialog` at `ui/src/components/admin/user-feature-override-dialog.tsx` — accessible via settings icon on each row in AdminUsersManager
+- **Usage**: When checking limits, if a `UserFeatureOverride` exists for the user+featureKey, its `limitValue` takes precedence over the package config.
+
+### UsageRollover Tracking
+
+`UsageRollover` model (`userId + subscriptionId + featureKey` unique) tracks accumulated rollover balance per subscription. Data structure is ready; actual enforcement (daily reset, balance accumulation) is deferred to a future phase.
+
+### Boolean Feature limitType Nullable
+
+`FeatureBasePrice.limitType` changed from `String @default("OVERALL")` to `String?` (nullable). Boolean features (`allow_discount_codes`, `allow_invite_codes`) have `limitType = null`, skipping them from daily cost amortization in the pricing calculator.
 
 ## Pagination Strategy (Divar Dashboard)
 - No Prisma `cursor`/`skip` for large tables (full-table scans on tied `publishedAt`)

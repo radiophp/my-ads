@@ -3,6 +3,7 @@ import { JwtAuthGuard } from '@app/modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '@app/modules/auth/guards/roles.guard';
 import { Roles, Role } from '@app/common/decorators/roles.decorator';
 import { PaymentsService } from './payments.service';
+import { FinalizePaymentDto } from './dto/finalize-payment.dto';
 import { RejectPaymentDto } from './dto/reject-payment.dto';
 import { BaleBotService } from '@app/modules/bale/bale.service';
 
@@ -28,6 +29,17 @@ export class AdminPaymentsController {
       page: page ? Math.max(1, Number(page)) : 1,
       limit: limit ? Math.min(100, Math.max(1, Number(limit))) : 20,
     });
+  }
+
+  @Post(':id/finalize')
+  async finalizePayment(
+    @Param('id') id: string,
+    @Req() req: AuthedReq,
+    @Body() dto: FinalizePaymentDto,
+  ) {
+    const result = await this.paymentsService.finalizePayment(id, req.user?.sub ?? '', dto);
+    await this.baleBotService.sendPaymentReviewed(id);
+    return result;
   }
 
   @Post(':id/approve')

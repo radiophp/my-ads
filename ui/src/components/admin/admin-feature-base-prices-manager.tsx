@@ -210,7 +210,7 @@ export function AdminFeatureBasePricesManager() {
                         {price.pricingType === 'PER_UNIT' ? t('perUnit') : t('flatAccess')}
                       </td>
                       <td className="py-2.5 text-right text-muted-foreground">
-                        {price.limitType === 'DAILY' ? t('daily') : t('overall')}
+                        {price.limitType === 'DAILY' ? t('daily') : price.limitType === 'OVERALL' ? t('overall') : '—'}
                       </td>
                       <td className="py-2.5 text-right">
                         {price.isPermanent ? (

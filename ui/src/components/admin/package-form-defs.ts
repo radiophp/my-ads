@@ -1,7 +1,17 @@
 'use client';
 
 import { z } from 'zod';
-import { defaultPackageFeatures } from '@/components/admin/constants/package-features.constants';
+import { defaultPackageFeatures, PACKAGE_FEATURES } from '@/components/admin/constants/package-features.constants';
+
+export const featureMetaSchema = z.object({
+  allowExtra: z.boolean().optional(),
+  maxExtra: z.coerce.number().int().min(0).optional(),
+  extraUnitPrice: z.coerce.number().min(0).optional(),
+  allowRollover: z.boolean().optional(),
+  maxRolloverCap: z.coerce.number().int().min(0).optional(),
+});
+
+export type FeatureMeta = z.infer<typeof featureMetaSchema>;
 
 export const packageSchemaFactory = (t: (key: string) => string) =>
   z
@@ -43,6 +53,7 @@ export const packageSchemaFactory = (t: (key: string) => string) =>
       actualPrice: z.coerce.number().min(0, t('validation.actualPriceMin')),
       discountedPrice: z.coerce.number().min(0, t('validation.discountedPriceMin')),
       features: z.record(z.string(), z.string()),
+      featureMeta: z.record(z.string(), featureMetaSchema).optional().default({}),
     })
     .superRefine((data, ctx) => {
       if (data.discountedPrice > data.actualPrice) {
@@ -57,6 +68,14 @@ export const packageSchemaFactory = (t: (key: string) => string) =>
 export type PackageFormSchema = ReturnType<typeof packageSchemaFactory>;
 export type PackageFormValues = z.infer<PackageFormSchema>;
 
+export function createDefaultFeatureMeta(): Record<string, FeatureMeta> {
+  const meta: Record<string, FeatureMeta> = {};
+  for (const key of Object.keys(PACKAGE_FEATURES)) {
+    meta[key] = {};
+  }
+  return meta;
+}
+
 export const createPackageDefaultValues: PackageFormValues = {
   title: '',
   description: '',
@@ -69,4 +88,5 @@ export const createPackageDefaultValues: PackageFormValues = {
   actualPrice: 0,
   discountedPrice: 0,
   features: defaultPackageFeatures(),
+  featureMeta: createDefaultFeatureMeta(),
 };

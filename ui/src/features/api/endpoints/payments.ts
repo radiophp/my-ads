@@ -24,6 +24,11 @@ type PaymentRequest = {
   receiptUrl: string | null;
   status: 'INITIATED' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
   rejectionReason: string | null;
+  featureExtras: Record<string, number>;
+  adminAdjustedPrice: number | null;
+  adminNote: string | null;
+  adminReviewedAt: string | null;
+  adminReviewedBy: string | null;
   createdAt: string;
   updatedAt: string;
   expiresAt?: string;
@@ -43,6 +48,12 @@ type InitiatePaymentPayload = {
   packageId: string;
   discountCode?: string;
   inviteCode?: string;
+};
+
+type FinalizePaymentPayload = {
+  featureExtras: Record<string, number>;
+  amount: number;
+  adminNote?: string;
 };
 
 type CodeValidationResult =
@@ -116,6 +127,14 @@ const paymentsApi = apiSlice.injectEndpoints({
       }),
       providesTags: ['Payments'],
     }),
+    finalizePayment: builder.mutation<PaymentRequest, { id: string; body: FinalizePaymentPayload }>({
+      query: ({ id, body }) => ({
+        url: `/admin/payments/${id}/finalize`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Payments'],
+    }),
     approvePayment: builder.mutation<void, string>({
       query: (id) => ({
         url: `/admin/payments/${id}/approve`,
@@ -156,6 +175,7 @@ export const {
   useGetMyPaymentsQuery,
   useGetPaymentQuery,
   useGetAdminPaymentsQuery,
+  useFinalizePaymentMutation,
   useApprovePaymentMutation,
   useRejectPaymentMutation,
   useCancelPaymentMutation,

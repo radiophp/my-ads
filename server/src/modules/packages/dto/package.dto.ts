@@ -4,6 +4,12 @@ import type {
   PackageFeaturePriceSnapshot,
 } from '@prisma/client';
 
+export interface PackageStats {
+  subscriptionCounts: Record<string, number>;
+  paymentCounts: Record<string, number>;
+  totalRevenue: string;
+}
+
 export class PackageDto {
   id!: string;
   title!: string;
@@ -20,6 +26,7 @@ export class PackageDto {
   features!: Record<string, string>;
   featureConfigs?: unknown[];
   priceSnapshots?: unknown[];
+  stats?: PackageStats;
   createdAt!: Date;
   updatedAt!: Date;
 
@@ -28,6 +35,7 @@ export class PackageDto {
       featureConfigs?: PackageFeatureConfig[];
       priceSnapshots?: PackageFeaturePriceSnapshot[];
     },
+    stats?: PackageStats,
   ): PackageDto {
     return {
       id: entity.id,
@@ -45,6 +53,7 @@ export class PackageDto {
       features: (entity.features as Record<string, string>) ?? {},
       featureConfigs: entity.featureConfigs ?? undefined,
       priceSnapshots: entity.priceSnapshots ?? undefined,
+      stats,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     };

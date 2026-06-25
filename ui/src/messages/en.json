@@ -875,6 +875,9 @@
         "pendingMessage": "Once approved, you will receive a message in our Bale bot and your subscription will be activated.",
         "close": "Close",
         "success": "Receipt uploaded successfully",
+        "requested": "Payment request submitted. Our team will review it shortly.",
+        "awaitingTitle": "Awaiting Admin Review",
+        "awaitingReview": "Your request is awaiting admin review. You will be notified when your invoice is ready.",
         "error": "Failed to initiate payment",
         "uploadError": "Failed to upload receipt",
         "copied": "Copied",
@@ -902,6 +905,9 @@
         "cancelButton": "Cancel Payment",
         "cancelled": "Payment cancelled successfully",
         "cancelError": "Failed to cancel payment",
+        "descriptionReviewed": "Your invoice is ready. Please complete the payment.",
+        "awaitingReviewStatus": "Awaiting admin review",
+        "awaitingAdminReview": "Your request is pending admin review. Please wait for our team to contact you.",
         "awaitingReview": "Your previous payment has not been approved yet. You can purchase a new package after admin review.",
         "blocked": "You have a pending payment. Please cancel it first.",
         "deadline": "Time remaining",
@@ -940,11 +946,13 @@
       "viewReceipt": "View receipt",
       "rejectionReason": "Reason: {reason}",
       "rejectionNoReason": "Your payment was rejected. Please upload a new receipt.",
+      "awaitingReview": "Awaiting admin review. You will be contacted when your invoice is ready.",
+      "readyForPayment": "Invoice ready. Please complete the payment by uploading a receipt.",
       "reUpload": "Re-upload receipt",
       "reUploadSuccess": "New receipt uploaded successfully",
       "error": "Failed to upload receipt",
       "status": {
-        "INITIATED": "Awaiting Receipt",
+        "INITIATED": "Initiated",
         "PENDING": "Pending Review",
         "APPROVED": "Approved",
         "REJECTED": "Rejected"
@@ -1176,7 +1184,15 @@
       "empty": "No users found",
       "pageInfo": "Page {page} of {totalPages} — {total} total users",
       "prev": "Previous",
-      "next": "Next"
+      "next": "Next",
+      "devDelete": {
+        "title": "Delete User (Dev Only)",
+        "description": "Permanently delete this user and ALL associated data (subscriptions, payments, ring binders, saved filters, notifications, push subscriptions, usage logs, telegram/bale links, devices, feature overrides, rollovers, invite codes, discount redemptions, post notes). This action is irreversible.",
+        "confirm": "Yes, Delete Everything",
+        "cancel": "Cancel",
+        "success": "User and all related data deleted",
+        "error": "Failed to delete user"
+      }
     },
     "usageLogs": {
       "title": "Usage Logs",
@@ -1202,7 +1218,7 @@
       "filter": {
         "all": "All",
         "PENDING": "Pending",
-        "INITIATED": "No Receipt",
+        "INITIATED": "Initiated",
         "APPROVED": "Approved",
         "REJECTED": "Rejected"
       },
@@ -1215,11 +1231,12 @@
         "actions": "Actions"
       },
       "status": {
-        "INITIATED": "No Receipt",
+        "INITIATED": "Initiated",
         "PENDING": "Pending Review",
         "APPROVED": "Approved",
         "REJECTED": "Rejected"
       },
+      "reviewButton": "Review",
       "viewReceipt": "View receipt",
       "approveSuccess": "Payment approved successfully",
       "rejectSuccess": "Payment rejected",
@@ -1228,6 +1245,28 @@
       "pageInfo": "Page {page} of {totalPages} — {total} total payments",
       "prev": "Previous",
       "next": "Next",
+      "reviewDialog": {
+        "title": "Review Payment",
+        "featureExtras": "Feature Extras",
+        "featureExtrasHint": "Set additional feature limits beyond the package defaults. District-related features are marked with 🏘️.",
+        "base": "Base",
+        "yes": "Yes",
+        "no": "No",
+        "priceSection": "Price",
+        "packagePrice": "Package Price",
+        "extrasTotal": "Extras Total",
+        "extrasLine": "{count} × {price}",
+        "computedTotal": "Computed Total",
+        "adminPrice": "Adjusted Price (pre-tax)",
+        "taxPercent": "Tax (%)",
+        "finalAmount": "Final Amount",
+        "adminNote": "Admin Note",
+        "notePlaceholder": "Enter internal note...",
+        "finalize": "Finalize",
+        "cancel": "Cancel",
+        "finalized": "Payment finalized successfully",
+        "invalidPrice": "Invalid price amount"
+      },
       "rejectDialog": {
         "title": "Reject Payment",
         "description": "Enter a reason for rejecting this payment.",
@@ -2454,6 +2493,31 @@
         "freeDaysValue": "+{days, plural, one {# bonus day} other {# bonus days}}",
         "active": "Active",
         "inactive": "Inactive"
+      },
+      "cards": {
+        "featureConfigs": "Feature Configurations",
+        "priceSnapshots": "Price Breakdown",
+        "subscriptionStats": "Subscription Stats",
+        "paymentStats": "Payment Stats",
+        "totalRevenue": "Total Revenue",
+        "permanent": "Permanent",
+        "allowExtra": "Extra allowed",
+        "allowRollover": "Rollover enabled",
+        "rolloverCap": "Rollover cap",
+        "extraUnitPrice": "Extra unit price",
+        "subscriptionDaily": "Daily total",
+        "subscriptionTotal": "Subscription total",
+        "oneTimeTotal": "One-time total",
+        "grandTotal": "Grand total",
+        "activeSubs": "Active",
+        "expiredSubs": "Expired",
+        "canceledSubs": "Canceled",
+        "paymentInitiated": "Initiated",
+        "paymentPending": "Pending",
+        "paymentApproved": "Approved",
+        "paymentRejected": "Rejected",
+        "paymentCancelled": "Cancelled",
+        "noSnapshots": "No price snapshots yet. Save the package to generate them."
       },
       "toast": {
         "createdTitle": "Package created",

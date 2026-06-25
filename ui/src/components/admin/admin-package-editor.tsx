@@ -103,6 +103,18 @@ export function AdminPackageEditor({ mode, packageId }: AdminPackageEditorProps)
 
   useEffect(() => {
     if (isEditing && existingPackage) {
+      const meta: Record<string, Record<string, unknown>> = {};
+      if (existingPackage.featureConfigs) {
+        for (const fc of existingPackage.featureConfigs as Array<Record<string, unknown>>) {
+          meta[fc.featureKey as string] = {
+            allowExtra: fc.allowExtra ?? false,
+            maxExtra: fc.maxExtra ?? 0,
+            extraUnitPrice: fc.extraUnitPrice ?? undefined,
+            allowRollover: fc.allowRollover ?? false,
+            maxRolloverCap: fc.maxRolloverCap ?? 0,
+          };
+        }
+      }
       form.reset({
         title: existingPackage.title,
         description: existingPackage.description ?? '',
@@ -114,7 +126,8 @@ export function AdminPackageEditor({ mode, packageId }: AdminPackageEditorProps)
         trialOncePerUser: existingPackage.trialOncePerUser,
         actualPrice: Number.parseFloat(existingPackage.actualPrice),
         discountedPrice: Number.parseFloat(existingPackage.discountedPrice),
-        features: { ...existingPackage.features },
+        features: { ...createPackageDefaultValues.features, ...existingPackage.features },
+        featureMeta: meta as Record<string, Record<string, unknown>>,
       });
     }
   }, [existingPackage, form, isEditing]);
@@ -184,12 +197,18 @@ export function AdminPackageEditor({ mode, packageId }: AdminPackageEditorProps)
       actualPrice: values.actualPrice,
       discountedPrice: values.discountedPrice,
       features: values.features,
-      featureConfigs: Object.entries(values.features).map(([featureKey, value]) => ({
-        featureKey,
-        limitValue: value === 'true' ? 1 : value === 'false' ? 0 : Number.parseInt(value, 10) || 0,
-        allowExtra: false,
-        maxExtra: 0,
-      })),
+      featureConfigs: Object.entries(values.features).map(([featureKey, value]) => {
+        const meta = values.featureMeta?.[featureKey] ?? {};
+        return {
+          featureKey,
+          limitValue: value === 'true' ? 1 : value === 'false' ? 0 : Number.parseInt(value, 10) || 0,
+          allowExtra: meta.allowExtra ?? false,
+          maxExtra: meta.maxExtra ?? 0,
+          extraUnitPrice: meta.extraUnitPrice,
+          allowRollover: meta.allowRollover ?? false,
+          maxRolloverCap: meta.maxRolloverCap ?? 0,
+        };
+      }),
     };
 
     try {

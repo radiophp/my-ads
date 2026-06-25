@@ -18,6 +18,13 @@ export type AdminUserListItem = {
   currentSubscription: { id: string; packageTitle: string; endsAt: string } | null;
 };
 
+export type UserFeatureOverride = {
+  id: string;
+  userId: string;
+  featureKey: string;
+  limitValue: number;
+};
+
 export type PaginatedUsersResponse = {
   items: AdminUserListItem[];
   total: number;
@@ -62,6 +69,31 @@ const usersApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ['AdminUsers'],
     }),
+    getUserFeatureOverrides: builder.query<UserFeatureOverride[], string>({
+      query: (userId) => `/users/${userId}/feature-overrides`,
+    }),
+    upsertUserFeatureOverride: builder.mutation<void, { userId: string; featureKey: string; limitValue: number }>({
+      query: ({ userId, featureKey, limitValue }) => ({
+        url: `/users/${userId}/feature-overrides/${featureKey}`,
+        method: 'PUT',
+        body: { limitValue },
+      }),
+      invalidatesTags: ['AdminUsers'],
+    }),
+    devDeleteUser: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `/users/${id}/dev-delete`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['AdminUsers'],
+    }),
+    deleteUserFeatureOverride: builder.mutation<void, { userId: string; featureKey: string }>({
+      query: ({ userId, featureKey }) => ({
+        url: `/users/${userId}/feature-overrides/${featureKey}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['AdminUsers'],
+    }),
   }),
 });
 
@@ -71,4 +103,8 @@ export const {
   useGetPendingActivationsQuery,
   useApproveActivationMutation,
   useRejectActivationMutation,
+  useGetUserFeatureOverridesQuery,
+  useUpsertUserFeatureOverrideMutation,
+  useDeleteUserFeatureOverrideMutation,
+  useDevDeleteUserMutation,
 } = usersApi;

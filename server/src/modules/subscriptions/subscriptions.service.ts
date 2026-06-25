@@ -39,7 +39,7 @@ export class SubscriptionsService {
         { title: 'asc' },
       ],
     });
-    return packages.map(PackageDto.fromEntity);
+    return packages.map((p) => PackageDto.fromEntity(p));
   }
 
   async getActiveSubscription(userId: string): Promise<UserSubscriptionDto | null> {

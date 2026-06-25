@@ -1,10 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, Loader2, Search, X } from 'lucide-react';
+import { Check, Loader2, Search, Settings2, Trash2, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
@@ -13,6 +23,10 @@ import {
   useApproveActivationMutation,
   useRejectActivationMutation,
 } from '@/features/api/endpoints/users';
+import {
+  UserFeatureOverrideDialog,
+} from '@/components/admin/user-feature-override-dialog';
+import { useDevDeleteUserMutation } from '@/features/api/endpoints/users';
 
 const STATUS_COLORS: Record<string, string> = {
   APPROVED: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
@@ -35,6 +49,9 @@ export function AdminUsersManager() {
   });
   const [approve, { isLoading: approving }] = useApproveActivationMutation();
   const [reject, { isLoading: rejecting }] = useRejectActivationMutation();
+  const [overrideUserId, setOverrideUserId] = useState<string | null>(null);
+  const [deleteConfirmUserId, setDeleteConfirmUserId] = useState<string | null>(null);
+  const [devDelete, { isLoading: devDeleting }] = useDevDeleteUserMutation();
 
   const handleApprove = async (userId: string) => {
     try {
@@ -54,7 +71,18 @@ export function AdminUsersManager() {
     }
   };
 
+  const handleDevDelete = async (userId: string) => {
+    try {
+      await devDelete(userId).unwrap();
+      setDeleteConfirmUserId(null);
+      toast({ title: t('devDelete.success') });
+    } catch {
+      toast({ title: t('devDelete.error'), variant: 'destructive' });
+    }
+  };
+
   const isLoadingData = isLoading || isFetching;
+  const isDev = process.env['NODE_ENV'] !== 'production';
 
   return (
     <div className="flex w-full flex-col gap-6 px-4 py-8">
@@ -131,26 +159,46 @@ export function AdminUsersManager() {
                           : '—'}
                       </td>
                       <td className="whitespace-nowrap py-3">
-                        {user.activationStatus === 'PENDING' && (
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="default"
-                              onClick={() => handleApprove(user.id)}
-                              disabled={approving || rejecting}
-                            >
-                              <Check className="size-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleReject(user.id)}
-                              disabled={approving || rejecting}
-                            >
-                              <X className="size-4" />
-                            </Button>
-                          </div>
-                        )}
+                        <div className="flex gap-2">
+                          {user.activationStatus === 'PENDING' && (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="default"
+                                onClick={() => handleApprove(user.id)}
+                                disabled={approving || rejecting}
+                              >
+                                <Check className="size-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleReject(user.id)}
+                                disabled={approving || rejecting}
+                              >
+                                <X className="size-4" />
+                              </Button>
+                            </>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setOverrideUserId(user.id)}
+                          >
+                            <Settings2 className="size-4" />
+                          </Button>
+                          {isDev && (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => setDeleteConfirmUserId(user.id)}
+                              >
+                                <Trash2 className="size-4" />
+                              </Button>
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -185,6 +233,41 @@ export function AdminUsersManager() {
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!deleteConfirmUserId} onOpenChange={(open) => { if (!open) setDeleteConfirmUserId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('devDelete.title')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('devDelete.description')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('devDelete.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={devDeleting}
+              onClick={(e) => {
+                e.preventDefault();
+                if (deleteConfirmUserId) handleDevDelete(deleteConfirmUserId);
+              }}
+            >
+              {devDeleting && <Loader2 className="mr-2 size-4 animate-spin" />}
+              {t('devDelete.confirm')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {overrideUserId && (
+        <UserFeatureOverrideDialog
+          userId={overrideUserId}
+          open={!!overrideUserId}
+          onOpenChange={(open) => {
+            if (!open) setOverrideUserId(null);
+          }}
+        />
+      )}
     </div>
   );
 }

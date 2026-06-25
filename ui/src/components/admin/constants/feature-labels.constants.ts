@@ -1,0 +1,15 @@
+export const FEATURE_LABELS: Record<string, { fa: string; en: string }> = {
+  saved_filters_limit: { fa: 'تعداد فیلترهای ذخیره شده', en: 'Saved Filters Limit' },
+  allow_discount_codes: { fa: 'کد تخفیف', en: 'Discount Codes' },
+  allow_invite_codes: { fa: 'کد دعوت', en: 'Invite Codes' },
+  ring_binders_limit: { fa: 'تعداد زونکن‌ها', en: 'Ring Binders Limit' },
+  districts_limit: { fa: 'تعداد مناطق تحت پوشش', en: 'Districts Limit' },
+  notifications_limit: { fa: 'تعداد اعلان‌ها', en: 'Notifications Limit' },
+  zip_downloads_per_day: { fa: 'دانلود زیپ روزانه', en: 'Zip Downloads Per Day' },
+  divar_drafts_per_day: { fa: 'پیش‌نویس دیوار روزانه', en: 'Divar Drafts Per Day' },
+  ai_edits_limit: { fa: 'تعداد ویرایش هوشمند', en: 'AI Edits Limit' },
+  channels_limit: { fa: 'تعداد کانال‌ها', en: 'Channels Limit' },
+  share_ring_binder: { fa: 'اشتراک زونکن', en: 'Share Ring Binder' },
+  builders_archive: { fa: 'آرشیو سازندگان', en: 'Builders Archive' },
+  archive_history_quarters: { fa: 'دسترسی به آرشیو فصلی', en: 'Seasonal Archive Access' },
+};

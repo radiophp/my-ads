@@ -38,6 +38,22 @@ class FeatureConfigDto {
   @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 2 })
   @IsOptional()
+  extraUnitPrice?: number;
+
+  @Type(() => Boolean)
+  @IsBoolean()
+  @IsOptional()
+  allowRollover?: boolean;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  maxRolloverCap?: number;
+
+  @Type(() => Number)
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @IsOptional()
   unitPriceOverride?: number;
 }
 

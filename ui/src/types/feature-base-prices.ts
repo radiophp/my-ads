@@ -6,7 +6,7 @@ export type FeatureBasePrice = {
   pricingType: 'PER_UNIT' | 'FLAT_ACCESS';
   unitPrice: string;
   unitLabel: string | null;
-  limitType: string;
+  limitType: string | null;
   isPermanent: boolean;
   isActive: boolean;
   sortOrder: number;
@@ -38,10 +38,13 @@ export type PackagePricingBreakdown = {
     pricingType: 'PER_UNIT' | 'FLAT_ACCESS';
     unitPrice: string;
     limitValue: number;
-    limitType: string;
+    limitType: string | null;
     dailyTotal: string;
     oneTimeTotal: string;
     isPermanent: boolean;
+    extraUnitPrice: string | null;
+    allowRollover: boolean;
+    maxRolloverCap: number;
   }>;
 };
 

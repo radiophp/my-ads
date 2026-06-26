@@ -5,10 +5,18 @@ import { Download, ImageIcon } from 'lucide-react';
 import { LoadingLogo } from '@/components/ui/loading-logo';
 
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import type { DivarPostSummary } from '@/types/divar-posts';
 import { cn } from '@/lib/utils';
 import type { useTranslations } from 'next-intl';
+import { useAppSelector } from '@/lib/hooks';
 import {
   buildPhotoDownloadUrl,
   getMediaDownloadUrl,
@@ -34,9 +42,11 @@ export function DownloadPhotosDialog({
   t,
 }: DownloadPhotosDialogProps): JSX.Element | null {
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [showLimitDialog, setShowLimitDialog] = useState(false);
   const medias = useMemo(() => (post ? mapPostMediasToDownloadables(post) : []), [post]);
   const zipDownloadUrl =
     post && post.medias.length > 1 ? buildPhotoDownloadUrl(post.id) : null;
+  const accessToken = useAppSelector((state) => (state as { auth?: { accessToken: string | null } }).auth?.accessToken ?? null);
 
   const hasDownloadableMedia = medias.length > 0;
 
@@ -76,137 +86,191 @@ export function DownloadPhotosDialog({
     [post],
   );
 
-  const handleZipDownload = useCallback(() => {
+  const handleZipDownload = useCallback(async () => {
     if (!post || !zipDownloadUrl) {
       return;
     }
     setDownloadingId('zip');
-    const link = document.createElement('a');
-    link.href = zipDownloadUrl;
-    const fallbackId = post.externalId ?? post.id ?? 'post';
-    const downloadLabel = post.code ? `${post.code}` : fallbackId;
-    link.download = `${sanitizeFileName(downloadLabel)}-photos.zip`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    setTimeout(() => setDownloadingId(null), 3000);
-  }, [post, zipDownloadUrl]);
+    try {
+      const headers: Record<string, string> = {};
+      if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
+      }
+      const response = await fetch(zipDownloadUrl, { headers });
+
+      if (response.status === 429) {
+        setShowLimitDialog(true);
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(`Failed to download ZIP: ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const objectUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const fallbackId = post.externalId ?? post.id ?? 'post';
+      const downloadLabel = post.code ? `${post.code}` : fallbackId;
+      link.href = objectUrl;
+      link.download = `${sanitizeFileName(downloadLabel)}-photos.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(objectUrl);
+    } catch (error) {
+      console.error('Failed to download ZIP archive', error);
+    } finally {
+      setDownloadingId(null);
+    }
+  }, [post, zipDownloadUrl, accessToken]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
-      <DialogContent
-        hideCloseButton
-        className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] sm:left-1/2 sm:top-1/2 sm:flex sm:h-[90vh] sm:w-full sm:max-w-3xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:flex-col sm:overflow-hidden sm:rounded-2xl sm:p-6"
-        onPointerDownOutside={(event) => event.preventDefault()}
-        onInteractOutside={(event) => event.preventDefault()}
-      >
-        <div className="flex h-full min-h-0 flex-col overflow-hidden">
-          <div className="border-b border-border px-6 py-4 sm:hidden">
-            <p className="text-center text-base font-semibold">{t('downloadPhotos')}</p>
-          </div>
-          <div className="hidden px-6 py-4 sm:block">
-            <DialogHeader>
-              <DialogTitle>{t('downloadPhotos')}</DialogTitle>
-              <DialogDescription className="sr-only">{t('downloadPhotos')}</DialogDescription>
-            </DialogHeader>
-          </div>
-          <div className="flex-1 min-h-0 touch-pan-y overflow-y-auto overscroll-contain px-6 pb-4 pt-2 sm:px-6">
-            {hasDownloadableMedia ? (
-              <div className="grid grid-cols-3 gap-3 md:grid-cols-5 lg:grid-cols-5">
-                {medias.map((media, index) => {
-                  const downloadUrl = getMediaDownloadUrl(media);
-                  const isDownloading = downloadingId === media.id;
-                  return (
-                    <div key={media.id ?? `download-media-${index}`} className="flex flex-col gap-2">
-                      <div className="aspect-[4/3] overflow-hidden rounded-xl border border-border/80">
-                        {media.thumbnailUrl || media.url ? (
-                          <img
-                            src={media.thumbnailUrl ?? media.url ?? undefined}
-                            alt={resolveMediaAlt(media, post?.title, post?.externalId)}
-                            className="size-full object-cover"
-                            draggable={false}
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="flex size-full items-center justify-center bg-muted">
-                            <ImageIcon className="size-6 text-muted-foreground" aria-hidden />
-                          </div>
-                        )}
-                      </div>
-                        {downloadUrl ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={isDownloading}
-                            className="flex items-center justify-center gap-1 text-xs"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              void handleSingleDownload(media, index);
-                            }}
-                          >
-                            <Download className="size-4" aria-hidden />
-                            <span>
-                              {isDownloading ? t('downloadInProgress') : t('downloadSingle')}
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
+        <DialogContent
+          hideCloseButton
+          className="left-0 top-0 h-dvh w-screen max-w-none translate-x-0 translate-y-0 rounded-none border-0 p-0 pb-[env(safe-area-inset-bottom)] sm:left-1/2 sm:top-1/2 sm:flex sm:h-[90vh] sm:w-full sm:max-w-3xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:flex-col sm:overflow-hidden sm:rounded-2xl sm:p-6"
+          onPointerDownOutside={(event) => event.preventDefault()}
+          onInteractOutside={(event) => event.preventDefault()}
+        >
+          <div className="flex h-full min-h-0 flex-col overflow-hidden">
+            <div className="border-b border-border px-6 py-4 sm:hidden">
+              <p className="text-center text-base font-semibold">{t('downloadPhotos')}</p>
+            </div>
+            <div className="hidden px-6 py-4 sm:block">
+              <DialogHeader>
+                <DialogTitle>{t('downloadPhotos')}</DialogTitle>
+                <DialogDescription className="sr-only">{t('downloadPhotos')}</DialogDescription>
+              </DialogHeader>
+            </div>
+            <div className="flex-1 min-h-0 touch-pan-y overflow-y-auto overscroll-contain px-6 pb-4 pt-2 sm:px-6">
+              {hasDownloadableMedia ? (
+                <div className="grid grid-cols-3 gap-3 md:grid-cols-5 lg:grid-cols-5">
+                  {medias.map((media, index) => {
+                    const downloadUrl = getMediaDownloadUrl(media);
+                    const isDownloading = downloadingId === media.id;
+                    return (
+                      <div key={media.id ?? `download-media-${index}`} className="flex flex-col gap-2">
+                        <div className="aspect-[4/3] overflow-hidden rounded-xl border border-border/80">
+                          {media.thumbnailUrl || media.url ? (
+                            <img
+                              src={media.thumbnailUrl ?? media.url ?? undefined}
+                              alt={resolveMediaAlt(media, post?.title, post?.externalId)}
+                              className="size-full object-cover"
+                              draggable={false}
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="flex size-full items-center justify-center bg-muted">
+                              <ImageIcon className="size-6 text-muted-foreground" aria-hidden />
+                            </div>
+                          )}
+                        </div>
+                          {downloadUrl ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={isDownloading}
+                              className="flex items-center justify-center gap-1 text-xs"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                void handleSingleDownload(media, index);
+                              }}
+                            >
+                              <Download className="size-4" aria-hidden />
+                              <span>
+                                {isDownloading ? t('downloadInProgress') : t('downloadSingle')}
+                              </span>
+                            </Button>
+                          ) : (
+                            <span className="text-center text-xs text-muted-foreground">
+                              {t('downloadUnavailable')}
                             </span>
-                          </Button>
-                        ) : (
-                          <span className="text-center text-xs text-muted-foreground">
-                            {t('downloadUnavailable')}
-                          </span>
-                        )}
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">{t('downloadNoPhotos')}</p>
-            )}
-          </div>
-          <div
-            className={cn(
-              'px-6 py-4 bg-background/95 border-t border-border',
-              'sm:px-6 sm:bg-transparent sm:border-0',
-            )}
-          >
-              <div
-                className={cn(
-                  'flex flex-col gap-3',
-                  'sm:flex-row sm:flex-wrap',
-                  isRTL ? 'sm:flex-row-reverse' : 'sm:flex-row',
-                )}
-              >
-                {zipDownloadUrl ? (
-                  <Button
-                    className="flex flex-1 min-w-[140px] justify-center"
-                    disabled={downloadingId === 'zip'}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      handleZipDownload();
-                    }}
-                  >
-                  {downloadingId === 'zip' ? (
-                    <LoadingLogo size="sm" className="mr-2" />
-                  ) : (
-                    <Download className="mr-2 size-4" aria-hidden />
+                          )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">{t('downloadNoPhotos')}</p>
+              )}
+            </div>
+            <div
+              className={cn(
+                'px-6 py-4 bg-background/95 border-t border-border',
+                'sm:px-6 sm:bg-transparent sm:border-0',
+              )}
+            >
+                <div
+                  className={cn(
+                    'flex flex-col gap-3',
+                    'sm:flex-row sm:flex-wrap',
+                    isRTL ? 'sm:flex-row-reverse' : 'sm:flex-row',
                   )}
-                  {downloadingId === 'zip' ? t('downloadInProgress') : t('downloadAllZip')}
+                >
+                  {zipDownloadUrl ? (
+                    <Button
+                      className="flex flex-1 min-w-[140px] justify-center"
+                      disabled={downloadingId === 'zip'}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        void handleZipDownload();
+                      }}
+                    >
+                    {downloadingId === 'zip' ? (
+                      <LoadingLogo size="sm" className="mr-2" />
+                    ) : (
+                      <Download className="mr-2 size-4" aria-hidden />
+                    )}
+                    {downloadingId === 'zip' ? t('downloadInProgress') : t('downloadAllZip')}
+                  </Button>
+                ) : null}
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="flex-1 min-w-[140px]"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onOpenChange(false);
+                  }}
+                >
+                  {t('close')}
                 </Button>
-              ) : null}
-              <Button
-                type="button"
-                variant="secondary"
-                className="flex-1 min-w-[140px]"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onOpenChange(false);
-                }}
-              >
-                {t('close')}
-              </Button>
+              </div>
             </div>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showLimitDialog} onOpenChange={setShowLimitDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('downloadLimitTitle')}</DialogTitle>
+          </DialogHeader>
+          <div className="text-sm text-muted-foreground">
+            {t('downloadLimitMessage')}
+          </div>
+          <DialogFooter className="flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setShowLimitDialog(false)}
+            >
+              {t('downloadLimitClose')}
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                setShowLimitDialog(false);
+                window.location.href = '/dashboard/subscription';
+              }}
+            >
+              {t('downloadLimitUpgrade')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

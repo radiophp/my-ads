@@ -22,6 +22,8 @@ import archiver = require('archiver');
 import { PassThrough } from 'node:stream';
 import { JwtAuthGuard } from '@app/modules/auth/guards/jwt-auth.guard';
 import { Public } from '@app/common/decorators/public.decorator';
+import { AuthService } from '@app/modules/auth/auth.service';
+import { UsageService } from '@app/modules/usage/usage.service';
 import { StorageService } from '@app/platform/storage/storage.service';
 import { DivarPostsAdminService } from './divar-posts-admin.service';
 import { DivarPostListItemDto, type PaginatedDivarPostsDto } from './dto/divar-post.dto';
@@ -46,6 +48,8 @@ export class DivarPostsController {
     private readonly contactFetchService: DivarContactFetchService,
     private readonly rateLimitService: RateLimitService,
     private readonly divarPostStatsService: DivarPostStatsService,
+    private readonly authService: AuthService,
+    private readonly usageService: UsageService,
   ) {}
 
   @Get()
@@ -272,6 +276,51 @@ export class DivarPostsController {
       throw new NotFoundException('Post not found.');
     }
 
+    let userId: string | null = null;
+    const authHeader = request.headers['authorization'];
+    if (authHeader && typeof authHeader === 'string') {
+      const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+      if (token) {
+        try {
+          const payload = await this.authService.verifyAccessToken(token);
+          userId = payload.sub;
+
+          // admins bypass the daily limit
+          if (payload.role === 'ADMIN') {
+            userId = null;
+          }
+        } catch {
+          // invalid token — continue without user
+        }
+
+        if (userId) {
+          const alreadyDownloaded = await this.usageService.hasLoggedToday(
+            userId,
+            'zip_downloads_per_day',
+            { postId: post.id },
+          );
+
+          if (!alreadyDownloaded) {
+            const { allowed } = await this.usageService.checkDailyUniqueLimit(
+              userId,
+              'zip_downloads_per_day',
+              'postId',
+            );
+
+            if (!allowed) {
+              throw new HttpException(
+                {
+                  message:
+                    'محدودیت دانلود روزانه شما به پایان رسیده است. برای افزایش محدودیت اشتراک خود را ارتقا دهید.',
+                },
+                HttpStatus.TOO_MANY_REQUESTS,
+              );
+            }
+          }
+        }
+      }
+    }
+
     const downloadLabel =
       post.code && Number.isFinite(post.code) ? String(post.code) : (post.externalId ?? post.id);
     const downloadName = `${this.sanitizeFileName(downloadLabel) || 'post'}-photos.zip`;
@@ -293,6 +342,14 @@ export class DivarPostsController {
 
     const stream = await this.storageService.getObjectStream(objectKey);
     reply.code(200).send(stream);
+
+    if (userId) {
+      this.usageService
+        .logIfNotExistsToday(userId, 'zip_downloads_per_day', 'download', {
+          postId: post.id,
+        })
+        .catch((err) => this.logger.error('Failed to log zip download usage', err));
+    }
   }
 
   private buildPhotoArchiveKey(postId: string, downloadName: string): string {

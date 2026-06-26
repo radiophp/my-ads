@@ -66,6 +66,90 @@ export class UsageService {
     });
   }
 
+  async logIfNotExistsToday(
+    userId: string,
+    feature: string,
+    action: string,
+    metadata: Record<string, unknown>,
+  ): Promise<boolean> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const existing = await this.prisma.usageLog.findFirst({
+      where: {
+        userId,
+        feature,
+        consumedAt: { gte: today },
+        metadata: { equals: metadata as Prisma.InputJsonValue },
+      },
+    });
+
+    if (existing) return false;
+
+    await this.prisma.usageLog.create({
+      data: {
+        userId,
+        feature,
+        action,
+        metadata: metadata as Prisma.InputJsonValue,
+      },
+    });
+    return true;
+  }
+
+  async getDailyUniqueCount(userId: string, feature: string, metadataKey: string): Promise<number> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const logs = await this.prisma.usageLog.findMany({
+      where: { userId, feature, consumedAt: { gte: today } },
+      select: { metadata: true },
+    });
+
+    const uniqueValues = new Set<string>();
+    for (const log of logs) {
+      const meta = log.metadata as Record<string, unknown> | null;
+      if (meta && typeof meta[metadataKey] === 'string') {
+        uniqueValues.add(meta[metadataKey] as string);
+      }
+    }
+
+    return uniqueValues.size;
+  }
+
+  async hasLoggedToday(
+    userId: string,
+    feature: string,
+    metadata: Record<string, unknown>,
+  ): Promise<boolean> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const existing = await this.prisma.usageLog.findFirst({
+      where: {
+        userId,
+        feature,
+        consumedAt: { gte: today },
+        metadata: { equals: metadata as Prisma.InputJsonValue },
+      },
+    });
+
+    return existing !== null;
+  }
+
+  async checkDailyUniqueLimit(
+    userId: string,
+    feature: string,
+    metadataKey: string,
+  ): Promise<{ allowed: boolean; current: number; limit: number }> {
+    const limit = await this.subscriptionsService.resolveFeatureLimit(userId, feature);
+    if (limit <= 0) {
+      return { allowed: false, current: 0, limit: 0 };
+    }
+    const current = await this.getDailyUniqueCount(userId, feature, metadataKey);
+    return { allowed: current < limit, current, limit };
+  }
+
   async getUsageReport(params: {
     userId?: string;
     feature?: string;

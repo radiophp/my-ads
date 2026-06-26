@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { StorageModule } from '@app/platform/storage/storage.module';
+import { UsageModule } from '@app/modules/usage/usage.module';
 import { DivarPostHarvestService } from './divar-post-harvest.service';
 import { DivarPostFetchService } from './divar-post-fetch.service';
 import { DivarPostsAdminService } from './divar-posts-admin.service';
@@ -12,7 +13,7 @@ import { AdminDivarSessionsModule } from '../admin-divar-sessions/admin-divar-se
 import { DivarPostStatsService } from './divar-post-stats.service';
 
 @Module({
-  imports: [StorageModule, AdminDivarSessionsModule],
+  imports: [StorageModule, AdminDivarSessionsModule, UsageModule],
   providers: [
     DivarPostHarvestService,
     DivarPostFetchService,

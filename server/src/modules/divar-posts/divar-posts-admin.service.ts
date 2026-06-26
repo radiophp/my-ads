@@ -184,12 +184,94 @@ export class DivarPostsAdminService {
   ): Promise<PaginatedDivarPostsDto> {
     const take = Math.min(Math.max(options.limit ?? 20, 1), 50);
     const where: Prisma.DivarPostWhereInput = {};
-    if (typeof options.provinceId === 'number') {
-      where.provinceId = options.provinceId;
+    const isRingBinder = !!options.ringFolderId;
+
+    if (!isRingBinder && options.userId) {
+      const user = await this.prisma.user.findUnique({
+        where: { id: options.userId },
+        select: { role: true },
+      });
+      if (user && user.role !== 'ADMIN') {
+        const subscription = await this.prisma.userSubscription.findFirst({
+          where: {
+            userId: options.userId,
+            status: 'ACTIVE',
+            endsAt: { gte: new Date() },
+          },
+          select: { districtAssignments: true },
+          orderBy: { endsAt: 'desc' },
+        });
+
+        if (!subscription) {
+          return {
+            items: [],
+            nextCursor: null,
+            hasMore: false,
+          };
+        }
+
+        const assignments = subscription.districtAssignments as Record<
+          string,
+          { id: number; cityId: number; provinceId: number }[]
+        >;
+
+        const accessibleDistricts = new Set<number>();
+        const accessibleCities = new Set<number>();
+        const accessibleProvinces = new Set<number>();
+        for (const list of Object.values(assignments)) {
+          for (const d of list) {
+            accessibleDistricts.add(d.id);
+            accessibleCities.add(d.cityId);
+            accessibleProvinces.add(d.provinceId);
+          }
+        }
+
+        if (accessibleDistricts.size === 0) {
+          return {
+            items: [],
+            nextCursor: null,
+            hasMore: false,
+          };
+        }
+
+        const requestedDistrictIds = options.districtIds ?? [];
+        const filteredDistrictIds = requestedDistrictIds.filter((id) =>
+          accessibleDistricts.has(id),
+        );
+        const requestedCityIds = options.cityIds ?? [];
+        const filteredCityIds = requestedCityIds.filter((id) => accessibleCities.has(id));
+        const requestedProvinceId = options.provinceId;
+
+        if (
+          (requestedProvinceId !== undefined && !accessibleProvinces.has(requestedProvinceId)) ||
+          (requestedCityIds.length > 0 && filteredCityIds.length === 0) ||
+          (requestedDistrictIds.length > 0 && filteredDistrictIds.length === 0)
+        ) {
+          return {
+            items: [],
+            nextCursor: null,
+            hasMore: false,
+          };
+        }
+
+        options.districtIds = filteredDistrictIds;
+        options.cityIds = filteredCityIds;
+        if (requestedProvinceId !== undefined && accessibleProvinces.has(requestedProvinceId)) {
+          options.provinceId = requestedProvinceId;
+        } else {
+          options.provinceId = undefined;
+        }
+      }
     }
-    // cityIds handled below after all other conditions are built
-    if (options.districtIds && options.districtIds.length > 0) {
-      where.districtId = { in: options.districtIds };
+
+    if (!isRingBinder) {
+      if (typeof options.provinceId === 'number') {
+        where.provinceId = options.provinceId;
+      }
+      // cityIds handled below after all other conditions are built
+      if (options.districtIds && options.districtIds.length > 0) {
+        where.districtId = { in: options.districtIds };
+      }
     }
     if (options.categorySlug) {
       where.OR = [
@@ -251,12 +333,23 @@ export class DivarPostsAdminService {
             };
       this.appendAndCondition(where, condition);
     }
-    if (options.dateQuarter) {
-      const parts = options.dateQuarter.split('-');
-      const year = parseInt(parts[0], 10);
-      const quarter = parseInt(parts[1], 10);
-      if (Number.isFinite(year) && Number.isFinite(quarter) && quarter >= 1 && quarter <= 4) {
-        const { startDate, endDate } = getPersianQuarterDateRange(year, quarter);
+    if (options.dateQuarter && !isRingBinder) {
+      const ranges = options.dateQuarter
+        .split(',')
+        .map((q) => {
+          const parts = q.trim().split('-');
+          const year = parseInt(parts[0], 10);
+          const quarter = parseInt(parts[1], 10);
+          if (Number.isFinite(year) && Number.isFinite(quarter) && quarter >= 1 && quarter <= 4) {
+            return getPersianQuarterDateRange(year, quarter);
+          }
+          return null;
+        })
+        .filter(Boolean) as { startDate: Date; endDate: Date }[];
+
+      if (ranges.length > 0) {
+        const startDate = new Date(Math.min(...ranges.map((r) => r.startDate.getTime())));
+        const endDate = new Date(Math.max(...ranges.map((r) => r.endDate.getTime())));
         this.appendAndCondition(where, {
           publishedAt: { gte: startDate, lte: endDate },
         });
@@ -321,7 +414,7 @@ export class DivarPostsAdminService {
       } satisfies Prisma.DivarPostFindManyArgs);
 
     // Multi-city (>1): run per-city queries in parallel using composite index
-    if (options.cityIds && options.cityIds.length > 1) {
+    if (!isRingBinder && options.cityIds && options.cityIds.length > 1) {
       const queries = options.cityIds.map((cityId) => {
         const cityWhere = structuredClone(where);
         cityWhere.cityId = cityId;
@@ -349,7 +442,7 @@ export class DivarPostsAdminService {
       };
     }
 
-    if (options.cityIds && options.cityIds.length === 1) {
+    if (!isRingBinder && options.cityIds && options.cityIds.length === 1) {
       where.cityId = options.cityIds[0];
     }
 

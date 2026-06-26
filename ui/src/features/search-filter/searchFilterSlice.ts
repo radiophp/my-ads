@@ -1,6 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { createSelector } from '@reduxjs/toolkit';
-import { DEFAULT_QUARTER_VALUE } from './date-quarter-utils';
+import { getDefaultQuarters } from './date-quarter-utils';
 
 export type SelectionMode = 'all' | 'custom';
 
@@ -55,7 +55,7 @@ const initialFilterState: SearchFilterState = {
   categoryFilters: {},
   ringBinderFolderId: null,
   noteFilter: 'all',
-  dateQuarter: DEFAULT_QUARTER_VALUE,
+  dateQuarter: getDefaultQuarters(),
 };
 
 const initialState: SearchFilterSliceState = {

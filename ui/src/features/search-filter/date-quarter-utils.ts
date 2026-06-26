@@ -64,3 +64,15 @@ export function getCurrentQuarterValue(): string {
   const { year, quarter } = getCurrentPersianYearAndQuarter();
   return `${year}-${quarter}`;
 }
+
+export function getPreviousQuarterValue(): string {
+  const { year, quarter } = getCurrentPersianYearAndQuarter();
+  if (quarter === 1) {
+    return `${year - 1}-4`;
+  }
+  return `${year}-${quarter - 1}`;
+}
+
+export function getDefaultQuarters(): string {
+  return `${getPreviousQuarterValue()},${getCurrentQuarterValue()}`;
+}

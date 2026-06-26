@@ -16,6 +16,8 @@ import {
   useFetchPostPhoneMutation,
   useFetchPostContactInfoMutation,
 } from '@/features/api/endpoints/divar-posts';
+import { useGetCurrentSubscriptionQuery } from '@/features/api/endpoints/subscriptions';
+import { useGetRingBinderFoldersQuery } from '@/features/api/endpoints/ring-binder';
 import { useSharePostOnBaleMutation } from '@/features/api/endpoints/bale';
 import type { DivarPostContactInfo, DivarPostSummary } from '@/types/divar-posts';
 import { useAppSelector } from '@/lib/hooks';
@@ -30,6 +32,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { BASE_CATEGORY_SLUG } from '@/lib/divar-categories';
 import { ActiveFilterBadges } from '@/components/dashboard/active-filter-badges';
+import { RingBinderFolderCard } from '@/components/dashboard/ring-binder-folder-card';
 
 type ShareIconMap = {
   title: string;
@@ -62,6 +65,11 @@ export function DivarPostsFeed(): JSX.Element {
   const [loadingMore, setLoadingMore] = useState(false);
   const [downloadDialogOpen, setDownloadDialogOpen] = useState(false);
   const [mapReady, setMapReady] = useState(true);
+  const { data: currentSubscription } = useGetCurrentSubscriptionQuery();
+  const hasSubscription = !!currentSubscription;
+  const { data: ringBinderData } = useGetRingBinderFoldersQuery();
+  const ringFolders = ringBinderData?.folders ?? [];
+
   const [fetchPosts] = useLazyGetDivarPostsQuery();
   const [fetchPhone] = useFetchPostPhoneMutation();
   const [fetchContactInfo] = useFetchPostContactInfoMutation();
@@ -160,6 +168,8 @@ export function DivarPostsFeed(): JSX.Element {
     dateQuarter,
   ]);
 
+  const canFetch = hasSubscription || !!ringBinderFolderId;
+
   useEffect(() => {
     let isMounted = true;
     setInitializing(true);
@@ -167,11 +177,16 @@ export function DivarPostsFeed(): JSX.Element {
     setNextCursor(null);
     setHasMore(true);
 
+    if (!canFetch) {
+      if (isMounted) setInitializing(false);
+      return;
+    }
+
     fetchPosts({
       cursor: null,
-      provinceId: filterArgs.provinceId,
-      cityIds: filterArgs.cityIds,
-      districtIds: filterArgs.districtIds,
+      provinceId: hasSubscription ? filterArgs.provinceId : undefined,
+      cityIds: hasSubscription ? filterArgs.cityIds : undefined,
+      districtIds: hasSubscription ? filterArgs.districtIds : undefined,
       categorySlug: filterArgs.categorySlug,
       categoryDepth: filterArgs.categoryDepth,
       filters: filterArgs.filters,
@@ -200,19 +215,19 @@ export function DivarPostsFeed(): JSX.Element {
     return () => {
       isMounted = false;
     };
-  }, [fetchPosts, filterArgs]);
+  }, [fetchPosts, filterArgs, hasSubscription, canFetch]);
 
   const loadMore = useCallback(async () => {
-    if (!nextCursor || loadingMore || !hasMore) {
+    if (!canFetch || !nextCursor || loadingMore || !hasMore) {
       return;
     }
     setLoadingMore(true);
     try {
       const result = await fetchPosts({
         cursor: nextCursor,
-        provinceId: filterArgs.provinceId,
-        cityIds: filterArgs.cityIds,
-        districtIds: filterArgs.districtIds,
+        provinceId: hasSubscription ? filterArgs.provinceId : undefined,
+        cityIds: hasSubscription ? filterArgs.cityIds : undefined,
+        districtIds: hasSubscription ? filterArgs.districtIds : undefined,
         categorySlug: filterArgs.categorySlug,
         categoryDepth: filterArgs.categoryDepth,
         filters: filterArgs.filters,
@@ -228,7 +243,7 @@ export function DivarPostsFeed(): JSX.Element {
     } finally {
       setLoadingMore(false);
     }
-  }, [fetchPosts, nextCursor, loadingMore, hasMore, filterArgs]);
+  }, [fetchPosts, nextCursor, loadingMore, hasMore, filterArgs, hasSubscription, canFetch]);
 
   useEffect(() => {
     if (!hasMore) {
@@ -659,8 +674,20 @@ export function DivarPostsFeed(): JSX.Element {
             ))}
           </div>
         ) : posts.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground">
-            {t('empty')}
+          <div>
+            <div className="rounded-xl border border-dashed border-border p-8 text-center text-muted-foreground">
+              {hasSubscription ? t('empty') : ringBinderFolderId ? t('empty') : t('noSubscription')}
+            </div>
+            {!hasSubscription && !ringBinderFolderId && ringFolders.length > 0 ? (
+              <div className="mt-6">
+                <h3 className="mb-3 text-sm font-semibold text-foreground">{t('ringBinderTitle')}</h3>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {ringFolders.map((folder) => (
+                    <RingBinderFolderCard key={folder.id} folder={folder} />
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
         ) : (
           <>

@@ -7,6 +7,7 @@ import type {
   DivarPostSummary,
   PaginatedPostsToAnalyze,
   PaginatedPostsWithPhones,
+  RingFolderDistricts,
 } from '@/types/divar-posts';
 import type { DivarDistrictPriceReportRow } from '@/types/divar-reports';
 
@@ -145,6 +146,10 @@ const divarPostsApi = apiSlice.injectEndpoints({
       },
       providesTags: ['PostsWithPhones'],
     }),
+    getRingFolderDistricts: builder.query<RingFolderDistricts, { ringFolderId: string }>({
+      query: ({ ringFolderId }) =>
+        `/divar-posts/ring-folder-districts?ringFolderId=${encodeURIComponent(ringFolderId)}`,
+    }),
     fetchPostPhone: builder.mutation<{ phoneNumber: string | null }, { postId: string }>({
       query: ({ postId }) => ({
         url: `/divar-posts/${postId}/share-phone`,
@@ -173,6 +178,8 @@ export const {
   useLazyGetDivarDistrictPriceReportQuery,
   useGetPostsWithPhonesQuery,
   useLazyGetPostsWithPhonesQuery,
+  useGetRingFolderDistrictsQuery,
+  useLazyGetRingFolderDistrictsQuery,
   useFetchPostPhoneMutation,
   useFetchPostContactInfoMutation,
 } = divarPostsApi;

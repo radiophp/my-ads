@@ -471,19 +471,27 @@ export class PaymentsService {
     const allDistrictIds = [...new Set(Object.values(dto.districtAssignments).flat())];
     const districts = await this.prisma.district.findMany({
       where: { id: { in: allDistrictIds } },
-      include: { city: { select: { name: true } } },
+      include: { city: { select: { id: true, name: true, provinceId: true } } },
     });
     const districtMap = new Map(districts.map((d) => [d.id, d]));
 
-    const enrichedAssignments: Record<string, { id: number; name: string; cityName: string }[]> =
-      {};
+    const enrichedAssignments: Record<
+      string,
+      { id: number; name: string; cityId: number; provinceId: number; cityName: string }[]
+    > = {};
     for (const [featureKey, ids] of Object.entries(dto.districtAssignments)) {
       enrichedAssignments[featureKey] = ids
         .map((id) => {
           const d = districtMap.get(id);
           return d
-            ? { id, name: d.name, cityName: d.city.name }
-            : { id, name: String(id), cityName: '' };
+            ? {
+                id,
+                name: d.name,
+                cityId: d.city.id,
+                provinceId: d.city.provinceId,
+                cityName: d.city.name,
+              }
+            : { id, name: String(id), cityId: 0, provinceId: 0, cityName: '' };
         })
         .filter(Boolean);
     }

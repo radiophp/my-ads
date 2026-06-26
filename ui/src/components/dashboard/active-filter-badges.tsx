@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { skipToken } from '@reduxjs/toolkit/query';
 import { X } from 'lucide-react';
 
@@ -45,6 +46,9 @@ export function ActiveFilterBadges({ className }: ActiveFilterBadgesProps) {
   const locale = useLocale();
   const isRTL = ['fa', 'ar', 'he'].includes(locale);
   const dispatch = useAppDispatch();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const {
     provinceId,
     citySelection,
@@ -210,13 +214,19 @@ export function ActiveFilterBadges({ className }: ActiveFilterBadgesProps) {
       });
     }
     if (dateQuarter) {
-      const parts = dateQuarter.split('-');
-      const year = parseInt(parts[0], 10);
-      const quarter = parseInt(parts[1], 10);
-      if (Number.isFinite(year) && Number.isFinite(quarter)) {
+      const quarterLabels = dateQuarter.split(',').map((q) => {
+        const parts = q.split('-');
+        const year = parseInt(parts[0], 10);
+        const quarter = parseInt(parts[1], 10);
+        if (Number.isFinite(year) && Number.isFinite(quarter)) {
+          return formatQuarterLabel(year, quarter);
+        }
+        return null;
+      }).filter(Boolean);
+      if (quarterLabels.length > 0) {
         entries.push({
           key: 'dateQuarter',
-          label: formatQuarterLabel(year, quarter),
+          label: quarterLabels.join(', '),
           kind: 'dateQuarter',
         });
       }
@@ -297,10 +307,16 @@ export function ActiveFilterBadges({ className }: ActiveFilterBadgesProps) {
           dispatch(setDistrictSelectionMode('all'));
           didChange = true;
           break;
-        case 'ringBinder':
+        case 'ringBinder': {
           dispatch(setRingBinderFolder(null));
+          const params = new URLSearchParams(searchParams.toString());
+          params.delete('ringFolderId');
+          params.delete('ringBinderFolderId');
+          const qs = params.toString();
+          router.replace(qs ? `${pathname}?${qs}` : pathname);
           didChange = true;
           break;
+        }
         case 'noteFilter':
           dispatch(setNoteFilter('all'));
           didChange = true;
@@ -330,7 +346,7 @@ export function ActiveFilterBadges({ className }: ActiveFilterBadgesProps) {
         dispatch(commitAppliedFilters());
       }
     },
-    [categoryFilters, dispatch],
+    [categoryFilters, dispatch, searchParams, router, pathname],
   );
 
   if (badges.length === 0) {

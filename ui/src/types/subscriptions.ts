@@ -1,5 +1,13 @@
 import type { SubscriptionPackage } from '@/types/packages';
 
+export type DistrictAssignment = {
+  id: number;
+  name: string;
+  cityId: number;
+  provinceId: number;
+  cityName: string;
+};
+
 export type UserSubscription = {
   id: string;
   packageId: string;
@@ -14,6 +22,7 @@ export type UserSubscription = {
   bonusDays: number;
   createdAt: string;
   updatedAt: string;
+  districtAssignments: Record<string, DistrictAssignment[]>;
   package?: Pick<
     SubscriptionPackage,
     | 'id'

@@ -7,6 +7,14 @@ export type SubscriptionPackageSummary = Pick<
 
 type SubscriptionWithPackage = UserSubscription & { package?: SubscriptionPackage | null };
 
+export type DistrictAssignment = {
+  id: number;
+  name: string;
+  cityId: number;
+  provinceId: number;
+  cityName: string;
+};
+
 export class UserSubscriptionDto {
   id!: string;
   packageId!: string;
@@ -22,6 +30,7 @@ export class UserSubscriptionDto {
   createdAt!: Date;
   updatedAt!: Date;
   package?: SubscriptionPackageSummary;
+  districtAssignments!: Record<string, DistrictAssignment[]>;
 
   static fromEntity(entity: SubscriptionWithPackage): UserSubscriptionDto {
     return {
@@ -38,6 +47,10 @@ export class UserSubscriptionDto {
       bonusDays: entity.bonusDays,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
+      districtAssignments: (entity.districtAssignments ?? {}) as Record<
+        string,
+        { id: number; name: string; cityId: number; provinceId: number; cityName: string }[]
+      >,
       package: entity.package
         ? {
             id: entity.package.id,

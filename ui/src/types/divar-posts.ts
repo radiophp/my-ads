@@ -143,3 +143,9 @@ export type PaginatedPostsWithPhones = {
     hasNextPage: boolean;
   };
 };
+
+export type RingFolderDistricts = {
+  provinceIds: number[];
+  cityIds: number[];
+  districtIds: number[];
+};

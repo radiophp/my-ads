@@ -40,6 +40,8 @@ import {
 } from '@/features/api/endpoints/locations';
 import { useGetPublicDivarCategoriesQuery } from '@/features/api/endpoints/divar-categories';
 import { useGetRingBinderFoldersQuery } from '@/features/api/endpoints/ring-binder';
+import { useGetCurrentSubscriptionQuery } from '@/features/api/endpoints/subscriptions';
+import { useLazyGetRingFolderDistrictsQuery } from '@/features/api/endpoints/divar-posts';
 import { Button } from '@/components/ui/button';
 import type { DivarCategory } from '@/types/divar-category';
 import { CategoryFiltersPreview } from './category-filters-preview';
@@ -61,6 +63,14 @@ import { cloneSearchFilterState, mergeSavedFilterState } from '@/features/search
 import { formatQuarterLabel } from '@/features/search-filter/date-quarter-utils';
 import { DesktopCategorySection } from './desktop-category-section';
 import { DesktopRegionSelectors } from './desktop-region-selectors';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogFooter,
+  AlertDialogAction,
+} from '@/components/ui/alert-dialog';
 import { CodeSearch } from '@/components/layout/code-search';
 
 const DEFAULT_SAVED_FILTER_LIMIT = 0;
@@ -127,6 +137,71 @@ export function DashboardSearchFilterPanel() {
     isFetching: ringBinderFetching,
   } = useGetRingBinderFoldersQuery();
   const ringBinderFolders = useMemo(() => ringBinderData?.folders ?? [], [ringBinderData]);
+
+  const { data: currentSubscription } = useGetCurrentSubscriptionQuery();
+  const [fetchRingFolderDistricts] = useLazyGetRingFolderDistrictsQuery();
+
+  const [ringFolderDistricts, setRingFolderDistricts] = useState<{
+    provinceIds: number[];
+    cityIds: number[];
+    districtIds: number[];
+  } | null>(null);
+
+  const hasSubscriptionAccess = !!currentSubscription?.districtAssignments;
+
+  useEffect(() => {
+    if (hasSubscriptionAccess || !ringBinderFolderId) {
+      setRingFolderDistricts(null);
+      return;
+    }
+    const promise = fetchRingFolderDistricts({ ringFolderId: ringBinderFolderId });
+    promise.then((result) => {
+      if (result.data) {
+        setRingFolderDistricts(result.data);
+      }
+    });
+    return () => {
+      promise.abort();
+    };
+  }, [hasSubscriptionAccess, ringBinderFolderId, fetchRingFolderDistricts]);
+
+  const accessibleDistrictIds = useMemo(() => {
+    const ids = new Set<number>();
+    if (hasSubscriptionAccess && currentSubscription?.districtAssignments) {
+      for (const assignments of Object.values(currentSubscription.districtAssignments)) {
+        for (const d of assignments) ids.add(d.id);
+      }
+    } else if (ringFolderDistricts) {
+      for (const id of ringFolderDistricts.districtIds) ids.add(id);
+    }
+    return ids;
+  }, [currentSubscription, hasSubscriptionAccess, ringFolderDistricts]);
+
+  const accessibleProvinceIds = useMemo(() => {
+    const ids = new Set<number>();
+    if (hasSubscriptionAccess && currentSubscription?.districtAssignments) {
+      for (const assignments of Object.values(currentSubscription.districtAssignments)) {
+        for (const d of assignments) ids.add(d.provinceId);
+      }
+    } else if (ringFolderDistricts) {
+      for (const id of ringFolderDistricts.provinceIds) ids.add(id);
+    }
+    return ids;
+  }, [currentSubscription, hasSubscriptionAccess, ringFolderDistricts]);
+
+  const accessibleCityIds = useMemo(() => {
+    const ids = new Set<number>();
+    if (hasSubscriptionAccess && currentSubscription?.districtAssignments) {
+      for (const assignments of Object.values(currentSubscription.districtAssignments)) {
+        for (const d of assignments) ids.add(d.cityId);
+      }
+    } else if (ringFolderDistricts) {
+      for (const id of ringFolderDistricts.cityIds) ids.add(id);
+    }
+    return ids;
+  }, [currentSubscription, hasSubscriptionAccess, ringFolderDistricts]);
+
+  const restrictToAccessible = true;
 
   const { toast } = useToast();
   const {
@@ -235,6 +310,26 @@ export function DashboardSearchFilterPanel() {
   }, [dispatch, provinceId, provinces]);
 
   useEffect(() => {
+    if (!restrictToAccessible || !cities.length) return;
+    if (citySelection.mode === 'all' && accessibleCityIds) {
+      const accessible = cities.filter((c) => accessibleCityIds.has(c.id)).map((c) => c.id);
+      if (accessible.length > 0) {
+        dispatch(setSelectedCities(accessible));
+      }
+    }
+  }, [restrictToAccessible, cities, citySelection.mode, accessibleCityIds, dispatch]);
+
+  useEffect(() => {
+    if (!restrictToAccessible || !districts.length) return;
+    if (districtSelection.mode === 'all' && accessibleDistrictIds) {
+      const accessible = districts.filter((d) => accessibleDistrictIds.has(d.id)).map((d) => d.id);
+      if (accessible.length > 0) {
+        dispatch(setSelectedDistricts(accessible));
+      }
+    }
+  }, [restrictToAccessible, districts, districtSelection.mode, accessibleDistrictIds, dispatch]);
+
+  useEffect(() => {
     if (
       citySelection.mode !== 'custom' ||
       citySelection.cityIds.length === 0 ||
@@ -307,11 +402,13 @@ export function DashboardSearchFilterPanel() {
 
   const provinceOptions = useMemo(() => {
     const normalized = provinceQuery.trim().toLowerCase();
-    const list = provinces.map((province) => ({
-      label: province.name,
-      value: province.id,
-      slug: province.slug?.toLowerCase?.() ?? '',
-    }));
+    const list = provinces
+      .filter((p) => !restrictToAccessible || accessibleProvinceIds?.has(p.id))
+      .map((province) => ({
+        label: province.name,
+        value: province.id,
+        slug: province.slug?.toLowerCase?.() ?? '',
+      }));
     if (!normalized) return list;
     return list.filter(
       (item) =>
@@ -319,15 +416,17 @@ export function DashboardSearchFilterPanel() {
         item.slug.includes(normalized) ||
         (!draftProvinceAll && draftProvinceId === item.value),
     );
-  }, [provinces, provinceQuery, draftProvinceAll, draftProvinceId]);
+  }, [provinces, provinceQuery, draftProvinceAll, draftProvinceId, restrictToAccessible, accessibleProvinceIds]);
 
   const cityOptions = useMemo(() => {
     const normalized = cityQuery.trim().toLowerCase();
-    const list = cities.map((city) => ({
-      label: city.name,
-      value: city.id,
-      slug: city.slug?.toLowerCase?.() ?? '',
-    }));
+    const list = cities
+      .filter((c) => !restrictToAccessible || accessibleCityIds?.has(c.id))
+      .map((city) => ({
+        label: city.name,
+        value: city.id,
+        slug: city.slug?.toLowerCase?.() ?? '',
+      }));
     if (!normalized) return list;
     return list.filter(
       (item) =>
@@ -335,17 +434,19 @@ export function DashboardSearchFilterPanel() {
         item.slug.includes(normalized) ||
         (!draftAllCities && draftCityIds.includes(item.value)),
     );
-  }, [cities, cityQuery, draftAllCities, draftCityIds]);
+  }, [cities, cityQuery, draftAllCities, draftCityIds, restrictToAccessible, accessibleCityIds]);
 
   const multipleCitySelection = selectedCityIds.length > 1;
 
   const districtOptions = useMemo(() => {
     const normalized = districtQuery.trim().toLowerCase();
-    const list = districts.map((district) => ({
-      label: multipleCitySelection ? `${district.city} • ${district.name}` : district.name,
-      value: district.id,
-      slug: district.slug?.toLowerCase?.() ?? '',
-    }));
+    const list = districts
+      .filter((d) => !restrictToAccessible || accessibleDistrictIds?.has(d.id))
+      .map((district) => ({
+        label: multipleCitySelection ? `${district.city} • ${district.name}` : district.name,
+        value: district.id,
+        slug: district.slug?.toLowerCase?.() ?? '',
+      }));
     if (!normalized) return list;
     return list.filter(
       (item) =>
@@ -353,7 +454,7 @@ export function DashboardSearchFilterPanel() {
         item.slug.includes(normalized) ||
         (!draftAllDistricts && draftDistrictIds.includes(item.value)),
     );
-  }, [districts, multipleCitySelection, districtQuery, draftAllDistricts, draftDistrictIds]);
+  }, [districts, multipleCitySelection, districtQuery, draftAllDistricts, draftDistrictIds, restrictToAccessible, accessibleDistrictIds]);
 
   const selectedCityNames = useMemo(() => {
     if (citySelection.mode !== 'custom' || citySelection.cityIds.length === 0) {
@@ -441,7 +542,14 @@ export function DashboardSearchFilterPanel() {
 
   const applyCitySelection = () => {
     if (draftAllCities || draftCityIds.length === 0) {
-      dispatch(setCitySelectionMode('all'));
+      if (restrictToAccessible) {
+        const accessibleInProvince = accessibleCityIds
+          ? cities.filter((c) => accessibleCityIds.has(c.id)).map((c) => c.id)
+          : [];
+        dispatch(setSelectedCities(accessibleInProvince));
+      } else {
+        dispatch(setCitySelectionMode('all'));
+      }
     } else {
       dispatch(setSelectedCities(draftCityIds));
     }
@@ -454,7 +562,14 @@ export function DashboardSearchFilterPanel() {
 
   const applyDistrictSelection = () => {
     if (draftAllDistricts || draftDistrictIds.length === 0) {
-      dispatch(setDistrictSelectionMode('all'));
+      if (restrictToAccessible) {
+        const accessibleInCities = accessibleDistrictIds
+          ? districts.filter((d) => accessibleDistrictIds.has(d.id)).map((d) => d.id)
+          : [];
+        dispatch(setSelectedDistricts(accessibleInCities));
+      } else {
+        dispatch(setDistrictSelectionMode('all'));
+      }
     } else {
       dispatch(setSelectedDistricts(draftDistrictIds));
     }
@@ -934,9 +1049,26 @@ export function DashboardSearchFilterPanel() {
   const savedFiltersRemaining = savedFiltersData?.remaining ?? Math.max(savedFiltersLimit - savedFiltersActiveCount, 0);
   const savedFiltersBusy = savedFiltersLoading || savedFiltersFetching;
   const saveLimitReached = savedFiltersRemaining <= 0;
+  const [inaccessibleDistricts, setInaccessibleDistricts] = useState<{ id: number; name: string }[]>([]);
 
   const handleApplySavedFilter = useCallback(
     (filter: SavedFilter) => {
+      if (restrictToAccessible && accessibleDistrictIds) {
+        const payload = filter.payload;
+        if (payload.districtSelection.mode === 'custom' && payload.districtSelection.districtIds.length > 0) {
+          const blocked = payload.districtSelection.districtIds.filter(
+            (did) => !accessibleDistrictIds.has(did),
+          );
+          if (blocked.length > 0) {
+            const names = blocked.map((id) => {
+              const d = districts.find((dd) => dd.id === id);
+              return { id, name: d ? `${d.name} (${d.city})` : String(id) };
+            });
+            setInaccessibleDistricts(names);
+            return;
+          }
+        }
+      }
       const normalized = mergeSavedFilterState(filter.payload);
       dispatch(hydrateFromSaved(normalized));
       dispatch(commitAppliedFilters());
@@ -948,7 +1080,7 @@ export function DashboardSearchFilterPanel() {
         setFilterModalOpen(false);
       }
     },
-    [dispatch, filterModalOpen, savedFiltersT, toast],
+    [dispatch, filterModalOpen, savedFiltersT, toast, restrictToAccessible, accessibleDistrictIds, districts],
   );
 
   const handleSaveFilter = useCallback(
@@ -1798,6 +1930,30 @@ export function DashboardSearchFilterPanel() {
         value={dateQuarter}
         onSelect={(next) => dispatch(setDateQuarter(next))}
       />
+
+      <AlertDialog
+        open={inaccessibleDistricts.length > 0}
+        onOpenChange={(open) => { if (!open) setInaccessibleDistricts([]); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{savedFiltersT('districtRestriction.title')}</AlertDialogTitle>
+          </AlertDialogHeader>
+          <div className="text-sm text-muted-foreground">
+            <p>{savedFiltersT('districtRestriction.description')}</p>
+            <ul className="mt-2 list-inside list-disc space-y-1">
+              {inaccessibleDistricts.map((d) => (
+                <li key={d.id} className="text-foreground">{d.name}</li>
+              ))}
+            </ul>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setInaccessibleDistricts([])}>
+              {savedFiltersT('districtRestriction.confirm')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

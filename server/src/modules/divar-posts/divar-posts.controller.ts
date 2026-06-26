@@ -115,6 +115,24 @@ export class DivarPostsController {
     });
   }
 
+  @Get('ring-folder-districts')
+  @ApiOperation({
+    summary: 'Get distinct provinces/cities/districts for posts in a ring binder folder',
+  })
+  async getRingFolderDistricts(
+    @Req() request: { user?: { sub?: string } },
+    @Query('ringFolderId') ringFolderId?: string,
+  ): Promise<{ provinceIds: number[]; cityIds: number[]; districtIds: number[] }> {
+    if (!ringFolderId) {
+      throw new BadRequestException('ringFolderId is required');
+    }
+    const userId = request.user?.sub;
+    if (!userId) {
+      throw new BadRequestException('User is required');
+    }
+    return this.divarPostsService.getRingFolderDistricts(ringFolderId, userId);
+  }
+
   @Get('category-counts')
   @Public()
   @ApiOperation({ summary: 'List leaf category counts' })

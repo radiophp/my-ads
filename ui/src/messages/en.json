@@ -370,6 +370,11 @@
           "deletedDescription": "“{name}” was deleted.",
           "errorTitle": "Something went wrong",
           "errorDescription": "Please try again."
+        },
+        "districtRestriction": {
+          "title": "Access to some districts restricted",
+          "description": "Your current subscription doesn't include access to the following districts. Please remove them from the filter first:",
+          "confirm": "Got it"
         }
       },
       "provinceLabel": "Province",
@@ -641,6 +646,10 @@
       "title": "Latest Divar posts",
       "description": "Freshly crawled listings ready for analysis will appear here.",
       "empty": "No posts have been processed yet. Trigger the crawler to see live content.",
+      "noSubscription": "You don't have an active subscription. Please purchase a subscription to view listings. You can still view saved ring binder folders and previously purchased archives.",
+      "ringBinderTitle": "Your saved folders",
+      "viewFolder": "View folder",
+      "savedCount": "{count} ads",
       "noImage": "No photo",
       "untitled": "Untitled ({externalId})",
       "mediaCount": "{count, plural, one {# photo} other {# photos}}",

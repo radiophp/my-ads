@@ -971,6 +971,43 @@ export class DivarPostsAdminService {
     return new Map(categories.map((category) => [category.slug, category.name]));
   }
 
+  async getRingFolderDistricts(
+    ringFolderId: string,
+    userId: string,
+  ): Promise<{ provinceIds: number[]; cityIds: number[]; districtIds: number[] }> {
+    const folder = await this.prisma.ringBinderFolder.findFirst({
+      where: { id: ringFolderId, userId, deletedAt: null },
+      select: { id: true },
+    });
+    if (!folder) {
+      return { provinceIds: [], cityIds: [], districtIds: [] };
+    }
+
+    const posts = await this.prisma.ringBinderFolderPost.findMany({
+      where: { folderId: folder.id },
+      select: {
+        post: {
+          select: { provinceId: true, cityId: true, districtId: true },
+        },
+      },
+    });
+
+    const provinceSet = new Set<number>();
+    const citySet = new Set<number>();
+    const districtSet = new Set<number>();
+    for (const { post } of posts) {
+      if (post.provinceId != null) provinceSet.add(post.provinceId);
+      if (post.cityId != null) citySet.add(post.cityId);
+      if (post.districtId != null) districtSet.add(post.districtId);
+    }
+
+    return {
+      provinceIds: Array.from(provinceSet),
+      cityIds: Array.from(citySet),
+      districtIds: Array.from(districtSet),
+    };
+  }
+
   private extractSeoTitle(payload: Prisma.JsonValue): string | null {
     if (!payload || typeof payload !== 'object') {
       return null;

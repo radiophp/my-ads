@@ -69,6 +69,8 @@ export function DashboardPlaceholder() {
       appliedRingFolderRef.current = ringFolderParam;
       dispatch(resetSearchFilter());
       dispatch(setRingBinderFolder(ringFolderParam));
+    } else {
+      appliedRingFolderRef.current = null;
     }
   }, [dispatch, searchParams]);
 

@@ -632,10 +632,29 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
     if (!payment) return { success: false, error: 'Payment not found' };
 
     const formattedAmount = Number(payment.amount).toLocaleString('fa-IR');
-    return this.sendPaymentMessage(
-      payment.userId,
-      `🟡 صورتحساب اشتراک «${payment.package.title}» توسط مدیر بررسی و تأیید شد.\nمبلغ نهایی: ${formattedAmount} ریال\nلطفاً رسید پرداخت را در پنل کاربری بارگذاری کنید.`,
-    );
+
+    let districtLines = '';
+    const assignments = payment.districtAssignments as Record<
+      string,
+      { id: number; name: string; cityName: string }[]
+    >;
+    if (assignments) {
+      for (const [featureKey, districts] of Object.entries(assignments)) {
+        if (districts.length > 0) {
+          const names = districts.map((d) => `${d.name} (${d.cityName})`).join('، ');
+          const featureLabel =
+            {
+              districts_limit: 'مناطق تحت پوشش',
+              builders_archive: 'آرشیو سازندگان',
+              archive_history_quarters: 'آرشیو فصلی',
+            }[featureKey] ?? featureKey;
+          districtLines += `\n🏘 ${featureLabel}: ${names}`;
+        }
+      }
+    }
+
+    const msg = `🟡 صورتحساب اشتراک «${payment.package.title}» توسط مدیر بررسی و تأیید شد.\nمبلغ نهایی: ${formattedAmount} ریال${districtLines}\nلطفاً رسید پرداخت را در پنل کاربری بارگذاری کنید.`;
+    return this.sendPaymentMessage(payment.userId, msg);
   }
 
   async sendPaymentApproved(paymentId: string): Promise<{ success: boolean; error?: string }> {

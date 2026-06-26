@@ -49,7 +49,9 @@ export function NumberInput({
         type="text"
         inputMode="numeric"
         value={String(value)}
+        disabled={disabled}
         onChange={(e) => {
+          if (disabled) return;
           const raw = e.target.value.replace(/[^0-9]/g, '');
           if (raw === '') {
             onChange(min);
@@ -62,7 +64,7 @@ export function NumberInput({
           if (value < min) onChange(min);
           if (value > max) onChange(max);
         }}
-        className="flex h-9 min-w-0 flex-1 items-center justify-center border-y bg-background text-center text-sm tabular-nums text-foreground outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        className="flex h-9 min-w-0 flex-1 items-center justify-center border-y bg-background text-center text-sm tabular-nums text-foreground outline-none [appearance:textfield] disabled:cursor-not-allowed disabled:opacity-50 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
       <Button
         type="button"

@@ -429,10 +429,16 @@ export class PaymentsService {
   async finalizePayment(
     paymentId: string,
     adminId: string,
-    dto: { featureExtras: Record<string, number>; amount: number; adminNote?: string },
+    dto: {
+      featureExtras: Record<string, number>;
+      districtAssignments: Record<string, number[]>;
+      amount: number;
+      adminNote?: string;
+    },
   ) {
     const payment = await this.prisma.paymentRequest.findUnique({
       where: { id: paymentId },
+      include: { package: { include: { featureConfigs: true } } },
     });
     if (!payment) throw new NotFoundException('Payment not found.');
     if (payment.status !== 'INITIATED') {
@@ -440,6 +446,46 @@ export class PaymentsService {
     }
     if (payment.receiptUrl) {
       throw new BadRequestException('Payment already has a receipt. Cannot modify.');
+    }
+
+    const DISTRICT_FEATURES = new Set([
+      'districts_limit',
+      'builders_archive',
+      'archive_history_quarters',
+    ]);
+
+    for (const featureKey of DISTRICT_FEATURES) {
+      const config = payment.package.featureConfigs.find((c) => c.featureKey === featureKey);
+      const baseLimit = config?.limitValue ?? 0;
+      const extras = dto.featureExtras[featureKey] ?? 0;
+      const requiredCount = baseLimit + extras;
+      const assigned = dto.districtAssignments[featureKey] ?? [];
+
+      if (requiredCount > 0 && assigned.length !== requiredCount) {
+        throw new BadRequestException(
+          `برای قابلیت "${featureKey}" باید دقیقاً ${requiredCount} منطقه انتخاب کنید (${assigned.length} منطقه انتخاب شده)`,
+        );
+      }
+    }
+
+    const allDistrictIds = [...new Set(Object.values(dto.districtAssignments).flat())];
+    const districts = await this.prisma.district.findMany({
+      where: { id: { in: allDistrictIds } },
+      include: { city: { select: { name: true } } },
+    });
+    const districtMap = new Map(districts.map((d) => [d.id, d]));
+
+    const enrichedAssignments: Record<string, { id: number; name: string; cityName: string }[]> =
+      {};
+    for (const [featureKey, ids] of Object.entries(dto.districtAssignments)) {
+      enrichedAssignments[featureKey] = ids
+        .map((id) => {
+          const d = districtMap.get(id);
+          return d
+            ? { id, name: d.name, cityName: d.city.name }
+            : { id, name: String(id), cityName: '' };
+        })
+        .filter(Boolean);
     }
 
     const taxPercentage = await this.getTaxPercentage();
@@ -451,6 +497,7 @@ export class PaymentsService {
       where: { id: paymentId },
       data: {
         featureExtras: dto.featureExtras as any,
+        districtAssignments: enrichedAssignments as any,
         amount,
         taxAmount: new Prisma.Decimal(taxAmount),
         finalAmount: new Prisma.Decimal(finalAmount),
@@ -496,6 +543,7 @@ export class PaymentsService {
         finalPrice: new Prisma.Decimal(payment.amount),
         bonusDays: pendingBonusDays,
         featureExtras: (payment.featureExtras ?? {}) as any,
+        districtAssignments: (payment.districtAssignments ?? {}) as any,
       },
     });
 

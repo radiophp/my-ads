@@ -198,13 +198,13 @@ export function PackageForm({
                         }}
                         className="h-9 min-w-0 flex-1 border-0 bg-transparent px-3 text-right text-sm outline-none"
                       />
-                      <div className="flex h-9 items-center border-l bg-muted/50 px-2 text-xs text-muted-foreground shrink-0">
+                      <div className="flex h-9 shrink-0 items-center border-l bg-muted/50 px-2 text-xs text-muted-foreground">
                         ریال
                       </div>
                     </div>
                   </FormControl>
                   <FormMessage />
-                  <p className="text-[11px] leading-tight text-muted-foreground px-0.5">
+                  <p className="px-0.5 text-[11px] leading-tight text-muted-foreground">
                     <span className="text-[10px]">{words} تومان</span>
                   </p>
                 </FormItem>
@@ -237,13 +237,13 @@ export function PackageForm({
                         }}
                         className="h-9 min-w-0 flex-1 border-0 bg-transparent px-3 text-right text-sm outline-none"
                       />
-                      <div className="flex h-9 items-center border-l bg-muted/50 px-2 text-xs text-muted-foreground shrink-0">
+                      <div className="flex h-9 shrink-0 items-center border-l bg-muted/50 px-2 text-xs text-muted-foreground">
                         ریال
                       </div>
                     </div>
                   </FormControl>
                   <FormMessage />
-                  <p className="text-[11px] leading-tight text-muted-foreground px-0.5">
+                  <p className="px-0.5 text-[11px] leading-tight text-muted-foreground">
                     <span className="text-[10px]">{words} تومان</span>
                   </p>
                 </FormItem>
@@ -308,7 +308,7 @@ export function PackageForm({
                         control={form.control}
                         name={fieldKey}
                         render={({ field }) => (
-                          <FormItem className="flex items-center justify-between rounded-lg border border-border/60 p-4 min-w-0">
+                          <FormItem className="flex min-w-0 items-center justify-between rounded-lg border border-border/60 p-4">
                             <FormLabel className="mb-0">
                               {t(key)}
                             </FormLabel>
@@ -351,7 +351,7 @@ export function PackageForm({
                                </FormControl>
                              </div>
                              <FormMessage />
-                             <div className="mt-2 space-y-2 rounded-md border border-border/50 p-3 min-w-0">
+                             <div className="mt-2 min-w-0 space-y-2 rounded-md border border-border/50 p-3">
                                 <FormField
                                   control={form.control}
                                   name={`featureMeta.${key}.allowExtra` as never}
@@ -375,7 +375,7 @@ export function PackageForm({
                                       render={({ field: fe }) => (
                                         <FormItem>
                                           <div className="flex flex-col gap-1.5 md:flex-row md:items-center md:gap-2">
-                                            <FormLabel className="mb-0 md:w-[30%] md:shrink-0 text-xs">حداکثر اضافه</FormLabel>
+                                            <FormLabel className="mb-0 text-xs md:w-[30%] md:shrink-0">حداکثر اضافه</FormLabel>
                                             <FormControl className="md:w-[70%]">
                                               <NumberInput value={fe.value ?? 0} onChange={fe.onChange} min={0} />
                                             </FormControl>
@@ -395,7 +395,7 @@ export function PackageForm({
                                         return (
                           <FormItem className="min-w-0">
                                             <div className="flex flex-col gap-1.5 md:flex-row md:items-center md:gap-2">
-                                              <FormLabel className="mb-0 md:w-[30%] md:shrink-0 text-xs">قیمت هر واحد اضافه</FormLabel>
+                                              <FormLabel className="mb-0 text-xs md:w-[30%] md:shrink-0">قیمت هر واحد اضافه</FormLabel>
                                               <FormControl className="md:w-[70%]">
                                                   <div className="flex w-full items-center rounded-md border">
                                                    <Input
@@ -409,13 +409,13 @@ export function PackageForm({
                                                      }}
                                                      className="h-9 min-w-0 flex-1 border-0 bg-transparent px-3 text-right text-sm outline-none"
                                                    />
-                                                   <div className="flex h-9 items-center border-l bg-muted/50 px-2 text-xs text-muted-foreground shrink-0">
+                                                   <div className="flex h-9 shrink-0 items-center border-l bg-muted/50 px-2 text-xs text-muted-foreground">
                                                      ریال
                                                    </div>
                                                   </div>
                                               </FormControl>
                                             </div>
-                                            <div className="text-[11px] leading-tight text-muted-foreground px-0.5">
+                                            <div className="px-0.5 text-[11px] leading-tight text-muted-foreground">
                                               <span className="text-[10px]">{words} تومان</span>
                                             </div>
                                           </FormItem>
@@ -448,7 +448,7 @@ export function PackageForm({
                                     render={({ field: fe }) => (
                                       <FormItem>
                                         <div className="flex flex-col gap-1.5 md:flex-row md:items-center md:gap-2">
-                                          <FormLabel className="mb-0 md:w-[30%] md:shrink-0 text-xs">سقف رول‌اوور</FormLabel>
+                                          <FormLabel className="mb-0 text-xs md:w-[30%] md:shrink-0">سقف رول‌اوور</FormLabel>
                                           <FormControl className="md:w-[70%]">
                                             <NumberInput value={fe.value ?? 0} onChange={fe.onChange} min={0} />
                                           </FormControl>
@@ -485,7 +485,7 @@ export function PackageForm({
                 {/* Subscription features */}
                 {pricingBreakdown.features.some((f) => !f.isPermanent && Number.parseFloat(f.dailyTotal) / 10 > 0) && (
                   <>
-                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                       اشتراک (ماهیانه)
                     </div>
                     <div className="space-y-2">
@@ -531,7 +531,7 @@ export function PackageForm({
                 {pricingBreakdown.features.some((f) => f.isPermanent && Number.parseFloat(f.oneTimeTotal) / 10 > 0) && (
                   <>
                     <div className="border-t border-border/60" />
-                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                       یک‌بار (دائمی)
                     </div>
                     <div className="space-y-2">

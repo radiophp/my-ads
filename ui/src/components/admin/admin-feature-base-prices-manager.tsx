@@ -79,7 +79,7 @@ function PriceHint({ raw }: { raw: string }) {
   const words = numberToPersianWords(toman);
 
   return (
-    <div className="text-[11px] leading-tight text-muted-foreground px-0.5">
+    <div className="px-0.5 text-[11px] leading-tight text-muted-foreground">
       <span className="text-[10px]">{words} تومان</span>
     </div>
   );
@@ -221,7 +221,7 @@ export function AdminFeatureBasePricesManager() {
                       </td>
                       <td className="py-2.5 text-right align-top">
                         <div className="flex flex-col gap-0.5">
-                          <div className="flex items-center rounded-md border w-full">
+                          <div className="flex w-full items-center rounded-md border">
                             <Input
                               type="text"
                               inputMode="decimal"
@@ -239,12 +239,12 @@ export function AdminFeatureBasePricesManager() {
                               className="h-8 flex-1 border-0 text-right"
                               disabled={isSaving}
                             />
-                            <div className="flex items-center px-1.5 h-8 text-[11px] text-muted-foreground border-l bg-muted/50 shrink-0">
+                            <div className="flex h-8 shrink-0 items-center border-l bg-muted/50 px-1.5 text-[11px] text-muted-foreground">
                               ریال
                             </div>
                             <Button
                               variant="ghost"
-                              className="shrink-0 rounded-none px-2 h-8 gap-1 text-xs"
+                              className="h-8 shrink-0 gap-1 rounded-none px-2 text-xs"
                               onClick={() => handleSave(price)}
                               disabled={isSaving}
                             >

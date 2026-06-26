@@ -936,7 +936,9 @@
         "confirmDescription": "Are you sure you want to cancel this payment? Your discount or invite code will not be lost and can be reused.",
         "confirmBack": "Go Back",
         "confirmYes": "Yes, Cancel",
-        "continueButton": "Continue Payment"
+        "continueButton": "Continue Payment",
+        "assignedDistricts": "Assigned districts",
+        "checkBeforePayment": "Please check your package feature counts and district access above. These cannot be changed after payment."
       }
     },
     "usage": {
@@ -965,6 +967,7 @@
       "rejectionNoReason": "Your payment was rejected. Please upload a new receipt.",
       "awaitingReview": "Awaiting admin review. You will be contacted when your invoice is ready.",
       "readyForPayment": "Invoice ready. Please complete the payment by uploading a receipt.",
+      "assignedDistricts": "Assigned districts",
       "reUpload": "Re-upload receipt",
       "reUploadSuccess": "New receipt uploaded successfully",
       "error": "Failed to upload receipt",
@@ -1279,10 +1282,26 @@
         "finalAmount": "Final Amount",
         "adminNote": "Admin Note",
         "notePlaceholder": "Enter internal note...",
+        "selectDistricts": "Select districts",
         "finalize": "Finalize",
         "cancel": "Cancel",
         "finalized": "Payment finalized successfully",
-        "invalidPrice": "Invalid price amount"
+        "invalidPrice": "Invalid price amount",
+        "districtSelectTitle": "Select districts for",
+        "districtSelectHint": "Select exactly {count} districts",
+        "districtProgress": "Districts selected",
+        "districtAdd": "Add district",
+        "districtSelected": "Selected districts",
+        "districtCancel": "Cancel",
+        "districtDone": "Done",
+        "districtIncomplete": "selected",
+        "districtProvincePlaceholder": "Select province",
+        "districtCityPlaceholder": "Select city",
+        "districtDistrictPlaceholder": "Select district",
+        "districtProvinceSearch": "Search province...",
+        "districtCitySearch": "Search city...",
+        "districtDistrictSearch": "Search district...",
+        "districtAllText": "All"
       },
       "rejectDialog": {
         "title": "Reject Payment",

@@ -937,7 +937,9 @@
         "confirmDescription": "آیا از لغو این پرداخت اطمینان دارید؟ در صورت لغو، کد تخفیف یا دعوت خود را از دست نخواهید داد و می‌توانید مجدداً استفاده کنید.",
         "confirmBack": "بازگشت",
         "confirmYes": "بله، لغو شود",
-        "continueButton": "ادامه پرداخت"
+        "continueButton": "ادامه پرداخت",
+        "assignedDistricts": "محله‌های تخصیص‌یافته",
+        "checkBeforePayment": "لطفاً تعداد ویژگی‌های پکیج و دسترسی به محله‌ها را بررسی کنید. پس از پرداخت امکان تغییر وجود ندارد. در صورت مغایرت با پشتیبانی ماهان فایل تماس بگیرید تا این فاکتور اصلاح گردد."
       }
     },
     "usage": {
@@ -966,6 +968,7 @@
       "rejectionNoReason": "پرداخت شما رد شده است. لطفاً رسید جدیدی بارگذاری کنید.",
       "awaitingReview": "در انتظار بررسی ادمین. پس از آماده شدن صورت‌حساب به شما اطلاع داده خواهد شد.",
       "readyForPayment": "صورت‌حساب آماده است. لطفاً با بارگذاری رسید، پرداخت را تکمیل کنید.",
+      "assignedDistricts": "محله‌های تخصیص‌یافته",
       "reUpload": "بارگذاری مجدد رسید",
       "reUploadSuccess": "رسید جدید با موفقیت بارگذاری شد",
       "error": "خطا در بارگذاری رسید",
@@ -1282,10 +1285,26 @@
         "finalAmount": "مبلغ نهایی",
         "adminNote": "یادداشت مدیریتی",
         "notePlaceholder": "یادداشت داخلی...",
+        "selectDistricts": "انتخاب محله",
         "finalize": "نهایی‌سازی",
         "cancel": "انصراف",
         "finalized": "پرداخت با موفقیت نهایی‌سازی شد",
-        "invalidPrice": "مبلغ نامعتبر است"
+        "invalidPrice": "مبلغ نامعتبر است",
+        "districtSelectTitle": "انتخاب محله برای",
+        "districtSelectHint": "دقیقاً {count} محله انتخاب کنید",
+        "districtProgress": "محله‌های انتخاب شده",
+        "districtAdd": "افزودن محله",
+        "districtSelected": "محله‌های انتخاب شده",
+        "districtCancel": "انصراف",
+        "districtDone": "تأیید",
+        "districtIncomplete": "انتخاب شده",
+        "districtProvincePlaceholder": "انتخاب استان",
+        "districtCityPlaceholder": "انتخاب شهر",
+        "districtDistrictPlaceholder": "انتخاب محله",
+        "districtProvinceSearch": "جستجوی استان...",
+        "districtCitySearch": "جستجوی شهر...",
+        "districtDistrictSearch": "جستجوی محله...",
+        "districtAllText": "همه"
       },
       "rejectDialog": {
         "title": "رد پرداخت",

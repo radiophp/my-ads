@@ -7,7 +7,7 @@ export const FEATURE_LABELS: Record<string, { fa: string; en: string }> = {
   notifications_limit: { fa: 'تعداد اعلان‌ها', en: 'Notifications Limit' },
   zip_downloads_per_day: { fa: 'دانلود زیپ روزانه', en: 'Zip Downloads Per Day' },
   divar_drafts_per_day: { fa: 'پیش‌نویس دیوار روزانه', en: 'Divar Drafts Per Day' },
-  ai_edits_limit: { fa: 'تعداد ویرایش هوشمند', en: 'AI Edits Limit' },
+  ai_edits_limit: { fa: 'تعداد ویرایش با هوش مصنوعی', en: 'AI Edits Limit' },
   channels_limit: { fa: 'تعداد کانال‌ها', en: 'Channels Limit' },
   share_ring_binder: { fa: 'اشتراک زونکن', en: 'Share Ring Binder' },
   builders_archive: { fa: 'آرشیو سازندگان', en: 'Builders Archive' },

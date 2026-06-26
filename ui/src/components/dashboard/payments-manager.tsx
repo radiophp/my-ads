@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Loader2, Upload } from 'lucide-react';
 import { useRef, useState } from 'react';
 
@@ -11,6 +11,10 @@ import {
   useGetMyPaymentsQuery,
   useReUploadReceiptMutation,
 } from '@/features/api/endpoints/payments';
+import { FEATURE_LABELS } from '@/components/admin/constants/feature-labels.constants';
+import { PACKAGE_FEATURES } from '@/components/admin/constants/package-features.constants';
+import { getPackageFeatureIcon } from '@/components/shared/package-feature-icons';
+import type { PackageFeatureKey } from '@/components/admin/constants/package-features.constants';
 
 const STATUS_COLORS: Record<string, string> = {
   INITIATED: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
@@ -28,6 +32,7 @@ const STATUS_ICONS: Record<string, string> = {
 
 export function PaymentsManager() {
   const t = useTranslations('dashboard.payments');
+  const locale = useLocale();
   const { toast } = useToast();
   const [page, setPage] = useState(1);
   const [reUploading, setReUploading] = useState<string | null>(null);
@@ -119,9 +124,35 @@ export function PaymentsManager() {
                     </div>
                   )}
                   {payment.status === 'INITIATED' && payment.adminReviewedAt && !payment.receiptUrl && (
-                    <p className="text-sm text-emerald-600 dark:text-emerald-400">
-                      {t('readyForPayment')}
-                    </p>
+                    <div className="text-sm">
+                      <p className="text-emerald-600 dark:text-emerald-400">{t('readyForPayment')}</p>
+                      <div className="mt-2 space-y-1 rounded-md border border-emerald-200 bg-emerald-50/50 p-2.5 dark:border-emerald-800/30 dark:bg-emerald-950/10">
+                        <p className="text-xs font-medium text-muted-foreground">{t('assignedDistricts')}</p>
+                        {(Object.entries(PACKAGE_FEATURES) as [PackageFeatureKey, typeof PACKAGE_FEATURES[PackageFeatureKey]][]).map(([key]) => {
+                          const base = payment.features?.[key]?.limitValue ?? 0;
+                          const extras = payment.featureExtras?.[key] ?? 0;
+                          const total = base + extras;
+                          if (total === 0) return null;
+                          const districts = (payment.districtAssignments?.[key] ?? []) as { id: number; name: string; cityName: string }[];
+                          const isDistrict = districts.length > 0;
+                          const Icon = getPackageFeatureIcon(key);
+                          return (
+                            <div key={key} className="flex flex-col gap-0.5 text-xs">
+                              <span className="flex items-center gap-1 font-medium text-foreground/80">
+                                <Icon className="size-3.5 shrink-0 text-muted-foreground" />
+                                {FEATURE_LABELS[key]?.[locale as 'fa' | 'en'] ?? key}
+                                <span className="text-muted-foreground">({total})</span>
+                              </span>
+                              {isDistrict && (
+                                <span className="mr-4 text-muted-foreground">
+                                  {districts.map((d) => `${d.name} (${d.cityName})`).join('، ')}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   )}
 
                 {payment.status === 'REJECTED' && (

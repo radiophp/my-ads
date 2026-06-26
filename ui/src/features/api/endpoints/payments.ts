@@ -8,6 +8,18 @@ type BankAccount = {
   sheba: string;
 };
 
+type FeatureSnapshot = {
+  limitValue: number;
+  unitPrice: string;
+  dailyTotal: string;
+  oneTimeTotal: number;
+  pricingType: string;
+  isPermanent: boolean;
+  extraUnitPrice: string | null;
+  allowRollover: boolean;
+  maxRolloverCap: number;
+};
+
 type PaymentRequest = {
   id: string;
   userId: string;
@@ -24,7 +36,9 @@ type PaymentRequest = {
   receiptUrl: string | null;
   status: 'INITIATED' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
   rejectionReason: string | null;
+  features: Record<string, FeatureSnapshot>;
   featureExtras: Record<string, number>;
+  districtAssignments: Record<string, { id: number; name: string; cityName: string }[]>;
   adminAdjustedPrice: number | null;
   adminNote: string | null;
   adminReviewedAt: string | null;
@@ -52,6 +66,7 @@ type InitiatePaymentPayload = {
 
 type FinalizePaymentPayload = {
   featureExtras: Record<string, number>;
+  districtAssignments: Record<string, number[]>;
   amount: number;
   adminNote?: string;
 };

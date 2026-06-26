@@ -1,11 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { skipToken } from '@reduxjs/toolkit/query';
 import {
   Check,
   ExternalLink,
   Loader2,
+  MapPin,
   PencilLine,
+  Plus,
+  Trash2,
   X,
 } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
@@ -23,6 +27,12 @@ import {
   useRejectPaymentMutation,
 } from '@/features/api/endpoints/payments';
 import { useGetPackageQuery } from '@/features/api/endpoints/packages';
+import {
+  useGetProvincesQuery,
+  useGetCitiesQuery,
+  useGetDistrictsQuery,
+} from '@/features/api/endpoints/locations';
+import { SearchableSelect } from '@/components/ui/searchable-select';
 import { NumberInput } from '@/components/ui/number-input';
 import {
   Dialog,
@@ -45,6 +55,187 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const DISTRICT_FEATURES = new Set(['districts_limit', 'builders_archive', 'archive_history_quarters']);
+
+function DistrictSelectDialog({
+  featureKey,
+  open,
+  onOpenChange,
+  requiredCount,
+  initialDistricts,
+  onSave,
+}: {
+  featureKey: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  requiredCount: number;
+  initialDistricts: { id: number; name: string; cityName: string }[];
+  onSave: (districts: { id: number; name: string; cityName: string }[]) => void;
+}) {
+  const t = useTranslations('admin.payments.reviewDialog');
+  const locale = useLocale();
+  const [selProvinceId, setSelProvinceId] = useState<number | null>(895);
+  const [selCityId, setSelCityId] = useState<number | null>(2);
+  const [selDistrictId, setSelDistrictId] = useState<number | null>(null);
+  const [selected, setSelected] = useState<{ id: number; name: string; cityName: string }[]>([]);
+  const initRef = useRef(initialDistricts);
+
+  useEffect(() => {
+    initRef.current = initialDistricts;
+  }, [initialDistricts]);
+
+  const { data: provinces = [] } = useGetProvincesQuery();
+  const { data: cities = [] } = useGetCitiesQuery(selProvinceId ?? undefined);
+  const { data: districts = [] } = useGetDistrictsQuery(selCityId ?? skipToken);
+
+  useEffect(() => {
+    if (!open) return;
+    setSelected(initRef.current.filter((d) => d && typeof d.id === 'number'));
+  }, [open]);
+
+  const handleAdd = () => {
+    if (!selDistrictId || !selCityId) return;
+    if (selected.some((d) => d.id === selDistrictId)) return;
+
+    const city = cities.find((c) => c.id === selCityId);
+    const district = districts.find((d) => d.id === selDistrictId);
+    if (!district) return;
+
+    setSelected((prev) => [
+      ...prev,
+      { id: selDistrictId, name: district.name, cityName: city?.name ?? '' },
+    ]);
+    setSelDistrictId(null);
+  };
+
+  const handleRemove = (id: number) => {
+    setSelected((prev) => prev.filter((d) => d.id !== id));
+  };
+
+  const label = FEATURE_LABELS[featureKey]?.[locale as 'fa' | 'en'] ?? featureKey;
+  const canAdd = selDistrictId != null && selected.length < requiredCount;
+  const isComplete = selected.length === requiredCount;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>
+            {t('districtSelectTitle')}: {label}
+          </DialogTitle>
+          <DialogDescription>
+            {t('districtSelectHint', { count: requiredCount })}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div className="flex items-center justify-between rounded-md bg-muted/30 px-3 py-2 text-sm">
+            <span className="text-muted-foreground">{t('districtProgress')}</span>
+            <span className={`font-medium ${isComplete ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
+              {selected.length}/{requiredCount}
+            </span>
+          </div>
+
+          {selected.length < requiredCount && (
+            <div className="space-y-3 rounded-md border p-3">
+              <div className="flex flex-col gap-3">
+                <SearchableSelect
+                  options={[
+                    { value: '', label: t('districtAllText') },
+                    ...provinces.map((p) => ({ value: String(p.id), label: p.name, searchText: p.slug })),
+                  ]}
+                  value={selProvinceId ? String(selProvinceId) : ''}
+                  onSelect={(val) => {
+                    setSelProvinceId(val ? Number(val) : null);
+                    setSelCityId(null);
+                    setSelDistrictId(null);
+                  }}
+                  placeholder={t('districtProvincePlaceholder')}
+                  searchPlaceholder={t('districtProvinceSearch')}
+                />
+                <SearchableSelect
+                  options={[
+                    { value: '', label: t('districtAllText') },
+                    ...cities.map((c) => ({ value: String(c.id), label: c.name, searchText: c.slug })),
+                  ]}
+                  value={selCityId ? String(selCityId) : ''}
+                  onSelect={(val) => {
+                    setSelCityId(val ? Number(val) : null);
+                    setSelDistrictId(null);
+                  }}
+                  placeholder={t('districtCityPlaceholder')}
+                  searchPlaceholder={t('districtCitySearch')}
+                  disabled={!selProvinceId}
+                />
+                <SearchableSelect
+                  options={[
+                    { value: '', label: t('districtAllText') },
+                    ...districts.map((d) => ({ value: String(d.id), label: d.name, searchText: d.slug })),
+                  ]}
+                  value={selDistrictId ? String(selDistrictId) : ''}
+                  onSelect={(val) => setSelDistrictId(val ? Number(val) : null)}
+                  placeholder={t('districtDistrictPlaceholder')}
+                  searchPlaceholder={t('districtDistrictSearch')}
+                  disabled={!selCityId}
+                />
+              </div>
+              <Button
+                size="sm"
+                onClick={handleAdd}
+                disabled={!canAdd}
+                className="w-full"
+              >
+                <Plus className="ml-1 size-4" />
+                {t('districtAdd')}
+              </Button>
+            </div>
+          )}
+
+          {selected.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground">{t('districtSelected')}</p>
+              <div className="flex flex-col gap-1.5">
+                {selected.map((d) => (
+                  <div
+                    key={d.id}
+                    className="inline-flex items-center gap-1.5 rounded-md border bg-muted/20 px-2.5 py-1.5 text-xs"
+                  >
+                    <MapPin className="size-3 shrink-0 text-muted-foreground" />
+                    <span>
+                      {d.name}
+                      {d.cityName ? ` (${d.cityName})` : ''}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemove(d.id)}
+                      className="ml-0.5 rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                    >
+                      <Trash2 className="size-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            {t('districtCancel')}
+          </Button>
+          <Button
+            onClick={() => {
+              onSave(selected);
+              onOpenChange(false);
+            }}
+            disabled={!isComplete}
+          >
+            {isComplete ? t('districtDone') : `${selected.length}/${requiredCount} ${t('districtIncomplete')}`}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 function ReviewDialog({
   paymentId,
@@ -80,13 +271,31 @@ function ReviewDialog({
       initialExtras[k] = v as number;
     }
   }
+  const initialDistricts: Record<string, { id: number; name: string; cityName: string }[]> = {};
+  if (payment?.districtAssignments) {
+    for (const [k, v] of Object.entries(payment.districtAssignments)) {
+      initialDistricts[k] = v as { id: number; name: string; cityName: string }[];
+    }
+  }
   const [featureExtras, setFeatureExtras] = useState<Record<string, number>>(initialExtras);
+  const [districtAssignments, setDistrictAssignments] = useState<Record<string, { id: number; name: string; cityName: string }[]>>(initialDistricts);
+  const [districtFeatureKey, setDistrictFeatureKey] = useState<string | null>(null);
+
   const basePrice = Number(payment?.originalPrice ?? 0);
   const extrasTotal = Object.entries(featureExtras).reduce((sum, [key, v]) => {
     const c = configMap.get(key);
     return sum + v * (c?.extraUnitPrice ? Number(c.extraUnitPrice) : 0);
   }, 0);
   const suggestedTotal = basePrice + extrasTotal;
+  const districtsComplete = [...DISTRICT_FEATURES].every((key) => {
+    const config = configMap.get(key);
+    const snapshot = snapshotMap.get(key);
+    const baseLimit = snapshot?.limitValue ?? config?.limitValue ?? 0;
+    const extras = featureExtras[key] ?? 0;
+    const required = baseLimit + extras;
+    if (required === 0) return true;
+    return (districtAssignments[key] ?? []).length === required;
+  });
   const [amount, setAmount] = useState(payment ? String(payment.amount) : '0');
   const [adminNote, setAdminNote] = useState(payment?.adminNote ?? '');
 
@@ -102,18 +311,25 @@ function ReviewDialog({
       return;
     }
     try {
+      const districtIds: Record<string, number[]> = {};
+      for (const [key, districts] of Object.entries(districtAssignments)) {
+        districtIds[key] = districts.map((d) => d.id);
+      }
       await finalize({
         id: paymentId,
         body: {
           featureExtras,
+          districtAssignments: districtIds,
           amount: numAmount,
           adminNote: adminNote || undefined,
         },
       }).unwrap();
       toast({ title: t('reviewDialog.finalized') });
       onOpenChange(false);
-    } catch {
-      toast({ title: t('error'), variant: 'destructive' });
+    } catch (err: unknown) {
+      const msg = (err as { data?: { message?: string | { message?: string } } })?.data?.message;
+      const errorText = typeof msg === 'string' ? msg : (msg as { message?: string })?.message ?? t('error');
+      toast({ title: errorText, variant: 'destructive' });
     }
   };
 
@@ -137,7 +353,7 @@ function ReviewDialog({
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-foreground">{t('reviewDialog.featureExtras')}</h4>
               <p className="text-xs text-muted-foreground">{t('reviewDialog.featureExtrasHint')}</p>
-              <div className="grid gap-2 grid-cols-1">
+              <div className="grid grid-cols-1 gap-2">
                 {(Object.entries(PACKAGE_FEATURES) as [PackageFeatureKey, typeof PACKAGE_FEATURES[PackageFeatureKey]][]).map(([key, feature]) => {
                   const Icon = getPackageFeatureIcon(key);
                   const snapshot = snapshotMap.get(key);
@@ -146,6 +362,10 @@ function ReviewDialog({
                   const maxExtra = config?.maxExtra ?? 0;
                   const isDistrict = DISTRICT_FEATURES.has(key);
                   const currentExtra = featureExtras[key] ?? 0;
+                  const requiredDistricts = baseLimit + currentExtra;
+                  const assignedIds = districtAssignments[key] ?? [];
+                  const districtCount = assignedIds.length;
+                  const districtComplete = requiredDistricts === 0 || districtCount === requiredDistricts;
                   return (
                     <div
                       key={key}
@@ -171,7 +391,25 @@ function ReviewDialog({
                             value={currentExtra}
                             onChange={(val) => setFeatureExtras((prev) => ({ ...prev, [key]: val }))}
                             max={maxExtra}
+                            disabled={isDistrict && assignedIds.length > 0}
+                            key={`${key}-${assignedIds.length}`}
                           />
+                        )}
+                        {isDistrict && requiredDistricts > 0 && (
+                          <div className="flex items-center gap-2 pt-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 gap-1 text-xs"
+                              onClick={() => setDistrictFeatureKey(key)}
+                            >
+                              <MapPin className="size-3" />
+                              {t('reviewDialog.selectDistricts')}
+                            </Button>
+                            <span className={`text-xs ${districtComplete ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
+                              {districtCount}/{requiredDistricts}
+                            </span>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -248,7 +486,7 @@ function ReviewDialog({
 
         <div className="shrink-0 border-t px-6 py-4">
           <div className="flex flex-row-reverse gap-2">
-            <Button onClick={handleFinalize} disabled={finalizing}>
+            <Button onClick={handleFinalize} disabled={finalizing || !districtsComplete}>
               {finalizing ? <Loader2 className="size-4 animate-spin" /> : t('reviewDialog.finalize')}
             </Button>
             <Button variant="outline" onClick={() => onOpenChange(false)}>
@@ -257,6 +495,27 @@ function ReviewDialog({
           </div>
         </div>
       </DialogContent>
+
+      {/* District selection sub-dialog */}
+      {districtFeatureKey && (() => {
+        const snapshot = snapshotMap.get(districtFeatureKey);
+        const config = configMap.get(districtFeatureKey);
+        const baseLimit = snapshot?.limitValue ?? config?.limitValue ?? 0;
+        const currentExtra = featureExtras[districtFeatureKey] ?? 0;
+        const requiredCount = baseLimit + currentExtra;
+        return (
+          <DistrictSelectDialog
+            featureKey={districtFeatureKey}
+            open={Boolean(districtFeatureKey)}
+            onOpenChange={(open) => { if (!open) setDistrictFeatureKey(null); }}
+            requiredCount={requiredCount}
+            initialDistricts={districtAssignments[districtFeatureKey] ?? []}
+            onSave={(districts) => {
+              setDistrictAssignments((prev) => ({ ...prev, [districtFeatureKey]: districts }));
+            }}
+          />
+        );
+      })()}
     </Dialog>
   );
 }

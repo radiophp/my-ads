@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
-import { Clock, Copy, Crown, Image as ImageIcon, Loader2, Sparkles, TicketPercent, Upload, UserPlus, X, Zap } from 'lucide-react';
+import { useTranslations, useLocale } from 'next-intl';
+import { AlertTriangle, Clock, Copy, Crown, Image as ImageIcon, Loader2, Sparkles, TicketPercent, Upload, UserPlus, X, Zap } from 'lucide-react';
 
 import {
   useGetCurrentSubscriptionQuery,
@@ -44,6 +44,10 @@ import {
   useGetPaymentQuery,
 } from '@/features/api/endpoints/payments';
 import { useGetWebsiteSettingsQuery } from '@/features/api/endpoints/website-settings';
+import { FEATURE_LABELS } from '@/components/admin/constants/feature-labels.constants';
+import { PACKAGE_FEATURES } from '@/components/admin/constants/package-features.constants';
+import { getPackageFeatureIcon } from '@/components/shared/package-feature-icons';
+import type { PackageFeatureKey } from '@/components/admin/constants/package-features.constants';
 import type { SubscriptionPackage } from '@/types/packages';
 
 function CurrentSubscriptionCard() {
@@ -742,6 +746,7 @@ function PendingPaymentCard({ pending, onCancel, onContinue }: {
 }) {
   const t = useTranslations('dashboard.subscriptionPage.pendingPayment');
   const tp = useTranslations('dashboard.subscriptionPage.package');
+  const locale = useLocale();
   const [cancelling, setCancelling] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [remaining, setRemaining] = useState('');
@@ -798,6 +803,15 @@ function PendingPaymentCard({ pending, onCancel, onContinue }: {
             <span className="text-muted-foreground">{t('amount')}</span>
             <span className="font-medium">{Number(pending.finalAmount).toLocaleString()} {tp('currency')}</span>
           </div>
+          {pending.expiresAt && (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">{t('deadline')}</span>
+              <span className="flex items-center gap-1 font-medium text-amber-600 dark:text-amber-400">
+                <Clock className="size-3.5" />
+                {remaining}
+              </span>
+            </div>
+          )}
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">{t('receipt')}</span>
             <span>
@@ -806,13 +820,40 @@ function PendingPaymentCard({ pending, onCancel, onContinue }: {
                 : t('awaitingReviewStatus')}
             </span>
           </div>
-          {pending.expiresAt && (
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">{t('deadline')}</span>
-              <span className="flex items-center gap-1 font-medium text-amber-600 dark:text-amber-400">
-                <Clock className="size-3.5" />
-                {remaining}
-              </span>
+          {adminReviewed && (
+            <div className="space-y-1 rounded-md border border-emerald-200 bg-emerald-50/50 p-2.5 dark:border-emerald-800/30 dark:bg-emerald-950/10">
+              <p className="text-xs font-medium text-muted-foreground">{t('assignedDistricts')}</p>
+              {(Object.entries(PACKAGE_FEATURES) as [PackageFeatureKey, typeof PACKAGE_FEATURES[PackageFeatureKey]][]).map(([key]) => {
+                const base = pending.features?.[key]?.limitValue ?? 0;
+                const extras = pending.featureExtras?.[key] ?? 0;
+                const total = base + extras;
+                if (total === 0) return null;
+                const districtsList = (pending.districtAssignments?.[key] ?? []) as { id: number; name: string; cityName: string }[];
+                const isDistrict = districtsList.length > 0;
+                const Icon = getPackageFeatureIcon(key);
+                return (
+                  <div key={key} className="flex flex-col gap-0.5 text-xs">
+                    <span className="flex items-center gap-1 font-medium text-foreground/80">
+                      <Icon className="size-3.5 shrink-0 text-muted-foreground" />
+                      {FEATURE_LABELS[key]?.[locale as 'fa' | 'en'] ?? key}
+                      <span className="text-muted-foreground">({total})</span>
+                    </span>
+                    {isDistrict && (
+                      <span className="mr-4 text-muted-foreground">
+                        {districtsList.map((d) => `${d.name} (${d.cityName})`).join('، ')}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {adminReviewed && (
+            <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50/50 p-2.5 text-xs text-amber-700 dark:border-amber-700/40 dark:bg-amber-950/10 dark:text-amber-300">
+              <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+              <div>
+                <p className="font-medium">{t('checkBeforePayment')}</p>
+              </div>
             </div>
           )}
           <div className="flex flex-col gap-2 sm:flex-row">
@@ -916,7 +957,7 @@ export function SubscriptionPanel() {
 
   const isApproved = activationStatus?.activationStatus === 'APPROVED';
   const isRejected = activationStatus?.activationStatus === 'REJECTED';
-  const showPackages = isApproved || isRejected;
+  const showPackages = (isApproved || isRejected) && !pendingPayment;
   const filteredPackages = activationStatus?.hasEverPurchased
     ? packages.filter((pkg) => Number(pkg.discountedPrice) > 0)
     : packages;

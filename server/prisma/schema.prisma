@@ -564,10 +564,11 @@ model UserSubscription {
   basePrice      Decimal  @db.Decimal(12, 2)
   finalPrice     Decimal  @db.Decimal(12, 2)
   bonusDays      Int      @default(0)
-  featureExtras  Json     @default("{}")
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  rolloverBalances   UsageRollover[]
+  featureExtras       Json     @default("{}")
+  districtAssignments Json     @default("{}")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  rolloverBalances    UsageRollover[]
 
   @@index([userId, status])
   @@index([userId, endsAt])
@@ -1150,7 +1151,8 @@ model PaymentRequest {
   rejectionReason   String?
   reviewedBy        String?
   reviewedAt        DateTime?
-  featureExtras     Json          @default("{}")
+  featureExtras      Json          @default("{}")
+  districtAssignments Json         @default("{}")
   adminAdjustedPrice Decimal?     @db.Decimal(12, 2)
   adminNote         String?
   adminReviewedAt   DateTime?

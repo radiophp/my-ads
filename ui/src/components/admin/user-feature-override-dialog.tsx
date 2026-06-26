@@ -120,7 +120,7 @@ export function UserFeatureOverrideDialog({ userId, open, onOpenChange }: UserFe
                         handleSave(key);
                       }}
                     >
-                      <Plus className="size-4 ml-1" />
+                      <Plus className="ml-1 size-4" />
                       افزودن
                     </Button>
                   )}

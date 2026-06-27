@@ -2478,7 +2478,7 @@
           "allow_invite_codes": "Use invite codes",
           "ring_binders_limit": "Create up to {count} ring binders",
           "districts_limit": "Access {count} districts",
-          "notifications_limit": "Get notifications for {count} filters",
+          "notifications_limit": "Receive new saved filter posts up to {count} messages in Bale",
           "zip_downloads_per_day": "Download {count} ZIP files per day",
           "divar_drafts_per_day": "Create {count} Divar drafts per day",
           "ai_edits_limit": "Edit {count} ads with AI",

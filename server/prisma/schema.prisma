@@ -60,6 +60,7 @@ enum NotificationBaleStatus {
   SENT
   FAILED
   HAS_NOT_CONNECTED
+  LIMIT_REACHED
 }
 
 enum PhoneFetchStatus {

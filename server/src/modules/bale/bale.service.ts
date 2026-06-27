@@ -735,6 +735,38 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  async sendNotificationLimitWarning(
+    userId: string,
+  ): Promise<{ success: boolean; error?: string }> {
+    await this.ensureSender();
+    if (!this.sender) {
+      return { success: false, error: 'Bale sender is not initialized' };
+    }
+
+    const chatLink = await this.findChatLink({ userId });
+    if (!chatLink) {
+      return { success: false, error: 'Bale chat link not found' };
+    }
+
+    try {
+      await this.sendWithRetry(
+        'notificationLimitWarning',
+        () =>
+          this.sender!.sendMessage(
+            chatLink.chatId,
+            '⚠️ شما به محدودیت تعداد اعلان‌های روزانه خود رسیده‌اید.\nارسال اعلان‌های جدید از ساعت ۰۰:۰۰ بامداد فردا از سر گرفته خواهد شد.',
+            { parse_mode: 'HTML', link_preview_options: { is_disabled: true } },
+          ),
+        { chatId: chatLink.chatId },
+      );
+      return { success: true };
+    } catch (err) {
+      const errMsg = (err as any)?.response?.description ?? (err as Error).message;
+      this.logger.error(`Failed to send notification limit warning to user ${userId}: ${errMsg}`);
+      return { success: false, error: errMsg };
+    }
+  }
+
   private async sendPaymentMessage(
     userId: string,
     message: string,

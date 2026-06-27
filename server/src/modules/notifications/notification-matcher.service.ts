@@ -4,6 +4,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from '@app/platform/database/prisma.service';
 import type { NotificationsConfig } from '@app/platform/config/notifications.config';
 import { DivarPostsAdminService } from '@app/modules/divar-posts/divar-posts-admin.service';
+import { SubscriptionsService } from '@app/modules/subscriptions/subscriptions.service';
 import { NotificationsService } from './notifications.service';
 import { NotificationQueueProcessor } from './notification-queue.processor';
 import {
@@ -16,6 +17,7 @@ interface ActiveSavedFilter {
   id: string;
   name: string;
   userId: string;
+  userRole: string;
   payload: SavedFilterPayload;
 }
 
@@ -29,6 +31,7 @@ export class NotificationMatcherService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly divarPostsAdminService: DivarPostsAdminService,
+    private readonly subscriptionsService: SubscriptionsService,
     private readonly notificationsService: NotificationsService,
     private readonly notificationQueue: NotificationQueueProcessor,
     configService: ConfigService,
@@ -97,6 +100,9 @@ export class NotificationMatcherService {
         userId: true,
         payload: true,
         isActive: true,
+        user: {
+          select: { role: true },
+        },
       },
       orderBy: [{ createdAt: 'asc' }],
     });
@@ -105,6 +111,7 @@ export class NotificationMatcherService {
       id: record.id,
       name: record.name,
       userId: record.userId,
+      userRole: record.user.role,
       payload: normalizeSavedFilterPayload(record.payload),
     }));
   }
@@ -118,7 +125,29 @@ export class NotificationMatcherService {
       return;
     }
 
+    const subCache = new Map<string, boolean>();
+
+    async function hasNotificationsEnabled(
+      self: NotificationMatcherService,
+      userId: string,
+      userRole: string,
+    ): Promise<boolean> {
+      if (userRole === 'ADMIN') return true;
+      if (subCache.has(userId)) return subCache.get(userId)!;
+      const limit = await self.subscriptionsService.resolveFeatureLimit(
+        userId,
+        'notifications_limit',
+      );
+      const enabled = limit > 0;
+      subCache.set(userId, enabled);
+      return enabled;
+    }
+
     for (const filter of filters) {
+      if (!(await hasNotificationsEnabled(this, filter.userId, filter.userRole))) {
+        continue;
+      }
+
       const queryOptions = this.buildQueryOptions(filter, candidateIds, windowStart);
       if (!queryOptions) {
         continue;

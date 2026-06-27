@@ -2481,7 +2481,7 @@
           "allow_invite_codes": "دسترسی به کد دعوت",
           "ring_binders_limit": "ساخت زونکن تا {count} عدد",
           "districts_limit": "تعداد مناطق تحت پوشش",
-          "notifications_limit": "دریافت اعلان آگهی‌های جدید {count} فیلتر",
+          "notifications_limit": "دریافت آگهی‌های جدید فیلتر‌های ذخیره شده تا سقف روزانه {count} پیام در بله",
           "zip_downloads_per_day": "دانلود گروهی عکس‌های {count} آگهی در روز",
           "divar_drafts_per_day": "ایجاد {count} پیش‌نویس دیوار در روز",
           "ai_edits_limit": "ویرایش {count} آگهی با هوش مصنوعی",

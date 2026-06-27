@@ -5,6 +5,7 @@ import { QueueModule } from '@app/platform/queue/queue.module';
 import { WebsocketModule } from '@app/platform/websocket/websocket.module';
 import { MetricsModule } from '@app/platform/metrics/metrics.module';
 import { DivarPostsModule } from '@app/modules/divar-posts/divar-posts.module';
+import { SubscriptionsModule } from '@app/modules/subscriptions/subscriptions.module';
 import { NotificationsController } from './notifications.controller';
 import { NotificationsService } from './notifications.service';
 import { NotificationQueueProcessor } from './notification-queue.processor';
@@ -25,6 +26,7 @@ import { BaleModule } from '../bale/bale.module';
     WebsocketModule,
     MetricsModule,
     DivarPostsModule,
+    SubscriptionsModule,
     TelegramModule,
     BaleModule,
   ],

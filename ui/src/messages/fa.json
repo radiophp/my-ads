@@ -2857,6 +2857,7 @@
       "accessList": "دسترسی‌ها",
       "noShares": "هنوز با کسی به اشتراک گذاشته نشده است.",
       "shareLabel": "اشتراک‌گذاری پوشه",
+      "sharedWithLabel": "به اشتراک گذاشته شده با :",
       "removeFromThis": "حذف از این پوشه",
       "removeFromAll": "حذف از همه پوشه‌ها",
       "close": "بستن",

@@ -3,20 +3,24 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@app/platform/database/prisma.service';
 import { SubscriptionsService } from '@app/modules/subscriptions/subscriptions.service';
+import { BaleBotService } from '@app/modules/bale/bale.service';
 
 const FEATURE_KEY = 'ring_binders_limit';
 const SHARE_FEATURE_KEY = 'share_ring_binder';
 
 @Injectable()
 export class RingBindersService {
+  private readonly logger = new Logger(RingBindersService.name);
   constructor(
     private readonly prismaService: PrismaService,
     private readonly subscriptionsService: SubscriptionsService,
+    private readonly baleBotService: BaleBotService,
   ) {}
 
   async listFolders(userId: string, isAdmin = false) {
@@ -383,8 +387,19 @@ export class RingBindersService {
       },
       include: {
         sharedWithUser: { select: { id: true, phone: true } },
+        folder: { select: { name: true } },
+        sharedByUser: { select: { phone: true } },
       },
     });
+
+    this.baleBotService
+      .sendTextToUser(
+        targetUser.id,
+        `🔔 یک زونکن با شما به اشتراک گذاشته شد.\n\n📁 "${share.folder.name}" توسط ${share.sharedByUser.phone}\n\nبرای مشاهده از قسمت زونکن‌ها اقدام کنید.`,
+      )
+      .catch((err) =>
+        this.logger.error(`Failed to send Bale notification for share: ${(err as Error).message}`),
+      );
 
     return share;
   }

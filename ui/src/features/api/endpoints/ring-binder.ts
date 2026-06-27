@@ -111,6 +111,7 @@ const ringBinderApi = apiSlice.injectEndpoints({
       invalidatesTags: [
         { type: 'RingBinderFolders', id: 'SHARES' },
         { type: 'RingBinderFolders', id: 'SHARED_WITH_ME' },
+        { type: 'RingBinderFolders', id: 'LIST' },
       ],
     }),
     removeFolderShare: builder.mutation<
@@ -124,6 +125,7 @@ const ringBinderApi = apiSlice.injectEndpoints({
       invalidatesTags: [
         { type: 'RingBinderFolders', id: 'SHARES' },
         { type: 'RingBinderFolders', id: 'SHARED_WITH_ME' },
+        { type: 'RingBinderFolders', id: 'LIST' },
       ],
     }),
     removeUserFromShares: builder.mutation<
@@ -137,6 +139,7 @@ const ringBinderApi = apiSlice.injectEndpoints({
       invalidatesTags: [
         { type: 'RingBinderFolders', id: 'SHARES' },
         { type: 'RingBinderFolders', id: 'SHARED_WITH_ME' },
+        { type: 'RingBinderFolders', id: 'LIST' },
       ],
     }),
     getFolderShares: builder.query<RingBinderShare[], { folderId: string }>({

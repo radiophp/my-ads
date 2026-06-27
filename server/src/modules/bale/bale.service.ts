@@ -801,6 +801,38 @@ export class BaleBotService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  async sendTextToUser(
+    userId: string,
+    text: string,
+  ): Promise<{ success: boolean; error?: string }> {
+    await this.ensureSender();
+    if (!this.sender) {
+      return { success: false, error: 'Bale sender is not initialized' };
+    }
+
+    const chatLink = await this.findChatLink({ userId });
+    if (!chatLink) {
+      return { success: false, error: 'Bale chat link not found' };
+    }
+
+    try {
+      await this.sendWithRetry(
+        'sendText',
+        () =>
+          this.sender!.sendMessage(chatLink.chatId, text, {
+            parse_mode: 'HTML',
+            link_preview_options: { is_disabled: true },
+          }),
+        { chatId: chatLink.chatId },
+      );
+      return { success: true };
+    } catch (err) {
+      const errMsg = (err as any)?.response?.description ?? (err as Error).message;
+      this.logger.error(`Failed to send text to user ${userId}: ${errMsg}`);
+      return { success: false, error: errMsg };
+    }
+  }
+
   async sharePostToUser(
     userId: string,
     postId: string,

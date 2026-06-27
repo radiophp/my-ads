@@ -232,7 +232,10 @@ export function RingBinderPanel() {
                             </span>
                           </div>
                           {folder.sharedWithPhones && folder.sharedWithPhones.length > 0 ? (
-                            <div className="mt-2 flex flex-wrap gap-1.5">
+                            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                              <span className="text-[11px] text-muted-foreground">
+                                {t('share.sharedWithLabel')}
+                              </span>
                               {folder.sharedWithPhones.map((phone) => (
                                 <span
                                   key={phone}

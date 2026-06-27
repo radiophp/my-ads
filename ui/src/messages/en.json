@@ -2854,6 +2854,7 @@
       "accessList": "Access list",
       "noShares": "Not shared with anyone yet.",
       "shareLabel": "Share folder",
+      "sharedWithLabel": "Shared with:",
       "removeFromThis": "Remove from this folder",
       "removeFromAll": "Remove from all folders",
       "close": "Close",

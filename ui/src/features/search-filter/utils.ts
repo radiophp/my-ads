@@ -44,6 +44,7 @@ export function cloneSearchFilterState(state: SearchFilterState): SearchFilterSt
       typeof state.dateQuarter === 'string' && state.dateQuarter.length > 0
         ? state.dateQuarter
         : '',
+    sharedFolder: state.sharedFolder === true,
   };
 }
 

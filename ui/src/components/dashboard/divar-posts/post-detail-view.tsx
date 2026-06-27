@@ -103,6 +103,7 @@ export function PostDetailView({
   const [savedDialogOpen, setSavedDialogOpen] = useState(false);
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
   const isAuthenticated = useAppSelector((state) => Boolean(state.auth.accessToken));
+  const isSharedFolder = useAppSelector((state) => state.searchFilter.sharedFolder);
   const { data: savedData, refetch: refetchSaved, isFetching: isFetchingSaved } =
     useGetPostSavedFoldersQuery(post.id, { skip: !post.id });
   const [removePostFromFolder, { isLoading: isRemoving }] =
@@ -353,28 +354,30 @@ export function PostDetailView({
                 isRTL && 'divide-x-reverse',
               )}
             >
-              <Button
-                type="button"
-                variant={isSaved ? 'outline' : 'secondary'}
-                size="sm"
-                className={cn(
-                  actionButtonClass,
-                  isSaved && 'border-emerald-500 text-emerald-600 hover:bg-emerald-50',
-                )}
-                onClick={handleSaveButtonClick}
-              >
-                {isSaved ? (
-                  <>
-                    <BookmarkCheck className="size-3.5" />
-                    <span>{t('saveToFolder')}</span>
-                  </>
-                ) : (
-                  <>
-                    <Bookmark className="size-3.5" />
-                    <span>{t('saveToFolder')}</span>
-                  </>
-                )}
-              </Button>
+              {!isSharedFolder ? (
+                <Button
+                  type="button"
+                  variant={isSaved ? 'outline' : 'secondary'}
+                  size="sm"
+                  className={cn(
+                    actionButtonClass,
+                    isSaved && 'border-emerald-500 text-emerald-600 hover:bg-emerald-50',
+                  )}
+                  onClick={handleSaveButtonClick}
+                >
+                  {isSaved ? (
+                    <>
+                      <BookmarkCheck className="size-3.5" />
+                      <span>{t('saveToFolder')}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Bookmark className="size-3.5" />
+                      <span>{t('saveToFolder')}</span>
+                    </>
+                  )}
+                </Button>
+              ) : null}
               <Button
                 type="button"
                 variant="secondary"
@@ -511,28 +514,30 @@ export function PostDetailView({
                 isRTL && 'divide-x-reverse',
               )}
             >
-              <Button
-                type="button"
-                variant={isSaved ? 'outline' : 'secondary'}
-                size="sm"
-                className={cn(
-                  actionButtonClass,
-                  isSaved && 'border-emerald-500 text-emerald-600 hover:bg-emerald-50',
-                )}
-                onClick={handleSaveButtonClick}
-              >
-                {isSaved ? (
-                  <>
-                    <BookmarkCheck className="size-3.5" />
-                    <span>{t('saveToFolder')}</span>
-                  </>
-                ) : (
-                  <>
-                    <Bookmark className="size-3.5" />
-                    <span>{t('saveToFolder')}</span>
-                  </>
-                )}
-              </Button>
+              {!isSharedFolder ? (
+                <Button
+                  type="button"
+                  variant={isSaved ? 'outline' : 'secondary'}
+                  size="sm"
+                  className={cn(
+                    actionButtonClass,
+                    isSaved && 'border-emerald-500 text-emerald-600 hover:bg-emerald-50',
+                  )}
+                  onClick={handleSaveButtonClick}
+                >
+                  {isSaved ? (
+                    <>
+                      <BookmarkCheck className="size-3.5" />
+                      <span>{t('saveToFolder')}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Bookmark className="size-3.5" />
+                      <span>{t('saveToFolder')}</span>
+                    </>
+                  )}
+                </Button>
+              ) : null}
               <Button
                 type="button"
                 variant="secondary"
@@ -645,14 +650,16 @@ export function PostDetailView({
           />
         </div>
       ) : null}
-      <SaveToFolderDialog
-        post={post}
-        open={saveDialogOpen}
-        onOpenChange={setSaveDialogOpen}
-        onSaved={refetchSaved}
-        initialNote={noteContent}
-        isRTL={isRTL}
-      />
+      {!isSharedFolder ? (
+        <SaveToFolderDialog
+          post={post}
+          open={saveDialogOpen}
+          onOpenChange={setSaveDialogOpen}
+          onSaved={refetchSaved}
+          initialNote={noteContent}
+          isRTL={isRTL}
+        />
+      ) : null}
       <SavedFoldersDialog
         open={savedDialogOpen}
         onOpenChange={setSavedDialogOpen}

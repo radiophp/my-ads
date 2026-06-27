@@ -12,6 +12,7 @@ import {
   resetSearchFilter,
   setProvince,
   setRingBinderFolder,
+  setSharedFolder,
   setSelectedCities,
   setSelectedDistricts,
 } from '@/features/search-filter/searchFilterSlice';
@@ -69,6 +70,7 @@ export function DashboardPlaceholder() {
       appliedRingFolderRef.current = ringFolderParam;
       dispatch(resetSearchFilter());
       dispatch(setRingBinderFolder(ringFolderParam));
+      dispatch(setSharedFolder(searchParams.get('shared') === '1'));
     } else {
       appliedRingFolderRef.current = null;
     }

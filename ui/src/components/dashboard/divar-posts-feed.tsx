@@ -17,7 +17,7 @@ import {
   useFetchPostContactInfoMutation,
 } from '@/features/api/endpoints/divar-posts';
 import { useGetCurrentSubscriptionQuery } from '@/features/api/endpoints/subscriptions';
-import { useGetRingBinderFoldersQuery } from '@/features/api/endpoints/ring-binder';
+import { useGetRingBinderFoldersQuery, useGetSharedWithMeQuery } from '@/features/api/endpoints/ring-binder';
 import { useSharePostOnBaleMutation } from '@/features/api/endpoints/bale';
 import type { DivarPostContactInfo, DivarPostSummary } from '@/types/divar-posts';
 import { useAppSelector } from '@/lib/hooks';
@@ -70,7 +70,20 @@ export function DivarPostsFeed(): JSX.Element {
   const isAdminUser = currentUserRole === 'ADMIN';
   const hasSubscription = !!(currentSubscription || isAdminUser);
   const { data: ringBinderData } = useGetRingBinderFoldersQuery();
-  const ringFolders = ringBinderData?.folders ?? [];
+  const { data: sharedWithMeData = [] } = useGetSharedWithMeQuery();
+  const ringFolders = useMemo(() => {
+    const owned = ringBinderData?.folders ?? [];
+    const shared = sharedWithMeData.map((s) => ({
+      id: s.folderId,
+      userId: s.ownerId,
+      name: s.folderName,
+      createdAt: s.createdAt,
+      updatedAt: s.createdAt,
+      deletedAt: null,
+    }));
+    const ownedIds = new Set(owned.map((f) => f.id));
+    return [...owned, ...shared.filter((s) => !ownedIds.has(s.id))];
+  }, [ringBinderData, sharedWithMeData]);
 
   const [fetchPosts] = useLazyGetDivarPostsQuery();
   const [fetchPhone] = useFetchPostPhoneMutation();

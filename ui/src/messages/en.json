@@ -2846,6 +2846,33 @@
       "confirming": "Deleting…",
       "cancel": "Cancel"
     },
+    "share": {
+      "title": "Share {name}",
+      "description": "Other users can view posts in this folder.",
+      "phonePlaceholder": "9123456789",
+      "addButton": "Share",
+      "accessList": "Access list",
+      "noShares": "Not shared with anyone yet.",
+      "shareLabel": "Share folder",
+      "removeFromThis": "Remove from this folder",
+      "removeFromAll": "Remove from all folders",
+      "close": "Close",
+      "shareSuccess": "Folder shared successfully",
+      "shareError": "This number is not registered on Mahan File",
+      "shareNumberInvalid": "Invalid phone number",
+      "removeSuccess": "Access removed successfully",
+      "removeError": "Access removal failed",
+      "removeAllSuccess": "Access removed from all folders ({count} folders)",
+      "removeAllError": "Could not remove user access from all folders",
+      "limitHelper": "{count} / {max} shares used",
+      "limitReached": "You reached the maximum number of shared folders."
+    },
+    "sharedWithMe": {
+      "badge": "Following",
+      "followingTitle": "Following folders",
+      "empty": "No folders shared with you yet.",
+      "viewButton": "View posts"
+    },
     "toast": {
       "successTitle": "Folder added",
       "successDescription": "“{name}” is ready to use.",

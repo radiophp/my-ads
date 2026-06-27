@@ -17,6 +17,7 @@ import { CreateRingBinderFolderDto } from './dto/create-ring-binder-folder.dto';
 import { UpdateRingBinderFolderDto } from './dto/update-ring-binder-folder.dto';
 import { SavePostToFolderDto } from './dto/save-post-to-folder.dto';
 import { SavePostNoteDto } from './dto/save-post-note.dto';
+import { ShareFolderDto } from './dto/share-folder.dto';
 import { RingBindersService } from './ring-binders.service';
 
 @Controller('ring-binders')
@@ -132,5 +133,92 @@ export class RingBindersController {
       throw new UnauthorizedException();
     }
     return this.ringBindersService.deletePostNote(userId, postId);
+  }
+
+  // --- Share endpoints ---
+
+  @Post('folders/:id/share')
+  async shareFolder(
+    @Req() request: { user?: { sub?: string; role?: string } },
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() dto: ShareFolderDto,
+  ) {
+    const user = request.user;
+    if (!user?.sub) {
+      throw new UnauthorizedException();
+    }
+    return this.ringBindersService.shareFolderWithUser(
+      user.sub,
+      id,
+      dto.phone,
+      user.role === 'ADMIN',
+    );
+  }
+
+  @Delete('folders/:folderId/share/:userId')
+  async removeShare(
+    @Req() request: { user?: { sub?: string } },
+    @Param('folderId', new ParseUUIDPipe()) folderId: string,
+    @Param('userId', new ParseUUIDPipe()) userId: string,
+  ) {
+    const ownerId = request.user?.sub;
+    if (!ownerId) {
+      throw new UnauthorizedException();
+    }
+    return this.ringBindersService.removeShareFromFolder(ownerId, folderId, userId);
+  }
+
+  @Delete('shares/user/:userId')
+  async removeUserFromAllShares(
+    @Req() request: { user?: { sub?: string } },
+    @Param('userId', new ParseUUIDPipe()) userId: string,
+  ) {
+    const ownerId = request.user?.sub;
+    if (!ownerId) {
+      throw new UnauthorizedException();
+    }
+    return this.ringBindersService.removeUserFromAllShares(ownerId, userId);
+  }
+
+  @Get('folders/:id/shares')
+  async listFolderShares(
+    @Req() request: { user?: { sub?: string } },
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ) {
+    const userId = request.user?.sub;
+    if (!userId) {
+      throw new UnauthorizedException();
+    }
+    return this.ringBindersService.listFolderShares(userId, id);
+  }
+
+  @Get('shares/users')
+  async listAllSharedUsers(@Req() request: { user?: { sub?: string } }) {
+    const userId = request.user?.sub;
+    if (!userId) {
+      throw new UnauthorizedException();
+    }
+    return this.ringBindersService.listAllSharedUsers(userId);
+  }
+
+  @Get('shared-with-me')
+  async listSharedWithMe(@Req() request: { user?: { sub?: string } }) {
+    const userId = request.user?.sub;
+    if (!userId) {
+      return [];
+    }
+    return this.ringBindersService.listSharedWithMe(userId);
+  }
+
+  @Get('folders/:id/posts')
+  async getFolderPosts(
+    @Req() request: { user?: { sub?: string } },
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ) {
+    const userId = request.user?.sub;
+    if (!userId) {
+      throw new UnauthorizedException();
+    }
+    return this.ringBindersService.getFolderPosts(id, userId);
   }
 }

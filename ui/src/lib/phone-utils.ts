@@ -34,4 +34,12 @@ export const toInternationalIranPhone = (digits: string): string =>
 
 export const formatDisplayIranPhone = (digits: string): string => `0${digits}`;
 
+export const formatPhoneDisplay = (digits: string): string => {
+  const cleaned = digits.replace(/\D/g, '').slice(0, 10);
+  if (cleaned.length < 3) return cleaned;
+  if (cleaned.length < 6) return `${cleaned.slice(0, 3)} ${cleaned.slice(3)}`;
+  if (cleaned.length < 8) return `${cleaned.slice(0, 3)} ${cleaned.slice(3, 6)} ${cleaned.slice(6)}`;
+  return `${cleaned.slice(0, 3)} ${cleaned.slice(3, 6)} ${cleaned.slice(6, 8)} ${cleaned.slice(8, 10)}`;
+};
+
 export const sanitizeCode = (input: string) => input.replace(/\D/g, '').slice(0, CODE_LENGTH);

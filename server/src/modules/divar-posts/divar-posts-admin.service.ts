@@ -291,8 +291,15 @@ export class DivarPostsAdminService {
       const folder = await this.prisma.ringBinderFolder.findFirst({
         where: {
           id: options.ringFolderId,
-          userId: options.userId,
           deletedAt: null,
+          OR: [
+            { userId: options.userId },
+            {
+              shares: {
+                some: { sharedWithUserId: options.userId },
+              },
+            },
+          ],
         },
         select: { id: true },
       });
@@ -976,7 +983,18 @@ export class DivarPostsAdminService {
     userId: string,
   ): Promise<{ provinceIds: number[]; cityIds: number[]; districtIds: number[] }> {
     const folder = await this.prisma.ringBinderFolder.findFirst({
-      where: { id: ringFolderId, userId, deletedAt: null },
+      where: {
+        id: ringFolderId,
+        deletedAt: null,
+        OR: [
+          { userId },
+          {
+            shares: {
+              some: { sharedWithUserId: userId },
+            },
+          },
+        ],
+      },
       select: { id: true },
     });
     if (!folder) {

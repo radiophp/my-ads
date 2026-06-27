@@ -39,7 +39,7 @@ import {
   useGetDistrictsQuery,
 } from '@/features/api/endpoints/locations';
 import { useGetPublicDivarCategoriesQuery } from '@/features/api/endpoints/divar-categories';
-import { useGetRingBinderFoldersQuery } from '@/features/api/endpoints/ring-binder';
+import { useGetRingBinderFoldersQuery, useGetSharedWithMeQuery } from '@/features/api/endpoints/ring-binder';
 import { useGetCurrentSubscriptionQuery } from '@/features/api/endpoints/subscriptions';
 import { useLazyGetRingFolderDistrictsQuery } from '@/features/api/endpoints/divar-posts';
 import { Button } from '@/components/ui/button';
@@ -136,7 +136,13 @@ export function DashboardSearchFilterPanel() {
     isLoading: ringBinderLoading,
     isFetching: ringBinderFetching,
   } = useGetRingBinderFoldersQuery();
-  const ringBinderFolders = useMemo(() => ringBinderData?.folders ?? [], [ringBinderData]);
+  const { data: sharedWithMeData = [] } = useGetSharedWithMeQuery();
+  const ringBinderFolders = useMemo(() => {
+    const owned = ringBinderData?.folders ?? [];
+    const shared = sharedWithMeData.map((s) => ({ id: s.folderId, name: s.folderName }));
+    const ownedIds = new Set(owned.map((f) => f.id));
+    return [...owned, ...shared.filter((s) => !ownedIds.has(s.id))];
+  }, [ringBinderData, sharedWithMeData]);
 
   const { data: currentSubscription } = useGetCurrentSubscriptionQuery();
   const [fetchRingFolderDistricts] = useLazyGetRingFolderDistrictsQuery();
@@ -1031,6 +1037,7 @@ export function DashboardSearchFilterPanel() {
       ringBinderFolderId,
       noteFilter,
       dateQuarter,
+      sharedFolder: false,
     }),
     [
       provinceId,

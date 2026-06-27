@@ -93,6 +93,7 @@ const loadSearchFilterState = (): SearchFilterSliceState => {
         typeof parsed.dateQuarter === 'string' && parsed.dateQuarter.length > 0
           ? parsed.dateQuarter
           : '',
+      sharedFolder: parsed.sharedFolder === true,
       persistNonce: 0,
     };
   } catch {

@@ -22,6 +22,7 @@ describe('search-filter utils', () => {
     dateQuarter: '',
     ringBinderFolderId: 'folder-1',
     noteFilter: 'has',
+    sharedFolder: false,
   };
 
   describe('cloneSearchFilterState', () => {

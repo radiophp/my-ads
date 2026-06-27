@@ -2,7 +2,7 @@
 
 import { FormEvent, useMemo, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { ExternalLink, Pencil, Trash2 } from 'lucide-react';
+import { ExternalLink, Pencil, Share2, Trash2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,10 +24,13 @@ import {
   useUpdateRingBinderFolderMutation,
 } from '@/features/api/endpoints/ring-binder';
 import type { RingBinderFolder } from '@/types/ring-binder';
+import { ShareFolderDialog } from '@/components/ring-binder/share-folder-dialog';
+import { FollowingSection } from '@/components/ring-binder/following-section';
 
 export function RingBinderPanel() {
   const t = useTranslations('ringBinder');
   const locale = useLocale();
+  const isRtl = locale === 'fa';
   const [folderName, setFolderName] = useState('');
   const { data, isLoading, isFetching, isError } = useGetRingBinderFoldersQuery();
   const [createFolder, { isLoading: isCreating }] = useCreateRingBinderFolderMutation();
@@ -36,6 +39,7 @@ export function RingBinderPanel() {
   const [folderToRename, setFolderToRename] = useState<RingBinderFolder | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const [folderToDelete, setFolderToDelete] = useState<RingBinderFolder | null>(null);
+  const [shareDialogFor, setShareDialogFor] = useState<RingBinderFolder | null>(null);
 
   const folders = data?.folders ?? [];
   const rawLimit = data?.limit ?? Infinity;
@@ -50,6 +54,17 @@ export function RingBinderPanel() {
       }),
     [locale],
   );
+
+  const toPersianDigits = (str: string) => {
+    if (locale !== 'fa') return str;
+    return str.replace(/[0-9]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[Number(d)]);
+  };
+
+  const formatPhone = (phone: string) => {
+    const digits = phone.replace(/\D/g, '');
+    const local = digits.startsWith('98') ? digits.slice(2) : digits;
+    return toPersianDigits(local);
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -197,62 +212,83 @@ export function RingBinderPanel() {
               <div className="grid gap-4 sm:grid-cols-2">
                 {folders.map((folder) => (
                   <div
-                    key={folder.id}
-                    className="rounded-2xl border border-border/70 p-4"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="text-base font-semibold text-foreground">{folder.name}</p>
-                        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                          <span>
-                            {t('list.savedCount', {
-                              count: (folder.savedPostCount ?? 0).toLocaleString(locale),
-                            })}
-                          </span>
-                          <span aria-hidden="true">•</span>
-                          <span>
-                            {t('list.createdAt', {
-                              date: dateFormatter.format(new Date(folder.createdAt)),
-                            })}
-                          </span>
+                      key={folder.id}
+                      className="rounded-2xl border border-border/70 p-4"
+                    >
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-base font-semibold text-foreground">{folder.name}</p>
+                          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                            <span>
+                              {t('list.savedCount', {
+                                count: (folder.savedPostCount ?? 0).toLocaleString(locale),
+                              })}
+                            </span>
+                            <span aria-hidden="true">•</span>
+                            <span>
+                              {t('list.createdAt', {
+                                date: dateFormatter.format(new Date(folder.createdAt)),
+                              })}
+                            </span>
+                          </div>
+                          {folder.sharedWithPhones && folder.sharedWithPhones.length > 0 ? (
+                            <div className="mt-2 flex flex-wrap gap-1.5">
+                              {folder.sharedWithPhones.map((phone) => (
+                                <span
+                                  key={phone}
+                                  className={`inline-flex items-center rounded-md border border-border/60 bg-muted/30 px-2 py-0.5 text-[11px] ${isRtl ? 'font-sans' : 'dir-ltr'}`}
+                                >
+                                  {formatPhone(phone)}
+                                </span>
+                              ))}
+                            </div>
+                          ) : null}
+                        </div>
+                        <div className="flex shrink-0 flex-wrap gap-2 sm:items-start">
+                          <Button
+                            asChild
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                          >
+                            <Link href={`/dashboard?ringFolderId=${folder.id}`}>
+                              <ExternalLink className="size-4" aria-hidden />
+                              <span className="hidden sm:inline">{t('actions.view')}</span>
+                            </Link>
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setShareDialogFor(folder)}
+                          >
+                            <Share2 className="size-4" aria-hidden />
+                            <span className="hidden sm:inline">{t('share.shareLabel')}</span>
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon-sm"
+                            aria-label={t('actions.rename')}
+                            onClick={() => {
+                              setFolderToRename(folder);
+                              setRenameValue(folder.name);
+                            }}
+                          >
+                            <Pencil className="size-4" aria-hidden />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon-sm"
+                            aria-label={t('actions.delete')}
+                            onClick={() => setFolderToDelete(folder)}
+                          >
+                            <Trash2 className="size-4" aria-hidden />
+                          </Button>
                         </div>
                       </div>
-                      <div className="flex gap-2">
-                        <Button
-                          asChild
-                          type="button"
-                          variant="outline"
-                          size="icon-sm"
-                          aria-label={t('actions.view')}
-                        >
-                          <Link href={`/dashboard?ringFolderId=${folder.id}`}>
-                            <ExternalLink className="size-4" aria-hidden />
-                          </Link>
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon-sm"
-                          aria-label={t('actions.rename')}
-                          onClick={() => {
-                            setFolderToRename(folder);
-                            setRenameValue(folder.name);
-                          }}
-                        >
-                          <Pencil className="size-4" aria-hidden />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="icon-sm"
-                          aria-label={t('actions.delete')}
-                          onClick={() => setFolderToDelete(folder)}
-                        >
-                          <Trash2 className="size-4" aria-hidden />
-                        </Button>
-                      </div>
                     </div>
-                  </div>
                 ))}
               </div>
             )}
@@ -338,6 +374,21 @@ export function RingBinderPanel() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Card className="border border-border/70 shadow-sm">
+        <CardContent className="pt-6">
+          <FollowingSection />
+        </CardContent>
+      </Card>
+
+      {shareDialogFor && (
+        <ShareFolderDialog
+          folderId={shareDialogFor.id}
+          folderName={shareDialogFor.name}
+          open={Boolean(shareDialogFor)}
+          onOpenChange={(open) => { if (!open) setShareDialogFor(null); }}
+        />
+      )}
     </div>
   );
 }

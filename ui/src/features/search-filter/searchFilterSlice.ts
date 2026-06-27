@@ -32,6 +32,7 @@ export type SearchFilterState = {
   ringBinderFolderId: string | null;
   noteFilter: NoteFilterOption;
   dateQuarter: string;
+  sharedFolder: boolean;
 };
 
 export type SearchFilterSliceState = SearchFilterState & {
@@ -56,6 +57,7 @@ const initialFilterState: SearchFilterState = {
   ringBinderFolderId: null,
   noteFilter: 'all',
   dateQuarter: getDefaultQuarters(),
+  sharedFolder: false,
 };
 
 const initialState: SearchFilterSliceState = {
@@ -106,6 +108,9 @@ const searchFilterSlice = createSlice({
     setRingBinderFolder(state, action: PayloadAction<string | null>) {
       state.ringBinderFolderId = action.payload;
     },
+    setSharedFolder(state, action: PayloadAction<boolean>) {
+      state.sharedFolder = action.payload;
+    },
     setNoteFilter(state, action: PayloadAction<NoteFilterOption>) {
       state.noteFilter = action.payload;
     },
@@ -153,6 +158,7 @@ const searchFilterSlice = createSlice({
       state.ringBinderFolderId = initialFilterState.ringBinderFolderId;
       state.noteFilter = initialFilterState.noteFilter;
       state.dateQuarter = initialFilterState.dateQuarter;
+      state.sharedFolder = initialFilterState.sharedFolder;
     },
     hydrateFromSaved: (state, action: PayloadAction<SearchFilterState>) => {
       state.provinceId = action.payload.provinceId;
@@ -163,6 +169,7 @@ const searchFilterSlice = createSlice({
       state.ringBinderFolderId = action.payload.ringBinderFolderId;
       state.noteFilter = action.payload.noteFilter;
       state.dateQuarter = action.payload.dateQuarter;
+      state.sharedFolder = action.payload.sharedFolder ?? false;
     },
     commitAppliedFilters: (state) => {
       state.persistNonce += 1;
@@ -180,6 +187,7 @@ export const {
   setCategoryFilterValue,
   clearCategoryFilters,
   setRingBinderFolder,
+  setSharedFolder,
   setNoteFilter,
   setDateQuarter,
   resetSearchFilter,

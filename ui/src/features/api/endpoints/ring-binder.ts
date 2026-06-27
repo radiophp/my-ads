@@ -1,9 +1,12 @@
 import { apiSlice } from '../baseApi';
 
 import type {
+  AllSharedUsersResponse,
   PostSavedFoldersResponse,
   RingBinderFolder,
   RingBinderFolderListResponse,
+  RingBinderShare,
+  SharedWithMeFolder,
 } from '@/types/ring-binder';
 
 const ringBinderApi = apiSlice.injectEndpoints({
@@ -96,6 +99,58 @@ const ringBinderApi = apiSlice.injectEndpoints({
         { type: 'RingBinderFolders', id: 'LIST' },
       ],
     }),
+
+    // --- Share endpoints ---
+
+    shareFolder: builder.mutation<RingBinderShare, { folderId: string; phone: string }>({
+      query: ({ folderId, phone }) => ({
+        url: `/ring-binders/folders/${folderId}/share`,
+        method: 'POST',
+        body: { phone },
+      }),
+      invalidatesTags: [
+        { type: 'RingBinderFolders', id: 'SHARES' },
+        { type: 'RingBinderFolders', id: 'SHARED_WITH_ME' },
+      ],
+    }),
+    removeFolderShare: builder.mutation<
+      { success: boolean },
+      { folderId: string; userId: string }
+    >({
+      query: ({ folderId, userId }) => ({
+        url: `/ring-binders/folders/${folderId}/share/${userId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: [
+        { type: 'RingBinderFolders', id: 'SHARES' },
+        { type: 'RingBinderFolders', id: 'SHARED_WITH_ME' },
+      ],
+    }),
+    removeUserFromShares: builder.mutation<
+      { deletedCount: number },
+      { userId: string }
+    >({
+      query: ({ userId }) => ({
+        url: `/ring-binders/shares/user/${userId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: [
+        { type: 'RingBinderFolders', id: 'SHARES' },
+        { type: 'RingBinderFolders', id: 'SHARED_WITH_ME' },
+      ],
+    }),
+    getFolderShares: builder.query<RingBinderShare[], { folderId: string }>({
+      query: ({ folderId }) => `/ring-binders/folders/${folderId}/shares`,
+      providesTags: [{ type: 'RingBinderFolders', id: 'SHARES' }],
+    }),
+    getAllSharedUsers: builder.query<AllSharedUsersResponse, void>({
+      query: () => '/ring-binders/shares/users',
+      providesTags: [{ type: 'RingBinderFolders', id: 'SHARES' }],
+    }),
+    getSharedWithMe: builder.query<SharedWithMeFolder[], void>({
+      query: () => '/ring-binders/shared-with-me',
+      providesTags: [{ type: 'RingBinderFolders', id: 'SHARED_WITH_ME' }],
+    }),
   }),
 });
 
@@ -109,4 +164,10 @@ export const {
   useUpsertPostNoteMutation,
   useDeletePostNoteMutation,
   useDeleteRingBinderFolderMutation,
+  useShareFolderMutation,
+  useRemoveFolderShareMutation,
+  useRemoveUserFromSharesMutation,
+  useGetFolderSharesQuery,
+  useGetAllSharedUsersQuery,
+  useGetSharedWithMeQuery,
 } = ringBinderApi;

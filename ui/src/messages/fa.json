@@ -2849,6 +2849,33 @@
       "confirming": "در حال حذف…",
       "cancel": "انصراف"
     },
+    "share": {
+      "title": "اشتراک‌گذاری {name}",
+      "description": "کاربران دیگر می‌توانند آگهی‌های این پوشه را ببینند.",
+      "phonePlaceholder": "۹۱۲۳۴۵۶۷۸۹",
+      "addButton": "اشتراک‌گذاری",
+      "accessList": "دسترسی‌ها",
+      "noShares": "هنوز با کسی به اشتراک گذاشته نشده است.",
+      "shareLabel": "اشتراک‌گذاری پوشه",
+      "removeFromThis": "حذف از این پوشه",
+      "removeFromAll": "حذف از همه پوشه‌ها",
+      "close": "بستن",
+      "shareSuccess": "پوشه با موفقیت به اشتراک گذاشته شد",
+      "shareError": "این شماره در ماهان فایل ثبت‌نام نکرده است",
+      "shareNumberInvalid": "شماره تلفن وارد شده معتبر نیست",
+      "removeSuccess": "دسترسی با موفقیت حذف شد",
+      "removeError": "حذف دسترسی ناموفق بود",
+      "removeAllSuccess": "دسترسی از همه پوشه‌ها حذف شد ({count} پوشه)",
+      "removeAllError": "حذف دسترسی از همه پوشه‌ها ناموفق بود",
+      "limitHelper": "{count} از {max} اشتراک استفاده شده",
+      "limitReached": "به حداکثر تعداد مجاز اشتراک پوشه رسیده‌اید."
+    },
+    "sharedWithMe": {
+      "badge": "دنبال شده",
+      "followingTitle": "پوشه‌های دنبال شده",
+      "empty": "هنوز پوشه‌ای با شما به اشتراک گذاشته نشده است.",
+      "viewButton": "مشاهده آگهی‌ها"
+    },
     "toast": {
       "successTitle": "پوشه اضافه شد",
       "successDescription": "«{name}» آماده استفاده است.",

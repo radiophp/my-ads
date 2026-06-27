@@ -66,7 +66,9 @@ export function DivarPostsFeed(): JSX.Element {
   const [downloadDialogOpen, setDownloadDialogOpen] = useState(false);
   const [mapReady, setMapReady] = useState(true);
   const { data: currentSubscription } = useGetCurrentSubscriptionQuery();
-  const hasSubscription = !!currentSubscription;
+  const currentUserRole = useAppSelector((state) => state.auth.user?.role);
+  const isAdminUser = currentUserRole === 'ADMIN';
+  const hasSubscription = !!(currentSubscription || isAdminUser);
   const { data: ringBinderData } = useGetRingBinderFoldersQuery();
   const ringFolders = ringBinderData?.folders ?? [];
 

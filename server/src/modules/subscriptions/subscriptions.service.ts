@@ -70,7 +70,7 @@ export class SubscriptionsService {
     featureKey: string,
     isAdmin?: boolean,
   ): Promise<number> {
-    if (isAdmin) return Infinity;
+    if (isAdmin) return -1;
 
     if (!userId) return 0;
 
@@ -92,7 +92,7 @@ export class SubscriptionsService {
     featureKey: string,
     isAdmin?: boolean,
   ): Promise<number> {
-    if (isAdmin) return Infinity;
+    if (isAdmin) return -1;
 
     if (!userId) return 0;
 

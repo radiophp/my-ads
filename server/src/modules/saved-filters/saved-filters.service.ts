@@ -33,9 +33,7 @@ export class SavedFiltersService {
         where: { userId },
         orderBy: { createdAt: 'desc' },
       }),
-      isAdmin
-        ? Promise.resolve(Infinity)
-        : this.prisma.savedFilter.count({ where: { userId, isActive: true } }),
+      this.prisma.savedFilter.count({ where: { userId, isActive: true } }),
     ]);
 
     const items = filters.map((filter) =>
@@ -44,10 +42,28 @@ export class SavedFiltersService {
 
     return {
       filters: items,
-      limit,
-      activeCount,
-      remaining: Math.max(limit - activeCount, 0),
+      limit: isAdmin ? -1 : limit,
+      activeCount: isAdmin ? -1 : activeCount,
+      remaining: isAdmin ? -1 : Math.max(limit - activeCount, 0),
     };
+  }
+
+  private validateFilterPayload(payload: SavedFilterPayload): void {
+    if (!payload.categorySelection.slug || payload.categorySelection.depth !== 3) {
+      throw new BadRequestException(
+        'برای ذخیره فیلتر باید یک دسته‌بندی سطح آخر (سطح ۳) را انتخاب کنید.',
+      );
+    }
+
+    if (
+      payload.districtSelection.mode !== 'custom' ||
+      payload.districtSelection.districtIds.length < 1 ||
+      payload.districtSelection.districtIds.length > 3
+    ) {
+      throw new BadRequestException(
+        'برای ذخیره فیلتر باید حداقل ۱ و حداکثر ۳ منطقه را انتخاب کنید.',
+      );
+    }
   }
 
   async create(userId: string, dto: CreateSavedFilterDto, isAdmin = false) {
@@ -83,6 +99,7 @@ export class SavedFiltersService {
     }
 
     const payload = normalizeSavedFilterPayload(dto.payload);
+    this.validateFilterPayload(payload);
     const notificationsEnabled = dto.notificationsEnabled !== false;
 
     const entity = await this.prisma.savedFilter.create({
@@ -95,15 +112,13 @@ export class SavedFiltersService {
       },
     });
 
-    const activeCount = isAdmin
-      ? Infinity
-      : await this.prisma.savedFilter.count({ where: { userId, isActive: true } });
+    const activeCount = await this.prisma.savedFilter.count({ where: { userId, isActive: true } });
 
     return {
       filter: SavedFilterDto.fromEntity(entity, payload),
-      limit,
-      activeCount,
-      remaining: Math.max(limit - activeCount, 0),
+      limit: isAdmin ? -1 : limit,
+      activeCount: isAdmin ? -1 : activeCount,
+      remaining: isAdmin ? -1 : Math.max(limit - activeCount, 0),
     };
   }
 
@@ -137,6 +152,10 @@ export class SavedFiltersService {
       typeof dto.payload === 'undefined'
         ? normalizeSavedFilterPayload(existing.payload)
         : normalizeSavedFilterPayload(dto.payload);
+
+    if (typeof dto.payload !== 'undefined') {
+      this.validateFilterPayload(nextPayload);
+    }
 
     const updateData: Prisma.SavedFilterUpdateInput = {
       name: nextName,
@@ -173,15 +192,13 @@ export class SavedFiltersService {
     await this.prisma.savedFilter.delete({ where: { id } });
 
     const limit = await this.subscriptionsService.resolveFeatureLimit(userId, FEATURE_KEY, isAdmin);
-    const activeCount = isAdmin
-      ? Infinity
-      : await this.prisma.savedFilter.count({ where: { userId, isActive: true } });
+    const activeCount = await this.prisma.savedFilter.count({ where: { userId, isActive: true } });
 
     return {
       success: true,
-      limit,
-      activeCount,
-      remaining: Math.max(limit - activeCount, 0),
+      limit: isAdmin ? -1 : limit,
+      activeCount: isAdmin ? -1 : activeCount,
+      remaining: isAdmin ? -1 : Math.max(limit - activeCount, 0),
     };
   }
 
@@ -221,15 +238,13 @@ export class SavedFiltersService {
       },
     });
 
-    const activeCount = isAdmin
-      ? Infinity
-      : await this.prisma.savedFilter.count({ where: { userId, isActive: true } });
+    const activeCount = await this.prisma.savedFilter.count({ where: { userId, isActive: true } });
 
     return {
       filter: SavedFilterDto.fromEntity(entity, normalizeSavedFilterPayload(entity.payload)),
-      limit,
-      activeCount,
-      remaining: Math.max(limit - activeCount, 0),
+      limit: isAdmin ? -1 : limit,
+      activeCount: isAdmin ? -1 : activeCount,
+      remaining: isAdmin ? -1 : Math.max(limit - activeCount, 0),
     };
   }
 }

@@ -48,7 +48,7 @@ export class RingBindersService {
         savedPostCount: _count.posts,
       })),
       limit,
-      remaining: limit === Infinity ? Infinity : Math.max(limit - folders.length, 0),
+      remaining: limit === -1 ? -1 : Math.max(limit - folders.length, 0),
     };
   }
 
@@ -89,7 +89,7 @@ export class RingBindersService {
       isAdmin,
     );
 
-    if (limit !== Infinity) {
+    if (limit !== -1) {
       const folderCount = await this.prismaService.ringBinderFolder.count({
         where: { userId, deletedAt: null },
       });

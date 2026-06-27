@@ -375,6 +375,13 @@
           "title": "Access to some districts restricted",
           "description": "Your current subscription doesn't include access to the following districts. Please remove them from the filter first:",
           "confirm": "Got it"
+        },
+        "rulesAlert": {
+          "title": "Filter Save Rules",
+          "category": "You must select a leaf-level category (level 3) to save filters:",
+          "categoryExamples": "Leaf-level categories:",
+          "districts": "You must select at least 1 and at most 3 districts.",
+          "confirm": "Got it"
         }
       },
       "provinceLabel": "Province",

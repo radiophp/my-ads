@@ -38,7 +38,9 @@ export function RingBinderPanel() {
   const [folderToDelete, setFolderToDelete] = useState<RingBinderFolder | null>(null);
 
   const folders = data?.folders ?? [];
-  const folderLimit = data?.limit ?? Infinity;
+  const rawLimit = data?.limit ?? Infinity;
+  const isUnlimitedFolders = rawLimit === -1;
+  const folderLimit = isUnlimitedFolders ? Infinity : rawLimit;
   const isAtLimit = folders.length >= folderLimit;
 
   const dateFormatter = useMemo(
@@ -157,7 +159,9 @@ export function RingBinderPanel() {
               </Button>
             </form>
             <p className="mt-2 text-xs text-muted-foreground">
-              {t('form.limitHelper', { count: folders.length, max: folderLimit })}
+              {isUnlimitedFolders
+                ? `${folders.length} پوشه`
+                : t('form.limitHelper', { count: folders.length, max: folderLimit })}
             </p>
             {isAtLimit ? (
               <p className="mt-1 text-xs font-medium text-destructive">{t('form.limitReached')}</p>

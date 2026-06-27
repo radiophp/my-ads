@@ -201,7 +201,8 @@ export function DashboardSearchFilterPanel() {
     return ids;
   }, [currentSubscription, hasSubscriptionAccess, ringFolderDistricts]);
 
-  const restrictToAccessible = true;
+  const currentUserRole = useAppSelector((state) => state.auth.user?.role);
+  const restrictToAccessible = currentUserRole !== 'ADMIN';
 
   const { toast } = useToast();
   const {
@@ -1045,11 +1046,27 @@ export function DashboardSearchFilterPanel() {
 
   const savedFilters = savedFiltersData?.filters ?? [];
   const savedFiltersLimit = savedFiltersData?.limit ?? DEFAULT_SAVED_FILTER_LIMIT;
+  const isUnlimited = savedFiltersLimit === -1;
   const savedFiltersActiveCount = savedFiltersData?.activeCount ?? savedFilters.filter((f) => f.isActive).length;
-  const savedFiltersRemaining = savedFiltersData?.remaining ?? Math.max(savedFiltersLimit - savedFiltersActiveCount, 0);
+  const savedFiltersRemaining = savedFiltersData?.remaining ?? Math.max(isUnlimited ? 0 : savedFiltersLimit - savedFiltersActiveCount, 0);
   const savedFiltersBusy = savedFiltersLoading || savedFiltersFetching;
-  const saveLimitReached = savedFiltersRemaining <= 0;
+  const saveLimitReached = !isUnlimited && savedFiltersRemaining <= 0;
   const [inaccessibleDistricts, setInaccessibleDistricts] = useState<{ id: number; name: string }[]>([]);
+  const [filterRulesAlert, setFilterRulesAlert] = useState<{
+    category?: boolean;
+    districts?: boolean;
+  } | null>(null);
+
+  const leafCategoryExamples = useMemo(() => {
+    return categories
+      .filter((c) => c.depth === 3 && c.allowPosting)
+      .sort((a, b) => a.position - b.position)
+      .slice(0, 20)
+      .map((c) => {
+        const parts = c.displayPath.split(' - ');
+        return parts.slice(-2).join(' > ');
+      });
+  }, [categories]);
 
   const handleApplySavedFilter = useCallback(
     (filter: SavedFilter) => {
@@ -1082,6 +1099,27 @@ export function DashboardSearchFilterPanel() {
     },
     [dispatch, filterModalOpen, savedFiltersT, toast, restrictToAccessible, accessibleDistrictIds, districts],
   );
+
+  const handleSaveClick = useCallback(() => {
+    const errors: { category?: boolean; districts?: boolean } = {};
+
+    if (!categorySelection.slug || categorySelection.depth !== 3) {
+      errors.category = true;
+    }
+    if (
+      districtSelection.mode !== 'custom' ||
+      districtSelection.districtIds.length < 1 ||
+      districtSelection.districtIds.length > 3
+    ) {
+      errors.districts = true;
+    }
+
+    if (errors.category || errors.districts) {
+      setFilterRulesAlert(errors);
+    } else {
+      setSaveDialogOpen(true);
+    }
+  }, [categorySelection, districtSelection]);
 
   const handleSaveFilter = useCallback(
     async (name: string) => {
@@ -1382,14 +1420,14 @@ export function DashboardSearchFilterPanel() {
               <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
             </Button>
             <p className="text-xs text-muted-foreground">
-              {savedFiltersT('usage', { count: savedFiltersActiveCount, limit: savedFiltersLimit })}
+              {isUnlimited ? `${savedFiltersActiveCount} مجموعه` : savedFiltersT('usage', { count: savedFiltersActiveCount, limit: savedFiltersLimit })}
             </p>
             <div className="hidden lg:flex">
               <Button
                 type="button"
                 variant="secondary"
                 className="w-full justify-center"
-                onClick={() => setSaveDialogOpen(true)}
+                onClick={handleSaveClick}
                 disabled={!hasActiveFilters || saveLimitReached || isCreatingSavedFilter}
                 title={
                   !hasActiveFilters
@@ -1731,7 +1769,7 @@ export function DashboardSearchFilterPanel() {
 		                        <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
 		                      </Button>
 		                      <p className="text-xs text-muted-foreground">
-{savedFiltersT('usage', { count: savedFiltersActiveCount, limit: savedFiltersLimit })}
+{isUnlimited ? `${savedFiltersActiveCount} مجموعه` : savedFiltersT('usage', { count: savedFiltersActiveCount, limit: savedFiltersLimit })}
 		                      </p>
 		                    </div>
 
@@ -1833,7 +1871,7 @@ export function DashboardSearchFilterPanel() {
                 size="sm"
                 className="inline-flex items-center gap-1"
                 disabled={!hasActiveFilters || saveLimitReached || isCreatingSavedFilter}
-                onClick={() => setSaveDialogOpen(true)}
+                onClick={handleSaveClick}
                 title={
                   !hasActiveFilters
                     ? savedFiltersT('disabled.noFilters')
@@ -1950,6 +1988,46 @@ export function DashboardSearchFilterPanel() {
           <AlertDialogFooter>
             <AlertDialogAction onClick={() => setInaccessibleDistricts([])}>
               {savedFiltersT('districtRestriction.confirm')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={filterRulesAlert !== null}
+        onOpenChange={(open) => { if (!open) setFilterRulesAlert(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{savedFiltersT('rulesAlert.title')}</AlertDialogTitle>
+          </AlertDialogHeader>
+          <div className="space-y-3 text-sm text-muted-foreground">
+            {filterRulesAlert?.category && (
+              <div className="space-y-2">
+                <p>{savedFiltersT('rulesAlert.category')}</p>
+                {leafCategoryExamples.length > 0 && (
+                  <div className="rounded-md border p-3">
+                    <div className="mb-1.5 text-xs font-medium text-foreground">
+                      {savedFiltersT('rulesAlert.categoryExamples')}
+                    </div>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1">
+                      {leafCategoryExamples.map((example) => (
+                        <span key={example} className="text-foreground">
+                          {example}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            {filterRulesAlert?.districts && (
+              <p>{savedFiltersT('rulesAlert.districts')}</p>
+            )}
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setFilterRulesAlert(null)}>
+              {savedFiltersT('rulesAlert.confirm')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

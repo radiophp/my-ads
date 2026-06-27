@@ -53,7 +53,9 @@ export function SaveToFolderDialog({
     { skip: !open },
   );
   const folders = useMemo(() => data?.folders ?? [], [data?.folders]);
-  const maxFolders = data?.limit ?? Infinity;
+  const rawLimit = data?.limit ?? Infinity;
+  const isUnlimitedFolders = rawLimit === -1;
+  const maxFolders = isUnlimitedFolders ? Infinity : rawLimit;
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [newFolderName, setNewFolderName] = useState('');
   const [createFolder, { isLoading: isCreating }] = useCreateRingBinderFolderMutation();
@@ -235,7 +237,9 @@ export function SaveToFolderDialog({
       <div className="space-y-4">
         {renderFolderSelector()}
         <p className="text-right text-xs text-muted-foreground">
-          {t('saveDialog.folderCount', { count: folders.length, max: maxFolders })}
+          {isUnlimitedFolders
+            ? `${folders.length} پوشه`
+            : t('saveDialog.folderCount', { count: folders.length, max: maxFolders })}
         </p>
         {renderCreateSection()}
         <div className="space-y-2">

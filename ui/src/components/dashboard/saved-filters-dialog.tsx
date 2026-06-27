@@ -40,6 +40,7 @@ export function SavedFiltersDialog({
   const activeCount = savedFilters.filter((f) => f.isActive).length;
   const hasInactive = savedFilters.some((f) => !f.isActive);
   const isRTL = ['fa', 'ar', 'he'].includes(locale);
+  const isUnlimited = savedFiltersLimit === -1;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange} disableBackClose>
@@ -53,9 +54,11 @@ export function SavedFiltersDialog({
               {savedFiltersT('title')}
             </p>
             <p className={cn('mt-1 text-sm text-muted-foreground', isRTL ? 'text-right' : 'text-left')}>
-              {activeCount > 0
-                ? savedFiltersT('usageActive', { count: activeCount, limit: savedFiltersLimit })
-                : savedFiltersT('usage', { count: totalSavedFilters, limit: savedFiltersLimit })}
+              {isUnlimited
+                ? `${activeCount > 0 ? activeCount : totalSavedFilters} مجموعه`
+                : activeCount > 0
+                  ? savedFiltersT('usageActive', { count: activeCount, limit: savedFiltersLimit })
+                  : savedFiltersT('usage', { count: totalSavedFilters, limit: savedFiltersLimit })}
             </p>
           </div>
 
